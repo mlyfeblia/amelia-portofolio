@@ -7,7 +7,7 @@ import { getArticleBySlug } from '@/lib/data-store';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 
-const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://amelia-bki.vercel.app';
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://mlyfeblia.vercel.app';
 
 export async function generateMetadata(props: {
   params: Promise<{ slug: string }>;

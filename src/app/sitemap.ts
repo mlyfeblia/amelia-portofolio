@@ -1,7 +1,7 @@
 import type { MetadataRoute } from 'next';
 import { getArticles } from '@/lib/data-store';
 
-const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://amelia-bki.vercel.app';
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://mlyfeblia.vercel.app';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const articles = await getArticles();

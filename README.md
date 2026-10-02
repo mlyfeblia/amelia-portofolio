@@ -92,7 +92,7 @@ INSFORGE_API_KEY=ik_your_api_key_here
 DATABASE_URL=postgresql://postgres:password@y8ug7mrt.ap-southeast.database.insforge.app:5432/insforge?sslmode=require
 
 # App
-NEXT_PUBLIC_SITE_URL=https://amelia-bki.vercel.app
+NEXT_PUBLIC_SITE_URL=https://mlyfeblia.vercel.app
 ```
 
 ### 4. Sinkronisasi Database
@@ -127,7 +127,7 @@ Buka browser favoritmu di [http://localhost:3000](http://localhost:3000) dan nik
 
 ## 🌐 Tautan Live & Kontak
 
-* 🌟 **Live Website**: [https://amelia-bki.vercel.app](https://amelia-bki.vercel.app) *(Tersedia juga di [https://mlyfeblia.vercel.app](https://mlyfeblia.vercel.app))*
+* 🌟 **Live Website Utama**: [https://mlyfeblia.vercel.app](https://mlyfeblia.vercel.app) *(Tersedia juga di [https://amelia-bki.vercel.app](https://amelia-bki.vercel.app))*
 * 📦 **GitHub Repository**: [mlyfeblia/amelia-portofolio](https://github.com/mlyfeblia/amelia-portofolio)
 * ☁️ **Vercel Dashboard**: [mlyfeblia/amelia-portofolio](https://vercel.com/mlyfeblia/amelia-portofolio)
 * 🗄️ **InsForge Dashboard**: [amelia-portofolio (InsForge)](https://insforge.dev/dashboard/project/5036fd47-4cff-4810-ac38-4fba27a68450)

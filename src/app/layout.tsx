@@ -22,7 +22,7 @@ const newsreader = Newsreader({
 });
 
 // ── Constants ─────────────────────────────────────────────────────
-const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://amelia-bki.vercel.app';
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://mlyfeblia.vercel.app';
 const SITE_NAME = 'Amelia — Bimbingan Konseling Islam';
 const DEFAULT_DESC =
   'Portofolio resmi Amelia (Amel), mahasiswi Bimbingan Konseling Islam UIN Siber Syekh Nurjati Cirebon. Konseling islami berbasis Tazkiyatun Nafs, cyber counseling, dan edukasi kesehatan mental generasi digital.';
