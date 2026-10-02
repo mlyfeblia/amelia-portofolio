@@ -1,0 +1,134 @@
+{
+  "bookings": [
+    {
+      "name": "Ahmad Fauzi",
+      "alias": "Fauzi",
+      "phone": "081299887766",
+      "email": "fauzi@example.com",
+      "category": "Krisis Identitas Diri & Quarter-Life Crisis",
+      "mode": "online_meet",
+      "date": "2026-10-05",
+      "timeSlot": "16:00 - 17:00 WIB",
+      "notes": "Menemukan arah hidup setelah lulus semester ini.",
+      "id": "bk-1790581539331",
+      "code": "BKI-2609-227",
+      "status": "menunggu",
+      "createdAt": "2026-09-28T07:45:39.331Z"
+    },
+    {
+      "id": "bk-1",
+      "code": "BKI-2609-001",
+      "name": "Rahmat Hidayat",
+      "alias": "Rahmat",
+      "phone": "081234567890",
+      "email": "rahmat@example.com",
+      "category": "Akademik & Karier",
+      "mode": "online_meet",
+      "date": "2026-09-30",
+      "timeSlot": "15:30 - 16:30 WIB",
+      "notes": "Konsultasi seputar kebimbangan memilih topik riset dan adaptasi perkuliahan.",
+      "status": "terkonfirmasi",
+      "createdAt": "2026-09-26T10:00:00Z"
+    },
+    {
+      "id": "bk-2",
+      "code": "BKI-2609-002",
+      "name": "Siti Nurhaliza",
+      "alias": "Siti",
+      "phone": "085712345678",
+      "email": "siti@example.com",
+      "category": "Manajemen Stres & Kecemasan",
+      "mode": "online_chat",
+      "date": "2026-10-02",
+      "timeSlot": "19:30 - 20:30 WIB",
+      "notes": "Ingin berbagi cerita tentang adaptasi lingkungan kos dan menjaga ketenangan pikiran.",
+      "status": "menunggu",
+      "createdAt": "2026-09-27T14:30:00Z"
+    }
+  ],
+  "curhatList": [
+    {
+      "id": "cur-1",
+      "alias": "Bunga di Ujung Jalan",
+      "category": "Quarter-Life Crisis",
+      "message": "Kak Amel, saya mahasiswa tingkat akhir dan merasa tertinggal jauh dari teman-teman yang sudah kerja dan mandiri finansial. Rasanya setiap bangun pagi dada sesak dan takut gagal membahagiakan orang tua. Bagaimana cara meredam rasa rendah diri ini ya kak?",
+      "answer": "Halo sahabat yang baik. Perasaanmu sangat valid dan manusiawi. Namun ingat, hidup bukanlah perlombaan lari cepat dengan satu garis finis yang sama. Allah menetapkan maqom (kedudukan) dan waktu mekar setiap bunga secara unik. Fokuslah pada langkah kecil yang bisa kamu ambil hari ini. Kamu tidak terlambat, kamu sedang ditempa. Jangan biarkan layar media orang lain meredupkan cahaya prosesmu sendiri ya.",
+      "isAnswered": true,
+      "isPublic": true,
+      "createdAt": "2026-09-22T09:30:00Z",
+      "answeredAt": "2026-09-22T14:15:00Z"
+    },
+    {
+      "id": "cur-2",
+      "alias": "Hamba Allah - Cirebon",
+      "category": "Kecemasan & Ibadah",
+      "message": "Saya sering sekali merasa cemas berlebihan sampai susah khusyuk saat sholat. Pikiran selalu loncat ke skripsi dan masalah keluarga. Apakah ini tanda iman saya lemah kak Amel?",
+      "answer": "Sama sekali bukan pertanda imanmu lemah, sahabat. Kecemasan adalah sinyal biologis dan psikologis bahwa sistem sarafmu sedang kelebihan beban (overstimulated). Ketika pikiran melayang dalam sholat, jangan mencela dirimu. Tarik nafas lembut, sadari bahwa kamu sedang menghadap Sang Maha Penyayang, dan perlahan kembalikan fokus pada bacaan. Ibadah dalam keadaan berjuang melawan rasa cemas justru memiliki nilai kesabaran yang sangat mulia di mata Allah.",
+      "isAnswered": true,
+      "isPublic": true,
+      "createdAt": "2026-09-25T11:20:00Z",
+      "answeredAt": "2026-09-25T16:00:00Z"
+    },
+    {
+      "id": "cur-3",
+      "alias": "Pejuang Skripsi",
+      "category": "Akademik & Burnout",
+      "message": "Kak, bagaimana membedakan antara rasa malas biasa dengan kelelahan mental (burnout)? Rasanya ingin istirahat tapi merasa bersalah terus.",
+      "answer": "Rasa bersalah saat istirahat adalah tanda khas burnout! Malas biasanya disertai rasa santai, sedangkan burnout tetap dipenuhi kecemasan meskipun tubuh sedang tidak mengerjakan apa-apa. Tubuh dan jiwamu memiliki hak untuk beristirahat (\"Inna linafsika 'alaika haqqa\"). Berikan dirimu izin beristirahat tanpa syarat selama 1 hari penuh untuk mengisi ulang baterai jiwamu.",
+      "isAnswered": true,
+      "isPublic": true,
+      "createdAt": "2026-09-27T08:10:00Z",
+      "answeredAt": "2026-09-27T10:45:00Z"
+    }
+  ],
+  "articles": [
+    {
+      "id": "art-1",
+      "slug": "menemukan-thumaninah-di-era-digital",
+      "title": "Menemukan Ketenangan Jiwa (Thuma'ninah) di Tengah Riuhnya Notifikasi Digital",
+      "excerpt": "Di zaman serba cepat dan hiperkonektivitas, hati manusia rentan mengalami disonansi batin. Bagaimana konsep Thuma'ninah dalam Islam menjadi jangkar ketenangan mental mahasiswa siber?",
+      "content": "\nKecemasan modern sering kali bukan berakar dari kekurangan informasi, melainkan kelimpahan stimuli yang gagal kita saring. Mahasiswa dan generasi muda hari ini hidup di persimpangan dua dunia: tuntutan akademis yang dinamis dan arus perbandingan sosial di media maya.\n\n### Hakikat Thuma'ninah dalam Perspektif Psikologi Islam\nDalam literatur Islam, khususnya pandangan Imam Al-Ghazali dalam *Ihya' 'Ulumuddin*, hati (qalb) memiliki sifat berbolak-balik. Thuma'ninah adalah kondisi di mana hati telah melampaui fase keraguan (*syakk*) dan gejolak (*idhthirab*), lalu berlabuh dalam kepasrahan yang sadar kepada Allah Swt.\n\nKetika kita menarik napas dalam konseling, kita tidak hanya mengidentifikasi distorsi kognitif (pikiran otomatis negatif), tetapi juga menghubungkan kembali jiwa dengan Dzat Yang Maha Mengatur. \n\n### Tiga Langkah Membangun Jangkar Hening\n1. **Digital Fasting Terukur (Shoum Media)**: Mengalokasikan 30-60 menit sebelum tidur tanpa paparan layar biru, menggantinya dengan dzikir petang atau muhasabah harian.\n2. **Nafas Sadar & Tafakkur**: Saat kecemasan melonjak, ambil jeda 5 detik. Akui perasaan tanpa menghakiminya, lalu ingat ayat: *\"Alaa bidzikrillahi tathma'innul qulub\"* (Ingatlah, hanya dengan mengingat Allah hati menjadi tenang - QS. Ar-Ra'd: 28).\n3. **Menerima Ketidaksempurnaan Diri (Tawadhu' & Self-Compassion)**: Berhenti menuntut diri menjadi sempurna di mata algoritma. Cukup hadir secara utuh bagi proses belajar hari ini.\n    ",
+      "category": "Kesehatan Mental Islami",
+      "readTime": "4 menit baca",
+      "publishedAt": "24 September 2026",
+      "tags": [
+        "Thuma'ninah",
+        "Cyber Well-being",
+        "Tazkiyatun Nafs",
+        "BKI"
+      ]
+    },
+    {
+      "id": "art-2",
+      "slug": "integrasi-cbt-dan-tazkiyatun-nafs",
+      "title": "Ketika Logika CBT Bertemu Kesucian Jiwa: Integrasi Terapi Kognitif & Tazkiyatun Nafs",
+      "excerpt": "Membedah bagaimana restrukturisasi kognitif (CBT) dan pembersihan kalbu saling melengkapi dalam mengurai depresi ringan, luka batin masa lalu, dan kecemasan masa depan.",
+      "content": "\nBimbingan Konseling Islam (BKI) bukan sekadar menasehati orang yang sedang terpuruk dengan ayat-ayat normatif. Sebagai calon konselor di era modern, kita memadukan kehangatan metodologis psikologi modern dengan kedalaman metafisika Islam.\n\n### Titik Temu CBT dan Konsep Pikiran dalam Islam\nCognitive Behavioral Therapy (CBT) mengajarkan bahwa bukan situasi yang membuat seseorang menderita, melainkan cara pandang (*cognitive appraisal*) terhadap peristiwa tersebut. \n\nDalam Islam, hal ini beririsan langsung dengan konsep **Husnudzon** (berprasangka baik) dan melawan **Khawathir as-Su'** (bisikan pikiran negatif destruktif). Ketika seorang konseli menganggap dirinya 'tidak berharga karena gagal satu ujian', konseling Islam membantu mendongkel distorsi itu:\n- Meninjau bukti riil (metode CBT).\n- Menemukan kembali kehormatan eksistensial manusia sebagai *khalifatullah fil ardh* yang dinilai dari usahanya, bukan sekadar hasil fana.\n\n### Ruang Konseling sebagai Tempat Aman\nKonseli tidak membutuhkan hakim, mereka membutuhkan saksi yang mendengarkan dengan penuh penerimaan. Pendekatan konseling yang saya terapkan mengedepankan prinsip: dengarkan terlebih dahulu hingga air mata tuntas, baru kemudian menyulam harapan bersama.\n    ",
+      "category": "Kajian Konseling",
+      "readTime": "5 menit baca",
+      "publishedAt": "18 September 2026",
+      "tags": [
+        "CBT",
+        "Tazkiyatun Nafs",
+        "Metodologi Konseling",
+        "UIN Siber"
+      ]
+    },
+    {
+      "id": "art-3",
+      "slug": "etika-cyber-counseling-mahasiswa",
+      "title": "Cyber Counseling: Menjaga Kerahasiaan Klien di Ruang Konsultasi Tanpa Batas",
+      "excerpt": "Keunggulan kuliah di UIN Siber Syekh Nurjati Cirebon membuka ruang luas bagi layanan konseling daring. Namun, bagaimana etika dan kehangatan empati tetap terjaga lewat layar?",
+      "content": "\nSebagai mahasiswi BKI di lingkungan kampus berbasis siber, saya menyaksikan langsung pergeseran cara generasi Z mencari bantuan psikologis. Konseli kerap merasa lebih berani menumpahkan isi hatinya lewat pesan tertulis atau sesi virtual daripada harus duduk berhadap-hadapan di ruangan formal.\n\n### Mengapa Cyber Counseling Begitu Efektif?\n- **Menurunkan Hambatan Stigma**: Banyak orang enggan mendatangi ruang konseling fisik karena takut dicap 'lemah' atau 'bermasalah'. Layanan siber memberikan ruang aman bergradasi.\n- **Aksesibilitas Geografis**: Seseorang dari pelosok Cirebon, Indramayu, Majalengka, Kuningan (Ciayumajakuning) bahkan luar pulau dapat mengakses bimbingan konselor yang tepat.\n- **Dokumentasi Reflektif**: Komunikasi tertulis memungkinkan konseli membaca kembali kalimat penguatan dan rencana aksi yang telah disepakati bersama.\n\nKuncinya tetap satu: etika kerahasiaan (*confidentiality*) dan keikhlasan niat untuk menjadi pendengar yang amanah.\n    ",
+      "category": "Cyber Counseling",
+      "readTime": "3 menit baca",
+      "publishedAt": "10 September 2026",
+      "tags": [
+        "Cyber Counseling",
+        "Etika Konseling",
+        "UINSSC",
+        "Generasi Digital"
+      ]
+    }
+  ]
+}
