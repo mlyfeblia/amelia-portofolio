@@ -38,13 +38,10 @@ export default function ApproachSection() {
       className="py-20 md:py-28 border-b border-[var(--color-line)]"
       aria-labelledby="approach-heading"
     >
-      <div className="max-w-6xl mx-auto px-5 sm:px-8">
+      <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-10">
 
         {/* Section Header */}
         <div className="max-w-3xl mb-16">
-          <p className="text-xs sm:text-[13px] font-bold uppercase tracking-widest text-[var(--color-accent)] mb-3">
-            Metode & Pendekatan
-          </p>
           <h2
             id="approach-heading"
             className="text-3xl sm:text-4xl lg:text-[2.75rem] font-medium text-[var(--color-ink)] leading-tight mb-4"
@@ -57,7 +54,7 @@ export default function ApproachSection() {
           </p>
         </div>
 
-        {/* Pillars List — Clean, spacious, with smooth hover transitions */}
+        {/* Pillars List - Clean, spacious, with smooth hover transitions */}
         <ol
           className="space-y-0 divide-y divide-[var(--color-line)] border-t border-[var(--color-line)]"
           aria-label="Empat pilar pendekatan konseling"

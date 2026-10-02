@@ -1,5 +1,5 @@
 import React from 'react';
-import { Heart, Lock, Sparkles, BookOpen } from 'lucide-react';
+import { Heart, Lock, Compass, BookOpen } from 'lucide-react';
 
 export default function AboutSection() {
   return (
@@ -8,13 +8,10 @@ export default function AboutSection() {
       className="py-20 md:py-28 bg-[var(--color-surface)] border-b border-[var(--color-line)]"
       aria-labelledby="about-heading"
     >
-      <div className="max-w-6xl mx-auto px-5 sm:px-8">
+      <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-10">
 
         {/* Section Header */}
         <div className="max-w-3xl mb-14">
-          <p className="text-xs sm:text-[13px] font-bold uppercase tracking-widest text-[var(--color-accent)] mb-3">
-            Mengenal Konselor
-          </p>
           <h2
             id="about-heading"
             className="text-3xl sm:text-4xl lg:text-[2.75rem] font-medium text-[var(--color-ink)] leading-tight mb-6"
@@ -33,10 +30,10 @@ export default function AboutSection() {
           {/* Left Column: Narrative & Philosophy */}
           <div className="lg:col-span-7 space-y-6 text-base sm:text-lg text-[var(--color-ink-2)] leading-relaxed">
             <p>
-              Saya adalah mahasiswi aktif <strong className="text-[var(--color-ink)] font-semibold">Bimbingan Konseling Islam (BKI)</strong> di kampus pelopor siber nasional, <strong className="text-[var(--color-ink)] font-semibold">UIN Siber Syekh Nurjati Cirebon</strong>. Latar belakang ini membentuk sudut pandang saya bahwa konseling di era modern membutuhkan fleksibilitas digital tanpa pernah mengorbankan kehangatan manusiawi.
+              Saya adalah mahasiswi aktif <strong className="text-[var(--color-ink)] font-semibold">Bimbingan Konseling</strong> di <strong className="text-[var(--color-ink)] font-semibold">UIN Siber Syekh Nurjati Cirebon</strong> dengan latar belakang pendidikan keagamaan dari MAN 4 Cirebon. Latar belakang ini membentuk sudut pandang saya bahwa konseling membutuhkan empati mendalam dan fleksibilitas digital tanpa pernah mengorbankan kehangatan manusiawi.
             </p>
             <p>
-              Dalam setiap sesi, saya memadukan pendekatan kognitif perilaku (<em>Cognitive Behavioral Therapy</em>) dengan kearifan penyucian jiwa Islami (<em>Tazkiyatun Nafs</em>). Tujuannya bukan sekadar meredakan gejala cemas di permukaan, melainkan mengembalikan ketenteraman batin (<em>thuma&apos;ninah</em>) dan membantu Anda menemukan arah hidup yang lebih bermakna.
+              Didukung oleh pengalaman kerja di bidang pelayanan pelanggan, manajemen kasir, serta kepemimpinan pemuda sejak 2020, saya memadukan pendekatan komunikasi interpersonal yang adaptif dengan kearifan penyucian jiwa Islami (<em>Tazkiyatun Nafs</em>). Tujuannya adalah mengembalikan ketenteraman batin (<em>thuma&apos;ninah</em>) dan membantu Anda menemukan arah hidup yang lebih bermakna.
             </p>
 
             {/* Pull Quote with clean styling */}
@@ -48,23 +45,20 @@ export default function AboutSection() {
                 className="text-xl sm:text-2xl font-medium text-[var(--color-ink)] leading-snug italic"
                 style={{ fontFamily: 'var(--font-display)' }}
               >
-                &ldquo;Tugas konselor bukanlah memaksakan solusi, melainkan menyediakan lentera agar Anda dapat melihat jalan keluar Anda sendiri dengan terang.&rdquo;
+                &ldquo;Tugas pendamping bukanlah memaksakan solusi atau menghakimi masa lalu, melainkan menyalakan lentera agar Anda dapat melihat jalan keluar Anda sendiri dengan tenang.&rdquo;
               </p>
               <cite className="block not-italic text-sm font-semibold text-[var(--color-accent)] mt-3">
-                — Amelia, Konselor Sebaya BKI
+                Amelia, Mahasiswi Bimbingan Konseling
               </cite>
             </blockquote>
 
             <p>
-              Setiap cerita yang Anda bagikan diterima seutuhnya dengan prinsip <em>unconditional positive regard</em> — tidak ada penghakiman atas masa lalu atau keraguan Anda.
+              Setiap cerita yang Anda bagikan diterima seutuhnya dengan prinsip <em>unconditional positive regard</em>, amanah, privat, dan tanpa penghakiman.
             </p>
           </div>
 
           {/* Right Column: Key Principles Cards */}
           <div className="lg:col-span-5 space-y-4">
-            <p className="text-xs font-bold uppercase tracking-widest text-[var(--color-ink-4)] mb-2">
-              Prinsip Layanan Konseling
-            </p>
 
             {[
               {
@@ -78,7 +72,7 @@ export default function AboutSection() {
                 desc: 'Seluruh identitas, rekam percakapan, dan materi konseling dijaga ketat sesuai kode etik BKI.',
               },
               {
-                icon: Sparkles,
+                icon: Compass,
                 title: 'Sinergi Psikologi & Spiritualitas',
                 desc: 'Menemukan titik temu antara ikhtiar rasional-psikologis dan tawakkal penyejuk kalbu.',
               },

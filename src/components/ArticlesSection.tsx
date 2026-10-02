@@ -12,13 +12,10 @@ export default async function ArticlesSection() {
       className="py-20 md:py-28 border-b border-[var(--color-line)]"
       aria-labelledby="articles-heading"
     >
-      <div className="max-w-6xl mx-auto px-5 sm:px-8">
+      <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-10">
 
         {/* Section Header */}
         <div className="max-w-3xl mb-16">
-          <p className="text-xs sm:text-[13px] font-bold uppercase tracking-widest text-[var(--color-accent)] mb-3">
-            Tulisan &amp; Pemikiran BKI
-          </p>
           <h2
             id="articles-heading"
             className="text-3xl sm:text-4xl lg:text-[2.75rem] font-medium text-[var(--color-ink)] leading-tight mb-4"
@@ -31,7 +28,7 @@ export default async function ArticlesSection() {
           </p>
         </div>
 
-        {/* Articles List — Clean, spacious, with smooth micro-interactions */}
+        {/* Articles List - Clean, spacious, with smooth micro-interactions */}
         {articles.length === 0 ? (
           <div className="p-12 text-center border border-[var(--color-line)] rounded-2xl bg-[var(--color-surface)]">
             <BookOpen className="w-10 h-10 text-[var(--color-ink-dim)] mx-auto mb-3" aria-hidden="true" />
@@ -72,7 +69,7 @@ export default async function ArticlesSection() {
                       className="text-xl sm:text-2xl font-medium text-[var(--color-ink)] group-hover:text-[var(--color-accent)] transition-colors duration-200 leading-snug"
                       style={{ fontFamily: 'var(--font-display)' }}
                     >
-                      <Link href={`/artikel/${art.slug}`} className="hover:underline">
+                      <Link href={`/articles/${art.slug}`} className="hover:underline">
                         {art.title}
                       </Link>
                     </h3>
@@ -84,7 +81,7 @@ export default async function ArticlesSection() {
                   {/* Read Button */}
                   <div className="lg:col-span-2 flex lg:justify-end items-center pt-2 lg:pt-0">
                     <Link
-                      href={`/artikel/${art.slug}`}
+                      href={`/articles/${art.slug}`}
                       className="btn-secondary text-sm py-2.5 px-4 min-h-[44px]"
                       aria-label={`Baca artikel: ${art.title}`}
                     >

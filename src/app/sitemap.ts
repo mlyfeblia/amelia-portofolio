@@ -14,37 +14,37 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 1,
     },
     {
-      url: `${BASE_URL}/tentang`,
+      url: `${BASE_URL}/about`,
       lastModified: new Date(),
       changeFrequency: 'monthly',
       priority: 0.8,
     },
     {
-      url: `${BASE_URL}/layanan`,
+      url: `${BASE_URL}/services`,
       lastModified: new Date(),
       changeFrequency: 'monthly',
       priority: 0.8,
     },
     {
-      url: `${BASE_URL}/asesmen`,
+      url: `${BASE_URL}/assessment`,
       lastModified: new Date(),
       changeFrequency: 'monthly',
       priority: 0.8,
     },
     {
-      url: `${BASE_URL}/curhat`,
+      url: `${BASE_URL}/counseling`,
       lastModified: new Date(),
       changeFrequency: 'daily',
       priority: 0.9,
     },
     {
-      url: `${BASE_URL}/artikel`,
+      url: `${BASE_URL}/articles`,
       lastModified: new Date(),
       changeFrequency: 'weekly',
       priority: 0.8,
     },
     {
-      url: `${BASE_URL}/jadwal`,
+      url: `${BASE_URL}/schedule`,
       lastModified: new Date(),
       changeFrequency: 'monthly',
       priority: 0.9,
@@ -52,7 +52,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ];
 
   const articleRoutes: MetadataRoute.Sitemap = articles.map((art) => ({
-    url: `${BASE_URL}/artikel/${art.slug}`,
+    url: `${BASE_URL}/articles/${art.slug}`,
     lastModified: new Date(art.publishedAt),
     changeFrequency: 'monthly' as const,
     priority: 0.7,

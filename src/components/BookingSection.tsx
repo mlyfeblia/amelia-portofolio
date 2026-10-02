@@ -3,6 +3,7 @@
 import React, { useState, useId } from 'react';
 import { AlertCircle, CheckCircle, Shield, Video, MessageSquare, Users } from 'lucide-react';
 import { ConsultationCategory, CounselingMode } from '@/types';
+import { getBookingConfirmationWhatsAppUrl } from '@/lib/whatsapp';
 
 const CATEGORIES: ConsultationCategory[] = [
   'Manajemen Stres & Kecemasan',
@@ -13,10 +14,10 @@ const CATEGORIES: ConsultationCategory[] = [
 ];
 
 const TIME_SLOTS = [
-  '09:30 – 10:30 WIB (Pagi)',
-  '13:30 – 14:30 WIB (Siang)',
-  '16:00 – 17:00 WIB (Sore)',
-  '19:30 – 20:30 WIB (Malam)',
+  '09:30 - 10:30 WIB (Pagi)',
+  '13:30 - 14:30 WIB (Siang)',
+  '16:00 - 17:00 WIB (Sore)',
+  '19:30 - 20:30 WIB (Malam)',
 ];
 
 const MODES: { id: CounselingMode; label: string; desc: string; icon: typeof Video }[] = [
@@ -45,7 +46,7 @@ const DEFAULT: FormState = {
   category: 'Manajemen Stres & Kecemasan',
   mode: 'online_meet',
   date: '',
-  timeSlot: '16:00 – 17:00 WIB (Sore)',
+  timeSlot: '16:00 - 17:00 WIB (Sore)',
   notes: '',
 };
 
@@ -61,6 +62,7 @@ export default function BookingSection() {
   const [success, setSuccess] = useState<{
     code: string;
     name: string;
+    alias?: string;
     date: string;
     slot: string;
   } | null>(null);
@@ -88,6 +90,7 @@ export default function BookingSection() {
       setSuccess({
         code: data.data.code,
         name: data.data.name,
+        alias: data.data.alias || form.alias || undefined,
         date: data.data.date,
         slot: data.data.timeSlot,
       });
@@ -130,9 +133,13 @@ export default function BookingSection() {
 
           <div className="pt-2 flex flex-wrap justify-center gap-3">
             <a
-              href={`https://wa.me/6281234567890?text=${encodeURIComponent(
-                `Halo Kak Amel, saya telah mengajukan janji temu konseling dengan kode ${success.code}. Mohon konfirmasinya.`
-              )}`}
+              href={getBookingConfirmationWhatsAppUrl({
+                name: success.name,
+                alias: success.alias,
+                code: success.code,
+                date: success.date,
+                slot: success.slot,
+              })}
               target="_blank"
               rel="noopener noreferrer"
               className="btn-primary text-sm"

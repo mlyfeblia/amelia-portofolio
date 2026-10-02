@@ -1,5 +1,7 @@
 import React from 'react';
+import Image from 'next/image';
 import { ArrowRight, CheckCircle2 } from 'lucide-react';
+import { getGeneralWhatsAppUrl } from '@/lib/whatsapp';
 
 export default function HeroSection() {
   return (
@@ -7,23 +9,11 @@ export default function HeroSection() {
       className="pt-16 pb-20 md:pt-24 md:pb-28 border-b border-[var(--color-line)]"
       aria-labelledby="hero-heading"
     >
-      <div className="max-w-6xl mx-auto px-5 sm:px-8">
+      <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-10">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
 
-          {/* Left Column — Core Message */}
+          {/* Left Column | Core Message */}
           <div className="lg:col-span-7 space-y-8">
-
-            {/* Kicker badge */}
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--color-paper-2)] border border-[var(--color-line)]">
-              <span className="w-2 h-2 rounded-full bg-[var(--color-accent)] shrink-0" aria-hidden="true" />
-              <p
-                className="text-xs sm:text-[13px] font-semibold text-[var(--color-ink-3)] tracking-wider uppercase"
-                aria-label="Program studi dan institusi"
-              >
-                Bimbingan Konseling Islam · UIN Siber Cirebon
-              </p>
-            </div>
-
             {/* Main Headline */}
             <div className="space-y-5">
               <h1
@@ -38,7 +28,7 @@ export default function HeroSection() {
                 bisa diucapkan.
               </h1>
               <p className="text-lg sm:text-xl text-[var(--color-ink-2)] leading-relaxed max-w-xl">
-                Saya <strong className="text-[var(--color-ink)] font-semibold">Amelia (Amel)</strong> — konselor sebaya yang memadukan psikologi modern dengan kedalaman spiritual Islam (<em>Tazkiyatun Nafs</em>) di era digital.
+                Saya <strong className="text-[var(--color-ink)] font-semibold">Amelia (Amel)</strong>, konselor sebaya yang memadukan psikologi modern dengan kedalaman spiritual Islam (<em>Tazkiyatun Nafs</em>) di era digital.
               </p>
             </div>
 
@@ -67,7 +57,7 @@ export default function HeroSection() {
                 { label: 'Format Sesi', value: 'Online & Offline' },
               ].map((item) => (
                 <div key={item.label} className="space-y-1">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-[var(--color-ink-4)]">
+                  <p className="text-xs font-semibold text-[var(--color-ink-4)]">
                     {item.label}
                   </p>
                   <p className="text-[15px] font-semibold text-[var(--color-ink)]">
@@ -78,73 +68,70 @@ export default function HeroSection() {
             </div>
           </div>
 
-          {/* Right Column — Warm, Elegant Counselor Profile Card */}
+          {/* Right Column | Profile Card with Photo */}
           <div className="lg:col-span-5">
             <div
-              className="bg-[var(--color-surface)] border border-[var(--color-line)] rounded-xl p-8 sm:p-10 card-hover-lift shadow-sm relative overflow-hidden"
+              className="bg-[var(--color-surface)] border border-[var(--color-line)] rounded-2xl p-6 sm:p-8 card-hover-lift shadow-sm relative overflow-hidden"
               role="complementary"
               aria-label="Profil Amelia"
             >
-              {/* Top Avatar badge */}
+              {/* Photo & Identity */}
               <div className="flex flex-col items-center text-center">
-                <div
-                  className="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-[var(--color-accent-bg)] border-2 border-[var(--color-accent-line)] flex items-center justify-center mb-5 shadow-inner"
-                  role="img"
-                  aria-label="Foto inisial Amelia"
-                >
-                  <span
-                    className="text-4xl sm:text-5xl font-medium text-[var(--color-accent)] select-none"
-                    style={{ fontFamily: 'var(--font-display)' }}
-                  >
-                    A
-                  </span>
+                <div className="relative w-32 h-40 sm:w-36 sm:h-44 rounded-xl overflow-hidden shadow-md border-2 border-[var(--color-accent-border)] mb-4 bg-[var(--color-paper-2)]">
+                  <Image
+                    src="/amelia.webp"
+                    alt="Foto Profil Amelia, Mahasiswi Bimbingan Konseling UIN Siber Syekh Nurjati Cirebon"
+                    fill
+                    sizes="180px"
+                    className="object-cover object-top"
+                    priority
+                  />
                 </div>
 
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--color-accent-bg)] text-[var(--color-accent)] text-xs font-semibold mb-3">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--color-accent-soft)] text-[var(--color-accent)] text-xs font-semibold mb-2">
                   <CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" />
-                  Konselor Sebaya Aktif
+                  Mahasiswi Bimbingan Konseling (Sm. 3)
                 </div>
 
                 <h2
-                  className="text-2xl sm:text-3xl font-medium text-[var(--color-ink)] mb-1.5"
+                  className="text-2xl sm:text-3xl font-medium text-[var(--color-ink)] mb-1"
                   style={{ fontFamily: 'var(--font-display)' }}
                 >
-                  Amelia
+                  Amelia (Amel)
                 </h2>
-                <p className="text-base text-[var(--color-ink-3)] font-medium mb-2">
-                  Akrab disapa <span className="text-[var(--color-accent)] font-semibold">Amel</span>
+                <p className="text-sm text-[var(--color-ink-3)] font-medium mb-1">
+                  UIN Siber Syekh Nurjati Cirebon
                 </p>
-                <p className="text-sm text-[var(--color-ink-4)] max-w-xs leading-relaxed">
-                  Jurusan Bimbingan Konseling Islam (BKI)<br />
-                  Universitas Islam Negeri Siber Syekh Nurjati Cirebon
+                <p className="text-xs text-[var(--color-ink-4)] max-w-xs leading-relaxed">
+                  Praktisi Layanan Pelanggan &amp; Kasir sejak 2020 · Duta Inspirasi Indonesia Batch 19
                 </p>
               </div>
 
               {/* Gentle separator */}
-              <div className="my-6 border-t border-[var(--color-line)]" />
+              <div className="my-5 border-t border-[var(--color-line)]" />
 
               {/* Quick info list */}
-              <ul className="space-y-3 text-sm text-[var(--color-ink-2)]" role="list">
+              <ul className="space-y-2.5 text-xs sm:text-sm text-[var(--color-ink-2)]" role="list">
                 <li className="flex items-center justify-between">
-                  <span className="text-[var(--color-ink-4)]">Domisili Layanan</span>
-                  <span className="font-semibold text-[var(--color-ink)]">Cirebon & Seluruh Indonesia (Online)</span>
+                  <span className="text-[var(--color-ink-4)]">Domisili</span>
+                  <span className="font-semibold text-[var(--color-ink)]">Cirebon &amp; Daring</span>
                 </li>
                 <li className="flex items-center justify-between">
-                  <span className="text-[var(--color-ink-4)]">Durasi Sesi</span>
-                  <span className="font-semibold text-[var(--color-ink)]">60 Menit / Konsultasi</span>
+                  <span className="text-[var(--color-ink-4)]">WhatsApp</span>
+                  <a
+                    href={getGeneralWhatsAppUrl()}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-semibold text-[var(--color-accent)] hover:underline"
+                  >
+                    +62 822-1044-5785
+                  </a>
                 </li>
                 <li className="flex items-center justify-between">
                   <span className="text-[var(--color-ink-4)]">Kode Etik</span>
                   <span className="font-semibold text-[var(--color-accent)]">100% Kerahasiaan Terjamin</span>
                 </li>
               </ul>
-
-              {/* Bottom welcoming note */}
-              <div className="mt-6 pt-4 bg-[var(--color-paper-2)] -mx-8 sm:-mx-10 -mb-8 sm:-mb-10 px-8 sm:px-10 py-4 border-t border-[var(--color-line)] text-center">
-                <p className="text-xs sm:text-[13px] text-[var(--color-ink-3)] leading-relaxed">
-                  Terbuka untuk keluh kesah akademik, quarter-life crisis, kecemasan, dan pencarian jati diri.
-                </p>
-              </div>
             </div>
           </div>
 

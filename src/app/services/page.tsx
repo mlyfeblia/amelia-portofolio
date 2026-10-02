@@ -5,90 +5,106 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 
 export const metadata: Metadata = {
-  title: 'Layanan & Pendekatan Konseling — Amelia BKI',
+  title: 'Layanan',
   description:
-    'Layanan bimbingan konseling Islam bersama Amelia: format sesi daring Google Meet, chat intensif, tatap muka di Cirebon, serta integrasi CBT dan Tazkiyatun Nafs.',
+    'Layanan bimbingan konseling sebaya bersama Amelia. Pilihan sesi fleksibel via Google Meet, Chat terjadwal, dan tatap muka di Cirebon yang hangat dan rahasia.',
 };
 
 const pillars = [
   {
     num: '01',
-    title: 'Tazkiyatun Nafs (Penyucian Kalbu)',
-    desc: 'Membimbing konseli mengenali akar kegelisahan batin, keputusasaan, atau rasa bersalah yang berkepanjangan, lalu mengarahkannya menuju ketenteraman jiwa (thuma\'ninah) melalui tafakkur dan muhasabah yang terarah.',
+    title: 'Ruang Dengar Tanpa Penghakiman',
+    desc: 'Kamu bebas menceritakan kerapuhanmu apa adanya. Aku hadir untuk mendengar dengan utuh tanpa memberikan stigma atau tatapan menghakimi.',
   },
   {
     num: '02',
-    title: 'Active Empathetic Listening',
-    desc: 'Ruang aman di mana konseli bebas menumpahkan segala keluh kesah, keraguan diri, dan kelelahan mental tanpa rasa takut dihakimi, dicap buruk, atau digurui.',
+    title: 'Kombinasi Logika CBT & Nilai Hati',
+    desc: 'Membedah pikiran yang membuatmu cemas dengan metode ilmiah, sekaligus menyiram batin dengan kedamaian spiritual dan rasa syukur.',
   },
   {
     num: '03',
-    title: 'Restrukturisasi Kognitif Islami',
-    desc: 'Memadukan teknik Cognitive Behavioral Therapy (CBT) dengan prinsip husnudzon (berprasangka baik kepada Allah dan kehidupan), mengurai pola pikir otomatis yang melumpuhkan menjadi sudut pandang yang realistis dan menenangkan.',
+    title: 'Amanah Kerahasiaan 100%',
+    desc: 'Ceritamu aman di sini. Semua identitas dan obrolan selama sesi dijaga ketat sesuai kode etik bimbingan konseling profesional.',
   },
   {
     num: '04',
-    title: 'Cyber Counseling Beretika',
-    desc: 'Memanfaatkan keunggulan teknologi digital agar konseling dapat diakses secara fleksibel dari mana saja, dengan tetap mematuhi protokol kerahasiaan data pribadi konseli secara ketat.',
+    title: 'Solusi Bertahap yang Realistis',
+    desc: 'Kita tidak mencari jalan pintas yang muluk-muluk. Bersama, kita susun langkah kecil yang ramah dan nyata untuk kamu jalani hari demi hari.',
   },
 ];
 
 const formats = [
   {
-    title: 'Tatap Muka Virtual (Google Meet)',
-    dur: '60 Menit per sesi',
-    desc: 'Percakapan video interaktif dua arah. Cocok untuk Anda yang ingin berdiskusi tatap muka dari kenyamanan ruang pribadi Anda.',
+    title: 'Google Meet Virtual',
+    dur: '60 Menit · Tatap Muka Daring',
+    desc: 'Cocok buat kamu yang nyaman berdiskusi lewat tatap muka langsung dari kamar atau sudut tenang rumahmu.',
   },
   {
-    title: 'Konseling Teks Terjadwal',
-    dur: '60 Menit per sesi',
-    desc: 'Sesi bimbingan intensif melalui aplikasi perpesanan secara real-time. Cocok bagi Anda yang lebih leluasa mengekspresikan perasaan lewat tulisan.',
+    title: 'Chat Terjadwal',
+    dur: '60 Menit · Komunikasi Teks',
+    desc: 'Pilihan pas bagi kamu yang lebih leluasa dan tenang mengekspresikan isi hati lewat ketikan kata demi kata.',
   },
   {
-    title: 'Tatap Muka Langsung (Cirebon)',
-    dur: '60 Menit per sesi',
-    desc: 'Bertemu langsung di area kampus UIN Siber Syekh Nurjati Cirebon pada jadwal yang disepakati bersama.',
+    title: 'Tatap Muka di Kampus',
+    dur: '60 Menit · Wilayah Cirebon',
+    desc: 'Pertemuan langsung di area kampus UIN Siber Cirebon bagi sahabat yang berada di domisili sekitar.',
   },
 ];
 
 const steps = [
-  { step: '1', title: 'Pilih Jadwal & Format', desc: 'Isi formulir reservasi dengan memilih waktu yang paling tenang bagi Anda.' },
-  { step: '2', title: 'Konfirmasi WhatsApp', desc: 'Amel akan menghubungi Anda dalam 1x24 jam untuk verifikasi jadwal dan mengirim tautan sesi.' },
-  { step: '3', title: 'Sesi Konseling 60 Menit', desc: 'Sesi privat yang difokuskan untuk mendengarkan, membedah masalah, dan merumuskan langkah penanganan.' },
-  { step: '4', title: 'Rangkuman & Refleksi', desc: 'Konseli memperoleh ringkasan poin muhasabah serta tindak lanjut praktis untuk dipraktikkan.' },
+  {
+    step: '1',
+    title: 'Pilih Jadwal Sesi',
+    desc: 'Tentukan hari, jam, dan format obrolan yang paling nyaman buat rutinitasmu.',
+  },
+  {
+    step: '2',
+    title: 'Konfirmasi WhatsApp',
+    desc: 'Amel akan menghubungimu secara privat untuk memastikan detail waktu sesi konseling.',
+  },
+  {
+    step: '3',
+    title: 'Sesi Curhat Bersama',
+    desc: 'Obrolan santai 60 menit untuk menumpahkan beban pikiran dan memetakan jalan keluar.',
+  },
+  {
+    step: '4',
+    title: 'Rangkuman Refleksi',
+    desc: 'Dapatkan catatan kecil penyemangat dan langkah praktis yang bisa kamu bawa pulang.',
+  },
 ];
 
-export default function LayananPage() {
+export default function ServicesPage() {
   return (
     <>
       <Navbar />
-      <main id="main-content" className="min-h-screen py-16 sm:py-20">
-        <div className="max-w-5xl mx-auto px-6 space-y-16">
+      <main id="main-content" className="min-h-screen pt-8 sm:pt-10 md:pt-12 pb-16 sm:pb-20 md:pb-24">
+        <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-10 space-y-16 lg:space-y-20">
 
           {/* Intro */}
-          <section className="space-y-4 max-w-3xl">
+          <section className="space-y-4 max-w-3xl animate-fade-in-up">
             <h1
-              className="text-3xl sm:text-4xl font-medium text-[var(--color-ink)]"
+              className="text-3xl sm:text-4xl lg:text-[2.65rem] font-medium text-[var(--color-ink)] leading-tight"
               style={{ fontFamily: 'var(--font-display)' }}
             >
-              Layanan &amp; Pendekatan Konseling
+              Layanan &amp; Format Konseling
             </h1>
             <p className="text-lg text-[var(--color-ink-muted)] leading-relaxed">
-              Memadukan standar keilmuan bimbingan konseling modern dengan kearifan nilai spiritual Islam, dirancang untuk mendampingi Anda melintasi masa-masa sulit dengan tenang.
+              Memadukan ilmu bimbingan konseling modern dengan kehangatan nilai Islam. Dirancang khusus untuk menemanimu melewati masa-masa berat dengan lebih tenang.
             </p>
           </section>
 
           {/* 4 Pillars */}
-          <section className="space-y-8 pt-8 border-t border-[var(--color-paper-border)]">
+          <section className="space-y-8 pt-8 border-t border-[var(--color-paper-border)]" data-reveal>
             <div className="max-w-2xl">
               <h2
                 className="text-2xl font-medium text-[var(--color-ink)]"
                 style={{ fontFamily: 'var(--font-display)' }}
               >
-                Empat Pilar Pendekatan
+                Empat Pilar Pendekatan Amel
               </h2>
               <p className="text-sm text-[var(--color-ink-muted)] mt-1">
-                Landasan metodologi yang digunakan dalam setiap sesi bimbingan bersama Amel.
+                Prinsip utama yang selalu aku jaga dalam setiap sesi bimbingan bersama teman-teman konseli.
               </p>
             </div>
 
@@ -96,11 +112,9 @@ export default function LayananPage() {
               {pillars.map((p) => (
                 <div
                   key={p.num}
-                  className="p-6 bg-[var(--color-surface)] border border-[var(--color-paper-border)] rounded-lg space-y-2"
+                  className="p-6 bg-[var(--color-surface)] border border-[var(--color-paper-border)] rounded-xl space-y-2 card-interactive"
                 >
-                  <span
-                    className="text-sm font-semibold text-[var(--color-accent)] block"
-                  >
+                  <span className="text-sm font-semibold text-[var(--color-accent)] block">
                     Pilar {p.num}
                   </span>
                   <h3 className="text-lg font-semibold text-[var(--color-ink)]">
@@ -115,7 +129,7 @@ export default function LayananPage() {
           </section>
 
           {/* Formats */}
-          <section className="space-y-8 pt-12 border-t border-[var(--color-paper-border)]">
+          <section className="space-y-8 pt-12 border-t border-[var(--color-paper-border)]" data-reveal>
             <div className="max-w-2xl">
               <h2
                 className="text-2xl font-medium text-[var(--color-ink)]"
@@ -124,7 +138,7 @@ export default function LayananPage() {
                 Format Konsultasi yang Tersedia
               </h2>
               <p className="text-sm text-[var(--color-ink-muted)] mt-1">
-                Tersedia pilihan sesi yang fleksibel sesuai kenyamanan dan kebutuhan Anda.
+                Pilih format obrolan yang paling nyaman dan sesuai dengan kesiapanmu.
               </p>
             </div>
 
@@ -132,7 +146,7 @@ export default function LayananPage() {
               {formats.map((f, i) => (
                 <div
                   key={i}
-                  className="p-6 bg-[var(--color-surface)] border border-[var(--color-paper-border)] rounded-lg space-y-3 flex flex-col justify-between"
+                  className="p-6 bg-[var(--color-surface)] border border-[var(--color-paper-border)] rounded-xl space-y-3 flex flex-col justify-between card-interactive"
                 >
                   <div>
                     <h3 className="text-base font-semibold text-[var(--color-ink)]">
@@ -146,7 +160,7 @@ export default function LayananPage() {
                     </p>
                   </div>
                   <div className="pt-4 border-t border-[var(--color-paper-border)]">
-                    <Link href="/jadwal" className="text-xs font-semibold text-[var(--color-accent)] hover:underline">
+                    <Link href="/schedule" className="text-xs font-semibold text-[var(--color-accent)] hover:underline">
                       Pilih format ini &rarr;
                     </Link>
                   </div>
@@ -156,22 +170,22 @@ export default function LayananPage() {
           </section>
 
           {/* Flow of Counseling */}
-          <section className="space-y-8 pt-12 border-t border-[var(--color-paper-border)]">
+          <section className="space-y-8 pt-12 border-t border-[var(--color-paper-border)]" data-reveal>
             <div className="max-w-2xl">
               <h2
                 className="text-2xl font-medium text-[var(--color-ink)]"
                 style={{ fontFamily: 'var(--font-display)' }}
               >
-                Alur Sesi Bimbingan
+                Alur Sederhana Sesi Bimbingan
               </h2>
               <p className="text-sm text-[var(--color-ink-muted)] mt-1">
-                Proses sederhana dan transparan sejak pendaftaran hingga sesi selesai.
+                Proses mudah dan transparan sejak awal mendaftar sampai sesi obrolan selesai.
               </p>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
               {steps.map((s) => (
-                <div key={s.step} className="p-5 bg-[var(--color-surface)] border border-[var(--color-paper-border)] rounded-lg space-y-2">
+                <div key={s.step} className="p-5 bg-[var(--color-surface)] border border-[var(--color-paper-border)] rounded-xl space-y-2 card-interactive">
                   <span
                     className="w-7 h-7 rounded-full bg-[var(--color-accent-soft)] text-[var(--color-accent)] font-semibold text-xs flex items-center justify-center"
                     aria-hidden="true"
@@ -190,7 +204,7 @@ export default function LayananPage() {
           </section>
 
           {/* Ethical Commitment & CTA */}
-          <section className="p-8 bg-[var(--color-surface)] border border-[var(--color-paper-border)] rounded-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+          <section className="p-8 bg-[var(--color-surface)] border border-[var(--color-paper-border)] rounded-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6 card-interactive" data-reveal>
             <div className="space-y-1">
               <h2
                 className="text-xl font-medium text-[var(--color-ink)]"
@@ -199,10 +213,10 @@ export default function LayananPage() {
                 Jaminan Kerahasiaan Terjaga Penuh
               </h2>
               <p className="text-sm text-[var(--color-ink-muted)] max-w-xl">
-                Seluruh percakapan, data pribadi, dan topik konseling dilindungi sesuai kode etik Bimbingan Konseling Islam.
+                Seluruh percakapan, data pribadi, dan topik konseling dilindungi sepenuhnya sesuai kode etik Bimbingan Konseling.
               </p>
             </div>
-            <Link href="/jadwal" className="btn-primary text-sm shrink-0">
+            <Link href="/schedule" className="btn-primary text-sm shrink-0">
               Jadwalkan Sesi Sekarang
             </Link>
           </section>

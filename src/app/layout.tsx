@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Plus_Jakarta_Sans, Newsreader } from 'next/font/google';
 import Script from 'next/script';
+import ScrollRevealProvider from '@/components/ScrollRevealProvider';
 import './globals.css';
 
 // ── Fonts ────────────────────────────────────────────────────────
@@ -14,7 +15,7 @@ const jakarta = Plus_Jakarta_Sans({
 
 const newsreader = Newsreader({
   subsets: ['latin'],
-  style: ['normal'],      // roman only — italic display headers are a design anti-pattern
+  style: ['normal'],      // roman only - italic display headers are a design anti-pattern
   weight: ['400', '500', '600'],
   variable: '--font-display',
   display: 'swap',
@@ -23,28 +24,38 @@ const newsreader = Newsreader({
 
 // ── Constants ─────────────────────────────────────────────────────
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://mlyfeblia.vercel.app';
-const SITE_NAME = 'Amelia — Bimbingan Konseling Islam';
+const SITE_NAME = 'Amelia';
 const DEFAULT_DESC =
-  'Portofolio resmi Amelia (Amel), mahasiswi Bimbingan Konseling Islam UIN Siber Syekh Nurjati Cirebon. Konseling islami berbasis Tazkiyatun Nafs, cyber counseling, dan edukasi kesehatan mental generasi digital.';
+  'Portofolio resmi Amelia (Amel), mahasiswi Bimbingan Konseling UIN Siber Syekh Nurjati Cirebon. Berdedikasi dan berpengalaman dalam pelayanan pelanggan, operasional kasir, serta kepemimpinan organisasi pemuda dan konseling sejak 2020.';
 
 // ── Root Metadata ─────────────────────────────────────────────────
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),
   title: {
-    default: `${SITE_NAME} | UIN Siber Syekh Nurjati Cirebon`,
-    template: `%s | ${SITE_NAME}`,
+    default: 'Amelia | Portofolio & Konseling',
+    template: '%s | Amelia',
   },
   description: DEFAULT_DESC,
   keywords: [
-    'Amelia', 'Amel', 'Bimbingan Konseling Islam', 'BKI',
-    'UIN Siber Syekh Nurjati Cirebon', 'UINSSC', 'Cyber Counseling',
-    'Kesehatan Mental Islami', 'Tazkiyatun Nafs', 'Konseling Online',
-    'Konselor Sebaya', 'Konseling Cirebon', 'Quarter Life Crisis',
-    'Stres Akademik', 'Psikologi Islam',
+    'Amelia', 'Amel', 'Bimbingan Konseling', 'BKI',
+    'UIN Siber Syekh Nurjati Cirebon', 'UINSSC', 'MAN 4 Cirebon',
+    'Customer Service', 'Layanan Pelanggan', 'Kasir Retail',
+    'Duta Inspirasi Indonesia', 'Duta Inisiatif Jawa Barat',
+    'Cyber Counseling', 'Kesehatan Mental', 'Tazkiyatun Nafs',
+    'Konselor Sebaya', 'Konseling Cirebon', 'Public Speaking',
   ],
   authors: [{ name: 'Amelia', url: BASE_URL }],
   creator: 'Amelia',
-  publisher: 'Amelia — BKI UIN Siber Syekh Nurjati Cirebon',
+  publisher: 'Amelia | UIN Siber Syekh Nurjati Cirebon',
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: '32x32' },
+      { url: '/icon.png', sizes: '512x512', type: 'image/png' },
+    ],
+    apple: [
+      { url: '/apple-icon.png', sizes: '180x180', type: 'image/png' },
+    ],
+  },
 
   // Canonical
   alternates: {
@@ -59,17 +70,17 @@ export const metadata: Metadata = {
     type: 'profile',
     locale: 'id_ID',
     url: BASE_URL,
-    siteName: SITE_NAME,
-    title: `${SITE_NAME} | Konseling Islami & Cyber Counseling`,
+    siteName: 'Amelia',
+    title: 'Amelia | Portofolio & Konseling',
     description: DEFAULT_DESC,
     firstName: 'Amelia',
-    username: 'amel-bki',
+    username: 'amelia',
     images: [
       {
-        url: `${BASE_URL}/og-image.png`,
+        url: `${BASE_URL}/amelia.webp`,
         width: 1200,
-        height: 630,
-        alt: 'Amelia — Bimbingan Konseling Islam UIN Siber Syekh Nurjati Cirebon',
+        height: 1500,
+        alt: 'Foto Profil Amelia, Mahasiswi Bimbingan Konseling UIN Siber Syekh Nurjati Cirebon',
       },
     ],
   },
@@ -77,9 +88,9 @@ export const metadata: Metadata = {
   // Twitter / X Card
   twitter: {
     card: 'summary_large_image',
-    title: `${SITE_NAME} | Konseling Islami & Cyber Counseling`,
+    title: 'Amelia | Portofolio & Konseling',
     description: DEFAULT_DESC,
-    images: [`${BASE_URL}/og-image.png`],
+    images: [`${BASE_URL}/amelia.webp`],
   },
 
   // Robots
@@ -101,7 +112,7 @@ export const metadata: Metadata = {
   },
 
   // App
-  applicationName: SITE_NAME,
+  applicationName: 'Amelia',
   category: 'education',
 };
 
@@ -124,7 +135,11 @@ const personJsonLd = {
   alternateName: 'Amel',
   description: DEFAULT_DESC,
   url: BASE_URL,
-  jobTitle: 'Mahasiswi Bimbingan Konseling Islam',
+  image: `${BASE_URL}/amelia.webp`,
+  email: 'mailto:mlyfeblia150207@gmail.com',
+  telephone: '+6282210445785',
+  sameAs: ['https://linkedin.com/in/amelia'],
+  jobTitle: 'Mahasiswi Bimbingan Konseling',
   affiliation: {
     '@type': 'EducationalOrganization',
     name: 'Universitas Islam Negeri Siber Syekh Nurjati Cirebon',
@@ -138,12 +153,14 @@ const personJsonLd = {
     },
   },
   knowsAbout: [
-    'Bimbingan Konseling Islam',
+    'Bimbingan Konseling',
+    'Customer Service & Pelayanan Pelanggan',
+    'Manajemen Kasir & Laporan Keuangan',
+    'Microsoft Office (Word, Excel)',
+    'Public Speaking & Komunikasi Efektif',
+    'Konten Edukasi Digital',
     'Cyber Counseling',
     'Tazkiyatun Nafs',
-    'Cognitive Behavioral Therapy',
-    'Kesehatan Mental Islam',
-    'Quarter Life Crisis',
   ],
   address: {
     '@type': 'PostalAddress',
@@ -168,7 +185,7 @@ const webSiteJsonLd = {
     '@type': 'SearchAction',
     target: {
       '@type': 'EntryPoint',
-      urlTemplate: `${BASE_URL}/artikel?q={search_term_string}`,
+      urlTemplate: `${BASE_URL}/articles?q={search_term_string}`,
     },
     'query-input': 'required name=search_term_string',
   },
@@ -199,14 +216,15 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-screen antialiased">
-        {/* Skip to main content — WCAG 2.4.1 Bypass Blocks */}
+        <ScrollRevealProvider />
+        {/* Skip to main content - WCAG 2.4.1 Bypass Blocks */}
         <a href="#main-content" className="skip-nav">
           Lewati ke konten utama
         </a>
 
         {children}
 
-        {/* JSON-LD — structured data for rich results */}
+        {/* JSON-LD - structured data for rich results */}
         <Script
           id="json-ld-person"
           type="application/ld+json"

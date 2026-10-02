@@ -2,7 +2,7 @@
 
 /*
  * ═══════════════════════════════════════════════════════════════
- * Design System — Amelia Portofolio
+ * Design System | Amelia Portofolio
  * Bimbingan Konseling Islam · UIN Siber Syekh Nurjati Cirebon
  * Human Craft · Disciplined Typography · No AI Slop
  * ═══════════════════════════════════════════════════════════════
@@ -47,7 +47,6 @@
 
   html {
     overflow-x: clip;
-    scroll-behavior: smooth;
     text-size-adjust: 100%;
     -webkit-text-size-adjust: 100%;
   }
@@ -118,7 +117,7 @@
 }
 
 .btn-primary:active {
-  transform: translateY(0);
+  transform: scale(0.98);
   box-shadow: 0 1px 3px rgba(26, 86, 60, 0.15);
 }
 
@@ -148,7 +147,7 @@
 }
 
 .btn-secondary:active {
-  transform: translateY(0);
+  transform: scale(0.98);
 }
 
 .btn-white {
@@ -258,6 +257,112 @@ select.form-input {
   padding-right: 2.25rem !important;
 }
 
+/* ══════════════════════════════════════════════════════════════ */
+/* Custom Themed Scrollbar (Sleek, Responsive & Elegant)          */
+/* ══════════════════════════════════════════════════════════════ */
+
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-paper);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(26, 86, 60, 0.25);
+  border-radius: 9999px;
+  transition: background var(--dur-fast) var(--ease-smooth);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(26, 86, 60, 0.5);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(26, 86, 60, 0.28) var(--color-paper);
+}
+
+/* ══════════════════════════════════════════════════════════════ */
+/* Micro-Interactions, Smooth Transitions & Animations            */
+/* ══════════════════════════════════════════════════════════════ */
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Stagger animation utilities */
+.delay-75  { animation-delay: 75ms; }
+.delay-150 { animation-delay: 150ms; }
+.delay-225 { animation-delay: 225ms; }
+.delay-300 { animation-delay: 300ms; }
+
+/* Interactive Card Elevation & Micro-transitions */
+.card-interactive {
+  transition: transform 0.28s var(--ease-smooth), box-shadow 0.28s var(--ease-smooth), border-color 0.28s var(--ease-smooth);
+}
+
+@media (hover: hover) {
+  .card-interactive:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 24px -4px rgba(25, 40, 32, 0.08), 0 4px 8px -4px rgba(25, 40, 32, 0.04);
+    border-color: var(--color-accent-border);
+  }
+}
+
+/* Scroll Reveal Base Classes */
+.reveal-init,
+[data-reveal] {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 0.55s cubic-bezier(0.16, 1, 0.3, 1), transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+
+.reveal-active,
+[data-reveal].revealed,
+.reveal-init.revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -266,5 +371,11 @@ select.form-input {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+  .reveal-init,
+  [data-reveal] {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
   }
 }

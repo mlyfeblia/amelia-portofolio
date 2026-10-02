@@ -40,7 +40,15 @@ async function seed() {
             ${art.publishedAt},
             ${JSON.stringify(art.tags || [])}::jsonb
           )
-          ON CONFLICT (id) DO NOTHING;
+          ON CONFLICT (id) DO UPDATE SET
+            slug = EXCLUDED.slug,
+            title = EXCLUDED.title,
+            excerpt = EXCLUDED.excerpt,
+            content = EXCLUDED.content,
+            category = EXCLUDED.category,
+            read_time = EXCLUDED.read_time,
+            published_at = EXCLUDED.published_at,
+            tags = EXCLUDED.tags;
         `;
       }
     }

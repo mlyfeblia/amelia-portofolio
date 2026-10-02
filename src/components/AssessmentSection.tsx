@@ -1,7 +1,9 @@
 'use client';
 
 import React, { useState, useCallback } from 'react';
-import { ArrowRight, RotateCcw, CheckCircle } from 'lucide-react';
+import Link from 'next/link';
+import { ArrowRight, RotateCcw, CheckCircle, MessageCircle } from 'lucide-react';
+import { getAssessmentWhatsAppUrl } from '@/lib/whatsapp';
 
 interface Question {
   id: number;
@@ -16,7 +18,7 @@ const questions: Question[] = [
     dimension: 'Kondisi Kognitif & Pikiran',
     question: 'Bagaimana ritme pikiran Anda dalam 7 hari terakhir?',
     options: [
-      { text: 'Tenang dan jernih — fokus terjaga, rutinitas terlaksana dengan baik.', score: 3 },
+      { text: 'Tenang dan jernih, fokus terjaga, dan rutinitas terlaksana dengan baik.', score: 3 },
       { text: 'Sering overthinking dan cemas sesekali, namun masih mampu beraktivitas.', score: 2 },
       { text: 'Pikiran terasa bising, kalut, dan sangat sulit untuk menemukan ketenangan.', score: 1 },
     ],
@@ -36,8 +38,8 @@ const questions: Question[] = [
     dimension: 'Ketenangan Jiwa & Spiritualitas',
     question: 'Bagaimana perasaan Anda saat berada dalam keheningan atau menjalankan ibadah?',
     options: [
-      { text: "Merasakan thuma'ninah — ibadah dan refleksi menjadi sumber kedamaian utama.", score: 3 },
-      { text: 'Fluktuatif — terkadang tenang, namun sering tergesa-gesa dan kurang fokus.', score: 2 },
+      { text: "Merasakan thuma'ninah, ibadah dan refleksi menjadi sumber kedamaian utama.", score: 3 },
+      { text: 'Fluktuatif, terkadang tenang namun sering tergesa-gesa dan kurang fokus.', score: 2 },
       { text: 'Hampa, gelisah, atau dibayangi rasa bersalah dan ketakutan yang tak kunjung reda.', score: 1 },
     ],
   },
@@ -46,9 +48,39 @@ const questions: Question[] = [
     dimension: 'Dukungan & Ruang Berbagi',
     question: 'Apakah Anda memiliki tempat atau orang yang aman untuk berbagi isi hati tanpa dihakimi?',
     options: [
-      { text: 'Ada — sahabat atau keluarga yang selalu siap mendengar dan memvalidasi perasaan.', score: 3 },
+      { text: 'Ada, sahabat atau keluarga selalu siap mendengar dan memvalidasi perasaan.', score: 3 },
       { text: 'Hanya sebagian kecil yang diceritakan; sisanya saya simpan rapat sendirian.', score: 2 },
-      { text: 'Tidak ada sama sekali — saya memikul semua beban dan kesedihan sendirian.', score: 1 },
+      { text: 'Tidak ada sama sekali, saya memikul semua beban dan kesedihan sendirian.', score: 1 },
+    ],
+  },
+  {
+    id: 5,
+    dimension: 'Manajemen Energi & Istirahat',
+    question: 'Bagaimana kualitas tidur dan tingkat kelelahan fisik maupun mental yang Anda rasakan?',
+    options: [
+      { text: 'Tidur cukup dan teratur, bangun dengan energi yang siap memulai hari.', score: 3 },
+      { text: 'Terkadang sulit tidur atau sering terjaga, lelah di sore hari namun masih terkendali.', score: 2 },
+      { text: 'Sangat kelelahan (burnout), insomnia berulang, bangun tidur tetap merasa lesu.', score: 1 },
+    ],
+  },
+  {
+    id: 6,
+    dimension: 'Penerimaan Diri & Ekspektasi',
+    question: 'Saat hasil yang dicapai belum sesuai dengan ekspektasi pribadi, apa reaksi Anda?',
+    options: [
+      { text: 'Memahami bahwa kegagalan adalah proses belajar dan tetap menghargai usaha sendiri.', score: 3 },
+      { text: 'Sempat membandingkan diri dengan pencapaian orang lain, meski akhirnya bisa menerima.', score: 2 },
+      { text: 'Merasa diri tidak berharga, tenggelam dalam rasa bersalah dan minder berkepanjangan.', score: 1 },
+    ],
+  },
+  {
+    id: 7,
+    dimension: 'Kejelasan Arah & Harapan',
+    question: 'Bagaimana pandangan dan rasa optimisme Anda terhadap langkah masa depan saat ini?',
+    options: [
+      { text: 'Memiliki visi yang cukup terarah dan optimis melangkah setahap demi setahap.', score: 3 },
+      { text: 'Terkadang diliputi keraguan tentang pilihan studi atau karier, namun tetap berjalan.', score: 2 },
+      { text: 'Merasa tersesat, masa depan terasa menakutkan, dan bingung harus melangkah ke mana.', score: 1 },
     ],
   },
 ];
@@ -63,32 +95,32 @@ interface Result {
 
 const results: Result[] = [
   {
-    range: [10, 12],
-    level: 'Jiwa Cukup Seimbang & Adaptif',
-    category: "Fase Nafs Muthma'innah",
+    range: [17, 21],
+    level: 'Jiwa Stabil & Adaptif',
+    category: "Fase Nafs Muthma'innah (Hati yang Tenang)",
     body: 'Kondisi mental dan spiritual Anda berada dalam harmoni yang positif. Anda memiliki ketahanan batin yang baik dalam menghadapi tekanan serta mampu melihat dinamika hidup dengan kacamata yang sehat.',
     recs: [
       'Pertahankan rutinitas dzikir dan muhasabah sebagai jangkar kestabilan hati.',
-      'Sesi konseling dapat dimanfaatkan untuk pengembangan potensi diri dan arahan karier masa depan.',
+      'Sesi bimbingan bersama Amel dapat difokuskan untuk pengembangan potensi diri dan pemetaan karier.',
       'Jadilah ruang pendengar yang hangat bagi orang-orang terdekat yang membutuhkan.',
     ],
   },
   {
-    range: [7, 9],
-    level: 'Membutuhkan Ruang Jeda & Curhat',
-    category: 'Fase Nafs Lawwamah (Reflektif Berlebih)',
+    range: [12, 16],
+    level: 'Perlu Ruang Jeda & Curhat',
+    category: 'Fase Nafs Lawwamah (Reflektif & Rentan Lelah)',
     body: 'Ada beban emosional dan pikiran yang mulai menumpuk serta menguras energi psikologis Anda. Sinyal kegelisahan ini wajar terjadi, namun perlu diurai dengan bijak sebelum berkembang menjadi kejenuhan (burnout).',
     recs: [
       'Latih pernapasan sadar dan berikan jeda dari paparan media sosial yang memicu perbandingan sosial.',
-      'Tuliskan isi pikiran yang mengganjal dalam jurnal refleksi atau kotak curhat anonim.',
-      'Sangat dianjurkan mengambil satu sesi bimbingan bersama Amel untuk mengurai benang kusut di kepala.',
+      'Tuliskan isi pikiran yang mengganjal dalam jurnal refleksi untuk mengurai benang kusut di kepala.',
+      'Sangat dianjurkan mengambil satu sesi bimbingan bersama Amel untuk melegakan beban pikiran.',
     ],
   },
   {
-    range: [4, 6],
-    level: 'Sinyal Kelelahan Hati (Perlu Pendamping)',
-    category: 'Memerlukan Pendampingan Hangat',
-    body: 'Hati dan pikiran Anda sedang mengalami kelelahan yang nyata — dan ini sangat valid untuk diakui. Memendam segala hal sendirian bukan tanda kekuatan, melainkan beban yang menuntut pertolongan. Anda berhak didengar dengan penuh kelembutan.',
+    range: [7, 11],
+    level: 'Sinyal Kelelahan Hati',
+    category: 'Memerlukan Pendampingan Hangat & Validasi',
+    body: 'Hati dan pikiran Anda sedang mengalami kelelahan yang nyata, dan ini sangat valid untuk diakui. Memendam segala hal sendirian bukan tanda kekuatan, melainkan beban yang menuntut pertolongan. Anda berhak didengar dengan penuh kelembutan.',
     recs: [
       'Berhenti menyalahkan diri sendiri atas situasi di luar kendali Anda.',
       'Berikan izin bagi diri sendiri untuk beristirahat secara fisik dan mental tanpa rasa bersalah.',
@@ -151,7 +183,7 @@ export default function AssessmentSection() {
       <div className="p-6 sm:p-10">
         {!done ? (
           <div>
-            {/* Meta indicator without eyebrow */}
+            {/* Meta indicator */}
             <div className="flex items-center justify-between gap-4 mb-5 text-xs text-[var(--color-ink-soft)] font-medium">
               <span>{questions[step].dimension}</span>
               <span>Langkah {step + 1} dari {questions.length}</span>
@@ -175,11 +207,11 @@ export default function AssessmentSection() {
                     key={i}
                     onClick={() => handleSelect(opt.score)}
                     type="button"
-                    className="w-full text-left p-4 sm:p-5 bg-[var(--color-paper)] border border-[var(--color-paper-border)] rounded-lg text-sm sm:text-base text-[var(--color-ink)] hover:border-[var(--color-accent)] hover:bg-[var(--color-accent-soft)] transition-colors flex items-start gap-3.5"
+                    className="w-full text-left p-4 sm:p-5 bg-[var(--color-paper)] border border-[var(--color-paper-border)] rounded-lg text-sm sm:text-base text-[var(--color-ink)] hover:border-[var(--color-accent)] hover:bg-[var(--color-accent-soft)] transition-colors flex items-start gap-3.5 group cursor-pointer"
                     aria-label={`Pilihan ${optionLetters[i]}: ${opt.text}`}
                   >
                     <span
-                      className="w-6 h-6 rounded-md bg-[var(--color-surface)] border border-[var(--color-paper-border)] font-semibold text-xs text-[var(--color-ink-soft)] flex items-center justify-center shrink-0 mt-0.5 select-none"
+                      className="w-6 h-6 rounded-md bg-[var(--color-surface)] border border-[var(--color-paper-border)] font-semibold text-xs text-[var(--color-ink-soft)] group-hover:border-[var(--color-accent)] group-hover:text-[var(--color-accent)] flex items-center justify-center shrink-0 mt-0.5 select-none transition-colors"
                       aria-hidden="true"
                     >
                       {optionLetters[i]}
@@ -197,7 +229,7 @@ export default function AssessmentSection() {
                 <button
                   onClick={() => setStep(step - 1)}
                   type="button"
-                  className="text-xs font-medium text-[var(--color-ink-soft)] hover:text-[var(--color-ink)] transition-colors"
+                  className="text-xs font-medium text-[var(--color-ink-soft)] hover:text-[var(--color-ink)] transition-colors inline-flex items-center gap-1.5 cursor-pointer"
                 >
                   &larr; Kembali ke pertanyaan sebelumnya
                 </button>
@@ -209,9 +241,9 @@ export default function AssessmentSection() {
           <div className="space-y-6" aria-live="polite">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-5 border-b border-[var(--color-paper-border)]">
               <div>
-                <span className="text-xs text-[var(--color-ink-soft)] font-medium block mb-1">
-                  Hasil Refleksi Diri
-                </span>
+                <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-[var(--color-accent-soft)] text-[var(--color-accent)] text-xs font-semibold mb-2">
+                  <span>Skor Anda: {total} / 21</span>
+                </div>
                 <h3
                   className="text-xl sm:text-2xl font-medium text-[var(--color-ink)]"
                   style={{ fontFamily: 'var(--font-display)' }}
@@ -226,7 +258,7 @@ export default function AssessmentSection() {
               <button
                 onClick={handleReset}
                 type="button"
-                className="btn-secondary text-xs py-2 px-3 self-start sm:self-center"
+                className="btn-secondary text-xs py-2 px-3 self-start sm:self-center cursor-pointer"
                 aria-label="Ulangi asesmen dari awal"
               >
                 <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" />
@@ -253,17 +285,33 @@ export default function AssessmentSection() {
               </ul>
             </div>
 
+            {/* CTA Buttons */}
             <div className="pt-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <p className="text-sm text-[var(--color-ink-muted)]">
-                Ingin berdiskusi lebih mendalam bersama Amel?
+                Ingin berdiskusi dan mendalami hasil ini bersama Amel?
               </p>
-              <a
-                href="/jadwal"
-                className="btn-primary text-sm"
-              >
-                Jadwalkan Konseling Sekarang
-                <ArrowRight className="w-4 h-4" />
-              </a>
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                <a
+                  href={getAssessmentWhatsAppUrl({
+                    level: result.level,
+                    category: result.category,
+                    totalScore: total,
+                  })}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-secondary text-sm inline-flex items-center justify-center gap-2"
+                >
+                  <MessageCircle className="w-4 h-4 text-[#25D366]" />
+                  Konsultasi via WhatsApp
+                </a>
+                <Link
+                  href="/schedule"
+                  className="btn-primary text-sm inline-flex items-center justify-center gap-2"
+                >
+                  Jadwalkan Sesi Konseling
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+              </div>
             </div>
           </div>
         )}
