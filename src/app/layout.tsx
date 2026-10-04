@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from 'next';
 import { Plus_Jakarta_Sans, Newsreader } from 'next/font/google';
 import Script from 'next/script';
 import ScrollRevealProvider from '@/components/ScrollRevealProvider';
+import PwaLifecycle from '@/components/pwa/PwaLifecycle';
+import { ToastProvider } from '@/context/ToastContext';
 import { safeJsonLd } from '@/lib/utils';
 import './globals.css';
 
@@ -53,10 +55,17 @@ export const metadata: Metadata = {
     address: false,
     telephone: false,
   },
+  manifest: '/manifest.webmanifest',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'Amelia',
+  },
   icons: {
     icon: [
       { url: '/favicon.ico', sizes: '32x32' },
-      { url: '/icon.png', sizes: '512x512', type: 'image/png' },
+      { url: '/icons/icon-192x192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icons/icon-512x512.png', sizes: '512x512', type: 'image/png' },
     ],
     apple: [
       { url: '/apple-icon.png', sizes: '180x180', type: 'image/png' },
@@ -127,9 +136,8 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  minimumScale: 1,
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#F9F7F2' },
+    { media: '(prefers-color-scheme: light)', color: '#FBF9F5' },
     { media: '(prefers-color-scheme: dark)',  color: '#1A2920' },
   ],
 };
@@ -246,12 +254,15 @@ export default function RootLayout({
     >
       <body className="min-h-screen antialiased">
         <ScrollRevealProvider />
+        <PwaLifecycle />
         {/* Skip to main content - WCAG 2.4.1 Bypass Blocks */}
         <a href="#main-content" className="skip-nav">
           Lewati ke konten utama
         </a>
 
-        {children}
+        <ToastProvider>
+          {children}
+        </ToastProvider>
 
         {/* JSON-LD - structured data for rich results */}
         <Script

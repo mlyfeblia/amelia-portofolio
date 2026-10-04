@@ -13,6 +13,7 @@ import { AnonymousMessage } from '@/types';
 import { CounselingReplyBox } from './CounselingReplyBox';
 import { Badge } from '@/components/ui/Badge';
 import { Spinner } from '@/components/ui/Spinner';
+import { Tooltip } from '@/components/ui/Tooltip';
 
 function formatDate(isoString?: string) {
   if (!isoString) return '';
@@ -101,14 +102,16 @@ export function CounselingCard({
           </button>
 
           {/* Delete Button */}
-          <button
-            onClick={onDelete}
-            type="button"
-            title="Hapus pesan curhat ini"
-            className="btn-interactive p-1.5 rounded-lg text-[var(--color-ink-muted)] hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer shrink-0"
-          >
-            <Trash2 className="w-3.5 h-3.5" />
-          </button>
+          <Tooltip content="Hapus pesan curhat" position="top">
+            <button
+              onClick={onDelete}
+              type="button"
+              className="btn-interactive p-1.5 rounded-lg text-[var(--color-ink-muted)] hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer shrink-0"
+              aria-label="Hapus pesan curhat ini"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          </Tooltip>
         </div>
       </div>
 

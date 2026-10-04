@@ -10,7 +10,20 @@ function renderInlineMarkdown(text: string): React.ReactNode {
     // Link: [label](url)
     const linkMatch = part.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
     if (linkMatch) {
-      const [, label, href] = linkMatch;
+      const [, label, rawHref] = linkMatch;
+      const href = rawHref.trim();
+      // Security: Strictly whitelist safe protocols (block javascript:, data:, vbscript:, //)
+      const isSafeProtocol =
+        href.startsWith('http://') ||
+        href.startsWith('https://') ||
+        href.startsWith('mailto:') ||
+        href.startsWith('tel:') ||
+        (href.startsWith('/') && !href.startsWith('//'));
+
+      if (!isSafeProtocol) {
+        return <span key={i}>{label}</span>;
+      }
+
       const isExternal = href.startsWith('http://') || href.startsWith('https://');
       return isExternal ? (
         <a

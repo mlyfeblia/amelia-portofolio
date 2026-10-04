@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import { MessageCircle, Calendar } from 'lucide-react';
 import { getGeneralWhatsAppUrl } from '@/lib/whatsapp';
 
 export function AboutCta() {
@@ -24,12 +25,17 @@ export function AboutCta() {
           href={getGeneralWhatsAppUrl()}
           target="_blank"
           rel="noopener noreferrer"
-          className="btn-primary text-sm min-h-[42px] px-5"
+          className="btn-primary text-sm min-h-[42px] px-5 inline-flex items-center gap-2"
         >
-          WhatsApp Langsung
+          <MessageCircle className="w-4 h-4" />
+          <span>WhatsApp Langsung</span>
         </a>
-        <Link href="/schedule" className="btn-secondary text-sm min-h-[42px] px-5">
-          Janji Temu Konseling
+        <Link
+          href="/schedule"
+          className="btn-secondary text-sm min-h-[42px] px-5 inline-flex items-center gap-2"
+        >
+          <Calendar className="w-4 h-4 text-[var(--color-ink-soft)]" />
+          <span>Janji Temu Konseling</span>
         </Link>
       </div>
     </section>

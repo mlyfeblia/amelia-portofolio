@@ -1,7 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowRight } from 'lucide-react';
+import { Calendar, User } from 'lucide-react';
 
 export function HeroSection() {
   return (
@@ -27,16 +27,17 @@ export function HeroSection() {
             <div className="flex flex-wrap items-center gap-3.5 pt-1">
               <Link
                 href="/schedule"
-                className="btn-primary min-h-[46px] px-6 text-[15px]"
+                className="btn-primary min-h-[46px] px-6 text-[15px] inline-flex items-center gap-2"
               >
-                Jadwalkan Konsultasi
-                <ArrowRight className="w-4 h-4 ml-0.5" />
+                <Calendar className="w-4 h-4" />
+                <span>Jadwalkan Konsultasi</span>
               </Link>
               <Link
                 href="/about"
-                className="btn-secondary min-h-[46px] px-6 text-[15px]"
+                className="btn-secondary min-h-[46px] px-6 text-[15px] inline-flex items-center gap-2"
               >
-                Kenali Profil Amel
+                <User className="w-4 h-4 text-[var(--color-ink-soft)]" />
+                <span>Kenali Profil Amel</span>
               </Link>
             </div>
 

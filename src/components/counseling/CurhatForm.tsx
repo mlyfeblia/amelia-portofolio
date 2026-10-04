@@ -1,8 +1,10 @@
 'use client';
 
 import React, { useState, useId } from 'react';
-import { Send, AlertCircle, CheckCircle2, Lock } from 'lucide-react';
+import Image from 'next/image';
+import { Send, AlertCircle, CheckCircle2, Lock, Download, PenLine } from 'lucide-react';
 import { Spinner } from '@/components/ui/Spinner';
+import { usePwa, triggerPwaInstall } from '@/lib/pwa-store';
 
 const CATEGORIES = [
   'Quarter-Life Crisis',
@@ -20,6 +22,7 @@ export function CurhatForm({ onSuccess }: CurhatFormProps) {
   const [submitting, setSubmitting] = useState(false);
   const [sent, setSent] = useState(false);
   const [sendError, setSendError] = useState('');
+  const { isInstalled } = usePwa();
 
   const [alias, setAlias] = useState('');
   const [category, setCategory] = useState(CATEGORIES[0]);
@@ -105,10 +108,43 @@ export function CurhatForm({ onSuccess }: CurhatFormProps) {
           <button
             onClick={() => setSent(false)}
             type="button"
-            className="btn-secondary text-xs py-1.5 px-3 mt-2"
+            className="btn-secondary text-xs py-1.5 px-3 mt-2 inline-flex items-center gap-1.5 cursor-pointer"
           >
-            Tulis Pesan Lain
+            <PenLine className="w-3.5 h-3.5 text-[var(--color-ink-soft)]" />
+            <span>Tulis Pesan Lain</span>
           </button>
+
+          {!isInstalled && (
+            <div className="mt-4 pt-4 border-t border-[var(--color-paper-border)] bg-[var(--color-paper)] p-3 rounded-xl flex items-center justify-between gap-3 text-left">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-8 h-8 rounded-lg overflow-hidden shrink-0 border border-[var(--color-paper-border)] bg-[#f7f2eb]">
+                  <Image
+                    src="/icons/icon-192x192.png"
+                    alt="Logo Amelia"
+                    width={32}
+                    height={32}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold text-[var(--color-ink)] truncate">
+                    Pasang Aplikasi Amelia
+                  </p>
+                  <p className="text-[11px] text-[var(--color-ink-muted)] line-clamp-1">
+                    Pantau balasan curhat dan materi konseling lebih mudah di HP.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => triggerPwaInstall()}
+                className="px-3 py-1.5 rounded-lg bg-[var(--color-accent)] text-white text-[11px] font-medium hover:bg-[var(--color-accent-hover)] transition-colors shrink-0 shadow-xs cursor-pointer inline-flex items-center gap-1 active:scale-95"
+              >
+                <Download className="w-3 h-3" />
+                <span>Pasang</span>
+              </button>
+            </div>
+          )}
         </div>
       ) : (
         <form
@@ -132,7 +168,7 @@ export function CurhatForm({ onSuccess }: CurhatFormProps) {
 
           {sendError && (
             <div
-              className="flex items-start gap-2 p-3 text-xs text-[var(--color-error)] bg-[var(--color-error-soft)] border border-[var(--color-error-border)] rounded-md"
+              className="flex items-start gap-2 p-3 text-xs text-[var(--color-error)] bg-[var(--color-error-soft)] border border-[var(--color-error-border)] rounded-md animate-shake"
               role="alert"
               aria-live="assertive"
             >
@@ -151,6 +187,7 @@ export function CurhatForm({ onSuccess }: CurhatFormProps) {
             <input
               id={`${formId}-alias`}
               type="text"
+              maxLength={50}
               value={alias}
               onChange={(e) => setAlias(e.target.value)}
               placeholder="Misal: Jiwa yang Lelah, Pejuang Skripsi"
@@ -201,7 +238,7 @@ export function CurhatForm({ onSuccess }: CurhatFormProps) {
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               placeholder="Tuliskan apa pun yang mengganjal di pikiran dan hatimu secara jujur..."
-              className="form-input text-sm py-2 resize-none"
+              className="form-input text-sm py-2 resize-y min-h-[108px] max-h-[320px] overflow-y-auto"
             />
           </div>
 

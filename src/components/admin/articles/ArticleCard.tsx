@@ -6,6 +6,7 @@ import { Clock, Calendar, Edit3, ExternalLink, Trash2, Eye, EyeOff } from 'lucid
 import { Article } from '@/types';
 import { Badge } from '@/components/ui/Badge';
 import { Spinner } from '@/components/ui/Spinner';
+import { Tooltip } from '@/components/ui/Tooltip';
 
 interface ArticleCardProps {
   article: Article;
@@ -102,25 +103,29 @@ export function ArticleCard({
 
           {/* Public Preview Link */}
           {isPublic && (
-            <Link
-              href={`/articles/${article.slug}`}
-              target="_blank"
-              className="btn-interactive inline-flex items-center justify-center gap-1 p-2 rounded-lg bg-[var(--color-surface)] border border-[var(--color-paper-border)] hover:bg-[var(--color-paper-muted)] text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] text-xs"
-              title="Buka tampilan web publik"
-            >
-              <ExternalLink className="w-3.5 h-3.5" />
-            </Link>
+            <Tooltip content="Buka di web publik" position="top">
+              <Link
+                href={`/articles/${article.slug}`}
+                target="_blank"
+                className="btn-interactive inline-flex items-center justify-center p-2 rounded-lg bg-[var(--color-surface)] border border-[var(--color-paper-border)] hover:bg-[var(--color-paper-muted)] text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] text-xs cursor-pointer"
+                aria-label="Buka tampilan web publik"
+              >
+                <ExternalLink className="w-3.5 h-3.5" />
+              </Link>
+            </Tooltip>
           )}
 
           {/* Delete Button */}
-          <button
-            onClick={() => onDelete(article)}
-            type="button"
-            className="btn-interactive inline-flex items-center justify-center p-2 rounded-lg text-[var(--color-ink-muted)] hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
-            title="Hapus artikel ini"
-          >
-            <Trash2 className="w-3.5 h-3.5" />
-          </button>
+          <Tooltip content="Hapus artikel" position="top">
+            <button
+              onClick={() => onDelete(article)}
+              type="button"
+              className="btn-interactive inline-flex items-center justify-center p-2 rounded-lg text-[var(--color-ink-muted)] hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+              aria-label="Hapus artikel ini"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          </Tooltip>
         </div>
       </div>
 

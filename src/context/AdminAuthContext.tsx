@@ -119,7 +119,7 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
                 PIN Akses Pengelola
               </label>
               
-              <div className="relative flex items-center">
+              <div className={`relative flex items-center ${pinError ? 'animate-shake' : ''}`}>
                 <input
                   id="admin-pin"
                   type={showPin ? 'text' : 'password'}
@@ -134,7 +134,11 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
                     if (pinError) setPinError(false);
                   }}
                   placeholder="••••••"
-                  className="w-full pl-4 pr-11 py-2.5 rounded-xl bg-[var(--color-paper)] border border-[var(--color-paper-border)] text-center font-mono tracking-widest text-base font-semibold text-[var(--color-ink)] focus:outline-none focus:border-[var(--color-accent)] focus:ring-2 focus:ring-[var(--color-accent-soft)] transition-all"
+                  className={`w-full pl-4 pr-11 py-2.5 rounded-xl bg-[var(--color-paper)] border text-center font-mono tracking-widest text-base font-semibold text-[var(--color-ink)] focus:outline-none focus:ring-2 transition-all ${
+                    pinError
+                      ? 'border-red-400 focus:border-red-500 focus:ring-red-100'
+                      : 'border-[var(--color-paper-border)] focus:border-[var(--color-accent)] focus:ring-[var(--color-accent-soft)]'
+                  }`}
                   autoFocus
                 />
 
@@ -178,7 +182,10 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
                   <span>Memverifikasi PIN...</span>
                 </>
               ) : (
-                <span>Masuk Dashboard Konselor</span>
+                <>
+                  <KeyRound className="w-4 h-4" />
+                  <span>Masuk Dashboard Konselor</span>
+                </>
               )}
             </button>
           </form>

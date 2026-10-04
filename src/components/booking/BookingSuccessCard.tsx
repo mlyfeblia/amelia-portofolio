@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { CheckCircle } from 'lucide-react';
+import { CheckCircle, MessageCircle, RotateCcw } from 'lucide-react';
 import { getBookingConfirmationWhatsAppUrl } from '@/lib/whatsapp';
 
 interface BookingSuccessCardProps {
@@ -54,16 +54,18 @@ export function BookingSuccessCard({ success, onReset }: BookingSuccessCardProps
           })}
           target="_blank"
           rel="noopener noreferrer"
-          className="btn-primary text-sm"
+          className="btn-primary text-sm inline-flex items-center gap-2"
         >
-          Konfirmasi via WhatsApp
+          <MessageCircle className="w-4 h-4" />
+          <span>Konfirmasi via WhatsApp</span>
         </a>
         <button
           onClick={onReset}
           type="button"
-          className="btn-secondary text-sm cursor-pointer"
+          className="btn-secondary text-sm cursor-pointer inline-flex items-center gap-2"
         >
-          Ajukan Jadwal Lain
+          <RotateCcw className="w-4 h-4 text-[var(--color-ink-soft)]" />
+          <span>Ajukan Jadwal Lain</span>
         </button>
       </div>
     </div>

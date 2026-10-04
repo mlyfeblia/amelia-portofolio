@@ -13,7 +13,9 @@ import {
 } from 'lucide-react';
 import { Article } from '@/types';
 import { useMounted } from '@/lib/use-mounted';
+import { useModalAnimation } from '@/lib/use-modal-animation';
 import { Spinner } from '@/components/ui/Spinner';
+import { cn } from '@/lib/utils';
 
 const POPULAR_CATEGORIES = [
   'Kesehatan Mental Islami',
@@ -180,7 +182,7 @@ function ArticleFormModalContent({
   };
 
   return (
-    <div className="w-full h-full bg-[var(--color-surface)] sm:border sm:border-[var(--color-paper-border)] sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden modal-window-enter">
+    <div className="w-full h-full bg-[var(--color-surface)] sm:border sm:border-[var(--color-paper-border)] sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden">
       {/* Modal Header (Sticky) */}
       <div className="p-4 sm:p-5 border-b border-[var(--color-paper-border)] bg-[var(--color-surface)] shrink-0 space-y-3">
         <div className="flex items-center justify-between gap-3">
@@ -280,7 +282,7 @@ function ArticleFormModalContent({
             )}
 
             {saveError && (
-              <div className="p-3 bg-rose-50 text-rose-700 border border-rose-200 rounded-xl font-medium flex items-center gap-2">
+              <div className="p-3 bg-rose-50 text-rose-700 border border-rose-200 rounded-xl font-medium flex items-center gap-2 animate-shake">
                 <AlertCircle className="w-4 h-4 shrink-0" />
                 <span>{saveError}</span>
               </div>
@@ -316,7 +318,7 @@ function ArticleFormModalContent({
                 type="checkbox"
                 checked={formData.isPublished}
                 onChange={(e) => setFormData((prev) => ({ ...prev, isPublished: e.target.checked }))}
-                className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 shrink-0"
+                className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 shrink-0 cursor-pointer"
               />
             </div>
 
@@ -327,6 +329,7 @@ function ArticleFormModalContent({
               </label>
               <input
                 type="text"
+                maxLength={200}
                 value={formData.title}
                 onChange={(e) => handleTitleChange(e.target.value)}
                 placeholder="Contoh: Menemukan Kedamaian Batin Melalui Doa dan Refleksi"
@@ -343,6 +346,7 @@ function ArticleFormModalContent({
                 </label>
                 <input
                   type="text"
+                  maxLength={120}
                   value={formData.slug}
                   onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
                   placeholder="menemukan-kedamaian-batin"
@@ -360,6 +364,7 @@ function ArticleFormModalContent({
                 </label>
                 <input
                   type="text"
+                  maxLength={80}
                   value={formData.category}
                   onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                   placeholder="Pilih atau ketik kategori..."
@@ -389,6 +394,7 @@ function ArticleFormModalContent({
                 </label>
                 <input
                   type="text"
+                  maxLength={50}
                   value={formData.readTime}
                   onChange={(e) => setFormData({ ...formData, readTime: e.target.value })}
                   placeholder="misal: 5 menit baca"
@@ -402,6 +408,7 @@ function ArticleFormModalContent({
                 </label>
                 <input
                   type="text"
+                  maxLength={200}
                   value={formData.tags}
                   onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
                   placeholder="Kecemasan, BKI, Self Love"
@@ -412,15 +419,23 @@ function ArticleFormModalContent({
 
             {/* Excerpt */}
             <div>
-              <label className="block font-semibold text-[var(--color-ink)] mb-1">
-                Ringkasan Singkat (Excerpt)
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block font-semibold text-[var(--color-ink)]">
+                  Ringkasan Singkat (Excerpt)
+                </label>
+                {formData.excerpt.length > 0 && (
+                  <span className="text-[10px] text-[var(--color-ink-muted)]">
+                    {formData.excerpt.length}/400
+                  </span>
+                )}
+              </div>
               <textarea
                 rows={2}
+                maxLength={400}
                 value={formData.excerpt}
                 onChange={(e) => setFormData({ ...formData, excerpt: e.target.value })}
                 placeholder="Tuliskan 1-2 kalimat pengantar artikel..."
-                className="w-full px-3.5 py-2 rounded-xl bg-[var(--color-paper)] border border-[var(--color-paper-border)] text-[var(--color-ink)] focus:outline-none focus:border-[var(--color-accent)] resize-none text-xs sm:text-sm"
+                className="w-full px-3.5 py-2 rounded-xl bg-[var(--color-paper)] border border-[var(--color-paper-border)] text-[var(--color-ink)] focus:outline-none focus:border-[var(--color-accent)] resize-y min-h-[64px] max-h-[160px] text-xs sm:text-sm"
               />
             </div>
 
@@ -567,6 +582,14 @@ export function ArticleFormModal({
   onSuccess,
 }: ArticleFormModalProps) {
   const mounted = useMounted();
+  const { isRendered, isExiting, backdropClass, windowClass } = useModalAnimation({ isOpen });
+
+  // Cache initialArticle so during exit transition the modal content doesn't flicker or lose state
+  const [cachedArticle, setCachedArticle] = useState<Article | null>(initialArticle);
+  if (initialArticle && initialArticle !== cachedArticle) {
+    setCachedArticle(initialArticle);
+  }
+  const activeArticle = initialArticle ?? cachedArticle;
 
   // Lock body & document scroll and handle Escape key
   useEffect(() => {
@@ -589,7 +612,7 @@ export function ArticleFormModal({
     };
   }, [isOpen, onClose]);
 
-  if (!mounted || !isOpen) return null;
+  if (!mounted || !isRendered) return null;
 
   return createPortal(
     <div 
@@ -597,19 +620,28 @@ export function ArticleFormModal({
       role="dialog"
       aria-modal="true"
     >
-      {/* Dedicated Full-Screen Backdrop Layer (Unclickable & Scroll-Blocked) */}
+      {/* Dedicated Full-Screen Backdrop Layer */}
       <div
-        className="fixed inset-0 bg-black/65 backdrop-blur-sm transition-opacity modal-backdrop-enter touch-none select-none"
+        className={cn(
+          'fixed inset-0 bg-black/65 backdrop-blur-sm transition-opacity touch-none select-none',
+          backdropClass
+        )}
         aria-hidden="true"
+        onClick={() => !isExiting && onClose()}
         onWheel={(e) => e.preventDefault()}
         onTouchMove={(e) => e.preventDefault()}
       />
 
-      <div className="relative z-10 w-full h-[100dvh] sm:h-auto sm:max-w-3xl sm:max-h-[90vh] flex flex-col pointer-events-auto">
+      <div
+        className={cn(
+          'relative z-10 w-full h-[100dvh] sm:h-auto sm:max-w-3xl sm:max-h-[90vh] flex flex-col pointer-events-auto',
+          windowClass
+        )}
+      >
         <ArticleFormModalContent
-          key={initialArticle?.id ?? 'create-new'}
+          key={activeArticle?.id ?? 'create-new'}
           mode={mode}
-          initialArticle={initialArticle}
+          initialArticle={activeArticle}
           onClose={onClose}
           onSuccess={onSuccess}
         />

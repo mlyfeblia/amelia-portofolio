@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import { ArrowUpRight } from 'lucide-react';
+import { BookOpen } from 'lucide-react';
 import { Article } from '@/types';
 import { getIsoDateString } from '@/lib/utils';
 
@@ -36,10 +36,10 @@ export function ArticleListItem({ article }: { article: Article }) {
         <div className="md:col-span-2 flex md:justify-end">
           <Link
             href={`/articles/${article.slug}`}
-            className="btn-secondary btn-interactive text-xs py-2 px-3.5 inline-flex items-center gap-1"
+            className="btn-secondary btn-interactive text-xs py-2 px-3.5 inline-flex items-center gap-1.5"
           >
-            Baca Tulisan
-            <ArrowUpRight className="w-3.5 h-3.5" />
+            <BookOpen className="w-3.5 h-3.5 text-[var(--color-ink-soft)]" />
+            <span>Baca Tulisan</span>
           </Link>
         </div>
       </div>

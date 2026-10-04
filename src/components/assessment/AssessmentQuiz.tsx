@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { ArrowLeft } from 'lucide-react';
 import { AssessmentQuestion } from '@/data/assessment-data';
 
 interface AssessmentQuizProps {
@@ -73,7 +74,8 @@ export function AssessmentQuiz({
             type="button"
             className="text-xs font-medium text-[var(--color-ink-soft)] hover:text-[var(--color-ink)] transition-colors inline-flex items-center gap-1.5 cursor-pointer"
           >
-            &larr; Kembali ke pertanyaan sebelumnya
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Kembali ke pertanyaan sebelumnya</span>
           </button>
         </div>
       )}

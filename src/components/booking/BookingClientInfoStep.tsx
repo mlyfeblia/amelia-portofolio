@@ -32,6 +32,7 @@ export function BookingClientInfoStep({
           id={`${formId}-name`}
           type="text"
           required
+          maxLength={80}
           autoComplete="name"
           value={form.name}
           onChange={(e) => onChange('name', e.target.value)}
@@ -50,6 +51,7 @@ export function BookingClientInfoStep({
         <input
           id={`${formId}-alias`}
           type="text"
+          maxLength={40}
           autoComplete="nickname"
           value={form.alias}
           onChange={(e) => onChange('alias', e.target.value)}
@@ -69,6 +71,7 @@ export function BookingClientInfoStep({
           id={`${formId}-phone`}
           type="tel"
           required
+          maxLength={25}
           autoComplete="tel"
           value={form.phone}
           onChange={(e) => onChange('phone', e.target.value)}
@@ -88,6 +91,7 @@ export function BookingClientInfoStep({
           id={`${formId}-email`}
           type="email"
           required
+          maxLength={100}
           autoComplete="email"
           value={form.email}
           onChange={(e) => onChange('email', e.target.value)}

@@ -5,7 +5,9 @@ import { createPortal } from 'react-dom';
 import { AlertTriangle, Trash2, X } from 'lucide-react';
 import { AnonymousMessage } from '@/types';
 import { useMounted } from '@/lib/use-mounted';
+import { useModalAnimation } from '@/lib/use-modal-animation';
 import { Spinner } from '@/components/ui/Spinner';
+import { cn } from '@/lib/utils';
 
 interface CounselingDeleteModalProps {
   item: AnonymousMessage | null;
@@ -22,6 +24,14 @@ export function CounselingDeleteModal({
 }: CounselingDeleteModalProps) {
   const mounted = useMounted();
   const [deleting, setDeleting] = useState(false);
+  const { isRendered, isExiting, backdropClass, windowClass } = useModalAnimation({ isOpen });
+
+  // Retain active counseling item during exit transition without accessing refs during render
+  const [cachedItem, setCachedItem] = useState<AnonymousMessage | null>(item);
+  if (item && item !== cachedItem) {
+    setCachedItem(item);
+  }
+  const activeItem = item ?? cachedItem;
 
   // Lock body & document scroll while modal is active
   useEffect(() => {
@@ -33,7 +43,7 @@ export function CounselingDeleteModal({
     document.documentElement.style.overflow = 'hidden';
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape' && !deleting) onClose();
     };
     window.addEventListener('keydown', handleKeyDown);
 
@@ -42,14 +52,15 @@ export function CounselingDeleteModal({
       document.documentElement.style.overflow = originalHtmlOverflow;
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, deleting]);
 
-  if (!mounted || !isOpen || !item) return null;
+  if (!mounted || !isRendered || !activeItem) return null;
 
   const handleConfirm = async () => {
+    if (!activeItem) return;
     setDeleting(true);
     try {
-      await onConfirm(item);
+      await onConfirm(activeItem);
     } finally {
       setDeleting(false);
     }
@@ -57,23 +68,29 @@ export function CounselingDeleteModal({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto"
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 overflow-y-auto"
       role="dialog"
       aria-modal="true"
       aria-labelledby="delete-counseling-title"
     >
-      {/* Dedicated Full-Screen Backdrop Layer (Unclickable & Scroll-Blocked) */}
+      {/* Dedicated Full-Screen Backdrop Layer */}
       <div
-        className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity modal-backdrop-enter touch-none select-none"
+        className={cn(
+          'fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity touch-none select-none',
+          backdropClass
+        )}
         aria-hidden="true"
+        onClick={() => !deleting && !isExiting && onClose()}
         onWheel={(e) => e.preventDefault()}
         onTouchMove={(e) => e.preventDefault()}
       />
 
-      <div className="relative z-10 w-full sm:max-w-md bg-[var(--color-surface)] border-t sm:border border-[var(--color-paper-border)] rounded-t-3xl sm:rounded-2xl p-5 sm:p-6 shadow-2xl space-y-4 modal-window-enter max-h-[90dvh] overflow-y-auto pb-[calc(1.25rem+env(safe-area-inset-bottom,0px))] sm:pb-6">
-        {/* Mobile handle indicator */}
-        <div className="w-12 h-1 bg-[var(--color-paper-border)] rounded-full mx-auto sm:hidden mb-2" />
-
+      <div
+        className={cn(
+          'relative z-10 w-full max-w-sm sm:max-w-md bg-[var(--color-surface)] border border-[var(--color-paper-border)] rounded-2xl p-5 sm:p-6 shadow-2xl space-y-4 max-h-[90dvh] overflow-y-auto my-auto',
+          windowClass
+        )}
+      >
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-start gap-3">
             <div className="w-10 h-10 rounded-xl bg-rose-500/10 text-rose-600 flex items-center justify-center shrink-0">
@@ -84,30 +101,32 @@ export function CounselingDeleteModal({
                 Hapus Pesan Curhat?
               </h3>
               <p className="text-xs text-[var(--color-ink-muted)] mt-1 leading-relaxed">
-                Pesan dari <strong className="text-[var(--color-ink)]">{item.alias}</strong> ({item.category}) akan dihapus secara permanen.
+                Pesan dari <strong className="text-[var(--color-ink)]">{activeItem.alias}</strong> ({activeItem.category}) akan dihapus secara permanen.
               </p>
             </div>
           </div>
 
           <button
             onClick={onClose}
+            disabled={deleting}
             type="button"
-            className="btn-interactive p-1.5 rounded-lg text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] hover:bg-[var(--color-paper)] transition-colors cursor-pointer shrink-0"
-            aria-label="Tutup"
+            className="btn-interactive p-1.5 rounded-lg text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] hover:bg-[var(--color-paper)] transition-colors cursor-pointer shrink-0 disabled:opacity-50"
+            aria-label="Tutup dialog"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         <div className="p-3 rounded-xl bg-[var(--color-paper)] border border-[var(--color-paper-border)] text-xs text-[var(--color-ink-muted)] italic max-h-24 overflow-y-auto leading-relaxed">
-          &ldquo;{item.message}&rdquo;
+          &ldquo;{activeItem.message}&rdquo;
         </div>
 
         <div className="grid grid-cols-2 gap-3 sm:flex sm:items-center sm:justify-end pt-2 border-t border-[var(--color-paper-border)]">
           <button
             onClick={onClose}
+            disabled={deleting}
             type="button"
-            className="btn-interactive h-10 sm:h-9 px-4 text-xs font-semibold rounded-xl bg-[var(--color-paper)] border border-[var(--color-paper-border)] text-[var(--color-ink)] hover:bg-[var(--color-paper-muted)] transition-all cursor-pointer inline-flex items-center justify-center"
+            className="btn-interactive h-10 sm:h-9 px-4 text-xs font-semibold rounded-xl bg-[var(--color-paper)] border border-[var(--color-paper-border)] text-[var(--color-ink)] hover:bg-[var(--color-paper-muted)] transition-all cursor-pointer inline-flex items-center justify-center disabled:opacity-50"
           >
             Batal
           </button>

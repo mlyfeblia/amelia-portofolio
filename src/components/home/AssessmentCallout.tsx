@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import { ArrowRight } from 'lucide-react';
+import { ClipboardCheck } from 'lucide-react';
 
 export function AssessmentCallout() {
   return (
@@ -20,10 +20,10 @@ export function AssessmentCallout() {
           </div>
           <Link
             href="/assessment"
-            className="btn-primary min-h-[46px] px-6 text-sm shrink-0"
+            className="btn-primary min-h-[46px] px-6 text-sm shrink-0 inline-flex items-center gap-2"
           >
-            Mulai Asesmen Diri
-            <ArrowRight className="w-4 h-4 ml-1" />
+            <ClipboardCheck className="w-4 h-4" />
+            <span>Mulai Asesmen Diri</span>
           </Link>
         </div>
       </div>

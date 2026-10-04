@@ -8,12 +8,19 @@ import {
   Mail, 
   Video, 
   MessageSquare, 
-  Users 
+  Users,
+  Copy,
+  Check,
+  CheckCircle2,
+  XCircle
 } from 'lucide-react';
 import { Booking, BookingStatus, CounselingMode } from '@/types';
 import { getAdminContactWhatsAppUrl } from '@/lib/whatsapp';
+import { getAdminContactEmailUrl } from '@/lib/email-template';
 import { Badge } from '@/components/ui/Badge';
 import { Spinner } from '@/components/ui/Spinner';
+import { Tooltip } from '@/components/ui/Tooltip';
+import { useToast } from '@/components/ui/Toast';
 
 function getModeInfo(mode: CounselingMode) {
   switch (mode) {
@@ -59,14 +66,33 @@ export function BookingCard({
     }
   };
 
+  const { toast } = useToast();
+
+  const handleCopyCode = async () => {
+    try {
+      await navigator.clipboard.writeText(item.code);
+      toast.success(`Kode ${item.code} disalin ke clipboard!`);
+    } catch {
+      toast.info(`Kode: ${item.code}`);
+    }
+  };
+
   return (
     <div className="card-interactive p-4 sm:p-6 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-paper-border)] shadow-xs space-y-3.5">
       {/* Header row */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-3 border-b border-[var(--color-paper-border)]">
         <div className="flex items-center gap-2.5">
-          <span className="font-mono text-[11px] sm:text-xs font-semibold px-2 py-0.5 rounded-md bg-[var(--color-paper)] border border-[var(--color-paper-border)] text-[var(--color-accent)]">
-            {item.code}
-          </span>
+          <Tooltip content="Salin kode booking" position="top">
+            <button
+              type="button"
+              onClick={handleCopyCode}
+              className="font-mono text-[11px] sm:text-xs font-semibold px-2 py-0.5 rounded-md bg-[var(--color-paper)] border border-[var(--color-paper-border)] text-[var(--color-accent)] hover:bg-[var(--color-paper-muted)] cursor-pointer inline-flex items-center gap-1.5 transition-colors select-text"
+              aria-label={`Salin kode booking ${item.code}`}
+            >
+              <span>{item.code}</span>
+              <Copy className="w-3 h-3 text-[var(--color-ink-muted)] shrink-0" />
+            </button>
+          </Tooltip>
           <div>
             <h3 className="font-semibold text-[var(--color-ink)] text-sm sm:text-base leading-tight">
               {item.name}
@@ -80,14 +106,16 @@ export function BookingCard({
         <div className="flex items-center gap-2 self-start sm:self-auto shrink-0">
           {getStatusBadgeElement()}
 
-          <button
-            onClick={() => onDelete(item)}
-            type="button"
-            title="Hapus janji temu ini"
-            className="btn-interactive p-1.5 rounded-lg text-[var(--color-ink-muted)] hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
-          >
-            <Trash2 className="w-3.5 h-3.5" />
-          </button>
+          <Tooltip content="Hapus janji temu" position="top">
+            <button
+              onClick={() => onDelete(item)}
+              type="button"
+              className="btn-interactive p-1.5 rounded-lg text-[var(--color-ink-muted)] hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+              aria-label="Hapus janji temu ini"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          </Tooltip>
         </div>
       </div>
 
@@ -145,7 +173,13 @@ export function BookingCard({
           </a>
 
           <a
-            href={`mailto:${item.email}?subject=Konfirmasi%20Konseling%20Amelia%20(${item.code})`}
+            href={getAdminContactEmailUrl({
+              clientEmail: item.email,
+              clientName: item.alias || item.name,
+              code: item.code,
+              date: item.date,
+              slot: item.timeSlot,
+            })}
             className="btn-interactive h-8 px-3 rounded-lg bg-[var(--color-paper)] border border-[var(--color-paper-border)] text-xs font-medium text-[var(--color-ink)] hover:text-[var(--color-accent)] inline-flex items-center justify-center gap-1.5 whitespace-nowrap"
           >
             <Mail className="w-3.5 h-3.5" />
@@ -162,9 +196,9 @@ export function BookingCard({
               onClick={() => onUpdateStatus(item.id, 'terkonfirmasi')}
               disabled={isUpdating}
               type="button"
-              className="btn-interactive h-8 px-2.5 text-xs font-semibold rounded-lg bg-[var(--color-accent-soft)] text-[var(--color-accent)] hover:bg-[var(--color-accent)] hover:text-white cursor-pointer inline-flex items-center justify-center gap-1 whitespace-nowrap disabled:opacity-50"
+              className="btn-interactive h-8 px-2.5 text-xs font-semibold rounded-lg bg-[var(--color-accent-soft)] text-[var(--color-accent)] hover:bg-[var(--color-accent)] hover:text-white cursor-pointer inline-flex items-center justify-center gap-1.5 whitespace-nowrap disabled:opacity-50"
             >
-              {isUpdating ? <Spinner size="xs" variant="accent" label="Memperbarui..." /> : null}
+              {isUpdating ? <Spinner size="xs" variant="accent" label="Memperbarui..." /> : <Check className="w-3.5 h-3.5" />}
               <span>Konfirmasi</span>
             </button>
           )}
@@ -174,9 +208,9 @@ export function BookingCard({
               onClick={() => onUpdateStatus(item.id, 'selesai')}
               disabled={isUpdating}
               type="button"
-              className="btn-interactive h-8 px-2.5 text-xs font-semibold rounded-lg bg-[var(--color-paper)] border border-[var(--color-paper-border)] text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] hover:bg-[var(--color-paper-muted)] cursor-pointer inline-flex items-center justify-center gap-1 whitespace-nowrap disabled:opacity-50"
+              className="btn-interactive h-8 px-2.5 text-xs font-semibold rounded-lg bg-[var(--color-paper)] border border-[var(--color-paper-border)] text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] hover:bg-[var(--color-paper-muted)] cursor-pointer inline-flex items-center justify-center gap-1.5 whitespace-nowrap disabled:opacity-50"
             >
-              {isUpdating ? <Spinner size="xs" variant="muted" label="Memperbarui..." /> : null}
+              {isUpdating ? <Spinner size="xs" variant="muted" label="Memperbarui..." /> : <CheckCircle2 className="w-3.5 h-3.5" />}
               <span>Selesai</span>
             </button>
           )}
@@ -186,9 +220,9 @@ export function BookingCard({
               onClick={() => onUpdateStatus(item.id, 'dibatalkan')}
               disabled={isUpdating}
               type="button"
-              className="btn-interactive h-8 px-2.5 text-xs font-semibold rounded-lg text-rose-600 bg-rose-50/50 hover:bg-rose-50 border border-rose-200/60 cursor-pointer inline-flex items-center justify-center gap-1 whitespace-nowrap disabled:opacity-50"
+              className="btn-interactive h-8 px-2.5 text-xs font-semibold rounded-lg text-rose-600 bg-rose-50/50 hover:bg-rose-50 border border-rose-200/60 cursor-pointer inline-flex items-center justify-center gap-1.5 whitespace-nowrap disabled:opacity-50"
             >
-              {isUpdating ? <Spinner size="xs" variant="ink" label="Memperbarui..." /> : null}
+              {isUpdating ? <Spinner size="xs" variant="ink" label="Memperbarui..." /> : <XCircle className="w-3.5 h-3.5" />}
               <span>Batal</span>
             </button>
           )}

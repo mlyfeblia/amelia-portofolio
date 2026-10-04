@@ -1,7 +1,7 @@
 import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { MapPin, GraduationCap, Phone, Mail, ExternalLink } from 'lucide-react';
+import { MapPin, GraduationCap, Phone, Mail, ExternalLink, MessageCircle } from 'lucide-react';
 import { getGeneralWhatsAppUrl } from '@/lib/whatsapp';
 
 export function AboutHero() {
@@ -81,9 +81,10 @@ export function AboutHero() {
               href={getGeneralWhatsAppUrl()}
               target="_blank"
               rel="noopener noreferrer"
-              className="btn-primary text-sm min-h-[42px] px-5"
+              className="btn-primary text-sm min-h-[42px] px-5 inline-flex items-center gap-2"
             >
-              Hubungi WhatsApp
+              <MessageCircle className="w-4 h-4" />
+              <span>Hubungi WhatsApp</span>
             </a>
             <a
               href="https://linkedin.com/in/amelia"
@@ -91,8 +92,8 @@ export function AboutHero() {
               rel="noopener noreferrer"
               className="btn-secondary text-sm min-h-[42px] px-4.5 inline-flex items-center gap-2"
             >
-              Profil LinkedIn
-              <ExternalLink className="w-3.5 h-3.5" />
+              <ExternalLink className="w-4 h-4 text-[var(--color-ink-soft)]" />
+              <span>Profil LinkedIn</span>
             </a>
             <Link
               href="/schedule"

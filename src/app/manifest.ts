@@ -1,0 +1,81 @@
+import type { MetadataRoute } from 'next';
+
+export default function manifest(): MetadataRoute.Manifest {
+  return {
+    name: 'Amelia | Portofolio & Bimbingan Konseling',
+    short_name: 'Amelia',
+    description:
+      'Portofolio resmi dan layanan bimbingan konseling Amelia, mahasiswi BKI UIN Siber Syekh Nurjati Cirebon.',
+    start_url: '/',
+    id: '/',
+    scope: '/',
+    display: 'standalone',
+    orientation: 'portrait-primary',
+    background_color: '#FBF9F5',
+    theme_color: '#1A563C',
+    lang: 'id',
+    dir: 'ltr',
+    categories: ['education', 'health', 'lifestyle'],
+    icons: [
+      {
+        src: '/icons/icon-192x192.png',
+        sizes: '192x192',
+        type: 'image/png',
+        purpose: 'any',
+      },
+      {
+        src: '/icons/icon-512x512.png',
+        sizes: '512x512',
+        type: 'image/png',
+        purpose: 'any',
+      },
+      {
+        src: '/icons/icon-maskable-192x192.png',
+        sizes: '192x192',
+        type: 'image/png',
+        purpose: 'maskable',
+      },
+      {
+        src: '/icons/icon-maskable-512x512.png',
+        sizes: '512x512',
+        type: 'image/png',
+        purpose: 'maskable',
+      },
+      {
+        src: '/apple-touch-icon.png',
+        sizes: '180x180',
+        type: 'image/png',
+      },
+    ],
+    shortcuts: [
+      {
+        name: 'Jadwal Konseling',
+        short_name: 'Jadwal',
+        description: 'Pilih jadwal sesi bimbingan konseling bersama Amelia',
+        url: '/schedule',
+        icons: [{ src: '/icons/icon-192x192.png', sizes: '192x192' }],
+      },
+      {
+        name: 'Ruang Curhat Anonim',
+        short_name: 'Curhat',
+        description: 'Kirimkan cerita dan curahan hati secara aman dan rahasia',
+        url: '/counseling',
+        icons: [{ src: '/icons/icon-192x192.png', sizes: '192x192' }],
+      },
+      {
+        name: 'Asesmen Kepribadian & Diri',
+        short_name: 'Asesmen',
+        description: 'Ikuti tes pemahaman diri dan kesehatan mental terarah',
+        url: '/assessment',
+        icons: [{ src: '/icons/icon-192x192.png', sizes: '192x192' }],
+      },
+      {
+        name: 'Artikel & Wawasan',
+        short_name: 'Artikel',
+        description: 'Baca kumpulan wawasan seputar kesehatan mental dan konseling',
+        url: '/articles',
+        icons: [{ src: '/icons/icon-192x192.png', sizes: '192x192' }],
+      },
+    ],
+  };
+}

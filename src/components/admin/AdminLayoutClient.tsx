@@ -49,7 +49,7 @@ function AdminHeader() {
                 className="text-lg sm:text-xl font-medium text-[var(--color-ink)] hover:text-[var(--color-accent)] transition-colors"
                 style={{ fontFamily: 'var(--font-display)' }}
               >
-                Amelia <span className="text-xs font-sans font-semibold px-2 py-0.5 rounded-md bg-[var(--color-accent-soft)] text-[var(--color-accent)] border border-[var(--color-accent-border)] ml-1">Admin</span>
+                Amelia
               </Link>
             </div>
           </div>

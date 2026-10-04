@@ -35,6 +35,14 @@ export default function Footer() {
             <p className="text-sm text-white/70 leading-relaxed max-w-sm pt-1">
               Ruang aman bimbingan konseling sebaya dan portofolio profesional Amelia. Mengedepankan ketulusan, kerahasiaan amanah, dan pelayanan yang hangat.
             </p>
+            <div className="pt-3 border-t border-white/10 max-w-sm">
+              <Link
+                href="/#app-showcase"
+                className="text-emerald-300/90 hover:text-emerald-200 text-xs font-medium transition-colors inline-block"
+              >
+                Pasang Web App &rarr;
+              </Link>
+            </div>
           </div>
 
           {/* Col 2: Navigation */}

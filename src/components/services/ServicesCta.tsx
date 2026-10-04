@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import { Calendar } from 'lucide-react';
 
 export function ServicesCta() {
   return (
@@ -18,8 +19,9 @@ export function ServicesCta() {
           Seluruh percakapan, data pribadi, dan topik konseling dilindungi sepenuhnya sesuai kode etik Bimbingan Konseling.
         </p>
       </div>
-      <Link href="/schedule" className="btn-primary text-sm shrink-0">
-        Jadwalkan Sesi Sekarang
+      <Link href="/schedule" className="btn-primary text-sm shrink-0 inline-flex items-center gap-2">
+        <Calendar className="w-4 h-4" />
+        <span>Jadwalkan Sesi Sekarang</span>
       </Link>
     </section>
   );

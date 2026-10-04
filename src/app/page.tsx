@@ -9,6 +9,7 @@ import { ServicesSection } from '@/components/home/ServicesSection';
 import { AssessmentCallout } from '@/components/home/AssessmentCallout';
 import { CurhatPreviewSection } from '@/components/home/CurhatPreviewSection';
 import { ArticlesPreviewSection } from '@/components/home/ArticlesPreviewSection';
+import { AppShowcaseSection } from '@/components/home/AppShowcaseSection';
 
 import type { Metadata } from 'next';
 
@@ -77,6 +78,7 @@ export default async function Home() {
         <AssessmentCallout />
         <CurhatPreviewSection messages={answeredCurhat} />
         <ArticlesPreviewSection articles={featuredArticles} />
+        <AppShowcaseSection />
       </main>
 
       <Footer />

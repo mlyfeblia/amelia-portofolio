@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { ArrowRight, RotateCcw, CheckCircle, MessageCircle } from 'lucide-react';
+import { Calendar, RotateCcw, CheckCircle, MessageCircle } from 'lucide-react';
 import { AssessmentResultData } from '@/data/assessment-data';
 import { getAssessmentWhatsAppUrl } from '@/lib/whatsapp';
 
@@ -88,8 +88,8 @@ export function AssessmentResult({
             href="/schedule"
             className="btn-primary text-sm inline-flex items-center justify-center gap-2"
           >
-            Jadwalkan Sesi Konseling
-            <ArrowRight className="w-4 h-4" />
+            <Calendar className="w-4 h-4" />
+            <span>Jadwalkan Sesi Konseling</span>
           </Link>
         </div>
       </div>

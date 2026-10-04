@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import { ArrowRight } from 'lucide-react';
+import { Calendar } from 'lucide-react';
 
 export function ArticleCta() {
   return (
@@ -22,10 +22,10 @@ export function ArticleCta() {
       </div>
       <Link
         href="/schedule"
-        className="btn-primary min-h-[46px] px-6 text-sm shrink-0"
+        className="btn-primary min-h-[46px] px-6 text-sm shrink-0 inline-flex items-center gap-2"
       >
-        Jadwalkan Konsultasi
-        <ArrowRight className="w-4 h-4 ml-1" aria-hidden="true" />
+        <Calendar className="w-4 h-4" aria-hidden="true" />
+        <span>Jadwalkan Konsultasi</span>
       </Link>
     </div>
   );

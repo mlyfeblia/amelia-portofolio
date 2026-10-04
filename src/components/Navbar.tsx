@@ -3,23 +3,36 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Menu, X, ArrowRight } from 'lucide-react';
+import { 
+  Menu, 
+  X, 
+  Calendar, 
+  Smartphone,
+  Home,
+  User,
+  Compass,
+  ClipboardCheck,
+  HeartHandshake,
+  BookOpen
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { usePwa, triggerPwaInstall } from '@/lib/pwa-store';
 
-// Ringkas tepat 6 menu navigasi
+// Ringkas tepat 6 menu navigasi dengan ikon terstandarisasi
 const navItems = [
-  { label: 'Beranda', href: '/' },
-  { label: 'Tentang', href: '/about' },
-  { label: 'Layanan', href: '/services' },
-  { label: 'Asesmen', href: '/assessment' },
-  { label: 'Curhat', href: '/counseling' },
-  { label: 'Artikel', href: '/articles' },
+  { label: 'Beranda', href: '/', icon: Home },
+  { label: 'Tentang', href: '/about', icon: User },
+  { label: 'Layanan', href: '/services', icon: Compass },
+  { label: 'Asesmen', href: '/assessment', icon: ClipboardCheck },
+  { label: 'Curhat', href: '/counseling', icon: HeartHandshake },
+  { label: 'Artikel', href: '/articles', icon: BookOpen },
 ];
 
 export default function Navbar() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const { isInstalled } = usePwa();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
@@ -108,19 +121,23 @@ export default function Navbar() {
           <nav className="hidden md:flex items-center gap-1.5" aria-label="Navigasi utama">
             {navItems.map((item) => {
               const isActive = isItemActive(item.href);
+              const Icon = item.icon;
               return (
                 <Link
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    'px-3.5 py-1.5 text-sm font-medium rounded-full transition-all duration-200',
+                    'px-3.5 py-1.5 text-sm font-medium rounded-full transition-all duration-200 inline-flex items-center gap-1.5',
                     isActive
                       ? 'text-[var(--color-accent)] bg-[var(--color-accent-soft)] font-semibold border border-[var(--color-accent-border)] shadow-xs'
                       : 'text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] hover:bg-[var(--color-paper-muted)]'
                   )}
                   aria-current={isActive ? 'page' : undefined}
                 >
-                  {item.label}
+                  {isActive && (
+                    <Icon className="w-3.5 h-3.5 text-[var(--color-accent)] animate-fade-in shrink-0" aria-hidden="true" />
+                  )}
+                  <span>{item.label}</span>
                 </Link>
               );
             })}
@@ -147,9 +164,10 @@ export default function Navbar() {
                 href="/schedule"
                 onClick={() => setOpen(false)}
                 tabIndex={open ? -1 : 0}
-                className="btn-primary btn-interactive !text-xs sm:!text-sm !py-1.5 sm:!py-2 !px-3 sm:!px-4.5 whitespace-nowrap shadow-xs"
+                className="btn-primary btn-interactive !text-xs sm:!text-sm !py-1.5 sm:!py-2 !px-3 sm:!px-4.5 whitespace-nowrap shadow-xs inline-flex items-center gap-1.5"
               >
-                Janji Temu
+                <Calendar className="w-3.5 h-3.5" />
+                <span>Janji Temu</span>
               </Link>
             </div>
 
@@ -197,6 +215,7 @@ export default function Navbar() {
           <nav className="flex flex-col gap-1" aria-label="Navigasi mobile">
             {navItems.map((item) => {
               const isActive = isItemActive(item.href);
+              const Icon = item.icon;
               return (
                 <Link
                   key={item.href}
@@ -210,7 +229,16 @@ export default function Navbar() {
                   )}
                   aria-current={isActive ? 'page' : undefined}
                 >
-                  <span>{item.label}</span>
+                  <div className="flex items-center gap-2.5">
+                    <Icon
+                      className={cn(
+                        'w-4 h-4 shrink-0 transition-colors',
+                        isActive ? 'text-[var(--color-accent)]' : 'text-[var(--color-ink-soft)]'
+                      )}
+                      aria-hidden="true"
+                    />
+                    <span>{item.label}</span>
+                  </div>
                   {isActive && (
                     <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-accent)]" />
                   )}
@@ -219,15 +247,27 @@ export default function Navbar() {
             })}
           </nav>
 
-          <div className="pt-3 mt-2 border-t border-[var(--color-paper-border)]">
+          <div className="pt-3 mt-2 border-t border-[var(--color-paper-border)] flex flex-col gap-2">
             <Link
               href="/schedule"
               onClick={() => setOpen(false)}
-              className="btn-primary text-sm py-2.5 px-4 w-full text-center justify-center shadow-xs"
+              className="btn-primary text-sm py-2.5 px-4 w-full text-center justify-center shadow-xs inline-flex items-center gap-2"
             >
-              Janji Temu Konseling
-              <ArrowRight className="w-4 h-4 ml-1.5" />
+              <Calendar className="w-4 h-4" />
+              <span>Janji Temu Konseling</span>
             </Link>
+
+            <button
+              type="button"
+              onClick={() => {
+                setOpen(false);
+                triggerPwaInstall();
+              }}
+              className="w-full py-2.5 px-4 rounded-xl bg-white border border-[var(--color-paper-border)] text-[var(--color-ink)] text-xs font-medium hover:bg-[var(--color-paper-muted)] transition-colors flex items-center justify-center gap-2 cursor-pointer active:scale-98"
+            >
+              <Smartphone className="w-4 h-4 text-[var(--color-accent)]" />
+              <span>{isInstalled ? 'Aplikasi Amelia (Terpasang)' : 'Pasang Aplikasi Amelia'}</span>
+            </button>
           </div>
         </div>
       </header>
@@ -238,9 +278,10 @@ export default function Navbar() {
       {/* ── Soft Frosted Backdrop (Translucent Blur, Non-clickable Scrim, Scroll-Blocked) ── */}
       <div
         className={cn(
-          'fixed inset-0 z-40 bg-black/40 backdrop-blur-sm md:hidden transition-opacity duration-300 ease-out touch-none select-none',
+          'fixed inset-0 z-40 bg-black/40 backdrop-blur-sm md:hidden transition-opacity duration-300 ease-out touch-none select-none cursor-pointer',
           open ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
         )}
+        onClick={() => setOpen(false)}
         onWheel={(e) => {
           if (open) e.preventDefault();
         }}

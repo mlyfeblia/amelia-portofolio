@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Shield } from 'lucide-react';
+import { Shield, Send } from 'lucide-react';
 import { Spinner } from '@/components/ui/Spinner';
 import {
   BookingFormState,
@@ -116,19 +116,27 @@ export function BookingSessionDetailsStep({
       </div>
 
       <div>
-        <label
-          htmlFor={`${formId}-notes`}
-          className="block text-xs font-semibold text-[var(--color-ink)] mb-1"
-        >
-          Gambaran Singkat Masalah <span className="text-[var(--color-ink-soft)] font-normal">(opsional)</span>
-        </label>
+        <div className="flex items-center justify-between mb-1">
+          <label
+            htmlFor={`${formId}-notes`}
+            className="block text-xs font-semibold text-[var(--color-ink)]"
+          >
+            Gambaran Singkat Masalah <span className="text-[var(--color-ink-soft)] font-normal">(opsional)</span>
+          </label>
+          {form.notes.length > 0 && (
+            <span className="text-[11px] text-[var(--color-ink-muted)]">
+              {form.notes.length}/500
+            </span>
+          )}
+        </div>
         <textarea
           id={`${formId}-notes`}
           rows={2}
+          maxLength={500}
           value={form.notes}
           onChange={(e) => onChange('notes', e.target.value)}
           placeholder="Ceritakan harapan atau hal yang ingin diurai dalam sesi ini..."
-          className="form-input text-sm py-2 resize-none"
+          className="form-input text-sm py-2 resize-y min-h-[72px] max-h-[220px] overflow-y-auto"
         />
       </div>
 
@@ -144,7 +152,10 @@ export function BookingSessionDetailsStep({
               <span>Memproses Pengajuan...</span>
             </>
           ) : (
-            <span>Kirim Permintaan Janji Temu</span>
+            <>
+              <Send className="w-4 h-4" />
+              <span>Kirim Permintaan Janji Temu</span>
+            </>
           )}
         </button>
 

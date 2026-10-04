@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { ArrowRight, CheckCircle2, Phone } from 'lucide-react';
+import { ArrowRight, CheckCircle2, Phone, Check } from 'lucide-react';
 import { Booking } from '@/types';
 import { getAdminContactWhatsAppUrl } from '@/lib/whatsapp';
 import { SkeletonBookingCard } from '@/components/ui/Skeleton';
@@ -105,9 +105,10 @@ export function OverviewRecentBookings({
                 <button
                   onClick={() => onConfirm(item.id)}
                   type="button"
-                  className="px-3 py-1.5 rounded-lg bg-[var(--color-accent)] text-white text-xs font-semibold hover:bg-[var(--color-accent-hover)] transition-all cursor-pointer shadow-xs"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--color-accent)] text-white text-xs font-semibold hover:bg-[var(--color-accent-hover)] transition-all cursor-pointer shadow-xs"
                 >
-                  Konfirmasi
+                  <Check className="w-3.5 h-3.5" />
+                  <span>Konfirmasi</span>
                 </button>
               </div>
             </div>
