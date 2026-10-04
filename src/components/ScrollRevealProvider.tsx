@@ -13,9 +13,6 @@ export default function ScrollRevealProvider() {
   const pathname = usePathname();
 
   useEffect(() => {
-    // Enable progressive reveal animations now that JS has loaded
-    document.documentElement.classList.add('js-reveal-ready');
-
     // If reduced motion is requested, reveal all immediately
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       document.querySelectorAll('[data-reveal], .reveal-init').forEach((el) => {
@@ -42,13 +39,16 @@ export default function ScrollRevealProvider() {
     const elements = document.querySelectorAll('[data-reveal], .reveal-init');
     elements.forEach((el) => {
       const rect = el.getBoundingClientRect();
-      // If above the viewport bottom, reveal immediately so top content isn't invisible
+      // If above the viewport bottom, reveal immediately so top content never blinks or flickers
       if (rect.top < window.innerHeight * 0.95) {
         el.classList.add('revealed');
       } else {
         observer.observe(el);
       }
     });
+
+    // Enable progressive reveal animations only AFTER visible elements are already marked .revealed
+    document.documentElement.classList.add('js-reveal-ready');
 
     return () => {
       observer.disconnect();

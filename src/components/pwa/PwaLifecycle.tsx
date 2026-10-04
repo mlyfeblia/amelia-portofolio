@@ -105,12 +105,6 @@ export default function PwaLifecycle() {
   useEffect(() => {
     if (typeof window === 'undefined' || !('serviceWorker' in navigator)) return;
 
-    const handleControllerChange = () => {
-      window.location.reload();
-    };
-
-    navigator.serviceWorker.addEventListener('controllerchange', handleControllerChange);
-
     navigator.serviceWorker.ready.then((registration) => {
       if (registration.waiting) {
         setWaitingWorker(registration.waiting);
@@ -135,13 +129,23 @@ export default function PwaLifecycle() {
         setUpdateWaiting(true);
       });
     }
-
-    return () => {
-      navigator.serviceWorker.removeEventListener('controllerchange', handleControllerChange);
-    };
   }, []);
 
   const handleApplyUpdate = useCallback(() => {
+    let refreshing = false;
+    if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+      navigator.serviceWorker.addEventListener(
+        'controllerchange',
+        () => {
+          if (!refreshing) {
+            refreshing = true;
+            window.location.reload();
+          }
+        },
+        { once: true }
+      );
+    }
+
     if (waitingWorker) {
       waitingWorker.postMessage({ type: 'SKIP_WAITING' });
     } else if (window.serwist !== undefined && typeof window.serwist.messageSkipWaiting === 'function') {

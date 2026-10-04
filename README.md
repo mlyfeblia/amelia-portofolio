@@ -1,60 +1,114 @@
-# 🌿 Amelia (Amel) — Portofolio & Ruang Dengar Digital
+# 🌿 Amelia (Amel) — Portofolio & Ruang Bimbingan Digital `v1.0.0`
+
+[![Production Status](https://img.shields.io/badge/Production-Live%20v1.0.0-1A563C?style=for-the-badge&logo=vercel&logoColor=white)](https://mlyfeblia.vercel.app)
+[![Next.js](https://img.shields.io/badge/Next.js-16.3-black?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org/)
+[![React](https://img.shields.io/badge/React-19.3-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![PWA](https://img.shields.io/badge/PWA-Serwist%20Ready-5A0FC8?style=for-the-badge&logo=pwa&logoColor=white)](https://serwist.pages.dev/)
+[![License](https://img.shields.io/badge/License-MIT-lightgrey?style=for-the-badge)](LICENSE)
 
 > *"Ruang aman untuk cerita yang belum sempat diucapkan, tempat hati berlabuh dalam Thuma'ninah."* 🕊️
 
-Selamat datang di repositori portofolio resmi **Amelia (Amel)** — mahasiswi Bimbingan Konseling Islam (BKI) di **UIN Siber Syekh Nurjati Cirebon**, konselor sebaya generasi digital, dan praktisi layanan pelanggan berpengalaman sejak 2020.
+Selamat datang di repositori resmi **Amelia (Amel) — Versi 1.0.0**, platform portofolio profesional dan ruang bimbingan konseling digital dari mahasiswi Bimbingan Konseling Islam (BKI) **Universitas Islam Negeri Siber Syekh Nurjati Cirebon (UINSSC)**.
 
-Website ini bukan sekadar portofolio statis, melainkan platform **Progressive Web App (PWA)** interaktif yang dirancang dengan dedikasi tinggi (*human craft*, tanpa *AI-slop*), performa tinggi, dan ketahanan *offline* penuh untuk mendampingi siapa saja yang membutuhkan ruang aman mendengar, bercerita, dan bertumbuh.
+Platform ini mengintegrasikan profil profesional praktisi layanan pelanggan (berpengalaman sejak 2020), ruang konseling sebaya (*cyber counseling*), ruang curhat anonim yang aman, asesmen mandiri kesehatan jiwa, dan artikel reflektif berbasis pendekatan psikologi Islam (*Tazkiyatun Nafs*).
 
 ---
 
-## ✨ Fitur-Fitur Utama
+## 🌟 Pilar Desain & Standar Rekayasa (Anti-AI-Slop)
 
-### 📱 1. PWA Modern & Resilien (Powered by Serwist)
-- **Offline-First Resilience:** Seluruh aset statis, font (*Google Fonts*), artikel, dan halaman yang pernah dibuka tersimpan otomatis ke dalam cache lokal.
-- **Halaman Fallback Offline ([`src/app/~offline/page.tsx`](src/app/~offline/page.tsx)):** Jika koneksi terputus saat membuka tautan baru, aplikasi menyajikan halaman khusus bertema *Tazkiyatun Nafs* lengkap dengan panduan latihan pernapasan sadar (*grounding exercise*), tombol muat ulang, dan kontak WhatsApp darurat.
-- **Instalasi ke Layar Utama (Add to Home Screen):** Mendukung instalasi native di Android, iOS, Windows, dan macOS dengan icon adaptif (*maskable icons*) beresolusi tinggi (192px & 512px).
-- **Deteksi Pembaruan Otomatis (Lifecycle Management):** Komponen [`PwaLifecycle.tsx`](src/components/pwa/PwaLifecycle.tsx) otomatis mendeteksi Service Worker baru dan menampilkan dialog pembaruan instan (*Skip Waiting*).
-- **Dukungan Penuh "Minta Situs Desktop":** Tampilan dan skala otomatis menyesuaikan secara proporsional saat pengguna beralih ke mode situs desktop di browser mobile (Chrome Android, Safari iOS), lengkap dengan dukungan *pinch-to-zoom*.
+Platform ini dibangun dengan prinsip keaslian (*human craft*) dan disiplin estetika tanpa kompromi:
+- **Palet Warna Organik Bernuansa Teduh:** Menggunakan token warna `Warm Paper` (`#FBF9F5`), `Forest Sage` (`#1A563C`), dan `Reading Ink` (`#192820`) yang menenangkan mata saat membaca lama.
+- **Tipografi Berdisiplin Tinggi:** Pasangan elegan *Newsreader* (serif untuk headline berwibawa) dan *Plus Jakarta Sans* (sans-serif ramah untuk keterbacaan teks panjang).
+- **Zero-Flicker & Micro-Interactions 60fps:** Seluruh transisi, modal terpusat, dropdown, dan animasi scroll menggunakan composited transforms hardware-accelerated tanpa lonjakan layout (*zero Cumulative Layout Shift*).
+- **Kebersihan Interaksi Teks:** Teks artikel, kode reservasi, dan materi bacaan dapat disalin bebas (`select-text`), sedangkan elemen antarmuka tombol dan navigasi terlindungi dari ketidaksengajaan seleksi blok (`select-none`).
+- **Aksesibilitas Universal (WCAG 2.1 AA):** Skip to content link, indikator fokus keyboard berstandar tinggi, semantik ARIA lengkap, dan dukungan ketat `prefers-reduced-motion`.
 
-### 🗓️ 2. Janji Temu Konseling (Reservasi Terpadu)
-- **Pilihan 3 Format Fleksibel:** *Google Meet Virtual*, *Chat Terjadwal*, atau *Tatap Muka di Kampus UIN Siber Cirebon*.
-- **Validasi Multi-Lapisan:** Validasi nomor WhatsApp (9–15 digit), format email, pencegahan tanggal masa lalu, dan batas reservasi hingga 60 hari ke depan.
-- **Keamanan Berlapis:** Dilengkapi *honeypot bot trap* dan Upstash Redis *sliding-window rate limiter* untuk mencegah spam.
+---
 
-### 💌 3. Ruang Curhat Anonim (Interactive Q&A)
-- **100% Aman & Terjaga:** Memungkinkan konseli menumpahkan keluh kesah akademik, emosional, atau keluarga tanpa perlu mencantumkan identitas asli.
-- **Moderasi & Tanggapan Konselor:** Amelia dapat membaca, memoderasi, dan memberikan jawaban meneduhkan langsung dari Dashboard Admin.
+## ✨ Fitur Utama Versi 1.0.0
+
+### 📱 1. Progressive Web App (PWA) Resilien
+- **Offline-First Resilience:** Seluruh halaman, font, dan aset statis yang pernah dibuka di-cache secara otomatis via Service Worker berbasis [Serwist](https://serwist.pages.dev/).
+- **Fallback Offline Interaktif ([`src/app/~offline/page.tsx`](src/app/~offline/page.tsx)):** Menyediakan panduan latihan pernapasan grounding (*Tazkiyatun Nafs*), tombol muat ulang, dan akses darurat saat koneksi internet terputus.
+- **Siklus Hidup Pintar (Zero-Flicker Lifecycle):** Service Worker beroperasi tanpa double-reload atau kedipan layar pada refresh normal. Notifikasi pembaruan disajikan dalam banner elegan dengan aksi *Perbarui Sekarang*.
+- **Panduan Pasang Lintas Platform:** Dukungan instalasi native di Android, Windows, macOS, serta modal petunjuk visual khusus untuk pengguna Safari iOS (*Add to Home Screen*).
+
+### 🗓️ 2. Reservasi Jadwal Konseling Privat
+- **Tiga Format Sesi Fleksibel:** *Google Meet Virtual*, *Chat Terjadwal*, dan *Tatap Muka di Lingkungan Kampus UIN Siber Cirebon*.
+- **Alur Mandiri & Validasi Berlapis:** Validasi nomor WhatsApp (9–15 digit), format email, pencegahan bentrok tanggal, dan tiket reservasi instan ber-QR code.
+- **Proteksi Spam:** Dilengkapi honeypot trap dan pembatasan frekuensi pengiriman via Upstash Redis Rate Limiting.
+
+### 💌 3. Ruang Curhat Anonim (Dinding Interaktif)
+- **100% Rahasia & Aman:** Konseli dapat mencurahkan isi hati dan beban pikiran akademik maupun emosional tanpa mempublikasikan identitas pribadi.
+- **Tanggapan Konselor Sebaya:** Jawaban reflektif dan suportif dari Amelia dipublikasikan ke dinding curhat publik setelah melalui proses kurasi.
 
 ### 🪞 4. Asesmen Kesejahteraan Diri Mandiri
-- Kuis refleksi interaktif 2 menit untuk mengevaluasi ritme pikiran, kestabilan emosi, dan ketenangan batin secara terarah.
+- Evaluasi reflektif terstruktur berdurasi 2 menit untuk menakar beban mental, stabilitas emosi, dan kedamaian batin dengan umpan balik interpretatif yang menenangkan.
 
 ### 📖 5. Artikel & Kajian Reflektif BKI
-- Wawasan mendalam seputar integrasi *Cognitive Behavioral Therapy* (CBT) dengan psikologi Islam, *Tazkiyatun Nafs*, serta etika *Cyber Counseling*.
+- Kumpulan artikel mendalam tentang *Tazkiyatun Nafs*, navigasi kecemasan (*overthinking*), *Cyber Counseling*, serta relasi bimbingan konseling sebaya.
+- Dilengkapi estimasi waktu baca, filter kategori, format markdown aman, dan tombol bagikan cepat.
 
-### 🔐 6. Portal Manajemen Admin Terproteksi
-- Dashboard privat khusus konselor untuk mengelola antrean reservasi konseli, membalas curhatan publik/privat, dan menerbitkan artikel.
-- Dilengkapi sistem otentikasi berbasis token JWT HttpOnly, verifikasi sesi realtime, dan proteksi brute-force.
+### 🔐 6. Portal Administrasi Konselor
+- Dashboard terlindungi untuk memantau pendaftar konseling, memoderasi pesan curhat, dan mempublikasikan artikel baru.
+- Otentikasi berbasis token JWT HttpOnly, hash verifikasi, dan proteksi sesi berlapis.
 
 ---
 
-## 🛠️ Stack Teknologi
+## ⚡ Optimalisasi Performa & SEO
 
-Platform ini dibangun menggunakan arsitektur web modern berkinerja tinggi:
+### 🚀 Metrik Kinerja (Core Web Vitals)
+- **Largest Contentful Paint (LCP):** Gambar profil pahlawan dioptimasi ke WebP/AVIF dengan atribut `priority` dan `sizes` responsif untuk pemuatan sub-detik.
+- **Cumulative Layout Shift (CLS):** `0.000` — Dimensi elemen gambar dan font swap terkunci presisi tanpa pergeseran layout.
+- **First Input Delay / INP:** Interaksi instan didukung oleh React 19 concurrent features dan bundle JavaScript modular.
 
-| Layer | Teknologi | Deskripsi / Peran |
+### 🔍 Search Engine Optimization (SEO) Terpadu
+- **Dynamic Metadata & Canonical URL:** Setiap halaman dilengkapi judul unik, deskripsi kontekstual, dan tautan kanonikal resmi ke domain produksi.
+- **OpenGraph & Twitter Card:** Tampilan pratinjau kaya (*rich snippet previews*) untuk pembagian di WhatsApp, Telegram, Twitter/X, dan LinkedIn.
+- **JSON-LD Schema.org Berstandar:**
+  - `Person` (Profil Amelia, afiliasi UIN Siber Cirebon, kompetensi konseling)
+  - `WebSite` (Pencarian artikel terindeks)
+  - `ProfessionalService` (Layanan bimbingan konseling)
+  - `WebApplication` (Asesmen mandiri & PWA)
+  - `BlogPosting` (Metadata artikel, penulis, dan tanggal rilis)
+  - `BreadcrumbList` (Hierarki navigasi di setiap sub-halaman)
+- **Sitemap Dinamis & Robots:** Berkas [`sitemap.xml`](src/app/sitemap.ts) yang mengindeks artikel aktif secara otomatis serta [`robots.txt`](src/app/robots.ts) yang memblokir crawler dari area privat admin/API.
+
+---
+
+## 🛡️ Standar Keamanan (OWASP Top 10 Hardened)
+
+1. **Proteksi Cross-Site Scripting (XSS):**
+   Renderer markdown artikel menggunakan whitelist ketat untuk skema URL (`http:`, `https:`, `mailto:`, `tel:`), memblokir injeksi berbasis `javascript:`, `data:`, atau `vbscript:`.
+2. **HTTP Security Headers Lengkap:**
+   - `Strict-Transport-Security: max-age=63072000; includeSubDomains; preload` (HSTS)
+   - `X-Frame-Options: SAMEORIGIN` (Pencegahan Clickjacking)
+   - `X-Content-Type-Options: nosniff` (Pencegahan MIME-sniffing)
+   - `Referrer-Policy: strict-origin-when-cross-origin`
+   - `Permissions-Policy: camera=(), microphone=(), geolocation=()`
+3. **Pembatasan Frekuensi Akses (Rate Limiting):**
+   Pencegahan serangan DDoS dan pengiriman formulir berulang menggunakan Upstash Redis Sliding Window Rate Limiter.
+4. **Proteksi Sesi Konselor:**
+   Cookie sesi menggunakan atribut `HttpOnly`, `SameSite=Lax`, dan `Secure` untuk mencegah kebocoran kredensial via script injeksi.
+
+---
+
+## 🛠️ Stack Teknologi & Arsitektur
+
+| Kategori | Teknologi | Peran / Deskripsi |
 | :--- | :--- | :--- |
-| **Framework** | [Next.js 16](https://nextjs.org/) (App Router) | Server Components (RSC), Dynamic Metadata, SEO |
-| **UI Library** | [React 19](https://react.dev/) | `react: 19.3.0`, `useSyncExternalStore` |
-| **PWA Engine** | [Serwist](https://serwist.pages.dev/) (`@serwist/next`) | Service Worker bundler, precache, runtime caching tiers |
-| **Language** | [TypeScript 5](https://www.typescriptlang.org/) | Strict type-safety dari ujung frontend hingga query database |
-| **Database** | [PostgreSQL 15](https://www.postgresql.org/) (InsForge BaaS) | Database relasional persisten & transaksi ACID |
-| **ORM** | [Drizzle ORM](https://orm.drizzle.team/) | Type-safe query builder & otomatisasi migrasi |
-| **Rate Limiting** | [Upstash Redis](https://upstash.com/) (`@upstash/ratelimit`) | Perlindungan DDoS & pembatasan frekuensi pengiriman pesan |
-| **Styling** | [Tailwind CSS v4](https://tailwindcss.com/) | Desain kustom bertema *Warm Paper*, *Forest Sage*, dan *Reading Ink* |
-| **Asset Pipeline**| [Sharp](https://sharp.pixelplumbing.com/) | Optimasi gambar WebP/AVIF dan kompilasi icon PWA |
-| **Icons & Font** | `lucide-react`, Google Fonts (`Newsreader` & `Plus Jakarta Sans`) | Tipografi berdisiplin tinggi dan ikonografi konsisten |
-| **Deployment** | [Vercel](https://vercel.com/) | Edge network global, zero-downtime CI/CD deployment |
+| **Framework** | [Next.js 16](https://nextjs.org/) (App Router) | React Server Components (RSC), Dynamic Metadata, Route Handlers |
+| **Library UI** | [React 19](https://react.dev/) | `react: 19.3.0`, `useSyncExternalStore`, concurrent hydration |
+| **PWA Engine** | [Serwist](https://serwist.pages.dev/) (`@serwist/next`) | Service Worker bundler, precache, tiering cache statis |
+| **Bahasa** | [TypeScript 5](https://www.typescriptlang.org/) | Type-safety menyeluruh dari skema DB hingga antarmuka UI |
+| **Database** | [PostgreSQL](https://www.postgresql.org/) (InsForge BaaS) | Penyimpanan data relasional persisten |
+| **ORM** | [Drizzle ORM](https://orm.drizzle.team/) | Type-safe queries, skema terstruktur, dan Drizzle Kit |
+| **Rate Limiter** | [Upstash Redis](https://upstash.com/) | Sliding-window limiter untuk rute form publik |
+| **Styling** | [Tailwind CSS v4](https://tailwindcss.com/) | Utilitas styling modern dengan token CSS native |
+| **Ikonografi** | [Lucide React](https://lucide.dev/) | Ikon antarmuka bersih & terstandarisasi |
+| **Kompresi Aset** | [Sharp](https://sharp.pixelplumbing.com/) | Konversi & optimasi gambar WebP/AVIF |
+| **Hosting & CDN**| [Vercel](https://vercel.com/) | Edge network global, HTTPS otomatis, zero-downtime deploys |
 
 ---
 
@@ -63,53 +117,56 @@ Platform ini dibangun menggunakan arsitektur web modern berkinerja tinggi:
 ```text
 amelia-portofolio/
 ├── public/
-│   ├── icons/                  # Icon PWA (192x192, 512x512, standard & maskable)
-│   ├── amelia.webp             # Foto profil beresolusi tinggi (teroptimasi)
+│   ├── icons/                  # Icon PWA (192px, 512px, standar & maskable)
+│   ├── amelia.webp             # Foto potret profil teroptimasi WebP
 │   ├── apple-icon.png          # Touch icon iOS Safari (180x180)
 │   ├── manifest.json           # Salinan statis Web App Manifest
-│   └── sw.js                   # Service Worker produksi (digenerasi oleh Serwist)
+│   └── sw.js                   # Service Worker produksi terkompilasi
 ├── src/
-│   ├── app/                    # Next.js App Router Routes
-│   │   ├── ~offline/           # Halaman fallback saat koneksi terputus
-│   │   ├── about/              # Profil lengkap, riwayat kerja & kepemimpinan
-│   │   ├── admin/              # Portal Manajemen Konselor (Dashboard, Bookings, Curhat)
-│   │   ├── api/                # API Route Handlers (Admin, Bookings, Curhat, Articles)
-│   │   ├── articles/           # Koleksi artikel & halaman dinamis [slug]
-│   │   ├── assessment/         # Kuis evaluasi diri & kesehatan mental mandiri
-│   │   ├── counseling/         # Ruang Curhat Anonim & dinding interaktif
+│   ├── app/                    # Next.js App Router
+│   │   ├── ~offline/           # Fallback PWA saat jaringan terputus
+│   │   ├── about/              # Profil lengkap, perjalanan, dan riwayat kerja
+│   │   ├── admin/              # Portal Manajemen Konselor
+│   │   ├── api/                # Endpoint API (Admin, Bookings, Curhat, Articles)
+│   │   ├── articles/           # Koleksi artikel & rute dinamis [slug]
+│   │   ├── assessment/         # Asesmen reflektif kesejahteraan jiwa
+│   │   ├── counseling/         # Ruang curhat anonim & dinding interaktif
 │   │   ├── schedule/           # Formulir reservasi janji temu konseling
-│   │   ├── services/           # Rincian format layanan & alur konsultasi
-│   │   ├── layout.tsx          # Root Layout, font injection, viewport, & JSON-LD
-│   │   ├── manifest.ts         # Dynamic App Router Web App Manifest
-│   │   ├── robots.ts           # Konfigurasi robots crawler
+│   │   ├── services/           # Format layanan & tahapan alur bimbingan
+│   │   ├── error.tsx           # Route Error Boundary
+│   │   ├── global-error.tsx    # Root Layout Fatal Error Boundary
+│   │   ├── not-found.tsx       # Empathetic Custom 404 Page
+│   │   ├── layout.tsx          # Root Layout, injection font, & JSON-LD
+│   │   ├── manifest.ts         # Dynamic Web App Manifest
+│   │   ├── robots.ts           # Konfigurasi perayapan mesin pencari
 │   │   └── sitemap.ts          # Generator sitemap XML otomatis
 │   ├── components/
-│   │   ├── about/              # Komponen halaman Tentang
-│   │   ├── admin/              # Komponen panel admin & proteksi sesi
-│   │   ├── booking/            # Langkah-langkah formulir reservasi
-│   │   ├── counseling/         # Form input curhat & dinding pesan
-│   │   ├── home/               # Hero, Approach, Services, & Track Record
-│   │   ├── pwa/                # PwaLifecycle (Update, Install, Status Jaringan) & OfflineActions
-│   │   ├── Navbar.tsx          # Navigasi responsif (Desktop & Mobile)
-│   │   └── Footer.tsx          # Navigasi bawah, kontak, dan hak cipta
+│   │   ├── about/              # Komponen modular halaman Tentang
+│   │   ├── admin/              # Antarmuka dashboard admin konselor
+│   │   ├── articles/           # Card artikel, renderer markdown aman
+│   │   ├── booking/            # Wizard form reservasi konseling
+│   │   ├── counseling/         # Form input & kartu dinding curhat
+│   │   ├── home/               # Hero, Track Record, Layanan, & Showcase
+│   │   ├── pwa/                # Komponen siklus hidup PWA & aksi offline
+│   │   ├── Navbar.tsx          # Navigasi utama dengan ikon terstandarisasi
+│   │   └── Footer.tsx          # Footer informatif, tautan & kontak resmi
 │   ├── db/
 │   │   ├── index.ts            # Inisialisasi koneksi Drizzle ORM
-│   │   └── schema.ts           # Definisi skema tabel (articles, bookings, curhat)
+│   │   └── schema.ts           # Skema tabel PostgreSQL
 │   ├── lib/
-│   │   ├── data-store.ts       # Lapisan akses data (PostgreSQL + Fallback Mock)
+│   │   ├── data-store.ts       # Lapisan akses data (PostgreSQL + Mock Fallback)
+│   │   ├── pwa-store.ts        # Store state reaktif PWA (Install & status)
 │   │   ├── rate-limiter.ts     # Integrasi Upstash Redis Rate Limiting
-│   │   └── utils.ts            # Helper utilitas Tailwind & JSON-LD sanitization
-│   └── sw.ts                   # Sumber Service Worker Serwist (Caching tiers & Fallbacks)
-├── next.config.ts              # Konfigurasi Next.js + withSerwistInit
-├── tsconfig.json               # Konfigurasi TypeScript + lib webworker & serwist typings
-└── package.json
+│   │   └── utils.ts            # Sanitasi teks, format tanggal, & helper UI
+│   └── sw.ts                   # Sumber Service Worker Serwist
+├── next.config.ts              # Konfigurasi Next.js + Serwist
+├── tsconfig.json               # Konfigurasi compiler TypeScript
+└── package.json                # Rincian dependensi & script v1.0.0
 ```
 
 ---
 
-## 🚀 Panduan Menjalankan di Komputer Lokal
-
-Ikuti langkah-langkah berikut untuk menjalankan repositori ini di lingkungan lokal Anda:
+## 🚀 Panduan Memulai di Komputer Lokal
 
 ### 1. Kloning Repositori
 ```bash
@@ -118,44 +175,36 @@ cd amelia-portofolio
 ```
 
 ### 2. Pasang Dependensi
-Aplikasi ini menggunakan package manager `pnpm`:
 ```bash
 pnpm install
 ```
 
-### 3. Konfigurasi Environment Variables (`.env.local`)
-Salin file template `.env.example` menjadi `.env.local`:
-```bash
-cp .env.example .env.local
-```
-Sesuaikan konfigurasi variabel lingkungan yang dibutuhkan:
+### 3. Konfigurasi Lingkungan (`.env.local`)
+Salin file `.env.example` ke `.env.local` dan lengkapi kredensial:
 ```env
-# InsForge Backend / PostgreSQL
+# Database PostgreSQL / InsForge
 DATABASE_URL="postgresql://postgres:password@host:5432/dbname?sslmode=require"
 NEXT_PUBLIC_INSFORGE_URL="https://your-project.insforge.app"
 NEXT_PUBLIC_INSFORGE_ANON_KEY="your-anon-key"
 INSFORGE_API_KEY="your-api-key"
 
-# Upstash Redis Rate Limiting (Opsional di lokal, wajib di produksi)
+# Upstash Redis (Rate Limiting)
 UPSTASH_REDIS_REST_URL="https://your-redis.upstash.io"
 UPSTASH_REDIS_REST_TOKEN="your-redis-token"
 
-# Keamanan Admin Dashboard
-ADMIN_SECRET="your-strong-admin-passphrase"
-ADMIN_SESSION_SECRET="your-32-char-random-jwt-secret-key"
+# Autentikasi Admin
+ADMIN_SECRET="kata-sandi-admin-yang-kuat"
+ADMIN_SESSION_SECRET="rahasia-token-jwt-minimal-32-karakter"
 
-# Metadata & Verifikasi
+# Metadata Situs
 NEXT_PUBLIC_SITE_URL="http://localhost:3000"
-GOOGLE_SITE_VERIFICATION="your-verification-code"
+GOOGLE_SITE_VERIFICATION="kode-verifikasi-google"
 ```
 
 ### 4. Sinkronisasi Skema Database
-Dorong skema tabel Drizzle ke database PostgreSQL:
 ```bash
 pnpm db:push
-```
-*(Opsional)* Jalankan script pengisian data awal:
-```bash
+# Opsional: Memasukkan data artikel & sampel awal
 pnpm db:seed
 ```
 
@@ -163,10 +212,9 @@ pnpm db:seed
 ```bash
 pnpm dev
 ```
-Buka peramban Anda di [http://localhost:3000](http://localhost:3000).
+Buka peramban di [http://localhost:3000](http://localhost:3000).
 
-### 6. Build Produksi (Kompilasi PWA & Service Worker)
-Untuk menguji performa penuh PWA dan kompilasi Service Worker Serwist:
+### 6. Pengujian Build Produksi & Service Worker
 ```bash
 pnpm build
 pnpm start
@@ -174,31 +222,31 @@ pnpm start
 
 ---
 
-## 📑 Daftar Perintah Kerja (Scripts)
+## 📋 Daftar Perintah (Scripts)
 
 | Perintah | Deskripsi |
 | :--- | :--- |
-| `pnpm dev` | Menjalankan server pengembangan lokal |
-| `pnpm build` | Membangun bundel produksi Next.js dengan kompilasi Service Worker Serwist (`--webpack`) |
-| `pnpm start` | Menjalankan server aplikasi produksi lokal |
+| `pnpm dev` | Menjalankan server pengembangan lokal dengan Turbopack |
+| `pnpm build` | Membangun bundel produksi Next.js dengan kompilasi Service Worker Serwist |
+| `pnpm start` | Menjalankan aplikasi hasil build produksi di server lokal |
 | `pnpm lint` | Memeriksa kepatuhan kode dan linting ESLint |
-| `pnpm db:push` | Mendorong perubahan skema Drizzle langsung ke PostgreSQL |
-| `pnpm db:generate` | Menghasilkan berkas migrasi SQL |
-| `pnpm db:studio` | Membuka antarmuka grafis Drizzle Studio di browser |
-| `pnpm db:seed` | Memasukkan data awal artikel dan rekam jejak ke database |
+| `pnpm db:push` | Mendorong perubahan skema Drizzle langsung ke basis data PostgreSQL |
+| `pnpm db:generate` | Menghasilkan berkas migrasi SQL baru |
+| `pnpm db:studio` | Membuka antarmuka visual Drizzle Studio di peramban |
+| `pnpm db:seed` | Mengisi data sampel awal ke database |
 
 ---
 
-## 🌐 Tautan Resmi
+## 🌐 Tautan & Akses Resmi
 
-- 🌟 **Situs Resmi Utama:** [https://mlyfeblia.vercel.app](https://mlyfeblia.vercel.app)
-- 📦 **Repositori GitHub:** [mlyfeblia/amelia-portofolio](https://github.com/mlyfeblia/amelia-portofolio)
-- 💼 **LinkedIn Amelia:** [linkedin.com/in/amelia](https://linkedin.com/in/amelia)
-- 💬 **Layanan Konseling & Curhat:** Tersedia melalui menu navigasi di situs resmi.
+- 🌟 **Situs Produksi:** [https://mlyfeblia.vercel.app](https://mlyfeblia.vercel.app)
+- 🔗 **Domain Alternatif:** [https://amelia-portofolio.vercel.app](https://amelia-portofolio.vercel.app)
+- 📦 **Repositori Sumber:** [mlyfeblia/amelia-portofolio](https://github.com/mlyfeblia/amelia-portofolio)
+- 💼 **LinkedIn:** [linkedin.com/in/amelia](https://linkedin.com/in/amelia)
 
 ---
 
 <div align="center">
-  <p>Didedikasikan dengan ketulusan untuk mendampingi jiwa-jiwa tangguh generasi siber. 🤍🌿</p>
-  <p><sub>© 2026 Amelia · Bimbingan Konseling Islam UIN Siber Syekh Nurjati Cirebon.</sub></p>
+  <p>Diciptakan dengan kehangatan dan dedikasi penuh untuk mendampingi jiwa-jiwa bertumbuh. 🤍🌿</p>
+  <p><sub>Versi 1.0.0 · © 2026 Amelia · Bimbingan Konseling Islam UIN Siber Syekh Nurjati Cirebon.</sub></p>
 </div>

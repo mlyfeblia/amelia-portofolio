@@ -16,7 +16,7 @@ const revision = (() => {
 const withSerwist = withSerwistInit({
   swSrc: 'src/sw.ts',
   swDest: 'public/sw.js',
-  reloadOnOnline: true,
+  reloadOnOnline: false,
   disable: process.env.NODE_ENV === 'development',
   additionalPrecacheEntries: [{ url: '/~offline', revision }],
 });
