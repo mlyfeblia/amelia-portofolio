@@ -1,0 +1,151 @@
+'use client';
+
+import React from 'react';
+import Link from 'next/link';
+import { Clock, Calendar, Edit3, ExternalLink, Trash2, Eye, EyeOff } from 'lucide-react';
+import { Article } from '@/types';
+import { Badge } from '@/components/ui/Badge';
+import { Spinner } from '@/components/ui/Spinner';
+
+interface ArticleCardProps {
+  article: Article;
+  isToggling?: boolean;
+  onEdit: (art: Article) => void;
+  onDelete: (art: Article) => void;
+  onTogglePublish?: (art: Article) => void;
+}
+
+export function ArticleCard({
+  article,
+  isToggling = false,
+  onEdit,
+  onDelete,
+  onTogglePublish,
+}: ArticleCardProps) {
+  const isPublic = article.isPublished !== false;
+
+  return (
+    <div className="card-interactive p-4 sm:p-6 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-paper-border)] shadow-xs space-y-3.5">
+      {/* Header Info & Actions */}
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+        <div className="space-y-1.5 flex-1 min-w-0">
+          <div className="flex flex-wrap items-center gap-2 text-xs">
+            {/* Status Badge */}
+            {isPublic ? (
+              <Badge variant="accent" size="xs" dot>Tayang Publik</Badge>
+            ) : (
+              <Badge variant="neutral" size="xs">Draf (Tersembunyi)</Badge>
+            )}
+
+            <span className="font-semibold text-[var(--color-accent)] px-2.5 py-0.5 rounded-full bg-[var(--color-accent-soft)] text-[11px]">
+              {article.category}
+            </span>
+            <span className="text-[var(--color-paper-border)]">&bull;</span>
+            <span className="text-[var(--color-ink-muted)] text-[11px] flex items-center gap-1">
+              <Clock className="w-3 h-3" />
+              {article.readTime}
+            </span>
+            <span className="text-[var(--color-paper-border)]">&bull;</span>
+            <span className="text-[var(--color-ink-muted)] text-[11px] flex items-center gap-1">
+              <Calendar className="w-3 h-3" />
+              {article.publishedAt}
+            </span>
+          </div>
+
+          <h2
+            className="text-base sm:text-lg font-medium text-[var(--color-ink)] leading-snug line-clamp-2"
+            style={{ fontFamily: 'var(--font-display)' }}
+          >
+            {article.title}
+          </h2>
+
+          <p className="text-xs sm:text-sm text-[var(--color-ink-muted)] leading-relaxed line-clamp-2">
+            {article.excerpt}
+          </p>
+        </div>
+
+        {/* Mobile-Friendly Action Buttons */}
+        <div className="flex flex-wrap items-center gap-2 shrink-0 self-stretch sm:self-start justify-end pt-2 sm:pt-0 border-t sm:border-t-0 border-[var(--color-paper-border)]">
+          {/* 1-Click Visibility Toggle Button */}
+          {onTogglePublish && (
+            <button
+              onClick={() => onTogglePublish(article)}
+              disabled={isToggling}
+              type="button"
+              title={isPublic ? 'Sembunyikan dari publik (jadikan draf)' : 'Terbitkan ke website publik'}
+              className={`btn-interactive inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold border cursor-pointer whitespace-nowrap disabled:opacity-60 ${
+                isPublic
+                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
+                  : 'bg-zinc-100 text-zinc-600 border-zinc-200 hover:bg-zinc-200'
+              }`}
+            >
+              {isToggling ? (
+                <Spinner size="xs" variant="muted" label="Menyimpan status publikasi..." />
+              ) : isPublic ? (
+                <Eye className="w-3.5 h-3.5 text-emerald-600" />
+              ) : (
+                <EyeOff className="w-3.5 h-3.5 text-zinc-500" />
+              )}
+              <span>{isToggling ? 'Menyimpan...' : isPublic ? 'Publik' : 'Draf'}</span>
+            </button>
+          )}
+
+          {/* Edit Button */}
+          <button
+            onClick={() => onEdit(article)}
+            type="button"
+            className="btn-interactive inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--color-accent-soft)] text-[var(--color-accent)] hover:bg-[var(--color-accent)] hover:text-white text-xs font-semibold cursor-pointer"
+          >
+            <Edit3 className="w-3.5 h-3.5" />
+            <span>Ubah</span>
+          </button>
+
+          {/* Public Preview Link */}
+          {isPublic && (
+            <Link
+              href={`/articles/${article.slug}`}
+              target="_blank"
+              className="btn-interactive inline-flex items-center justify-center gap-1 p-2 rounded-lg bg-[var(--color-surface)] border border-[var(--color-paper-border)] hover:bg-[var(--color-paper-muted)] text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] text-xs"
+              title="Buka tampilan web publik"
+            >
+              <ExternalLink className="w-3.5 h-3.5" />
+            </Link>
+          )}
+
+          {/* Delete Button */}
+          <button
+            onClick={() => onDelete(article)}
+            type="button"
+            className="btn-interactive inline-flex items-center justify-center p-2 rounded-lg text-[var(--color-ink-muted)] hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+            title="Hapus artikel ini"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      </div>
+
+      {/* Slug & Tags Footer */}
+      <div className="pt-2.5 border-t border-[var(--color-paper-border)] flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+        <div className="flex items-center gap-1.5 text-[var(--color-ink-muted)] font-mono text-[11px] overflow-hidden text-ellipsis">
+          <span className="shrink-0">URL:</span>
+          <code className="px-1.5 py-0.5 rounded bg-[var(--color-paper)] border border-[var(--color-paper-border)] text-[var(--color-accent)] truncate max-w-[260px] sm:max-w-none">
+            /articles/{article.slug}
+          </code>
+        </div>
+
+        {article.tags && article.tags.length > 0 && (
+          <div className="flex flex-wrap gap-1">
+            {article.tags.map((t) => (
+              <span
+                key={t}
+                className="px-2 py-0.5 rounded bg-[var(--color-paper)] border border-[var(--color-paper-border)] text-[10px] text-[var(--color-ink-muted)]"
+              >
+                #{t}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

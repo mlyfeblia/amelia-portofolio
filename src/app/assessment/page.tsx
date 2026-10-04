@@ -3,18 +3,78 @@ import type { Metadata } from 'next';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import AssessmentSection from '@/components/AssessmentSection';
+import BreadcrumbJsonLd from '@/components/BreadcrumbJsonLd';
+import { safeJsonLd } from '@/lib/utils';
+
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://mlyfeblia.vercel.app';
 
 export const metadata: Metadata = {
-  title: 'Asesmen',
+  title: 'Asesmen Kesejahteraan Jiwa',
   description:
     'Lakukan refleksi mandiri 2 menit untuk mengenali kondisi beban pikiran, resiliensi emosi, dan kedamaian batin Anda bersama Amelia.',
+  alternates: {
+    canonical: `${BASE_URL}/assessment`,
+  },
+  openGraph: {
+    title: 'Asesmen Kesejahteraan Jiwa | Amelia',
+    description:
+      'Lakukan refleksi mandiri 2 menit untuk mengenali kondisi beban pikiran, resiliensi emosi, dan kedamaian batin Anda bersama Amelia.',
+    url: `${BASE_URL}/assessment`,
+    type: 'website',
+    images: [
+      {
+        url: `${BASE_URL}/amelia.webp`,
+        width: 1200,
+        height: 1500,
+        alt: 'Asesmen Kesejahteraan Jiwa Amelia',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Asesmen Kesejahteraan Jiwa | Amelia',
+    description:
+      'Refleksi mandiri 2 menit untuk mengenali ritme pikiran, kestabilan emosi, dan ketenteraman batin.',
+    images: [`${BASE_URL}/amelia.webp`],
+  },
+};
+
+const assessmentAppJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'Asesmen Kesejahteraan Jiwa Amelia',
+  applicationCategory: 'HealthApplication',
+  operatingSystem: 'All',
+  url: `${BASE_URL}/assessment`,
+  description:
+    'Alat refleksi dan asesmen mandiri 2 menit untuk mengenali ritme pikiran, kestabilan emosi, dan ketenteraman batin.',
+  offers: {
+    '@type': 'Offer',
+    price: '0',
+    priceCurrency: 'IDR',
+  },
+  author: {
+    '@type': 'Person',
+    name: 'Amelia',
+    url: BASE_URL,
+  },
 };
 
 export default function AssessmentPage() {
   return (
     <>
+      <BreadcrumbJsonLd
+        items={[
+          { name: 'Beranda', url: BASE_URL },
+          { name: 'Asesmen', url: `${BASE_URL}/assessment` },
+        ]}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(assessmentAppJsonLd) }}
+      />
       <Navbar />
-      <main id="main-content" className="min-h-screen pt-8 sm:pt-10 md:pt-12 pb-16 sm:pb-20 md:pb-24">
+      <main id="main-content" className="min-h-screen pt-8 sm:pt-10 md:pt-12 pb-16 sm:pb-20 md:pb-24 page-enter">
         <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-10 space-y-8 animate-fade-in-up">
           <div className="max-w-3xl space-y-2">
             <h1

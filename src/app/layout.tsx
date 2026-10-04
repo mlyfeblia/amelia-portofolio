@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { Plus_Jakarta_Sans, Newsreader } from 'next/font/google';
 import Script from 'next/script';
 import ScrollRevealProvider from '@/components/ScrollRevealProvider';
+import { safeJsonLd } from '@/lib/utils';
 import './globals.css';
 
 // ── Fonts ────────────────────────────────────────────────────────
@@ -32,7 +33,7 @@ const DEFAULT_DESC =
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),
   title: {
-    default: 'Amelia | Portofolio & Konseling',
+    default: 'Amelia | Portofolio & Bimbingan Konseling',
     template: '%s | Amelia',
   },
   description: DEFAULT_DESC,
@@ -47,6 +48,11 @@ export const metadata: Metadata = {
   authors: [{ name: 'Amelia', url: BASE_URL }],
   creator: 'Amelia',
   publisher: 'Amelia | UIN Siber Syekh Nurjati Cirebon',
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
   icons: {
     icon: [
       { url: '/favicon.ico', sizes: '32x32' },
@@ -70,8 +76,8 @@ export const metadata: Metadata = {
     type: 'profile',
     locale: 'id_ID',
     url: BASE_URL,
-    siteName: 'Amelia',
-    title: 'Amelia | Portofolio & Konseling',
+    siteName: 'Amelia | Portofolio & Bimbingan Konseling',
+    title: 'Amelia | Portofolio & Bimbingan Konseling',
     description: DEFAULT_DESC,
     firstName: 'Amelia',
     username: 'amelia',
@@ -80,7 +86,7 @@ export const metadata: Metadata = {
         url: `${BASE_URL}/amelia.webp`,
         width: 1200,
         height: 1500,
-        alt: 'Foto Profil Amelia, Mahasiswi Bimbingan Konseling UIN Siber Syekh Nurjati Cirebon',
+        alt: 'Amelia | Portofolio & Bimbingan Konseling UIN Siber Syekh Nurjati Cirebon',
       },
     ],
   },
@@ -88,7 +94,7 @@ export const metadata: Metadata = {
   // Twitter / X Card
   twitter: {
     card: 'summary_large_image',
-    title: 'Amelia | Portofolio & Konseling',
+    title: 'Amelia | Portofolio & Bimbingan Konseling',
     description: DEFAULT_DESC,
     images: [`${BASE_URL}/amelia.webp`],
   },
@@ -106,14 +112,15 @@ export const metadata: Metadata = {
     },
   },
 
-  // Verification placeholders (replace with real values from Search Console)
+  // Google Site Verification
   verification: {
-    google: process.env.GOOGLE_SITE_VERIFICATION,
+    google: process.env.GOOGLE_SITE_VERIFICATION ?? 'fZXN146rP8I80rI_QDACZDUFiFIJy-OcIrsoyVFfkg8',
   },
 
   // App
   applicationName: 'Amelia',
   category: 'education',
+  classification: 'Bimbingan Konseling & Portofolio',
 };
 
 // ── Viewport (separate export as required by Next.js 15+) ─────────
@@ -191,6 +198,40 @@ const webSiteJsonLd = {
   },
 };
 
+const professionalServiceJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'ProfessionalService',
+  name: 'Bimbingan Konseling Amelia',
+  alternateName: 'Amelia Counseling Service',
+  image: `${BASE_URL}/amelia.webp`,
+  url: BASE_URL,
+  telephone: '+6282210445785',
+  email: 'mlyfeblia150207@gmail.com',
+  priceRange: 'Sukarela / Terjangkau',
+  address: {
+    '@type': 'PostalAddress',
+    addressLocality: 'Cirebon',
+    addressRegion: 'Jawa Barat',
+    addressCountry: 'ID',
+  },
+  areaServed: {
+    '@type': 'AdministrativeArea',
+    name: 'Indonesia',
+  },
+  founder: {
+    '@type': 'Person',
+    name: 'Amelia',
+    url: BASE_URL,
+  },
+  knowsAbout: [
+    'Bimbingan Konseling Islam',
+    'Cyber Counseling',
+    'Konseling Sebaya',
+    'Kesehatan Mental Mahasiswa',
+    'Tazkiyatun Nafs',
+  ],
+};
+
 // ── Root Layout ───────────────────────────────────────────────────
 export default function RootLayout({
   children,
@@ -203,18 +244,6 @@ export default function RootLayout({
       className={`${jakarta.variable} ${newsreader.variable}`}
       suppressHydrationWarning
     >
-      <head>
-        {/* DNS prefetch for external resources */}
-        <link rel="dns-prefetch" href="//fonts.googleapis.com" />
-        <link rel="dns-prefetch" href="//fonts.gstatic.com" />
-        {/* Preconnect for font performance */}
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link
-          rel="preconnect"
-          href="https://fonts.gstatic.com"
-          crossOrigin="anonymous"
-        />
-      </head>
       <body className="min-h-screen antialiased">
         <ScrollRevealProvider />
         {/* Skip to main content - WCAG 2.4.1 Bypass Blocks */}
@@ -228,13 +257,19 @@ export default function RootLayout({
         <Script
           id="json-ld-person"
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd) }}
+          dangerouslySetInnerHTML={{ __html: safeJsonLd(personJsonLd) }}
           strategy="afterInteractive"
         />
         <Script
           id="json-ld-website"
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(webSiteJsonLd) }}
+          dangerouslySetInnerHTML={{ __html: safeJsonLd(webSiteJsonLd) }}
+          strategy="afterInteractive"
+        />
+        <Script
+          id="json-ld-service"
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: safeJsonLd(professionalServiceJsonLd) }}
           strategy="afterInteractive"
         />
       </body>

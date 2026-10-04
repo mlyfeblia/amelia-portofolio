@@ -35,9 +35,12 @@ export default function Navbar() {
     return () => window.removeEventListener('resize', onResize);
   }, []);
 
+  // Close mobile menu on browser back/forward navigation
   useEffect(() => {
-    setOpen(false);
-  }, [pathname]);
+    const onPopState = () => setOpen(false);
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, []);
 
   // Close on Escape key press
   useEffect(() => {
@@ -48,11 +51,38 @@ export default function Navbar() {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, []);
 
+  // Lock body & document scroll when mobile menu is open
+  useEffect(() => {
+    if (open) {
+      const originalBodyOverflow = document.body.style.overflow;
+      const originalHtmlOverflow = document.documentElement.style.overflow;
+      document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = originalBodyOverflow;
+        document.documentElement.style.overflow = originalHtmlOverflow;
+      };
+    }
+  }, [open]);
+
+  // Helper to reliably check if a nav item is active
+  const isItemActive = (href: string) => {
+    if (!pathname) {
+      return href === '/';
+    }
+    const cleanPath = pathname === '/' ? '/' : pathname.replace(/\/+$/, '');
+    if (href === '/') {
+      return cleanPath === '' || cleanPath === '/';
+    }
+    return cleanPath === href || cleanPath.startsWith(href + '/');
+  };
+
   return (
     <>
       <header
         className={cn(
-          'sticky top-0 z-50 bg-[var(--color-paper)] border-b border-[var(--color-paper-border)] transition-shadow duration-200',
+          'z-50 bg-[var(--color-paper)] border-b border-[var(--color-paper-border)] transition-shadow duration-200',
+          open ? 'fixed top-0 inset-x-0' : 'sticky top-0',
           scrolled ? 'shadow-xs' : ''
         )}
         role="banner"
@@ -77,10 +107,7 @@ export default function Navbar() {
           {/* Desktop 6-menu navigation */}
           <nav className="hidden md:flex items-center gap-1.5" aria-label="Navigasi utama">
             {navItems.map((item) => {
-              const isActive =
-                item.href === '/'
-                  ? pathname === '/'
-                  : pathname === item.href || pathname.startsWith(item.href + '/');
+              const isActive = isItemActive(item.href);
               return (
                 <Link
                   key={item.href}
@@ -99,40 +126,58 @@ export default function Navbar() {
             })}
           </nav>
 
-          {/* Right CTA: Janji Temu */}
-          <div className="hidden md:flex items-center gap-3 shrink-0">
-            <Link
-              href="/schedule"
-              className="btn-primary text-sm py-2 px-4.5"
-            >
-              Janji Temu
-            </Link>
-          </div>
-
-          {/* Mobile toggle button */}
-          <button
-            type="button"
-            onClick={() => setOpen(!open)}
-            className="md:hidden relative w-9 h-9 rounded-lg text-[var(--color-ink)] hover:bg-[var(--color-paper-muted)] active:bg-[var(--color-paper-border)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] flex items-center justify-center"
-            aria-expanded={open}
-            aria-controls="mobile-nav"
-            aria-label={open ? 'Tutup menu navigasi' : 'Buka menu navigasi'}
+          {/* Right Actions: Janji Temu CTA & Mobile Toggle */}
+          <div
+            className={cn(
+              'flex items-center shrink-0 transition-all duration-300 ease-out',
+              open ? 'gap-0 md:gap-3' : 'gap-2 sm:gap-3'
+            )}
           >
-            <Menu
+            {/* Mobile Janji Temu CTA with smooth width/opacity collapse animation */}
+            <div
               className={cn(
-                'w-5 h-5 absolute transition-all duration-300 ease-out transform',
-                open ? 'opacity-0 rotate-90 scale-75' : 'opacity-100 rotate-0 scale-100'
+                'transition-all duration-300 ease-out flex items-center',
+                open
+                  ? 'max-md:max-w-0 max-md:opacity-0 max-md:scale-95 max-md:pointer-events-none max-md:overflow-hidden'
+                  : 'max-md:max-w-[140px] max-md:opacity-100 max-md:scale-100 max-md:pointer-events-auto max-md:overflow-hidden',
+                'md:max-w-none md:opacity-100 md:scale-100 md:pointer-events-auto md:overflow-visible'
               )}
-              aria-hidden="true"
-            />
-            <X
-              className={cn(
-                'w-5 h-5 absolute transition-all duration-300 ease-out transform',
-                open ? 'opacity-100 rotate-0 scale-100' : 'opacity-0 -rotate-90 scale-75'
-              )}
-              aria-hidden="true"
-            />
-          </button>
+            >
+              <Link
+                href="/schedule"
+                onClick={() => setOpen(false)}
+                tabIndex={open ? -1 : 0}
+                className="btn-primary btn-interactive !text-xs sm:!text-sm !py-1.5 sm:!py-2 !px-3 sm:!px-4.5 whitespace-nowrap shadow-xs"
+              >
+                Janji Temu
+              </Link>
+            </div>
+
+            {/* Mobile toggle button */}
+            <button
+              type="button"
+              onClick={() => setOpen(!open)}
+              className="md:hidden relative w-9 h-9 rounded-lg text-[var(--color-ink)] hover:bg-[var(--color-paper-muted)] active:bg-[var(--color-paper-border)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] flex items-center justify-center"
+              aria-expanded={open}
+              aria-controls="mobile-nav"
+              aria-label={open ? 'Tutup menu navigasi' : 'Buka menu navigasi'}
+            >
+              <Menu
+                className={cn(
+                  'w-5 h-5 absolute transition-all duration-300 ease-out transform',
+                  open ? 'opacity-0 rotate-90 scale-75' : 'opacity-100 rotate-0 scale-100'
+                )}
+                aria-hidden="true"
+              />
+              <X
+                className={cn(
+                  'w-5 h-5 absolute transition-all duration-300 ease-out transform',
+                  open ? 'opacity-100 rotate-0 scale-100' : 'opacity-0 -rotate-90 scale-75'
+                )}
+                aria-hidden="true"
+              />
+            </button>
+          </div>
 
         </div>
 
@@ -140,7 +185,7 @@ export default function Navbar() {
         <div
           id="mobile-nav"
           className={cn(
-            'md:hidden absolute top-full left-0 right-0 bg-[var(--color-paper)] border-y border-[var(--color-paper-border)] shadow-xl transition-all duration-300 ease-out origin-top px-5 sm:px-8 py-4 max-h-[calc(100vh-5rem)] overflow-y-auto',
+            'md:hidden absolute top-full left-0 right-0 bg-[var(--color-paper)] border-y border-[var(--color-paper-border)] shadow-xl transition-all duration-300 ease-out origin-top px-5 sm:px-8 py-4 max-h-[calc(100dvh-4.5rem)] overflow-y-auto overscroll-contain',
             open
               ? 'opacity-100 translate-y-0 pointer-events-auto visible'
               : 'opacity-0 -translate-y-2 pointer-events-none invisible'
@@ -151,10 +196,7 @@ export default function Navbar() {
         >
           <nav className="flex flex-col gap-1" aria-label="Navigasi mobile">
             {navItems.map((item) => {
-              const isActive =
-                item.href === '/'
-                  ? pathname === '/'
-                  : pathname === item.href || pathname.startsWith(item.href + '/');
+              const isActive = isItemActive(item.href);
               return (
                 <Link
                   key={item.href}
@@ -190,13 +232,18 @@ export default function Navbar() {
         </div>
       </header>
 
-      {/* ── Soft Frosted Backdrop (Translucent Blur, No Layout Shift) ── */}
+      {/* Placeholder to prevent layout shift when header becomes fixed upon opening */}
+      {open && <div className="h-16 md:hidden" aria-hidden="true" />}
+
+      {/* ── Soft Frosted Backdrop (Translucent Blur, Non-clickable Scrim, Scroll-Blocked) ── */}
       <div
         className={cn(
-          'fixed inset-0 z-40 bg-black/20 backdrop-blur-sm md:hidden transition-opacity duration-300 ease-out',
+          'fixed inset-0 z-40 bg-black/40 backdrop-blur-sm md:hidden transition-opacity duration-300 ease-out touch-none select-none',
           open ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
         )}
-        onClick={() => setOpen(false)}
+        onWheel={(e) => {
+          if (open) e.preventDefault();
+        }}
         onTouchMove={(e) => {
           if (open) e.preventDefault();
         }}

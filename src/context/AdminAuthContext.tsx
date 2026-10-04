@@ -3,17 +3,15 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, KeyRound, Eye, EyeOff } from 'lucide-react';
+import { Spinner } from '@/components/ui/Spinner';
 
 interface AdminAuthContextType {
   isAuthenticated: boolean;
-  login: (pin: string) => boolean;
-  logout: () => void;
+  login: (pin: string) => Promise<boolean>;
+  logout: () => Promise<void>;
 }
 
 const AdminAuthContext = createContext<AdminAuthContextType | undefined>(undefined);
-
-// PIN Khusus Pengelola Amelia
-const VALID_PINS = ['160523'];
 
 export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
@@ -21,55 +19,73 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
   const [pin, setPin] = useState('');
   const [showPin, setShowPin] = useState(false);
   const [pinError, setPinError] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    try {
-      const saved = sessionStorage.getItem('amel_admin_auth');
-      if (saved === 'true') {
-        setIsAuthenticated(true);
+    async function checkServerSession() {
+      try {
+        const res = await fetch('/api/admin/verify');
+        const data = await res.json();
+        if (data.authenticated) {
+          setIsAuthenticated(true);
+        } else {
+          setIsAuthenticated(false);
+        }
+      } catch {
+        setIsAuthenticated(false);
+      } finally {
+        setChecking(false);
       }
-    } catch {
-      // sessionStorage not available
-    } finally {
-      setChecking(false);
     }
+    checkServerSession();
   }, []);
 
-  const login = (inputPin: string) => {
-    if (VALID_PINS.includes(inputPin.trim())) {
-      setIsAuthenticated(true);
-      try {
-        sessionStorage.setItem('amel_admin_auth', 'true');
-      } catch {
-        // ignore
+  const login = async (inputPin: string): Promise<boolean> => {
+    setSubmitting(true);
+    setPinError(false);
+    try {
+      const res = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pin: inputPin.trim() }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setIsAuthenticated(true);
+        setPinError(false);
+        return true;
       }
-      setPinError(false);
-      return true;
+    } catch {
+      // network/fetch error
+    } finally {
+      setSubmitting(false);
     }
     setPinError(true);
     return false;
   };
 
-  const logout = () => {
-    setIsAuthenticated(false);
+  const logout = async () => {
     try {
-      sessionStorage.removeItem('amel_admin_auth');
+      await fetch('/api/admin/logout', { method: 'POST' });
     } catch {
       // ignore
     }
+    setIsAuthenticated(false);
     setPin('');
     setShowPin(false);
   };
 
-  const handleFormSubmit = (e: React.FormEvent) => {
+  const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    login(pin);
+    if (!pin.trim()) return;
+    await login(pin);
   };
 
   if (checking) {
     return (
-      <div className="min-h-screen bg-[var(--color-paper)] flex items-center justify-center">
-        <div className="text-sm text-[var(--color-ink-muted)] animate-pulse">
+      <div className="min-h-screen bg-[var(--color-paper)] flex flex-col items-center justify-center gap-3">
+        <Spinner size="lg" variant="accent" label="Memuat portal pengelola..." />
+        <div className="text-xs text-[var(--color-ink-muted)]">
           Memuat portal admin...
         </div>
       </div>
@@ -153,9 +169,17 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
 
             <button
               type="submit"
-              className="btn-primary w-full py-2.5 text-sm justify-center cursor-pointer shadow-xs"
+              disabled={submitting}
+              className="btn-primary btn-interactive w-full py-2.5 text-sm justify-center cursor-pointer shadow-xs disabled:opacity-60 flex items-center gap-2"
             >
-              Masuk Dashboard Konselor
+              {submitting ? (
+                <>
+                  <Spinner size="sm" variant="white" label="Memverifikasi PIN..." />
+                  <span>Memverifikasi PIN...</span>
+                </>
+              ) : (
+                <span>Masuk Dashboard Konselor</span>
+              )}
             </button>
           </form>
 

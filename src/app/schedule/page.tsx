@@ -3,18 +3,85 @@ import type { Metadata } from 'next';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import BookingSection from '@/components/BookingSection';
+import BreadcrumbJsonLd from '@/components/BreadcrumbJsonLd';
+import { safeJsonLd } from '@/lib/utils';
+
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://mlyfeblia.vercel.app';
 
 export const metadata: Metadata = {
-  title: 'Jadwal',
+  title: 'Jadwalkan Sesi Konseling Privat',
   description:
     'Jadwalkan sesi bimbingan konseling privat 60 menit bersama Amelia. Pilih format sesi daring (Google Meet/Chat) atau tatap muka di Cirebon.',
+  alternates: {
+    canonical: `${BASE_URL}/schedule`,
+  },
+  openGraph: {
+    title: 'Jadwalkan Sesi Konseling | Amelia',
+    description:
+      'Jadwalkan sesi bimbingan konseling privat 60 menit bersama Amelia. Pilih format sesi daring (Google Meet/Chat) atau tatap muka di Cirebon.',
+    url: `${BASE_URL}/schedule`,
+    type: 'website',
+    images: [
+      {
+        url: `${BASE_URL}/amelia.webp`,
+        width: 1200,
+        height: 1500,
+        alt: 'Jadwalkan Sesi Konseling Amelia',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Jadwalkan Sesi Konseling | Amelia',
+    description:
+      'Jadwalkan sesi bimbingan konseling privat 60 menit bersama Amelia secara mudah dan rahasia.',
+    images: [`${BASE_URL}/amelia.webp`],
+  },
+};
+
+const scheduleServiceJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Service',
+  name: 'Reservasi Sesi Konseling Privat Amelia',
+  serviceType: 'Bimbingan Konseling Privat',
+  url: `${BASE_URL}/schedule`,
+  provider: {
+    '@type': 'Person',
+    name: 'Amelia',
+    url: BASE_URL,
+  },
+  potentialAction: {
+    '@type': 'ReserveAction',
+    target: {
+      '@type': 'EntryPoint',
+      urlTemplate: `${BASE_URL}/schedule`,
+      actionPlatform: [
+        'http://schema.org/DesktopWebPlatform',
+        'http://schema.org/MobileWebPlatform',
+      ],
+    },
+    result: {
+      '@type': 'Reservation',
+      name: 'Janji Temu Konseling',
+    },
+  },
 };
 
 export default function SchedulePage() {
   return (
     <>
+      <BreadcrumbJsonLd
+        items={[
+          { name: 'Beranda', url: BASE_URL },
+          { name: 'Jadwal Konseling', url: `${BASE_URL}/schedule` },
+        ]}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(scheduleServiceJsonLd) }}
+      />
       <Navbar />
-      <main id="main-content" className="min-h-screen pt-8 sm:pt-10 md:pt-12 pb-16 sm:pb-20 md:pb-24">
+      <main id="main-content" className="min-h-screen pt-8 sm:pt-10 md:pt-12 pb-16 sm:pb-20 md:pb-24 page-enter">
         <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-10 space-y-8 animate-fade-in-up">
           <div className="max-w-3xl space-y-2">
             <h1

@@ -1,44 +1,66 @@
-import { pgTable, text, boolean, jsonb } from 'drizzle-orm/pg-core';
+import { pgTable, text, boolean, jsonb, index } from 'drizzle-orm/pg-core';
 
-export const articles = pgTable('articles', {
-  id: text('id').primaryKey(),
-  slug: text('slug').notNull().unique(),
-  title: text('title').notNull(),
-  excerpt: text('excerpt').notNull(),
-  content: text('content').notNull(),
-  category: text('category').notNull(),
-  readTime: text('read_time').notNull(),
-  publishedAt: text('published_at').notNull(),
-  tags: jsonb('tags').$type<string[]>().notNull().default([]),
-});
+export const articles = pgTable(
+  'articles',
+  {
+    id: text('id').primaryKey(),
+    slug: text('slug').notNull().unique(),
+    title: text('title').notNull(),
+    excerpt: text('excerpt').notNull(),
+    content: text('content').notNull(),
+    category: text('category').notNull(),
+    readTime: text('read_time').notNull(),
+    publishedAt: text('published_at').notNull(),
+    tags: jsonb('tags').$type<string[]>().notNull().default([]),
+    isPublished: boolean('is_published').notNull().default(true),
+  },
+  (table) => [
+    index('articles_category_idx').on(table.category),
+    index('articles_published_idx').on(table.isPublished),
+  ]
+);
 
-export const bookings = pgTable('bookings', {
-  id: text('id').primaryKey(),
-  code: text('code').notNull().unique(),
-  name: text('name').notNull(),
-  alias: text('alias'),
-  phone: text('phone').notNull(),
-  email: text('email').notNull(),
-  category: text('category').notNull(),
-  mode: text('mode').notNull(),
-  date: text('date').notNull(),
-  timeSlot: text('time_slot').notNull(),
-  notes: text('notes'),
-  status: text('status').notNull().default('menunggu'),
-  createdAt: text('created_at').notNull(),
-});
+export const bookings = pgTable(
+  'bookings',
+  {
+    id: text('id').primaryKey(),
+    code: text('code').notNull().unique(),
+    name: text('name').notNull(),
+    alias: text('alias'),
+    phone: text('phone').notNull(),
+    email: text('email').notNull(),
+    category: text('category').notNull(),
+    mode: text('mode').notNull(),
+    date: text('date').notNull(),
+    timeSlot: text('time_slot').notNull(),
+    notes: text('notes'),
+    status: text('status').notNull().default('menunggu'),
+    createdAt: text('created_at').notNull(),
+  },
+  (table) => [
+    index('bookings_created_idx').on(table.createdAt),
+    index('bookings_status_idx').on(table.status),
+  ]
+);
 
-export const curhat = pgTable('curhat', {
-  id: text('id').primaryKey(),
-  alias: text('alias').notNull(),
-  category: text('category').notNull(),
-  message: text('message').notNull(),
-  answer: text('answer'),
-  isAnswered: boolean('is_answered').notNull().default(false),
-  isPublic: boolean('is_public').notNull().default(true),
-  createdAt: text('created_at').notNull(),
-  answeredAt: text('answered_at'),
-});
+export const curhat = pgTable(
+  'curhat',
+  {
+    id: text('id').primaryKey(),
+    alias: text('alias').notNull(),
+    category: text('category').notNull(),
+    message: text('message').notNull(),
+    answer: text('answer'),
+    isAnswered: boolean('is_answered').notNull().default(false),
+    isPublic: boolean('is_public').notNull().default(true),
+    createdAt: text('created_at').notNull(),
+    answeredAt: text('answered_at'),
+  },
+  (table) => [
+    index('curhat_public_created_idx').on(table.isPublic, table.createdAt),
+    index('curhat_created_idx').on(table.createdAt),
+  ]
+);
 
 export type ArticleRecord = typeof articles.$inferSelect;
 export type InsertArticleRecord = typeof articles.$inferInsert;

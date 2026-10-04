@@ -1,9 +1,8 @@
-import fs from 'fs';
-import path from 'path';
+import crypto from 'crypto';
 import { revalidatePath } from 'next/cache';
-import { db } from '@/db';
+import { db, isDatabaseConfigured } from '@/db';
 import { articles, bookings, curhat } from '@/db/schema';
-import { desc, eq } from 'drizzle-orm';
+import { desc, eq, and } from 'drizzle-orm';
 import { Booking, AnonymousMessage, Article } from '@/types';
 
 // Fallback articles in case of offline/build-time isolation
@@ -310,92 +309,370 @@ Jika kamu merasa lelah yang berkepanjangan dan butuh ruang tenang untuk menyusun
   }
 ];
 
-// Bookings
-export async function getBookings(): Promise<Booking[]> {
+// Fallback Bookings for offline/demo/unconfigured database state
+const fallbackBookings: Booking[] = [
+  {
+    id: 'bk-1790581539331',
+    code: 'BKI-2609-227',
+    name: 'Ahmad Fauzi',
+    alias: 'Fauzi',
+    phone: '081299887766',
+    email: 'fauzi@example.com',
+    category: 'Krisis Identitas Diri & Quarter-Life Crisis',
+    mode: 'online_meet',
+    date: '2026-10-05',
+    timeSlot: '16:00 - 17:00 WIB',
+    notes: 'Menemukan arah hidup setelah lulus semester ini.',
+    status: 'menunggu',
+    createdAt: '2026-09-28T07:45:39.331Z',
+  },
+  {
+    id: 'bk-1',
+    code: 'BKI-2609-001',
+    name: 'Rahmat Hidayat',
+    alias: 'Rahmat',
+    phone: '081234567890',
+    email: 'rahmat@example.com',
+    category: 'Akademik & Karier',
+    mode: 'online_meet',
+    date: '2026-09-30',
+    timeSlot: '15:30 - 16:30 WIB',
+    notes: 'Konsultasi seputar kebimbangan memilih topik riset dan adaptasi perkuliahan.',
+    status: 'terkonfirmasi',
+    createdAt: '2026-09-26T10:00:00Z',
+  },
+  {
+    id: 'bk-2',
+    code: 'BKI-2609-002',
+    name: 'Siti Nurhaliza',
+    alias: 'Siti',
+    phone: '085712345678',
+    email: 'siti@example.com',
+    category: 'Manajemen Stres & Kecemasan',
+    mode: 'online_chat',
+    date: '2026-10-02',
+    timeSlot: '19:30 - 20:30 WIB',
+    notes: 'Ingin berbagi cerita tentang adaptasi lingkungan kos dan menjaga ketenangan pikiran.',
+    status: 'menunggu',
+    createdAt: '2026-09-27T14:30:00Z',
+  },
+];
+
+// Fallback Curhat for offline/demo/unconfigured database state
+const fallbackCurhat: AnonymousMessage[] = [
+  {
+    id: 'cur-1',
+    alias: 'Bunga di Ujung Jalan',
+    category: 'Quarter-Life Crisis',
+    message: 'Kak Amel, saya mahasiswa tingkat akhir dan merasa tertinggal jauh dari teman-teman yang sudah kerja dan mandiri finansial. Rasanya setiap bangun pagi dada sesak dan takut gagal membahagiakan orang tua. Bagaimana cara meredam rasa rendah diri ini ya kak?',
+    answer: 'Halo sahabat yang baik. Perasaanmu sangat valid dan manusiawi. Namun ingat, hidup bukanlah perlombaan lari cepat dengan satu garis finis yang sama. Allah menetapkan maqom (kedudukan) dan waktu mekar setiap bunga secara unik. Fokuslah pada langkah kecil yang bisa kamu ambil hari ini. Kamu tidak terlambat, kamu sedang ditempa. Jangan biarkan layar media orang lain meredupkan cahaya prosesmu sendiri ya.',
+    isAnswered: true,
+    isPublic: true,
+    createdAt: '2026-09-22T09:30:00Z',
+    answeredAt: '2026-09-22T14:15:00Z',
+  },
+  {
+    id: 'cur-2',
+    alias: 'Hamba Allah - Cirebon',
+    category: 'Kecemasan & Ibadah',
+    message: 'Saya sering sekali merasa cemas berlebihan sampai susah khusyuk saat sholat. Pikiran selalu loncat ke skripsi dan masalah keluarga. Apakah ini tanda iman saya lemah kak Amel?',
+    answer: 'Sama sekali bukan pertanda imanmu lemah, sahabat. Kecemasan adalah sinyal biologis dan psikologis bahwa sistem sarafmu sedang kelebihan beban (overstimulated). Ketika pikiran melayang dalam sholat, jangan mencela dirimu. Tarik nafas lembut, sadari bahwa kamu sedang menghadap Sang Maha Penyayang, dan perlahan kembalikan fokus pada bacaan. Ibadah dalam keadaan berjuang melawan rasa cemas justru memiliki nilai kesabaran yang sangat mulia di mata Allah.',
+    isAnswered: true,
+    isPublic: true,
+    createdAt: '2026-09-25T11:20:00Z',
+    answeredAt: '2026-09-25T16:00:00Z',
+  },
+  {
+    id: 'cur-3',
+    alias: 'Pejuang Skripsi',
+    category: 'Akademik & Burnout',
+    message: 'Kak, bagaimana membedakan antara rasa malas biasa dengan kelelahan mental (burnout)? Rasanya ingin istirahat tapi merasa bersalah terus.',
+    answer: 'Rasa bersalah saat istirahat adalah tanda khas burnout! Malas biasanya disertai rasa santai, sedangkan burnout tetap dipenuhi kecemasan meskipun tubuh sedang tidak mengerjakan apa-apa. Tubuh dan jiwamu memiliki hak untuk beristirahat ("Inna linafsika \'alaika haqqa"). Berikan dirimu izin beristirahat tanpa syarat selama 1 hari penuh untuk mengisi ulang baterai jiwamu.',
+    isAnswered: true,
+    isPublic: true,
+    createdAt: '2026-09-27T08:10:00Z',
+    answeredAt: '2026-09-27T10:45:00Z',
+  },
+  {
+    id: 'cur-4',
+    alias: 'Mahasiswa Rantau',
+    category: 'Adaptasi & Hubungan Sosial',
+    message: 'Kak Amel, ini tahun pertama saya merantau kuliah di Cirebon. Rasanya sepi sekali, susah berbaur dengan teman sekelas karena kendala bahasa dan budaya. Setiap malam rindu rumah sampai menangis. Gimana cara menguatkan hati ya kak?',
+    answer: 'Peluk hangat untukmu, sahabat perantau. Rasa rindu rumah (homesick) adalah tanda betapa berharganya kehangatan keluarga bagimu, bukan tanda kelemahan. Beri dirimu waktu beradaptasi secara bertahap. Mulailah dari sapaan kecil kepada satu teman di sebelahmu. Cirebon kota yang ramah dan penuh berkah; perlahan tempat ini juga akan menjadi rumah kedua bagimu. Kamu tidak sendirian, pintu ruang curhat Amel selalu terbuka.',
+    isAnswered: true,
+    isPublic: true,
+    createdAt: '2026-09-28T13:15:00Z',
+    answeredAt: '2026-09-28T16:30:00Z',
+  },
+  {
+    id: 'cur-5',
+    alias: 'Jiwa yang Gelisah',
+    category: 'Karier & Ekspektasi Diri',
+    message: 'Saya merasa terjebak di jurusan yang bukan minat saya demi menyenangkan orang tua. Sekarang di semester 5 nilai mulai turun dan kehilangan motivasi belajar total. Mau bicara jujur takut dicap anak durhaka kak.',
+    answer: 'Dilema antara bakti dan panggilan jiwa memang salah satu ujian terberat mahasiswa. Berbicara jujur dengan bahasa yang santun (qaulan layyina) bukanlah kedurhakaan, melainkan bentuk ikhtiar mencari jalan keluar bersama. Sering kali orang tua menuntut bukan karena ingin mengekang, melainkan karena khawatir akan masa depanmu. Kita bisa bersama-sama menyusun cara komunikasi asertif agar niat baikmu tersampaikan tanpa melukai hati mereka.',
+    isAnswered: true,
+    isPublic: true,
+    createdAt: '2026-09-29T10:40:00Z',
+    answeredAt: '2026-09-29T14:20:00Z',
+  },
+  {
+    id: 'cur-6',
+    alias: 'Sahabat Pendiam',
+    category: 'Kepercayaan Diri & Kecemasan',
+    message: 'Setiap ada tugas presentasi di kelas, jantung saya berdegup kencang, tangan dingin, dan suara bergetar sampai blank. Saya merasa minder karena teman-teman lain terlihat begitu percaya diri saat berbicara di depan umum.',
+    answer: 'Kecemasan berbicara di depan umum (glossophobia) dialami oleh lebih dari 70% orang, termasuk mereka yang tampak tenang di luar. Kuncinya bukan menghilangkan rasa gugup seketika, melainkan berteman dengan rasa gugup tersebut. Cobalah teknik relaksasi pernapasan 4-7-8 sebelum maju, dan ingat bahwa audiens tidak sedang mengincarmu untuk mencari kesalahan. Langkah kecil latihan mandiri akan membantumu bertumbuh setahap demi setahap.',
+    isAnswered: true,
+    isPublic: true,
+    createdAt: '2026-09-30T09:10:00Z',
+    answeredAt: '2026-09-30T11:50:00Z',
+  },
+  {
+    id: 'cur-7',
+    alias: 'Pencari Ketenangan',
+    category: 'Trauma & Pemulihan Batin',
+    message: 'Kak Amel, saya punya luka batin masa lalu akibat perlakuan teman sekolah yang merundung (bully). Sampai sekarang rasa dendam dan trauma itu sering muncul tiba-tiba saat melihat hal serupa. Bagaimana cara benar-benar berdamai dan ikhlas ya kak?',
+    answer: 'Memaafkan bukan berarti membenarkan tindakan orang yang melukaimu, melainkan melepaskan belenggu racun dendam dari dalam hatimu sendiri. Luka batin membutuhkan proses penyembuhan yang bertahap, persis seperti luka fisik. Jangan paksa dirimu untuk langsung merasa ikhlas jika hati masih perih. Akui rasa sakit itu di hadapan Allah dalam sujudmu, lalu serahkan keadilan kepada-Nya. Jiwamu terlalu berharga untuk terus memikul beban kesalahan orang lain.',
+    isAnswered: true,
+    isPublic: true,
+    createdAt: '2026-10-01T08:25:00Z',
+    answeredAt: '2026-10-01T12:00:00Z',
+  },
+  {
+    id: 'cur-8',
+    alias: 'Pejuang Hening',
+    category: 'Digital Well-being',
+    message: 'Saya merasa lelah mental setiap kali buka media sosial. Melihat teman-teman magang di perusahaan besar, ikut lomba sana-sini, rasanya diri ini tidak ada apa-apanya dan hidup berjalan di tempat.',
+    answer: 'Media sosial adalah panggung etalase di mana orang hanya memajang momen terbaiknya, bukan proses jatuh bangun di belakang layar. Membandingkan proses aslimu dengan highlight orang lain adalah jebakan yang tidak adil bagi dirimu sendiri. Cobalah berpuasa media sosial selama akhir pekan. Fokus pada satu keterampilan kecil yang ingin kamu asah hari ini. Ukuran keberhasilanmu adalah dirimu kemarin, bukan feed orang lain.',
+    isAnswered: true,
+    isPublic: true,
+    createdAt: '2026-10-01T15:00:00Z',
+    answeredAt: '2026-10-01T18:30:00Z',
+  },
+];
+
+function revalidateDataPaths(types: ('bookings' | 'curhat' | 'articles')[]) {
   try {
-    const rows = await db.select().from(bookings).orderBy(desc(bookings.createdAt));
-    return rows.map((r) => ({
-      ...r,
-      alias: r.alias ?? undefined,
-      notes: r.notes ?? '',
-    })) as Booking[];
-  } catch (error) {
-    console.error('Error in getBookings:', error);
-    return [];
+    if (types.includes('bookings')) {
+      revalidatePath('/schedule');
+      revalidatePath('/admin/bookings');
+      revalidatePath('/admin');
+    }
+    if (types.includes('curhat')) {
+      revalidatePath('/counseling');
+      revalidatePath('/admin/counseling');
+      revalidatePath('/admin');
+      revalidatePath('/');
+    }
+    if (types.includes('articles')) {
+      revalidatePath('/articles');
+      revalidatePath('/admin/articles');
+      revalidatePath('/admin');
+      revalidatePath('/');
+      revalidatePath('/sitemap.xml');
+    }
+  } catch {
+    // Safe to ignore outside active request context
   }
+}
+
+// Bookings
+export async function getBookings(limit: number = 100, offset: number = 0): Promise<Booking[]> {
+  if (isDatabaseConfigured && db) {
+    try {
+      const safeLimit = Math.min(Math.max(1, limit), 200);
+      const safeOffset = Math.max(0, offset);
+      const rows = await db
+        .select()
+        .from(bookings)
+        .orderBy(desc(bookings.createdAt))
+        .limit(safeLimit)
+        .offset(safeOffset);
+      if (rows && rows.length > 0) {
+        return rows.map((r) => ({
+          ...r,
+          alias: r.alias ?? undefined,
+          notes: r.notes ?? '',
+        })) as Booking[];
+      }
+    } catch (error) {
+      console.error('Error in getBookings from db, falling back to in-memory store:', error);
+    }
+  }
+  return fallbackBookings.slice(offset, offset + limit);
 }
 
 export async function createBooking(
   data: Omit<Booking, 'id' | 'code' | 'createdAt' | 'status'>
 ): Promise<Booking> {
   const dateStr = new Date().toISOString().slice(2, 7).replace('-', '');
-  const randomSuffix = Math.floor(100 + Math.random() * 900);
-  const code = `BKI-${dateStr}-${randomSuffix}`;
-  const id = `bk-${Date.now()}`;
+  const id = `bk-${crypto.randomUUID()}`;
   const createdAt = new Date().toISOString();
+  const randomSuffix = crypto.randomBytes(3).toString('hex').toUpperCase();
+  const code = `BKI-${dateStr}-${randomSuffix}`;
 
-  const [newRow] = await db
-    .insert(bookings)
-    .values({
-      id,
-      code,
-      name: data.name,
-      alias: data.alias || null,
-      phone: data.phone,
-      email: data.email,
-      category: data.category,
-      mode: data.mode,
-      date: data.date,
-      timeSlot: data.timeSlot,
-      notes: data.notes || '',
-      status: 'menunggu',
-      createdAt,
-    })
-    .returning();
+  const newBooking: Booking = {
+    id,
+    code,
+    name: data.name,
+    alias: data.alias || undefined,
+    phone: data.phone,
+    email: data.email,
+    category: data.category,
+    mode: data.mode,
+    date: data.date,
+    timeSlot: data.timeSlot,
+    notes: data.notes || '',
+    status: 'menunggu',
+    createdAt,
+  };
 
-  return {
-    ...newRow,
-    alias: newRow.alias ?? undefined,
-    notes: newRow.notes ?? '',
-  } as Booking;
+  if (isDatabaseConfigured && db) {
+    try {
+      const [newRow] = await db
+        .insert(bookings)
+        .values({
+          id,
+          code,
+          name: data.name,
+          alias: data.alias || null,
+          phone: data.phone,
+          email: data.email,
+          category: data.category,
+          mode: data.mode,
+          date: data.date,
+          timeSlot: data.timeSlot,
+          notes: data.notes || '',
+          status: 'menunggu',
+          createdAt,
+        })
+        .returning();
+
+      if (newRow) {
+        const result = {
+          ...newRow,
+          alias: newRow.alias ?? undefined,
+          notes: newRow.notes ?? '',
+        } as Booking;
+        fallbackBookings.unshift(result);
+        revalidateDataPaths(['bookings']);
+        return result;
+      }
+    } catch (err) {
+      console.error('Database insert failed in createBooking, falling back to in-memory store:', err);
+    }
+  }
+
+  fallbackBookings.unshift(newBooking);
+  revalidateDataPaths(['bookings']);
+  return newBooking;
 }
 
 export async function updateBookingStatus(
   id: string,
   status: Booking['status']
 ): Promise<Booking | null> {
-  try {
-    const [updated] = await db
-      .update(bookings)
-      .set({ status })
-      .where(eq(bookings.id, id))
-      .returning();
+  let updatedBooking: Booking | null = null;
 
-    if (!updated) return null;
-    return {
-      ...updated,
-      alias: updated.alias ?? undefined,
-      notes: updated.notes ?? '',
-    } as Booking;
-  } catch (error) {
-    console.error('Error in updateBookingStatus:', error);
-    return null;
+  if (isDatabaseConfigured && db) {
+    try {
+      const [updated] = await db
+        .update(bookings)
+        .set({ status })
+        .where(eq(bookings.id, id))
+        .returning();
+
+      if (updated) {
+        updatedBooking = {
+          ...updated,
+          alias: updated.alias ?? undefined,
+          notes: updated.notes ?? '',
+        } as Booking;
+      }
+    } catch (error) {
+      console.error('Error in updateBookingStatus in db:', error);
+    }
   }
+
+  const idx = fallbackBookings.findIndex((b) => b.id === id);
+  if (idx !== -1) {
+    fallbackBookings[idx].status = status;
+    if (!updatedBooking) {
+      updatedBooking = fallbackBookings[idx];
+    }
+  }
+
+  if (updatedBooking) {
+    revalidateDataPaths(['bookings']);
+  }
+
+  return updatedBooking;
+}
+
+export async function deleteBooking(id: string): Promise<boolean> {
+  let deleted = false;
+
+  if (isDatabaseConfigured && db) {
+    try {
+      const [res] = await db.delete(bookings).where(eq(bookings.id, id)).returning();
+      if (res) deleted = true;
+    } catch (error) {
+      console.error('Error in deleteBooking in db:', error);
+    }
+  }
+
+  const idx = fallbackBookings.findIndex((b) => b.id === id);
+  if (idx !== -1) {
+    fallbackBookings.splice(idx, 1);
+    deleted = true;
+  }
+
+  if (deleted) {
+    revalidateDataPaths(['bookings']);
+  }
+
+  return deleted;
 }
 
 // Curhat / Anonymous Q&A
-export async function getCurhatList(): Promise<AnonymousMessage[]> {
-  try {
-    const rows = await db.select().from(curhat).orderBy(desc(curhat.createdAt));
-    return rows.map((r) => ({
-      ...r,
-      answer: r.answer ?? undefined,
-      answeredAt: r.answeredAt ?? undefined,
-    })) as AnonymousMessage[];
-  } catch (error) {
-    console.error('Error in getCurhatList:', error);
-    return [];
+export async function getCurhatList(
+  onlyPublic: boolean = false,
+  limit: number = 100,
+  offset: number = 0
+): Promise<AnonymousMessage[]> {
+  if (isDatabaseConfigured && db) {
+    try {
+      const safeLimit = Math.min(Math.max(1, limit), 200);
+      const safeOffset = Math.max(0, offset);
+
+      const rows = onlyPublic
+        ? await db
+            .select()
+            .from(curhat)
+            .where(eq(curhat.isPublic, true))
+            .orderBy(desc(curhat.createdAt))
+            .limit(safeLimit)
+            .offset(safeOffset)
+        : await db
+            .select()
+            .from(curhat)
+            .orderBy(desc(curhat.createdAt))
+            .limit(safeLimit)
+            .offset(safeOffset);
+
+      if (rows && rows.length > 0) {
+        return rows.map((r) => ({
+          ...r,
+          answer: r.answer ?? undefined,
+          answeredAt: r.answeredAt ?? undefined,
+        })) as AnonymousMessage[];
+      }
+    } catch (error) {
+      console.error('Error in getCurhatList from db:', error);
+    }
   }
+
+  const filtered = onlyPublic ? fallbackCurhat.filter((c) => c.isPublic) : fallbackCurhat;
+  return filtered.slice(offset, offset + limit);
 }
 
 export async function createCurhat(data: {
@@ -404,27 +681,116 @@ export async function createCurhat(data: {
   message: string;
   isPublic: boolean;
 }): Promise<AnonymousMessage> {
-  const id = `cur-${Date.now()}`;
+  const id = `cur-${crypto.randomUUID()}`;
   const createdAt = new Date().toISOString();
+  const newCurhat: AnonymousMessage = {
+    id,
+    alias: data.alias || 'Teman Curhat',
+    category: data.category || 'Umum',
+    message: data.message,
+    isAnswered: false,
+    isPublic: data.isPublic,
+    createdAt,
+  };
 
-  const [newRow] = await db
-    .insert(curhat)
-    .values({
-      id,
-      alias: data.alias || 'Teman Curhat',
-      category: data.category || 'Umum',
-      message: data.message,
-      isAnswered: false,
-      isPublic: data.isPublic,
-      createdAt,
-    })
-    .returning();
+  if (isDatabaseConfigured && db) {
+    try {
+      const [newRow] = await db
+        .insert(curhat)
+        .values({
+          id,
+          alias: data.alias || 'Teman Curhat',
+          category: data.category || 'Umum',
+          message: data.message,
+          isAnswered: false,
+          isPublic: data.isPublic,
+          createdAt,
+        })
+        .returning();
 
-  return {
-    ...newRow,
-    answer: newRow.answer ?? undefined,
-    answeredAt: newRow.answeredAt ?? undefined,
-  } as AnonymousMessage;
+      if (newRow) {
+        const result = {
+          ...newRow,
+          answer: newRow.answer ?? undefined,
+          answeredAt: newRow.answeredAt ?? undefined,
+        } as AnonymousMessage;
+        fallbackCurhat.unshift(result);
+        revalidateDataPaths(['curhat']);
+        return result;
+      }
+    } catch (err) {
+      console.error('Database insert failed in createCurhat:', err);
+    }
+  }
+
+  fallbackCurhat.unshift(newCurhat);
+  revalidateDataPaths(['curhat']);
+  return newCurhat;
+}
+
+export async function updateCurhat(
+  id: string,
+  options: {
+    answer?: string;
+    isPublic?: boolean;
+  }
+): Promise<AnonymousMessage | null> {
+  let updatedCurhat: AnonymousMessage | null = null;
+
+  if (isDatabaseConfigured && db) {
+    try {
+      const updateData: Partial<typeof curhat.$inferInsert> = {};
+
+      if (typeof options.answer === 'string') {
+        const cleanAnswer = options.answer.trim();
+        updateData.answer = cleanAnswer;
+        updateData.isAnswered = cleanAnswer.length > 0;
+        updateData.answeredAt = cleanAnswer.length > 0 ? new Date().toISOString() : null;
+      }
+
+      if (typeof options.isPublic === 'boolean') {
+        updateData.isPublic = options.isPublic;
+      }
+
+      const [updated] = await db
+        .update(curhat)
+        .set(updateData)
+        .where(eq(curhat.id, id))
+        .returning();
+
+      if (updated) {
+        updatedCurhat = {
+          ...updated,
+          answer: updated.answer ?? undefined,
+          answeredAt: updated.answeredAt ?? undefined,
+        } as AnonymousMessage;
+      }
+    } catch (error) {
+      console.error('Error in updateCurhat from db:', error);
+    }
+  }
+
+  const idx = fallbackCurhat.findIndex((c) => c.id === id);
+  if (idx !== -1) {
+    if (typeof options.answer === 'string') {
+      const cleanAnswer = options.answer.trim();
+      fallbackCurhat[idx].answer = cleanAnswer;
+      fallbackCurhat[idx].isAnswered = cleanAnswer.length > 0;
+      fallbackCurhat[idx].answeredAt = cleanAnswer.length > 0 ? new Date().toISOString() : undefined;
+    }
+    if (typeof options.isPublic === 'boolean') {
+      fallbackCurhat[idx].isPublic = options.isPublic;
+    }
+    if (!updatedCurhat) {
+      updatedCurhat = fallbackCurhat[idx];
+    }
+  }
+
+  if (updatedCurhat) {
+    revalidateDataPaths(['curhat']);
+  }
+
+  return updatedCurhat;
 }
 
 export async function answerCurhat(
@@ -432,93 +798,83 @@ export async function answerCurhat(
   answer: string,
   isPublic?: boolean
 ): Promise<AnonymousMessage | null> {
-  try {
-    const updateData: Partial<typeof curhat.$inferInsert> = {
-      answer,
-      isAnswered: true,
-      answeredAt: new Date().toISOString(),
-    };
-
-    if (typeof isPublic === 'boolean') {
-      updateData.isPublic = isPublic;
-    }
-
-    const [updated] = await db
-      .update(curhat)
-      .set(updateData)
-      .where(eq(curhat.id, id))
-      .returning();
-
-    if (!updated) return null;
-    return {
-      ...updated,
-      answer: updated.answer ?? undefined,
-      answeredAt: updated.answeredAt ?? undefined,
-    } as AnonymousMessage;
-  } catch (error) {
-    console.error('Error in answerCurhat:', error);
-    return null;
-  }
+  return updateCurhat(id, { answer, isPublic });
 }
 
-// Articles
-export async function getArticles(): Promise<Article[]> {
-  try {
-    const rows = await db.select().from(articles);
-    if (rows && rows.length > 0) {
-      return rows.map((r) => ({
-        ...r,
-        tags: Array.isArray(r.tags) ? r.tags : [],
-      })) as Article[];
+export async function deleteCurhat(id: string): Promise<boolean> {
+  let deleted = false;
+
+  if (isDatabaseConfigured && db) {
+    try {
+      const [res] = await db.delete(curhat).where(eq(curhat.id, id)).returning();
+      if (res) deleted = true;
+    } catch (error) {
+      console.error('Error in deleteCurhat from db:', error);
     }
-  } catch (error) {
-    console.error('Error in getArticles from db:', error);
   }
 
-  // Fallback to data/db.json on disk if available
-  try {
-    const dbPath = path.join(process.cwd(), 'data', 'db.json');
-    if (fs.existsSync(dbPath)) {
-      const json = JSON.parse(fs.readFileSync(dbPath, 'utf8'));
-      if (Array.isArray(json.articles) && json.articles.length > 0) {
-        return json.articles as Article[];
-      }
-    }
-  } catch {
-    // fallback
+  const idx = fallbackCurhat.findIndex((c) => c.id === id);
+  if (idx !== -1) {
+    fallbackCurhat.splice(idx, 1);
+    deleted = true;
   }
 
-  return fallbackArticles;
+  if (deleted) {
+    revalidateDataPaths(['curhat']);
+  }
+
+  return deleted;
 }
 
-export async function getArticleBySlug(slug: string): Promise<Article | null> {
-  try {
-    const [row] = await db.select().from(articles).where(eq(articles.slug, slug)).limit(1);
-    if (row) {
-      return {
-        ...row,
-        tags: Array.isArray(row.tags) ? row.tags : [],
-      } as Article;
-    }
-  } catch (error) {
-    console.error('Error in getArticleBySlug from db:', error);
-  }
-
-  // Fallback to data/db.json
-  try {
-    const dbPath = path.join(process.cwd(), 'data', 'db.json');
-    if (fs.existsSync(dbPath)) {
-      const json = JSON.parse(fs.readFileSync(dbPath, 'utf8'));
-      if (Array.isArray(json.articles)) {
-        const found = json.articles.find((a: Article) => a.slug === slug);
-        if (found) return found as Article;
+// Articles (PostgreSQL SSOT)
+export async function getArticles(onlyPublished = false): Promise<Article[]> {
+  if (isDatabaseConfigured && db) {
+    try {
+      const rows = onlyPublished
+        ? await db.select().from(articles).where(eq(articles.isPublished, true))
+        : await db.select().from(articles);
+      if (rows && rows.length > 0) {
+        return rows.map((r) => ({
+          ...r,
+          tags: Array.isArray(r.tags) ? r.tags : [],
+          isPublished: r.isPublished ?? true,
+        })) as Article[];
       }
+    } catch (error) {
+      console.error('Error in getArticles from db:', error);
     }
-  } catch {
-    // fallback
   }
 
-  return fallbackArticles.find((a) => a.slug === slug) || null;
+  // Fallback to in-memory static articles for offline/build-time isolation
+  return onlyPublished
+    ? fallbackArticles.filter((a) => a.isPublished !== false)
+    : fallbackArticles;
+}
+
+export async function getArticleBySlug(slug: string, onlyPublished = false): Promise<Article | null> {
+  if (isDatabaseConfigured && db) {
+    try {
+      const query = onlyPublished
+        ? db.select().from(articles).where(and(eq(articles.slug, slug), eq(articles.isPublished, true))).limit(1)
+        : db.select().from(articles).where(eq(articles.slug, slug)).limit(1);
+      const [row] = await query;
+      if (row) {
+        return {
+          ...row,
+          tags: Array.isArray(row.tags) ? row.tags : [],
+          isPublished: row.isPublished ?? true,
+        } as Article;
+      }
+    } catch (error) {
+      console.error('Error in getArticleBySlug from db:', error);
+    }
+  }
+
+  // Fallback to in-memory static articles
+  const found = fallbackArticles.find((a) => a.slug === slug);
+  if (!found) return null;
+  if (onlyPublished && found.isPublished === false) return null;
+  return found;
 }
 
 export async function updateArticle(
@@ -534,49 +890,32 @@ export async function updateArticle(
     if (data.category !== undefined) updateData.category = data.category;
     if (data.readTime !== undefined) updateData.readTime = data.readTime;
     if (data.tags !== undefined) updateData.tags = data.tags;
+    if (data.isPublished !== undefined) updateData.isPublished = data.isPublished;
 
     let updatedArticle: Article | null = null;
 
-    // 1. Update Database (Postgres)
-    try {
-      const [updated] = await db
-        .update(articles)
-        .set(updateData)
-        .where(eq(articles.id, id))
-        .returning();
+    // 1. Update Database (Postgres as Primary SSOT)
+    if (isDatabaseConfigured && db) {
+      try {
+        const [updated] = await db
+          .update(articles)
+          .set(updateData)
+          .where(eq(articles.id, id))
+          .returning();
 
-      if (updated) {
-        updatedArticle = {
-          ...updated,
-          tags: Array.isArray(updated.tags) ? updated.tags : [],
-        } as Article;
-      }
-    } catch (dbErr) {
-      console.error('Database update failed, continuing with file sync:', dbErr);
-    }
-
-    // 2. Sync to data/db.json on disk
-    try {
-      const dbPath = path.join(process.cwd(), 'data', 'db.json');
-      if (fs.existsSync(dbPath)) {
-        const fileContent = fs.readFileSync(dbPath, 'utf8');
-        const json = JSON.parse(fileContent);
-        if (Array.isArray(json.articles)) {
-          const idx = json.articles.findIndex((a: Article) => a.id === id);
-          if (idx !== -1) {
-            json.articles[idx] = { ...json.articles[idx], ...data };
-            if (!updatedArticle) {
-              updatedArticle = json.articles[idx];
-            }
-            fs.writeFileSync(dbPath, JSON.stringify(json, null, 2), 'utf8');
-          }
+        if (updated) {
+          updatedArticle = {
+            ...updated,
+            tags: Array.isArray(updated.tags) ? updated.tags : [],
+            isPublished: updated.isPublished ?? true,
+          } as Article;
         }
+      } catch (dbErr) {
+        console.error('Database update failed:', dbErr);
       }
-    } catch (fsErr) {
-      console.error('File sync error in updateArticle:', fsErr);
     }
 
-    // 3. Update in-memory fallback
+    // 2. Sync to in-memory fallback cache
     const fallbackIdx = fallbackArticles.findIndex((a) => a.id === id);
     if (fallbackIdx !== -1) {
       fallbackArticles[fallbackIdx] = { ...fallbackArticles[fallbackIdx], ...data };
@@ -585,16 +924,9 @@ export async function updateArticle(
       }
     }
 
-    // 4. Invalidate Next.js cache so the update is immediately live
+    // 3. Invalidate Next.js cache so the update is immediately live
     if (updatedArticle) {
-      try {
-        revalidatePath('/articles');
-        revalidatePath(`/articles/${updatedArticle.slug}`);
-        revalidatePath('/admin/articles');
-        revalidatePath('/');
-      } catch {
-        // Safe to ignore if outside server action / route context
-      }
+      revalidateDataPaths(['articles']);
     }
 
     return updatedArticle;
@@ -602,4 +934,80 @@ export async function updateArticle(
     console.error('Error in updateArticle:', error);
     return null;
   }
+}
+
+export async function createArticle(
+  data: Omit<Article, 'id' | 'publishedAt'> & { publishedAt?: string }
+): Promise<Article> {
+  const id = `art-${Date.now()}`;
+  const insertData = {
+    id,
+    slug: data.slug,
+    title: data.title,
+    excerpt: data.excerpt,
+    content: data.content,
+    category: data.category,
+    readTime: data.readTime || '5 menit baca',
+    publishedAt: data.publishedAt || new Intl.DateTimeFormat('id-ID', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+      timeZone: 'Asia/Jakarta',
+    }).format(new Date()),
+    tags: Array.isArray(data.tags) ? data.tags : [],
+    isPublished: data.isPublished !== undefined ? data.isPublished : true,
+  };
+
+  if (isDatabaseConfigured && db) {
+    try {
+      const [inserted] = await db.insert(articles).values(insertData).returning();
+      if (inserted) {
+        const newArticle = {
+          ...inserted,
+          tags: Array.isArray(inserted.tags) ? inserted.tags : [],
+          isPublished: inserted.isPublished ?? true,
+        } as Article;
+
+        fallbackArticles.unshift(newArticle);
+        revalidateDataPaths(['articles']);
+        return newArticle;
+      }
+    } catch (dbErr) {
+      console.error('Error creating article in db:', dbErr);
+    }
+  }
+
+  // Fallback in-memory
+  const fallbackArticle: Article = {
+    ...insertData,
+    tags: Array.isArray(insertData.tags) ? insertData.tags : [],
+    isPublished: insertData.isPublished,
+  };
+  fallbackArticles.unshift(fallbackArticle);
+  revalidateDataPaths(['articles']);
+  return fallbackArticle;
+}
+
+export async function deleteArticle(id: string): Promise<boolean> {
+  let deleted = false;
+  if (isDatabaseConfigured && db) {
+    try {
+      const [res] = await db.delete(articles).where(eq(articles.id, id)).returning();
+      if (res) deleted = true;
+    } catch (error) {
+      console.error('Error in deleteArticle:', error);
+    }
+  }
+
+  const idx = fallbackArticles.findIndex((a) => a.id === id);
+  if (idx !== -1) {
+    fallbackArticles.splice(idx, 1);
+    deleted = true;
+  }
+
+  if (deleted) {
+    revalidateDataPaths(['articles']);
+  }
+
+  return deleted;
 }

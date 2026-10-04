@@ -13,6 +13,9 @@ export default function ScrollRevealProvider() {
   const pathname = usePathname();
 
   useEffect(() => {
+    // Enable progressive reveal animations now that JS has loaded
+    document.documentElement.classList.add('js-reveal-ready');
+
     // If reduced motion is requested, reveal all immediately
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       document.querySelectorAll('[data-reveal], .reveal-init').forEach((el) => {

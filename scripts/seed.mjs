@@ -28,7 +28,7 @@ async function seed() {
       console.log(`Seeding ${data.articles.length} articles...`);
       for (const art of data.articles) {
         await sql`
-          INSERT INTO articles (id, slug, title, excerpt, content, category, read_time, published_at, tags)
+          INSERT INTO articles (id, slug, title, excerpt, content, category, read_time, published_at, tags, is_published)
           VALUES (
             ${art.id},
             ${art.slug},
@@ -38,7 +38,8 @@ async function seed() {
             ${art.category},
             ${art.readTime},
             ${art.publishedAt},
-            ${JSON.stringify(art.tags || [])}::jsonb
+            ${JSON.stringify(art.tags || [])}::jsonb,
+            ${art.isPublished !== undefined ? Boolean(art.isPublished) : true}
           )
           ON CONFLICT (id) DO UPDATE SET
             slug = EXCLUDED.slug,
@@ -48,7 +49,8 @@ async function seed() {
             category = EXCLUDED.category,
             read_time = EXCLUDED.read_time,
             published_at = EXCLUDED.published_at,
-            tags = EXCLUDED.tags;
+            tags = EXCLUDED.tags,
+            is_published = EXCLUDED.is_published;
         `;
       }
     }

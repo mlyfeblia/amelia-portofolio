@@ -47,6 +47,7 @@ export interface Article {
   readTime: string;
   publishedAt: string;
   tags: string[];
+  isPublished?: boolean;
 }
 
 export interface AssessmentQuestion {

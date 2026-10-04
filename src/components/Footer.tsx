@@ -93,7 +93,7 @@ export default function Footer() {
                   linkedin.com/in/amelia
                 </a>
               </p>
-              <p className="text-xs text-white/55 pt-1">
+              <p className="text-xs text-white/70 pt-1">
                 Cirebon, Jawa Barat, Indonesia
               </p>
             </address>
@@ -101,7 +101,7 @@ export default function Footer() {
             <div className="pt-2">
               <Link
                 href="/admin"
-                className="text-xs text-white/40 hover:text-white/75 transition-colors"
+                className="text-xs text-white/60 hover:text-white transition-colors"
               >
                 Portal Admin Konselor &rarr;
               </Link>
@@ -114,10 +114,10 @@ export default function Footer() {
       {/* Bottom Bar */}
       <div className="border-t border-white/10 py-6 sm:py-5">
         <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-10 flex flex-col sm:flex-row items-center sm:justify-between gap-2.5 sm:gap-4 text-center sm:text-left">
-          <p className="text-xs text-white/60 tracking-tight">
+          <p className="text-xs text-white/75 tracking-tight">
             &copy; {year} Amelia. Seluruh hak cipta dilindungi.
           </p>
-          <p className="text-[11.5px] sm:text-xs text-white/40 leading-relaxed max-w-sm sm:max-w-none">
+          <p className="text-[11.5px] sm:text-xs text-white/65 leading-relaxed max-w-sm sm:max-w-none">
             Kerahasiaan konseli dijaga sesuai kode etik bimbingan konseling.
           </p>
         </div>
