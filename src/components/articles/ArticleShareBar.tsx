@@ -32,9 +32,9 @@ export function ArticleShareBar({ title, url }: ArticleShareBarProps) {
   };
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 p-4 sm:p-5 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-paper-border)] shadow-2xs">
-      <div className="flex items-center gap-2 text-xs sm:text-sm font-medium text-[var(--color-ink-muted)]">
-        <Share2 className="w-4 h-4 text-[var(--color-accent)]" />
+    <div className="flex flex-wrap items-center justify-between gap-3 p-4 sm:p-5 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-paper-border)] hover:border-[var(--color-accent-border)] hover:shadow-xs transition-all duration-200 shadow-2xs group">
+      <div className="flex items-center gap-2 text-xs sm:text-sm font-medium text-[var(--color-ink-muted)] group-hover:text-[var(--color-ink)] transition-colors duration-200">
+        <Share2 className="w-4 h-4 text-[var(--color-accent)] group-hover:scale-110 transition-transform duration-200" />
         <span>Bermanfaat? Bagikan tulisan ini:</span>
       </div>
 
