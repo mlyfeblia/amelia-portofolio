@@ -31,7 +31,7 @@ function renderInlineMarkdown(text: string): React.ReactNode {
           href={href}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-[var(--color-accent)] font-medium underline underline-offset-2 hover:opacity-80 transition-opacity"
+          className="text-[var(--color-accent)] font-medium underline underline-offset-4 hover:opacity-80 transition-opacity"
         >
           {label}
         </a>
@@ -39,7 +39,7 @@ function renderInlineMarkdown(text: string): React.ReactNode {
         <Link
           key={i}
           href={href}
-          className="text-[var(--color-accent)] font-medium underline underline-offset-2 hover:opacity-80 transition-opacity"
+          className="text-[var(--color-accent)] font-medium underline underline-offset-4 hover:opacity-80 transition-opacity"
         >
           {label}
         </Link>
@@ -78,26 +78,27 @@ function renderInlineMarkdown(text: string): React.ReactNode {
 
 /**
  * Render Markdown content cleanly into semantically structured HTML.
- * Handles headings (H2, H3), blockquotes, horizontal rules, lists, and short paragraphs.
+ * Handles headings (H2, H3), blockquotes, horizontal rules, lists, and prose paragraphs with comfortable reading line-height.
  */
 export function ArticleMarkdownRenderer({ content }: { content: string }) {
   const paragraphs = content.trim().split(/\n\s*\n/);
 
   return (
-    <div className="space-y-6 text-base sm:text-lg text-[var(--color-ink)] leading-relaxed">
+    <div className="space-y-6 text-[15px] sm:text-base md:text-[17px] text-[var(--color-ink)] leading-[1.8] sm:leading-[1.85]">
       {paragraphs.map((para, idx) => {
         const trimmed = para.trim();
 
         // Horizontal rule
         if (trimmed === '---' || trimmed === '***') {
-          return <hr key={idx} className="my-8 border-[var(--color-paper-border)]" />;
+          return <hr key={idx} className="my-10 border-[var(--color-paper-border)]" />;
         }
 
+        // Heading 2
         if (trimmed.startsWith('## ')) {
           return (
             <h2
               key={idx}
-              className="text-2xl sm:text-3xl font-medium text-[var(--color-ink)] pt-6 pb-2 leading-snug"
+              className="text-xl sm:text-2xl md:text-[1.65rem] font-medium text-[var(--color-ink)] pt-8 pb-1 leading-snug tracking-tight"
               style={{ fontFamily: 'var(--font-display)' }}
             >
               {renderInlineMarkdown(trimmed.replace(/^##\s+/, ''))}
@@ -105,11 +106,12 @@ export function ArticleMarkdownRenderer({ content }: { content: string }) {
           );
         }
 
+        // Heading 3
         if (trimmed.startsWith('### ')) {
           return (
             <h3
               key={idx}
-              className="text-xl sm:text-2xl font-semibold text-[var(--color-ink)] pt-4 pb-1"
+              className="text-lg sm:text-xl font-semibold text-[var(--color-ink)] pt-5 pb-1 leading-snug"
             >
               {renderInlineMarkdown(trimmed.replace(/^###\s+/, ''))}
             </h3>
@@ -125,9 +127,9 @@ export function ArticleMarkdownRenderer({ content }: { content: string }) {
           return (
             <blockquote
               key={idx}
-              className="my-6 pl-4 border-l-4 border-[var(--color-accent)] italic text-[var(--color-ink-muted)] bg-[var(--color-accent-soft)]/40 py-3 pr-4 rounded-r-lg"
+              className="my-7 pl-5 border-l-3 border-[var(--color-accent)] italic text-[var(--color-ink)] bg-[var(--color-accent-soft)]/35 py-3.5 pr-5 rounded-r-xl"
             >
-              <p className="leading-relaxed m-0 text-sm sm:text-base">
+              <p className="leading-relaxed m-0 text-sm sm:text-base font-serif">
                 {renderInlineMarkdown(quoteLines)}
               </p>
             </blockquote>
@@ -140,7 +142,7 @@ export function ArticleMarkdownRenderer({ content }: { content: string }) {
             .split('\n')
             .filter((line) => line.trim().startsWith('- ') || line.trim().startsWith('* '));
           return (
-            <ul key={idx} className="space-y-2.5 my-4 pl-1" role="list">
+            <ul key={idx} className="space-y-3 my-5 pl-1" role="list">
               {items.map((item, itemIdx) => (
                 <li key={itemIdx} className="flex items-start gap-3">
                   <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-accent)] mt-2.5 shrink-0" />
@@ -157,14 +159,14 @@ export function ArticleMarkdownRenderer({ content }: { content: string }) {
         if (/^\d+\.\s/.test(trimmed)) {
           const items = trimmed.split('\n').filter((line) => /^\d+\.\s/.test(line.trim()));
           return (
-            <ol key={idx} className="space-y-3 my-4 pl-1" role="list">
+            <ol key={idx} className="space-y-3.5 my-5 pl-1" role="list">
               {items.map((item, itemIdx) => {
                 const match = item.match(/^(\d+)\.\s+(.*)/);
                 const num = match ? match[1] : `${itemIdx + 1}`;
                 const text = match ? match[2] : item;
                 return (
                   <li key={itemIdx} className="flex items-start gap-3">
-                    <span className="w-6 h-6 rounded-full bg-[var(--color-accent-soft)] text-[var(--color-accent)] text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">
+                    <span className="w-6 h-6 rounded-full bg-[var(--color-accent-soft)] border border-[var(--color-accent-border)] text-[var(--color-accent)] text-xs font-semibold flex items-center justify-center shrink-0 mt-0.5">
                       {num}
                     </span>
                     <span className="leading-relaxed">{renderInlineMarkdown(text)}</span>
@@ -175,9 +177,9 @@ export function ArticleMarkdownRenderer({ content }: { content: string }) {
           );
         }
 
-        // Regular short paragraph
+        // Regular prose paragraph
         return (
-          <p key={idx} className="leading-relaxed text-[var(--color-ink-muted)]">
+          <p key={idx} className="leading-[1.8] sm:leading-[1.85] text-[var(--color-ink)]/90">
             {renderInlineMarkdown(trimmed)}
           </p>
         );

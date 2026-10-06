@@ -2,7 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
-import { ArrowUpRight, ArrowLeft } from 'lucide-react';
+import { ArrowLeft, ArrowUpRight, ChevronRight } from 'lucide-react';
 import { getArticleBySlug, getArticles } from '@/lib/data-store';
 import { getIsoDateString } from '@/lib/utils';
 import Navbar from '@/components/Navbar';
@@ -13,6 +13,8 @@ import { ArticleHeader } from '@/components/articles/ArticleHeader';
 import { ArticleMarkdownRenderer } from '@/components/articles/ArticleMarkdownRenderer';
 import { ArticleTags } from '@/components/articles/ArticleTags';
 import { ArticleCta } from '@/components/articles/ArticleCta';
+import { ArticleShareBar } from '@/components/articles/ArticleShareBar';
+import { ArticleSidebar } from '@/components/articles/ArticleSidebar';
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://mlyfeblia.vercel.app';
 
@@ -115,6 +117,8 @@ export default async function ArticleDetailPage(props: {
     notFound();
   }
 
+  const articleFullUrl = `${BASE_URL}/articles/${slug}`;
+
   // Find related articles (same category or shared tags, excluding self)
   const relatedArticles = allArticles
     .filter((a) => a.slug !== slug)
@@ -141,7 +145,7 @@ export default async function ArticleDetailPage(props: {
           { name: 'Beranda', url: BASE_URL },
           { name: 'Artikel', url: `${BASE_URL}/articles` },
           { name: article.category, url: `${BASE_URL}/articles` },
-          { name: article.title, url: `${BASE_URL}/articles/${slug}` },
+          { name: article.title, url: articleFullUrl },
         ]}
       />
       <Navbar />
@@ -151,81 +155,111 @@ export default async function ArticleDetailPage(props: {
         tabIndex={-1}
         style={{ backgroundColor: 'var(--color-paper)' }}
       >
-        <div className="max-w-5xl mx-auto px-5 sm:px-8 lg:px-10 pt-8 sm:pt-10 md:pt-12 pb-16 sm:pb-20 md:pb-24">
-          <div className="mb-6">
-            <Link
-              href="/articles"
-              className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-medium text-[var(--color-ink-muted)] hover:text-[var(--color-accent)] transition-colors"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              <span>Kembali ke Direktori Artikel</span>
-            </Link>
-          </div>
-
-          <article aria-labelledby="article-title">
-            <ArticleHeader article={article} />
-            <div className="mb-12" aria-label="Isi artikel">
-              <ArticleMarkdownRenderer content={article.content} />
+        <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-10 pt-6 sm:pt-8 md:pt-10 pb-16 sm:pb-20 md:pb-24">
+          
+          {/* Top Clean Navigation Breadcrumb */}
+          <nav aria-label="Navigasi rekam jejak artikel" className="mb-6 sm:mb-8">
+            <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm text-[var(--color-ink-muted)]">
+              <Link
+                href="/articles"
+                className="inline-flex items-center gap-1.5 font-medium hover:text-[var(--color-accent)] transition-colors"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span>Direktori Artikel</span>
+              </Link>
+              <ChevronRight className="w-3.5 h-3.5 text-[var(--color-paper-border)]" aria-hidden="true" />
+              <span className="text-[var(--color-ink-soft)] font-medium">
+                {article.category}
+              </span>
             </div>
-            <ArticleTags tags={article.tags} />
+          </nav>
 
-            {/* Related Articles for SEO Internal Linking */}
-            {relatedArticles.length > 0 && (
-              <section className="mt-14 pt-10 border-t border-[var(--color-paper-border)] space-y-6" aria-label="Tulisan Terkait">
-                <div className="space-y-1">
-                  <h3
-                    className="text-xl sm:text-2xl font-medium text-[var(--color-ink)]"
-                    style={{ fontFamily: 'var(--font-display)' }}
-                  >
-                    Tulisan Refleksi Terkait
-                  </h3>
-                  <p className="text-xs sm:text-sm text-[var(--color-ink-muted)]">
-                    Baca juga ulasan lain seputar {article.category.toLowerCase()} dan kesehatan mental.
-                  </p>
-                </div>
+          {/* 2-Column Desktop Editorial Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
+            
+            {/* Main Reading Column */}
+            <article aria-labelledby="article-title" className="lg:col-span-8 min-w-0">
+              <ArticleHeader article={article} />
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  {relatedArticles.map((rel) => (
-                    <div
-                      key={rel.id}
-                      className="p-5 sm:p-6 bg-[var(--color-surface)] border border-[var(--color-paper-border)] rounded-2xl flex flex-col justify-between space-y-3 card-interactive shadow-xs"
+              <div className="mb-10" aria-label="Isi artikel">
+                <ArticleMarkdownRenderer content={article.content} />
+              </div>
+
+              {/* Tags and Topic Focus */}
+              <div className="mb-8">
+                <ArticleTags tags={article.tags} />
+              </div>
+
+              {/* Share & Copy Link Section */}
+              <div className="mb-12">
+                <ArticleShareBar title={article.title} url={articleFullUrl} />
+              </div>
+
+              {/* Related Articles for SEO Internal Linking */}
+              {relatedArticles.length > 0 && (
+                <section className="pt-8 border-t border-[var(--color-paper-border)] space-y-5" aria-label="Tulisan Terkait">
+                  <div className="space-y-1">
+                    <h3
+                      className="text-xl sm:text-2xl font-medium text-[var(--color-ink)]"
+                      style={{ fontFamily: 'var(--font-display)' }}
                     >
-                      <div className="space-y-2">
-                        <h4
-                          className="text-base sm:text-lg font-medium text-[var(--color-ink)] leading-snug line-clamp-2"
-                          style={{ fontFamily: 'var(--font-display)' }}
-                        >
-                          <Link href={`/articles/${rel.slug}`} className="hover:text-[var(--color-accent)] transition-colors">
-                            {rel.title}
+                      Tulisan Refleksi Terkait
+                    </h3>
+                    <p className="text-xs sm:text-sm text-[var(--color-ink-muted)]">
+                      Baca juga ulasan lain seputar {article.category.toLowerCase()} dan bimbingan konseling.
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {relatedArticles.map((rel) => (
+                      <div
+                        key={rel.id}
+                        className="p-5 bg-[var(--color-surface)] border border-[var(--color-paper-border)] rounded-2xl flex flex-col justify-between space-y-3 card-interactive shadow-2xs"
+                      >
+                        <div className="space-y-2">
+                          <h4
+                            className="text-base font-medium text-[var(--color-ink)] leading-snug line-clamp-2"
+                            style={{ fontFamily: 'var(--font-display)' }}
+                          >
+                            <Link href={`/articles/${rel.slug}`} className="hover:text-[var(--color-accent)] transition-colors">
+                              {rel.title}
+                            </Link>
+                          </h4>
+                          <p className="text-xs text-[var(--color-ink-muted)] line-clamp-2 leading-relaxed">
+                            {rel.publishedAt ? `${rel.publishedAt} — ` : ''}{rel.excerpt}
+                          </p>
+                        </div>
+
+                        <div className="pt-2 flex items-center justify-between text-xs text-[var(--color-ink-soft)] border-t border-[var(--color-paper-border)]">
+                          <span className="inline-flex items-center gap-1.5">
+                            <span className="font-medium text-[var(--color-accent)]">{rel.category}</span>
+                            <span>•</span>
+                            <span>{rel.readTime}</span>
+                          </span>
+                          <Link
+                            href={`/articles/${rel.slug}`}
+                            className="font-semibold text-[var(--color-accent)] hover:underline inline-flex items-center gap-1"
+                          >
+                            <span>Baca</span>
+                            <ArrowUpRight className="w-3.5 h-3.5" />
                           </Link>
-                        </h4>
-                        <p className="text-xs text-[var(--color-ink-muted)] line-clamp-2 leading-relaxed">
-                          {rel.publishedAt ? `${rel.publishedAt} — ` : ''}{rel.excerpt}
-                        </p>
+                        </div>
                       </div>
+                    ))}
+                  </div>
+                </section>
+              )}
 
-                      <div className="pt-2 flex items-center justify-between text-xs text-[var(--color-ink-soft)] border-t border-[var(--color-paper-border)]">
-                        <span className="inline-flex items-center gap-1.5">
-                          <span className="font-medium text-[var(--color-accent)]">{rel.category}</span>
-                          <span>•</span>
-                          <span>{rel.readTime}</span>
-                        </span>
-                        <Link
-                          href={`/articles/${rel.slug}`}
-                          className="font-semibold text-[var(--color-accent)] hover:underline inline-flex items-center gap-1"
-                        >
-                          <span>Baca</span>
-                          <ArrowUpRight className="w-3.5 h-3.5" />
-                        </Link>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </section>
-            )}
+              {/* Consultation CTA Banner */}
+              <ArticleCta />
+            </article>
 
-            <ArticleCta />
-          </article>
+            {/* Desktop Sticky Sidebar */}
+            <div className="hidden lg:block lg:col-span-4">
+              <ArticleSidebar currentCategory={article.category} />
+            </div>
+
+          </div>
         </div>
       </main>
       <Footer />
