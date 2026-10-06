@@ -183,13 +183,53 @@ export function AdminBookingsClient() {
     return counts;
   }, [bookings]);
 
+  // Available unique dates sorted descending with human-readable Indonesian labels
+  const availableDates = useMemo(() => {
+    const dateCounts: Record<string, number> = {};
+    bookings.forEach((b) => {
+      if (b.date) {
+        dateCounts[b.date] = (dateCounts[b.date] || 0) + 1;
+      }
+    });
+
+    const todayStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jakarta' }).format(new Date());
+
+    return Object.keys(dateCounts)
+      .sort((a, b) => b.localeCompare(a))
+      .map((dateStr) => {
+        let formattedLabel = dateStr;
+        try {
+          // Parse YYYY-MM-DD safely
+          const [y, m, d] = dateStr.split('-').map(Number);
+          if (y && m && d) {
+            const dt = new Date(y, m - 1, d);
+            formattedLabel = new Intl.DateTimeFormat('id-ID', {
+              weekday: 'short',
+              day: 'numeric',
+              month: 'short',
+              year: 'numeric',
+            }).format(dt);
+          }
+        } catch {}
+
+        const isToday = dateStr === todayStr;
+        const label = isToday ? `Hari Ini (${formattedLabel})` : formattedLabel;
+
+        return {
+          value: dateStr,
+          label,
+          count: dateCounts[dateStr],
+        };
+      });
+  }, [bookings]);
+
   // Filtered Bookings
   const filteredBookings = useMemo(() => {
     return bookings.filter((b) => {
       const matchesStatus = statusFilter === 'semua' || b.status === statusFilter;
       const matchesCategory =
         categoryFilter === 'Semua Topik' || b.category === categoryFilter;
-      const matchesDate = !dateFilter || b.date.includes(dateFilter);
+      const matchesDate = !dateFilter || b.date === dateFilter || b.date.includes(dateFilter);
 
       const q = search.toLowerCase();
       const matchesSearch =
@@ -238,6 +278,7 @@ export function AdminBookingsClient() {
         onCategoryChange={handleCategoryChange}
         dateFilter={dateFilter}
         onDateChange={handleDateChange}
+        availableDates={availableDates}
         categories={CATEGORIES}
         statusCounts={statusCounts}
         totalCount={bookings.length}

@@ -21,6 +21,7 @@ interface BookingFiltersProps {
   onCategoryChange: (cat: string) => void;
   dateFilter: string;
   onDateChange: (d: string) => void;
+  availableDates: { value: string; label: string; count: number }[];
   categories: string[];
   statusCounts: Record<string, number>;
   totalCount: number;
@@ -35,6 +36,7 @@ export function BookingFilters({
   onCategoryChange,
   dateFilter,
   onDateChange,
+  availableDates,
   categories,
   statusCounts,
   totalCount,
@@ -108,21 +110,27 @@ export function BookingFilters({
           </select>
         </div>
 
-        {/* Date Input / Clear */}
+        {/* Date Dropdown / Clear */}
         <div className="flex items-center gap-2 bg-[var(--color-paper)] px-3 py-1.5 rounded-xl border border-[var(--color-paper-border)]">
           <Calendar className="w-3.5 h-3.5 text-[var(--color-ink-muted)] shrink-0" />
-          <input
-            type="text"
+          <select
             value={dateFilter}
             onChange={(e) => onDateChange(e.target.value)}
-            placeholder="Filter tanggal (misal: 2026-10 atau Oktober)..."
-            className="w-full bg-transparent text-xs text-[var(--color-ink)] placeholder:text-[var(--color-ink-muted)]/70 focus:outline-none"
-          />
+            className="w-full bg-transparent text-xs text-[var(--color-ink)] focus:outline-none cursor-pointer"
+          >
+            <option value="">Semua Tanggal</option>
+            {availableDates.map((item) => (
+              <option key={item.value} value={item.value}>
+                {item.label} ({item.count})
+              </option>
+            ))}
+          </select>
           {dateFilter && (
             <button
               onClick={() => onDateChange('')}
               className="text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] p-0.5"
               title="Hapus filter tanggal"
+              type="button"
             >
               <X className="w-3.5 h-3.5" />
             </button>
