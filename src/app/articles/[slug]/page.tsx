@@ -191,7 +191,7 @@ export default async function ArticleDetailPage(props: {
               </div>
 
               {/* Share & Copy Link Section */}
-              <div className="mb-4">
+              <div>
                 <ArticleShareBar title={article.title} url={articleFullUrl} />
               </div>
             </article>
@@ -204,10 +204,10 @@ export default async function ArticleDetailPage(props: {
           </div>
 
           {/* Full-width Bottom Sections on Desktop (Tulisan Terkait & CTA Konseling) */}
-          <div className="mt-12 sm:mt-16 space-y-10 sm:space-y-12">
+          <div className="mt-6 sm:mt-10 lg:mt-14 space-y-8 sm:space-y-10 lg:space-y-12">
             {/* Related Articles for SEO Internal Linking */}
             {relatedArticles.length > 0 && (
-              <section className="pt-8 sm:pt-10 border-t border-[var(--color-paper-border)] space-y-6" aria-label="Tulisan Terkait">
+              <section className="pt-6 sm:pt-8 lg:pt-10 border-t border-[var(--color-paper-border)] space-y-5 sm:space-y-6" aria-label="Tulisan Terkait">
                 <div className="space-y-1">
                   <h3
                     className="text-xl sm:text-2xl font-medium text-[var(--color-ink)]"
