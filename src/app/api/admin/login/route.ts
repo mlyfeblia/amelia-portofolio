@@ -1,5 +1,10 @@
 import { NextResponse } from 'next/server';
-import { verifyPin, generateAdminSessionToken, COOKIE_NAME } from '@/lib/admin-auth';
+import { 
+  verifyPin, 
+  generateAdminSessionToken, 
+  COOKIE_NAME,
+  ADMIN_SESSION_MAX_AGE_SECONDS 
+} from '@/lib/admin-auth';
 import { checkDistributedRateLimit, getClientIp } from '@/lib/rate-limiter';
 import { telemetry } from '@/lib/telemetry';
 
@@ -47,7 +52,7 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           success: false,
-          message: `PIN yang Anda masukkan tidak valid. Sisa percobaan: ${rateCheck.remaining}`,
+          message: `PIN yang dimasukkan belum tepat. Sisa percobaan: ${rateCheck.remaining}`,
         },
         { status: 401 }
       );
@@ -64,7 +69,7 @@ export async function POST(request: Request) {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       path: '/',
-      maxAge: 60 * 60 * 24, // 24 hours
+      maxAge: ADMIN_SESSION_MAX_AGE_SECONDS, // 30 minutes
     });
 
     return response;

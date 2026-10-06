@@ -33,16 +33,21 @@ export function ArticlesPreviewSection({ articles }: ArticlesPreviewSectionProps
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
+        <div
+          className={`grid grid-cols-1 ${
+            articles.length === 3
+              ? 'md:grid-cols-3'
+              : articles.length >= 4
+              ? 'sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+              : 'md:grid-cols-2'
+          } gap-6 lg:gap-8`}
+        >
           {articles.map((art) => (
             <article
               key={art.id}
               className="p-6 lg:p-7 bg-[var(--color-surface)] border border-[var(--color-paper-border)] rounded-xl space-y-3.5 flex flex-col justify-between hover:border-[var(--color-accent-border)] transition-colors shadow-xs card-interactive"
             >
               <div className="space-y-2.5">
-                <span className="text-xs font-medium text-[var(--color-accent)]">
-                  {art.category}
-                </span>
                 <h3
                   className="text-lg sm:text-xl font-medium text-[var(--color-ink)] leading-snug"
                   style={{ fontFamily: 'var(--font-display)' }}
@@ -52,12 +57,16 @@ export function ArticlesPreviewSection({ articles }: ArticlesPreviewSectionProps
                   </Link>
                 </h3>
                 <p className="text-sm text-[var(--color-ink-muted)] leading-relaxed line-clamp-2">
-                  {art.excerpt}
+                  {art.publishedAt ? `${art.publishedAt} — ` : ''}{art.excerpt}
                 </p>
               </div>
 
               <div className="pt-3 border-t border-[var(--color-paper-border)] flex items-center justify-between text-xs sm:text-sm text-[var(--color-ink-soft)]">
-                <span>{art.readTime}</span>
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="font-medium text-[var(--color-accent)]">{art.category}</span>
+                  <span>•</span>
+                  <span>{art.readTime}</span>
+                </span>
                 <Link
                   href={`/articles/${art.slug}`}
                   className="font-semibold text-[var(--color-accent)] hover:underline inline-flex items-center gap-1"

@@ -1,7 +1,7 @@
 'use client';
 
-import React from 'react';
-import { CheckCircle, MessageCircle, RotateCcw } from 'lucide-react';
+import React, { useState } from 'react';
+import { CheckCircle, MessageCircle, RotateCcw, Copy, Check } from 'lucide-react';
 import { getBookingConfirmationWhatsAppUrl } from '@/lib/whatsapp';
 
 interface BookingSuccessCardProps {
@@ -13,9 +13,20 @@ interface BookingSuccessCardProps {
     slot: string;
   };
   onReset: () => void;
+  onTrack?: (code: string) => void;
 }
 
-export function BookingSuccessCard({ success, onReset }: BookingSuccessCardProps) {
+export function BookingSuccessCard({ success, onReset, onTrack }: BookingSuccessCardProps) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyCode = async () => {
+    try {
+      await navigator.clipboard.writeText(success.code);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {}
+  };
+
   return (
     <div
       className="max-w-xl mx-auto space-y-6 text-center py-6"
@@ -31,19 +42,41 @@ export function BookingSuccessCard({ success, onReset }: BookingSuccessCardProps
           Permintaan Janji Temu Diterima
         </h2>
         <p className="text-sm text-[var(--color-ink-muted)]">
-          Terima kasih, <strong>{success.name}</strong>. Kode referensi Anda:
+          Terima kasih, <strong>{success.name}</strong>. Kode referensi kamu:
         </p>
-        <div className="p-3 bg-[var(--color-paper)] border border-[var(--color-paper-border)] rounded-md font-mono text-base font-bold text-[var(--color-accent)] inline-block mt-2">
-          {success.code}
+        <div className="inline-flex items-center gap-2 p-2.5 sm:p-3 bg-[var(--color-paper)] border border-[var(--color-paper-border)] rounded-xl font-mono text-base sm:text-lg font-bold text-[var(--color-accent)] mt-2">
+          <span>{success.code}</span>
+          <button
+            onClick={handleCopyCode}
+            type="button"
+            className="btn-icon-interactive p-1 text-[var(--color-ink-muted)] hover:text-[var(--color-accent)] hover:bg-[var(--color-accent-soft)] rounded-md cursor-pointer"
+            title="Salin kode referensi"
+            aria-label="Salin kode referensi"
+          >
+            {copied ? (
+              <Check className="w-4 h-4 text-emerald-600 animate-pop-success" />
+            ) : (
+              <Copy className="w-4 h-4" />
+            )}
+          </button>
         </div>
       </div>
 
       <div className="text-xs text-[var(--color-ink-soft)] space-y-1">
         <p>Jadwal: {success.date} ({success.slot})</p>
-        <p>Amel akan menghubungi nomor WhatsApp Anda untuk konfirmasi.</p>
+        <p>Amel akan menghubungi nomor WhatsApp kamu buat konfirmasi sesi ya.</p>
       </div>
 
       <div className="pt-2 flex flex-wrap justify-center gap-3">
+        {onTrack && (
+          <button
+            onClick={() => onTrack(success.code)}
+            type="button"
+            className="btn-primary btn-interactive text-sm inline-flex items-center gap-2 cursor-pointer"
+          >
+            <span>Pantau Status Janji Temu</span>
+          </button>
+        )}
         <a
           href={getBookingConfirmationWhatsAppUrl({
             name: success.name,
@@ -54,15 +87,15 @@ export function BookingSuccessCard({ success, onReset }: BookingSuccessCardProps
           })}
           target="_blank"
           rel="noopener noreferrer"
-          className="btn-primary text-sm inline-flex items-center gap-2"
+          className="btn-secondary btn-interactive text-sm inline-flex items-center gap-2"
         >
-          <MessageCircle className="w-4 h-4" />
+          <MessageCircle className="w-4 h-4 text-emerald-600" />
           <span>Konfirmasi via WhatsApp</span>
         </a>
         <button
           onClick={onReset}
           type="button"
-          className="btn-secondary text-sm cursor-pointer inline-flex items-center gap-2"
+          className="btn-secondary btn-interactive text-sm cursor-pointer inline-flex items-center gap-2"
         >
           <RotateCcw className="w-4 h-4 text-[var(--color-ink-soft)]" />
           <span>Ajukan Jadwal Lain</span>

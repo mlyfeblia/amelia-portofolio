@@ -146,3 +146,40 @@ export function SkeletonArticleCard() {
     </div>
   );
 }
+
+/**
+ * Standardized Overview Metric Card Skeleton
+ */
+export function SkeletonMetricCard() {
+  return (
+    <div className="p-4 sm:p-5 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-paper-border)] shadow-xs space-y-3 animate-fade-in" aria-hidden="true">
+      <div className="flex items-center justify-between">
+        <Skeleton variant="rectangular" className="w-24 h-4 rounded-md" />
+        <Skeleton variant="circular" className="w-8 h-8 shrink-0" />
+      </div>
+      <Skeleton variant="rectangular" className="w-16 h-7 rounded-lg" />
+      <Skeleton variant="rectangular" className="w-32 h-3 rounded-md" />
+    </div>
+  );
+}
+
+/**
+ * Standardized Device Booking Record Skeleton
+ */
+export function SkeletonDeviceBookingCard() {
+  return (
+    <div className="p-3.5 sm:p-4 rounded-xl sm:rounded-2xl bg-white border border-[var(--color-paper-border)] space-y-3 animate-fade-in shadow-2xs" aria-hidden="true">
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <Skeleton variant="circular" className="w-6 h-6 shrink-0" />
+          <Skeleton variant="rectangular" className="w-28 h-4 font-mono rounded" />
+        </div>
+        <Skeleton variant="rectangular" className="w-20 h-5 rounded-full" />
+      </div>
+      <div className="grid grid-cols-2 gap-2 pt-1">
+        <Skeleton variant="rectangular" className="h-6 rounded-md" />
+        <Skeleton variant="rectangular" className="h-6 rounded-md" />
+      </div>
+    </div>
+  );
+}

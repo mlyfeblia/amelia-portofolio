@@ -36,7 +36,7 @@ export function BookingClientInfoStep({
           autoComplete="name"
           value={form.name}
           onChange={(e) => onChange('name', e.target.value)}
-          placeholder="Nama lengkap Anda"
+          placeholder="Nama lengkapmu"
           className="form-input text-sm py-2"
         />
       </div>

@@ -67,7 +67,7 @@ export async function POST(request: Request) {
           (typeof b.website === 'string' && b.website.trim().length > 0)) {
         return NextResponse.json({
           success: true,
-          message: 'Jadwal konsultasi berhasil diajukan! Kami akan menghubungi Anda melalui WhatsApp/Email.',
+          message: 'Jadwal konsultasi berhasil diajukan! Amel akan segera menghubungimu melalui WhatsApp atau Email ya.',
           data: { id: 'bk-filtered', code: 'BKI-OK-000' },
         });
       }
@@ -86,7 +86,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       success: true,
-      message: 'Jadwal konsultasi berhasil diajukan! Kami akan menghubungi Anda melalui WhatsApp/Email.',
+      message: 'Jadwal konsultasi berhasil diajukan! Amel akan segera menghubungimu melalui WhatsApp atau Email ya.',
       data: newBooking,
     });
   } catch (error) {

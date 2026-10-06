@@ -35,7 +35,7 @@ export function ApproachSection() {
                 Penerimaan Tanpa Syarat
               </h3>
               <p className="text-xs sm:text-sm text-[var(--color-ink-muted)] leading-relaxed">
-                Menerima seluruh cerita dan kerapuhan Anda tanpa prasangka atau penghakiman moral.
+                Menerima seluruh cerita dan kerapuhanmu tanpa prasangka atau penghakiman moral.
               </p>
             </div>
 
@@ -65,7 +65,7 @@ export function ApproachSection() {
                 Akses Daring Fleksibel
               </h3>
               <p className="text-xs sm:text-sm text-[var(--color-ink-muted)] leading-relaxed">
-                Dapat diakses secara virtual dari mana pun Anda berada tanpa batasan jarak.
+                Dapat diakses secara virtual dari mana pun kamu berada tanpa batasan jarak.
               </p>
             </div>
           </div>

@@ -2,7 +2,7 @@ import React from 'react';
 
 export function ServicesHero() {
   return (
-    <section className="space-y-4 max-w-3xl animate-fade-in-up">
+    <section className="space-y-4 max-w-3xl">
       <h1
         className="text-3xl sm:text-4xl lg:text-[2.65rem] font-medium text-[var(--color-ink)] leading-tight"
         style={{ fontFamily: 'var(--font-display)' }}

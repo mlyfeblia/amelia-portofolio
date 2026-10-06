@@ -1,17 +1,23 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, KeyRound, Eye, EyeOff } from 'lucide-react';
+import { ArrowLeft, KeyRound, Eye, EyeOff, ShieldAlert } from 'lucide-react';
 import { Spinner } from '@/components/ui/Spinner';
 
 interface AdminAuthContextType {
   isAuthenticated: boolean;
+  remainingSeconds: number;
   login: (pin: string) => Promise<boolean>;
   logout: () => Promise<void>;
+  refreshSession: () => Promise<boolean>;
+  sessionNotice: string | null;
+  clearSessionNotice: () => void;
 }
 
 const AdminAuthContext = createContext<AdminAuthContextType | undefined>(undefined);
+
+const DEFAULT_SESSION_SECONDS = 30 * 60; // 30 minutes
 
 export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
@@ -20,24 +26,84 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
   const [showPin, setShowPin] = useState(false);
   const [pinError, setPinError] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [remainingSeconds, setRemainingSeconds] = useState<number>(DEFAULT_SESSION_SECONDS);
+  const [sessionNotice, setSessionNotice] = useState<string | null>(null);
 
   useEffect(() => {
-    async function checkServerSession() {
+    let active = true;
+    async function verify() {
       try {
         const res = await fetch('/api/admin/verify');
         const data = await res.json();
+        if (!active) return;
         if (data.authenticated) {
           setIsAuthenticated(true);
+          if (typeof data.remainingSeconds === 'number' && data.remainingSeconds > 0) {
+            setRemainingSeconds(data.remainingSeconds);
+          } else {
+            setRemainingSeconds(DEFAULT_SESSION_SECONDS);
+          }
         } else {
           setIsAuthenticated(false);
         }
       } catch {
-        setIsAuthenticated(false);
+        if (active) setIsAuthenticated(false);
       } finally {
-        setChecking(false);
+        if (active) setChecking(false);
       }
     }
-    checkServerSession();
+
+    verify();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const logout = useCallback(async () => {
+    try {
+      await fetch('/api/admin/logout', { method: 'POST' });
+    } catch {
+      // ignore
+    }
+    setIsAuthenticated(false);
+    setRemainingSeconds(0);
+    setPin('');
+    setShowPin(false);
+  }, []);
+
+  // 30-minute countdown ticker when authenticated
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    const interval = setInterval(() => {
+      setRemainingSeconds((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          logout();
+          setSessionNotice(
+            'Sesi login telah berakhir setelah 30 menit demi keamanan. Draf tulisanmu tetap tersimpan aman di browser.'
+          );
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [isAuthenticated, logout]);
+
+  const refreshSession = useCallback(async (): Promise<boolean> => {
+    try {
+      const res = await fetch('/api/admin/refresh', { method: 'POST' });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setRemainingSeconds(data.remainingSeconds || DEFAULT_SESSION_SECONDS);
+        return true;
+      }
+    } catch {
+      // network/fetch error
+    }
+    return false;
   }, []);
 
   const login = async (inputPin: string): Promise<boolean> => {
@@ -53,6 +119,8 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
       if (res.ok && data.success) {
         setIsAuthenticated(true);
         setPinError(false);
+        setRemainingSeconds(DEFAULT_SESSION_SECONDS);
+        setSessionNotice(null);
         return true;
       }
     } catch {
@@ -64,22 +132,13 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
     return false;
   };
 
-  const logout = async () => {
-    try {
-      await fetch('/api/admin/logout', { method: 'POST' });
-    } catch {
-      // ignore
-    }
-    setIsAuthenticated(false);
-    setPin('');
-    setShowPin(false);
-  };
-
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!pin.trim()) return;
     await login(pin);
   };
+
+  const clearSessionNotice = () => setSessionNotice(null);
 
   if (checking) {
     return (
@@ -109,9 +168,19 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
               Portal Konselor Amelia
             </h1>
             <p className="text-xs sm:text-sm text-[var(--color-ink-muted)] leading-relaxed">
-              Masukkan PIN pengelola untuk mengelola janji temu konseling, ruang curhat, dan data website.
+              Masukkan PIN pengelola untuk mengelola janji temu konseling, ruang curhat, dan artikel refleksi.
             </p>
           </div>
+
+          {sessionNotice && (
+            <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-xl text-left flex items-start gap-2.5 text-xs text-amber-900 animate-fade-in-up">
+              <ShieldAlert className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+              <div>
+                <p className="font-semibold text-amber-950 mb-0.5">Sesi Berakhir (30 Menit)</p>
+                <p className="text-amber-800 leading-relaxed">{sessionNotice}</p>
+              </div>
+            </div>
+          )}
 
           <form onSubmit={handleFormSubmit} className="space-y-4 text-left">
             <div>
@@ -165,8 +234,8 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
               </div>
 
               {pinError && (
-                <p className="text-xs text-red-600 mt-1.5 text-center font-medium animate-fade-in-up">
-                  PIN yang Anda masukkan tidak valid.
+                <p className="text-xs text-[var(--color-error)] mt-1.5 text-center font-medium animate-fade-in-up">
+                  PIN yang dimasukkan belum tepat.
                 </p>
               )}
             </div>
@@ -206,7 +275,17 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <AdminAuthContext.Provider value={{ isAuthenticated, login, logout }}>
+    <AdminAuthContext.Provider
+      value={{
+        isAuthenticated,
+        remainingSeconds,
+        login,
+        logout,
+        refreshSession,
+        sessionNotice,
+        clearSessionNotice,
+      }}
+    >
       {children}
     </AdminAuthContext.Provider>
   );

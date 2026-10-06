@@ -1,10 +1,18 @@
 import { NextResponse } from 'next/server';
-import { isAuthenticatedAdmin } from '@/lib/admin-auth';
+import { 
+  getAdminSessionToken, 
+  isValidAdminSessionToken, 
+  getAdminSessionRemainingSeconds 
+} from '@/lib/admin-auth';
 
 export async function GET(request: Request) {
-  const isAuth = await isAuthenticatedAdmin(request);
+  const token = await getAdminSessionToken(request);
+  const isValid = isValidAdminSessionToken(token);
+  const remainingSeconds = isValid ? getAdminSessionRemainingSeconds(token) : 0;
+
   return NextResponse.json({
-    success: isAuth,
-    authenticated: isAuth,
+    success: isValid,
+    authenticated: isValid,
+    remainingSeconds,
   });
 }

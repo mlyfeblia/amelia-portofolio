@@ -63,7 +63,7 @@ export interface AdminContactParams {
 
 export function getAdminContactWhatsAppUrl(params: AdminContactParams): string {
   const targetPhone = formatWhatsAppNumber(params.clientPhone);
-  const text = `Halo ${params.clientName}, salam kenal dari Amel (Konselor Sebaya UIN Siber Cirebon). Terkait permohonan sesi konseling Anda (${params.code}) untuk jadwal ${params.date} (${params.slot}), saya ingin mengonfirmasi kesiapan sesi kita. Apakah jadwal tersebut sudah sesuai untuk Anda? Terima kasih.`;
+  const text = `Halo ${params.clientName}, salam kenal dari Amel (Konselor Sebaya UIN Siber Cirebon). Terkait janji temu konseling kamu (${params.code}) untuk jadwal ${params.date} (${params.slot}), aku ingin konfirmasi kesiapan sesi kita. Apakah jadwal tersebut sudah pas buat kamu? Terima kasih ya.`;
 
   return `https://wa.me/${targetPhone}?text=${encodeURIComponent(text)}`;
 }
@@ -73,11 +73,15 @@ export function getAdminContactWhatsAppUrl(params: AdminContactParams): string {
  */
 export interface AssessmentResultParams {
   level: string;
-  category: string;
+  category?: string;
   totalScore: number;
+  maxScore?: number;
+  dimensionsSummary?: string;
 }
 
 export function getAssessmentWhatsAppUrl(params: AssessmentResultParams): string {
-  const text = `Halo Kak Amel, perkenalkan nama saya [Nama Kamu]. Saya baru saja mengisi Asesmen Kesejahteraan Jiwa di website dan mendapatkan hasil: ${params.level} (${params.category}) dengan skor ${params.totalScore}/21. Saya ingin berdiskusi dan konsultasi lebih lanjut dengan Kak Amel. Terima kasih!`;
+  const max = params.maxScore ?? 24;
+  const dimBlock = params.dimensionsSummary ? `\n\nRingkasan Dimensi:\n${params.dimensionsSummary}` : '';
+  const text = `Halo Kak Amel, perkenalkan nama saya [Nama Kamu]. Saya baru saja mengisi Asesmen Kesejahteraan Jiwa di website dan mendapatkan hasil: ${params.level} dengan skor ${params.totalScore}/${max}.${dimBlock}\n\nSaya ingin berdiskusi dan konsultasi lebih lanjut dengan Kak Amel. Terima kasih!`;
   return `https://wa.me/${AMELIA_WHATSAPP_NUMBER}?text=${encodeURIComponent(text)}`;
 }

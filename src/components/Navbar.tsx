@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { usePwa, triggerPwaInstall } from '@/lib/pwa-store';
+import { useModalAnimation } from '@/lib/use-modal-animation';
 
 // Ringkas tepat 6 menu navigasi dengan ikon terstandarisasi
 const navItems = [
@@ -33,6 +34,40 @@ export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const { isInstalled } = usePwa();
+
+  const { isRendered, isExiting } = useModalAnimation({
+    isOpen: open,
+    durationMs: 240,
+  });
+
+  // Freeze background scrolling & touch interactions while mobile menu is open (zero-jump)
+  useEffect(() => {
+    if (!open) return;
+
+    const originalBodyOverflow = document.body.style.overflow;
+    const originalHtmlOverflow = document.documentElement.style.overflow;
+    document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
+
+    // Non-passive touchmove listener to completely prevent mobile background scrolling
+    const handleTouchMove = (e: TouchEvent) => {
+      const mobileNav = document.getElementById('mobile-nav');
+      if (mobileNav && mobileNav.contains(e.target as Node)) {
+        return; // Allow smooth scrolling inside the mobile menu
+      }
+      if (e.cancelable) {
+        e.preventDefault(); // Strictly block any background drag / touch scroll
+      }
+    };
+
+    window.addEventListener('touchmove', handleTouchMove, { passive: false });
+
+    return () => {
+      document.body.style.overflow = originalBodyOverflow;
+      document.documentElement.style.overflow = originalHtmlOverflow;
+      window.removeEventListener('touchmove', handleTouchMove);
+    };
+  }, [open]);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
@@ -64,20 +99,6 @@ export default function Navbar() {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, []);
 
-  // Lock body & document scroll when mobile menu is open
-  useEffect(() => {
-    if (open) {
-      const originalBodyOverflow = document.body.style.overflow;
-      const originalHtmlOverflow = document.documentElement.style.overflow;
-      document.body.style.overflow = 'hidden';
-      document.documentElement.style.overflow = 'hidden';
-      return () => {
-        document.body.style.overflow = originalBodyOverflow;
-        document.documentElement.style.overflow = originalHtmlOverflow;
-      };
-    }
-  }, [open]);
-
   // Helper to reliably check if a nav item is active
   const isItemActive = (href: string) => {
     if (!pathname) {
@@ -94,30 +115,30 @@ export default function Navbar() {
     <>
       <header
         className={cn(
-          'z-50 bg-[var(--color-paper)] border-b border-[var(--color-paper-border)] transition-shadow duration-200',
+          'z-50 bg-[var(--color-paper)]/95 backdrop-blur-md border-b border-[var(--color-paper-border)] transition-shadow duration-200 overflow-visible',
           open ? 'fixed top-0 inset-x-0' : 'sticky top-0',
           scrolled ? 'shadow-xs' : ''
         )}
         role="banner"
       >
-        <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-10 h-16 flex items-center justify-between gap-6">
+        <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-10 h-16 flex items-center justify-between gap-6 overflow-visible">
 
-          {/* Wordmark logo */}
+          {/* Wordmark logo with elegant lift and color shift hover animation */}
           <Link
             href="/"
-            className="flex items-center shrink-0 group focus-visible:outline-none"
+            className="flex items-center shrink-0 group focus-visible:outline-none select-none py-1"
             aria-label="Amelia - Beranda"
             onClick={() => setOpen(false)}
           >
             <span
-              className="text-xl sm:text-2xl font-medium tracking-tight text-[var(--color-ink)] group-hover:text-[var(--color-accent)] transition-colors"
+              className="text-xl sm:text-2xl font-medium tracking-tight text-[var(--color-ink)] group-hover:text-[var(--color-accent)] group-hover:-translate-y-0.5 group-active:translate-y-0 group-active:scale-95 transition-all duration-200 ease-out inline-block"
               style={{ fontFamily: 'var(--font-display)' }}
             >
               Amelia
             </span>
           </Link>
 
-          {/* Desktop 6-menu navigation */}
+          {/* Desktop 6-menu navigation with refined tactile hover animations */}
           <nav className="hidden md:flex items-center gap-1.5" aria-label="Navigasi utama">
             {navItems.map((item) => {
               const isActive = isItemActive(item.href);
@@ -127,169 +148,165 @@ export default function Navbar() {
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    'px-3.5 py-1.5 text-sm font-medium rounded-full transition-all duration-200 inline-flex items-center gap-1.5',
+                    'group px-3.5 py-1.5 text-sm font-medium rounded-full transition-all duration-200 ease-out inline-flex items-center gap-1.5 hover:-translate-y-0.5 active:translate-y-0 active:scale-95',
                     isActive
-                      ? 'text-[var(--color-accent)] bg-[var(--color-accent-soft)] font-semibold border border-[var(--color-accent-border)] shadow-xs'
-                      : 'text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] hover:bg-[var(--color-paper-muted)]'
+                      ? 'text-[var(--color-accent)] bg-[var(--color-accent-soft)] font-semibold border border-[var(--color-accent-border)] shadow-xs hover:border-[var(--color-accent)] hover:shadow-sm'
+                      : 'text-[var(--color-ink-muted)] hover:text-[var(--color-accent)] hover:bg-[var(--color-paper-muted)] hover:shadow-2xs'
                   )}
                   aria-current={isActive ? 'page' : undefined}
                 >
                   {isActive && (
-                    <Icon className="w-3.5 h-3.5 text-[var(--color-accent)] animate-fade-in shrink-0" aria-hidden="true" />
+                    <Icon className="w-3.5 h-3.5 text-[var(--color-accent)] animate-fade-in shrink-0 transition-transform duration-200 group-hover:scale-110" aria-hidden="true" />
                   )}
-                  <span>{item.label}</span>
+                  <span className="transition-colors duration-200">{item.label}</span>
                 </Link>
               );
             })}
           </nav>
 
-          {/* Right Actions: Janji Temu CTA & Mobile Toggle */}
+            {/* Right Actions: Janji Temu CTA & Mobile Toggle */}
+            <div className="flex items-center justify-end shrink-0 gap-2 sm:gap-3 overflow-visible">
+              {/* Janji Temu CTA - Meluncur ke kanan masuk ke tombol hamburger saat dibuka, dan meluncur keluar dari kanan ke kiri saat ditutup */}
+              <div
+                className={cn(
+                  'flex items-center transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] relative z-0',
+                  open
+                    ? 'max-md:opacity-0 max-md:translate-x-7 max-md:pointer-events-none'
+                    : 'max-md:opacity-100 max-md:translate-x-0 max-md:pointer-events-auto'
+                )}
+              >
+                <Link
+                  href="/schedule"
+                  onClick={() => setOpen(false)}
+                  tabIndex={open ? -1 : 0}
+                  style={{
+                    transition: 'all var(--dur-base) var(--ease-smooth)',
+                  }}
+                  className="inline-flex items-center justify-center gap-1.5 h-8 md:h-9 px-3 md:px-4 text-xs md:text-sm font-semibold rounded-lg text-white bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] shadow-[0_1px_2px_rgba(25,40,32,0.1)] hover:-translate-y-[1px] hover:shadow-[0_4px_12px_rgba(26,86,60,0.22)] active:scale-[0.98] active:shadow-[0_1px_3px_rgba(26,86,60,0.15)] whitespace-nowrap select-none cursor-pointer"
+                >
+                  <Calendar className="w-3.5 h-3.5 shrink-0" />
+                  <span>Janji Temu</span>
+                </Link>
+              </div>
+
+              {/* Mobile toggle button - Desain kotak ramping & proporsional persis versi asli deploy */}
+              <button
+                type="button"
+                onClick={() => setOpen(!open)}
+                className="flex md:!hidden relative z-10 w-8 h-8 rounded-lg border border-[var(--color-paper-border)] bg-[var(--color-surface)] text-[var(--color-ink)] hover:border-[var(--color-accent-border)] hover:text-[var(--color-accent)] hover:bg-[var(--color-accent-soft)]/50 active:scale-95 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] items-center justify-center cursor-pointer shrink-0 select-none shadow-2xs"
+                aria-expanded={open}
+                aria-controls="mobile-nav"
+                aria-label={open ? 'Tutup menu navigasi' : 'Buka menu navigasi'}
+              >
+                <Menu
+                  className={cn(
+                    'w-4.5 h-4.5 absolute inset-0 m-auto transition-all duration-200 ease-out transform group-hover:scale-110',
+                    open ? 'opacity-0 rotate-90 scale-75' : 'opacity-100 rotate-0 scale-100'
+                  )}
+                  aria-hidden="true"
+                />
+                <X
+                  className={cn(
+                    'w-4.5 h-4.5 absolute inset-0 m-auto transition-all duration-200 ease-out transform group-hover:scale-110',
+                    open ? 'opacity-100 rotate-0 scale-100' : 'opacity-0 -rotate-90 scale-75'
+                  )}
+                  aria-hidden="true"
+                />
+              </button>
+            </div>
+
+        </div>
+
+        {/* ── Mobile Dropdown Panel (Anchored to header, Zero Gap, Upgraded Cascading Transitions) ── */}
+        {isRendered && (
           <div
+            id="mobile-nav"
             className={cn(
-              'flex items-center shrink-0 transition-all duration-300 ease-out',
-              open ? 'gap-0 md:gap-3' : 'gap-2 sm:gap-3'
+              'md:hidden absolute top-full left-0 right-0 bg-[var(--color-paper)]/98 backdrop-blur-xl border-y border-[var(--color-paper-border)] shadow-xl px-5 sm:px-8 py-4 max-h-[calc(100dvh-4.5rem)] overflow-y-auto overscroll-contain origin-top',
+              isExiting ? 'nav-dropdown-exit' : 'nav-dropdown-enter'
             )}
+            role="dialog"
+            aria-label="Menu navigasi mobile"
+            aria-modal={open}
           >
-            {/* Mobile Janji Temu CTA with smooth width/opacity collapse animation */}
+            <nav className="flex flex-col gap-1" aria-label="Navigasi mobile">
+              {navItems.map((item, idx) => {
+                const isActive = isItemActive(item.href);
+                const Icon = item.icon;
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setOpen(false)}
+                    style={{ animationDelay: `${25 + idx * 25}ms` }}
+                    className={cn(
+                      'group px-3.5 py-2.5 text-sm font-medium rounded-xl transition-all duration-200 ease-out flex items-center justify-between nav-item-stagger hover:translate-x-1.5 active:translate-x-0.5 active:scale-[0.98]',
+                      isActive
+                        ? 'text-[var(--color-accent)] bg-[var(--color-accent-soft)] font-semibold border border-[var(--color-accent-border)] hover:border-[var(--color-accent)] hover:bg-[var(--color-accent-soft)]/90'
+                        : 'text-[var(--color-ink)] hover:text-[var(--color-accent)] hover:bg-[var(--color-paper-muted)]'
+                    )}
+                    aria-current={isActive ? 'page' : undefined}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <Icon
+                        className={cn(
+                          'w-4 h-4 shrink-0 transition-all duration-200 group-hover:scale-110',
+                          isActive ? 'text-[var(--color-accent)]' : 'text-[var(--color-ink-soft)] group-hover:text-[var(--color-accent)]'
+                        )}
+                        aria-hidden="true"
+                      />
+                      <span className="transition-colors duration-200">{item.label}</span>
+                    </div>
+                    {isActive && (
+                      <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-accent)] transition-transform duration-200 group-hover:scale-125" />
+                    )}
+                  </Link>
+                );
+              })}
+            </nav>
+
             <div
-              className={cn(
-                'transition-all duration-300 ease-out flex items-center',
-                open
-                  ? 'max-md:max-w-0 max-md:opacity-0 max-md:scale-95 max-md:pointer-events-none max-md:overflow-hidden'
-                  : 'max-md:max-w-[140px] max-md:opacity-100 max-md:scale-100 max-md:pointer-events-auto max-md:overflow-hidden',
-                'md:max-w-none md:opacity-100 md:scale-100 md:pointer-events-auto md:overflow-visible'
-              )}
+              className="pt-3 mt-2 border-t border-[var(--color-paper-border)] flex flex-col gap-2 nav-item-stagger"
+              style={{ animationDelay: `${25 + navItems.length * 25}ms` }}
             >
               <Link
                 href="/schedule"
                 onClick={() => setOpen(false)}
-                tabIndex={open ? -1 : 0}
-                className="btn-primary btn-interactive !text-xs sm:!text-sm !py-1.5 sm:!py-2 !px-3 sm:!px-4.5 whitespace-nowrap shadow-xs inline-flex items-center gap-1.5"
+                className="btn-primary text-sm py-2.5 px-4 w-full text-center justify-center shadow-xs inline-flex items-center gap-2 hover:-translate-y-0.5 hover:shadow-md hover:bg-[var(--color-accent-hover)] active:translate-y-0 active:scale-[0.98] transition-all duration-200 ease-out"
               >
-                <Calendar className="w-3.5 h-3.5" />
-                <span>Janji Temu</span>
+                <Calendar className="w-4 h-4" />
+                <span>Janji Temu Konseling</span>
               </Link>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setOpen(false);
+                  triggerPwaInstall();
+                }}
+                className="w-full py-2.5 px-4 rounded-xl bg-white border border-[var(--color-paper-border)] text-[var(--color-ink)] text-xs font-medium hover:text-[var(--color-accent)] hover:border-[var(--color-accent-border)] hover:bg-[var(--color-paper-muted)] hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-all duration-200 ease-out flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <Smartphone className="w-4 h-4 text-[var(--color-accent)]" />
+                <span>{isInstalled ? 'Aplikasi Amelia (Terpasang)' : 'Pasang Aplikasi Amelia'}</span>
+              </button>
             </div>
-
-            {/* Mobile toggle button */}
-            <button
-              type="button"
-              onClick={() => setOpen(!open)}
-              className="md:hidden relative w-9 h-9 rounded-lg text-[var(--color-ink)] hover:bg-[var(--color-paper-muted)] active:bg-[var(--color-paper-border)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] flex items-center justify-center"
-              aria-expanded={open}
-              aria-controls="mobile-nav"
-              aria-label={open ? 'Tutup menu navigasi' : 'Buka menu navigasi'}
-            >
-              <Menu
-                className={cn(
-                  'w-5 h-5 absolute transition-all duration-300 ease-out transform',
-                  open ? 'opacity-0 rotate-90 scale-75' : 'opacity-100 rotate-0 scale-100'
-                )}
-                aria-hidden="true"
-              />
-              <X
-                className={cn(
-                  'w-5 h-5 absolute transition-all duration-300 ease-out transform',
-                  open ? 'opacity-100 rotate-0 scale-100' : 'opacity-0 -rotate-90 scale-75'
-                )}
-                aria-hidden="true"
-              />
-            </button>
           </div>
-
-        </div>
-
-        {/* ── Mobile Dropdown Panel (Anchored to header, Zero Gap, Solid Surface) ── */}
-        <div
-          id="mobile-nav"
-          className={cn(
-            'md:hidden absolute top-full left-0 right-0 bg-[var(--color-paper)] border-y border-[var(--color-paper-border)] shadow-xl transition-all duration-300 ease-out origin-top px-5 sm:px-8 py-4 max-h-[calc(100dvh-4.5rem)] overflow-y-auto overscroll-contain',
-            open
-              ? 'opacity-100 translate-y-0 pointer-events-auto visible'
-              : 'opacity-0 -translate-y-2 pointer-events-none invisible'
-          )}
-          role="dialog"
-          aria-label="Menu navigasi mobile"
-          aria-modal={open}
-        >
-          <nav className="flex flex-col gap-1" aria-label="Navigasi mobile">
-            {navItems.map((item) => {
-              const isActive = isItemActive(item.href);
-              const Icon = item.icon;
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => setOpen(false)}
-                  className={cn(
-                    'px-3.5 py-2.5 text-sm font-medium rounded-xl transition-all duration-150 flex items-center justify-between',
-                    isActive
-                      ? 'text-[var(--color-accent)] bg-[var(--color-accent-soft)] font-semibold border border-[var(--color-accent-border)]'
-                      : 'text-[var(--color-ink)] hover:text-[var(--color-accent)] hover:bg-[var(--color-paper-muted)]/70'
-                  )}
-                  aria-current={isActive ? 'page' : undefined}
-                >
-                  <div className="flex items-center gap-2.5">
-                    <Icon
-                      className={cn(
-                        'w-4 h-4 shrink-0 transition-colors',
-                        isActive ? 'text-[var(--color-accent)]' : 'text-[var(--color-ink-soft)]'
-                      )}
-                      aria-hidden="true"
-                    />
-                    <span>{item.label}</span>
-                  </div>
-                  {isActive && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-accent)]" />
-                  )}
-                </Link>
-              );
-            })}
-          </nav>
-
-          <div className="pt-3 mt-2 border-t border-[var(--color-paper-border)] flex flex-col gap-2">
-            <Link
-              href="/schedule"
-              onClick={() => setOpen(false)}
-              className="btn-primary text-sm py-2.5 px-4 w-full text-center justify-center shadow-xs inline-flex items-center gap-2"
-            >
-              <Calendar className="w-4 h-4" />
-              <span>Janji Temu Konseling</span>
-            </Link>
-
-            <button
-              type="button"
-              onClick={() => {
-                setOpen(false);
-                triggerPwaInstall();
-              }}
-              className="w-full py-2.5 px-4 rounded-xl bg-white border border-[var(--color-paper-border)] text-[var(--color-ink)] text-xs font-medium hover:bg-[var(--color-paper-muted)] transition-colors flex items-center justify-center gap-2 cursor-pointer active:scale-98"
-            >
-              <Smartphone className="w-4 h-4 text-[var(--color-accent)]" />
-              <span>{isInstalled ? 'Aplikasi Amelia (Terpasang)' : 'Pasang Aplikasi Amelia'}</span>
-            </button>
-          </div>
-        </div>
+        )}
       </header>
 
       {/* Placeholder to prevent layout shift when header becomes fixed upon opening */}
-      {open && <div className="h-16 md:hidden" aria-hidden="true" />}
+      {open && <div className="h-16 shrink-0 md:hidden" aria-hidden="true" />}
 
-      {/* ── Soft Frosted Backdrop (Translucent Blur, Non-clickable Scrim, Scroll-Blocked) ── */}
-      <div
-        className={cn(
-          'fixed inset-0 z-40 bg-black/40 backdrop-blur-sm md:hidden transition-opacity duration-300 ease-out touch-none select-none cursor-pointer',
-          open ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
-        )}
-        onClick={() => setOpen(false)}
-        onWheel={(e) => {
-          if (open) e.preventDefault();
-        }}
-        onTouchMove={(e) => {
-          if (open) e.preventDefault();
-        }}
-        aria-hidden="true"
-      />
+      {/* ── Pure Frosted Transparent Blur Backdrop (Zero Dark/Black Tint, Touch & Scroll Blocked) ── */}
+      {isRendered && (
+        <div
+          className={cn(
+            'fixed inset-0 z-40 bg-transparent backdrop-blur-md md:hidden touch-none select-none pointer-events-auto',
+            isExiting ? 'nav-backdrop-exit' : 'nav-backdrop-enter'
+          )}
+          aria-hidden="true"
+        />
+      )}
     </>
   );
 }

@@ -13,10 +13,12 @@ export const articles = pgTable(
     publishedAt: text('published_at').notNull(),
     tags: jsonb('tags').$type<string[]>().notNull().default([]),
     isPublished: boolean('is_published').notNull().default(true),
+    showOnLandingPage: boolean('show_on_landing_page').notNull().default(false),
   },
   (table) => [
     index('articles_category_idx').on(table.category),
     index('articles_published_idx').on(table.isPublished),
+    index('articles_landing_idx').on(table.showOnLandingPage),
   ]
 );
 
@@ -53,12 +55,14 @@ export const curhat = pgTable(
     answer: text('answer'),
     isAnswered: boolean('is_answered').notNull().default(false),
     isPublic: boolean('is_public').notNull().default(true),
+    showOnLandingPage: boolean('show_on_landing_page').notNull().default(false),
     createdAt: text('created_at').notNull(),
     answeredAt: text('answered_at'),
   },
   (table) => [
     index('curhat_public_created_idx').on(table.isPublic, table.createdAt),
     index('curhat_created_idx').on(table.createdAt),
+    index('curhat_landing_idx').on(table.showOnLandingPage),
   ]
 );
 

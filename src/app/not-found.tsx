@@ -15,7 +15,7 @@ import Footer from '@/components/Footer';
 
 export const metadata: Metadata = {
   title: '404 - Halaman Tidak Ditemukan | Amelia',
-  description: 'Halaman yang Anda tuju tidak ditemukan atau telah berpindah. Kembali ke beranda ruang konseling Amelia.',
+  description: 'Halaman yang kamu cari tidak ditemukan atau telah berpindah. Kembali ke beranda ruang konseling Amelia.',
   robots: {
     index: false,
     follow: false,
@@ -76,14 +76,14 @@ export default function NotFound() {
             <div className="flex flex-wrap items-center justify-center gap-3 pt-3">
               <Link
                 href="/"
-                className="btn-primary min-h-[46px] px-6 text-sm inline-flex items-center gap-2 shadow-xs"
+                className="btn-primary btn-interactive min-h-[46px] px-6 text-sm inline-flex items-center gap-2 shadow-xs"
               >
                 <Home className="w-4 h-4" aria-hidden="true" />
                 <span>Kembali ke Beranda</span>
               </Link>
               <Link
                 href="/schedule"
-                className="btn-secondary min-h-[46px] px-6 text-sm inline-flex items-center gap-2"
+                className="btn-secondary btn-interactive min-h-[46px] px-6 text-sm inline-flex items-center gap-2"
               >
                 <Calendar className="w-4 h-4 text-[var(--color-ink-soft)]" aria-hidden="true" />
                 <span>Jadwalkan Konseling</span>

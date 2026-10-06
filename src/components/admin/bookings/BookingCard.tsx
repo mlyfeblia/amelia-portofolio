@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   Clock, 
   Trash2, 
@@ -67,10 +67,13 @@ export function BookingCard({
   };
 
   const { toast } = useToast();
+  const [copied, setCopied] = useState(false);
 
   const handleCopyCode = async () => {
     try {
       await navigator.clipboard.writeText(item.code);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
       toast.success(`Kode ${item.code} disalin ke clipboard!`);
     } catch {
       toast.info(`Kode: ${item.code}`);
@@ -86,11 +89,15 @@ export function BookingCard({
             <button
               type="button"
               onClick={handleCopyCode}
-              className="font-mono text-[11px] sm:text-xs font-semibold px-2 py-0.5 rounded-md bg-[var(--color-paper)] border border-[var(--color-paper-border)] text-[var(--color-accent)] hover:bg-[var(--color-paper-muted)] cursor-pointer inline-flex items-center gap-1.5 transition-colors select-text"
+              className="btn-interactive font-mono text-[11px] sm:text-xs font-semibold px-2 py-0.5 rounded-md bg-[var(--color-paper)] border border-[var(--color-paper-border)] text-[var(--color-accent)] hover:bg-[var(--color-paper-muted)] cursor-pointer inline-flex items-center gap-1.5 transition-colors select-text"
               aria-label={`Salin kode booking ${item.code}`}
             >
               <span>{item.code}</span>
-              <Copy className="w-3 h-3 text-[var(--color-ink-muted)] shrink-0" />
+              {copied ? (
+                <Check className="w-3 h-3 text-emerald-600 animate-pop-success shrink-0" />
+              ) : (
+                <Copy className="w-3 h-3 text-[var(--color-ink-muted)] shrink-0" />
+              )}
             </button>
           </Tooltip>
           <div>
@@ -110,7 +117,7 @@ export function BookingCard({
             <button
               onClick={() => onDelete(item)}
               type="button"
-              className="btn-interactive p-1.5 rounded-lg text-[var(--color-ink-muted)] hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+              className="btn-interactive p-1.5 rounded-lg text-[var(--color-ink-muted)] hover:text-[var(--color-error)] hover:bg-[var(--color-error-soft)] transition-colors cursor-pointer"
               aria-label="Hapus janji temu ini"
             >
               <Trash2 className="w-3.5 h-3.5" />
@@ -166,7 +173,7 @@ export function BookingCard({
             })}
             target="_blank"
             rel="noopener noreferrer"
-            className="btn-interactive h-8 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold inline-flex items-center justify-center gap-1.5 shadow-xs whitespace-nowrap"
+            className="btn-interactive h-8 px-3 rounded-lg bg-[#25D366] hover:bg-[#20ba5a] text-white text-xs font-semibold inline-flex items-center justify-center gap-1.5 shadow-xs whitespace-nowrap"
           >
             <Phone className="w-3.5 h-3.5" />
             <span>WhatsApp</span>
@@ -220,7 +227,7 @@ export function BookingCard({
               onClick={() => onUpdateStatus(item.id, 'dibatalkan')}
               disabled={isUpdating}
               type="button"
-              className="btn-interactive h-8 px-2.5 text-xs font-semibold rounded-lg text-rose-600 bg-rose-50/50 hover:bg-rose-50 border border-rose-200/60 cursor-pointer inline-flex items-center justify-center gap-1.5 whitespace-nowrap disabled:opacity-50"
+              className="btn-interactive h-8 px-2.5 text-xs font-semibold rounded-lg text-[var(--color-error)] bg-[var(--color-error-soft)]/60 hover:bg-[var(--color-error-soft)] border border-[var(--color-error-border)] cursor-pointer inline-flex items-center justify-center gap-1.5 whitespace-nowrap disabled:opacity-50"
             >
               {isUpdating ? <Spinner size="xs" variant="ink" label="Memperbarui..." /> : <XCircle className="w-3.5 h-3.5" />}
               <span>Batal</span>

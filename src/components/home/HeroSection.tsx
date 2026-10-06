@@ -6,7 +6,7 @@ import { Calendar, User } from 'lucide-react';
 export function HeroSection() {
   return (
     <section className="pt-8 sm:pt-10 md:pt-12 pb-16 sm:pb-20 md:pb-24 border-b border-[var(--color-paper-border)]">
-      <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-10 animate-fade-in-up">
+      <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-10">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-10 md:gap-12 lg:gap-16 items-center">
           {/* Left Column: Heading & Value Proposition */}
           <div className="md:col-span-7 space-y-6 lg:space-y-8">
@@ -27,14 +27,14 @@ export function HeroSection() {
             <div className="flex flex-wrap items-center gap-3.5 pt-1">
               <Link
                 href="/schedule"
-                className="btn-primary min-h-[46px] px-6 text-[15px] inline-flex items-center gap-2"
+                className="btn-primary btn-interactive min-h-[46px] px-6 text-[15px] inline-flex items-center gap-2"
               >
                 <Calendar className="w-4 h-4" />
                 <span>Jadwalkan Konsultasi</span>
               </Link>
               <Link
                 href="/about"
-                className="btn-secondary min-h-[46px] px-6 text-[15px] inline-flex items-center gap-2"
+                className="btn-secondary btn-interactive min-h-[46px] px-6 text-[15px] inline-flex items-center gap-2"
               >
                 <User className="w-4 h-4 text-[var(--color-ink-soft)]" />
                 <span>Kenali Profil Amel</span>
@@ -60,14 +60,18 @@ export function HeroSection() {
 
           {/* Right Column: Clean Portrait Photo */}
           <div className="md:col-span-5 flex justify-center md:justify-end">
-            <div className="relative w-full max-w-[340px] aspect-[4/5] rounded-2xl overflow-hidden bg-[var(--color-surface)] border border-[var(--color-paper-border)] shadow-sm group card-interactive">
+            <div className="relative w-full max-w-[340px] aspect-[4/5] rounded-2xl overflow-hidden bg-[#1E2E25] border border-[var(--color-paper-border)] shadow-sm group card-interactive">
               <Image
                 src="/amelia.webp"
                 alt="Foto Profil Amelia, Mahasiswi Bimbingan Konseling UIN Siber Syekh Nurjati Cirebon"
                 fill
+                priority
+                unoptimized
+                decoding="sync"
+                placeholder="blur"
+                blurDataURL="data:image/webp;base64,UklGRmwAAABXRUJQVlA4IGAAAAAwBACdASoQABQAPzmGuVOvKSWisAgB4CcJZwDImCLY9Ls72ZrEJEF4/ewA/owBQOkyjLLc5jRc6xVnRV8Ih0nQBejrOHiefbZyHM/aYbkUsYDKEbJfV2RdDH7EoOfAAAA="
                 sizes="(max-width: 768px) 100vw, 340px"
                 className="object-cover object-top transition-transform duration-500 group-hover:scale-[1.02]"
-                priority
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[var(--color-ink)]/70 via-transparent to-transparent opacity-80 pointer-events-none" />
               

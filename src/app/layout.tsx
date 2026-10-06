@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { Plus_Jakarta_Sans, Newsreader } from 'next/font/google';
 import Script from 'next/script';
 import ScrollRevealProvider from '@/components/ScrollRevealProvider';
+import ScrollRestorationProvider from '@/components/ScrollRestorationProvider';
 import PwaLifecycle from '@/components/pwa/PwaLifecycle';
 import { ToastProvider } from '@/context/ToastContext';
 import { safeJsonLd } from '@/lib/utils';
@@ -12,7 +13,7 @@ const jakarta = Plus_Jakarta_Sans({
   subsets: ['latin'],
   weight: ['400', '500', '600', '700'],
   variable: '--font-body',
-  display: 'swap',
+  display: 'optional',
   preload: true,
 });
 
@@ -21,7 +22,7 @@ const newsreader = Newsreader({
   style: ['normal'],      // roman only - italic display headers are a design anti-pattern
   weight: ['400', '500', '600'],
   variable: '--font-display',
-  display: 'swap',
+  display: 'optional',
   preload: true,
 });
 
@@ -136,6 +137,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
+  viewportFit: 'cover',
   themeColor: [
     { media: '(prefers-color-scheme: light)', color: '#FBF9F5' },
     { media: '(prefers-color-scheme: dark)',  color: '#1A2920' },
@@ -153,7 +155,7 @@ const personJsonLd = {
   image: `${BASE_URL}/amelia.webp`,
   email: 'mailto:mlyfeblia150207@gmail.com',
   telephone: '+6282210445785',
-  sameAs: ['https://linkedin.com/in/amelia'],
+  sameAs: ['https://www.instagram.com/mlyfeb.lia'],
   jobTitle: 'Mahasiswi Bimbingan Konseling',
   affiliation: {
     '@type': 'EducationalOrganization',
@@ -253,6 +255,7 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-screen antialiased">
+        <ScrollRestorationProvider />
         <ScrollRevealProvider />
         <PwaLifecycle />
         {/* Skip to main content - WCAG 2.4.1 Bypass Blocks */}

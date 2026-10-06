@@ -8,23 +8,15 @@ import {
   FileEdit, 
   Eye, 
   EyeOff,
+  Star,
   CheckCircle2, 
   AlertCircle 
 } from 'lucide-react';
-import { Article } from '@/types';
+import { Article, ARTICLE_CATEGORIES } from '@/types';
 import { useMounted } from '@/lib/use-mounted';
 import { useModalAnimation } from '@/lib/use-modal-animation';
 import { Spinner } from '@/components/ui/Spinner';
 import { cn } from '@/lib/utils';
-
-const POPULAR_CATEGORIES = [
-  'Kesehatan Mental Islami',
-  'Manajemen Emosi',
-  'Hubungan & Keluarga',
-  'Kepercayaan Diri',
-  'Edukasi Konseling',
-  'Self-Improvement'
-];
 
 interface FormState {
   title: string;
@@ -35,6 +27,7 @@ interface FormState {
   content: string;
   tags: string;
   isPublished: boolean;
+  showOnLandingPage: boolean;
 }
 
 const INITIAL_FORM: FormState = {
@@ -46,6 +39,7 @@ const INITIAL_FORM: FormState = {
   content: '',
   tags: 'Kesehatan Mental, BKI, Self Growth',
   isPublished: true,
+  showOnLandingPage: false,
 };
 
 function generateSlug(text: string): string {
@@ -68,6 +62,7 @@ function getInitialFormState(mode: 'create' | 'edit', initialArticle: Article | 
       content: initialArticle.content,
       tags: (initialArticle.tags || []).join(', '),
       isPublished: initialArticle.isPublished !== false,
+      showOnLandingPage: initialArticle.showOnLandingPage ?? false,
     };
   }
   return INITIAL_FORM;
@@ -88,12 +83,67 @@ function ArticleFormModalContent({
   onSuccess,
 }: Omit<ArticleFormModalProps, 'isOpen'>) {
   const [activeTab, setActiveTab] = useState<'edit' | 'preview'>('edit');
-  const [formData, setFormData] = useState<FormState>(() =>
-    getInitialFormState(mode, initialArticle)
-  );
+  const storageKey = mode === 'edit' && initialArticle 
+    ? `amel_article_draft_${initialArticle.id}` 
+    : 'amel_article_draft_new';
+
+  const [formData, setFormData] = useState<FormState>(() => {
+    const base = getInitialFormState(mode, initialArticle);
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem(storageKey);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed && typeof parsed === 'object' && (parsed.title || parsed.content)) {
+            return { ...base, ...parsed };
+          }
+        }
+      } catch {
+        // localStorage may fail in private mode
+      }
+    }
+    return base;
+  });
+
   const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [saveError, setSaveError] = useState('');
+  const [lastSavedTime, setLastSavedTime] = useState<string | null>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem(storageKey);
+        if (saved) return 'Draf tersimpan dimuat';
+      } catch {
+        // ignore
+      }
+    }
+    return null;
+  });
+
+  // Debounced autosave to localStorage (800ms)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      try {
+        if (formData.title.trim() || formData.content.trim()) {
+          localStorage.setItem(storageKey, JSON.stringify(formData));
+          const now = new Intl.DateTimeFormat('id-ID', {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            timeZone: 'Asia/Jakarta',
+          }).format(new Date());
+          setLastSavedTime(`Tersimpan otomatis ${now} WIB`);
+        } else {
+          localStorage.removeItem(storageKey);
+          setLastSavedTime(null);
+        }
+      } catch {
+        // ignore storage errors
+      }
+    }, 800);
+
+    return () => clearTimeout(timer);
+  }, [formData, storageKey]);
 
   const handleTitleChange = (val: string) => {
     if (mode === 'create' && (!formData.slug || formData.slug === generateSlug(formData.title))) {
@@ -105,6 +155,14 @@ function ArticleFormModalContent({
     } else {
       setFormData((prev) => ({ ...prev, title: val }));
     }
+  };
+
+  const handleClearDraft = () => {
+    try {
+      localStorage.removeItem(storageKey);
+      setFormData(getInitialFormState(mode, initialArticle));
+      setLastSavedTime(null);
+    } catch {}
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -140,6 +198,7 @@ function ArticleFormModalContent({
       content: formData.content.trim(),
       tags: tagsArray,
       isPublished: formData.isPublished,
+      showOnLandingPage: formData.showOnLandingPage,
     };
 
     try {
@@ -153,6 +212,9 @@ function ArticleFormModalContent({
         if (!res.ok || !data.success) {
           throw new Error(data.message || 'Gagal menambahkan artikel.');
         }
+        try {
+          localStorage.removeItem(storageKey);
+        } catch {}
         setSaveSuccess(true);
         setTimeout(() => {
           onSuccess(data.data, 'create');
@@ -168,6 +230,9 @@ function ArticleFormModalContent({
         if (!res.ok || !data.success) {
           throw new Error(data.message || 'Gagal menyimpan perubahan artikel.');
         }
+        try {
+          localStorage.removeItem(storageKey);
+        } catch {}
         setSaveSuccess(true);
         setTimeout(() => {
           onSuccess({ ...initialArticle, ...payload }, 'edit');
@@ -182,7 +247,7 @@ function ArticleFormModalContent({
   };
 
   return (
-    <div className="w-full h-full bg-[var(--color-surface)] sm:border sm:border-[var(--color-paper-border)] sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden">
+    <div className="w-full h-full bg-[var(--color-surface)] sm:border sm:border-[var(--color-paper-border)] sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden">
       {/* Modal Header (Sticky) */}
       <div className="p-4 sm:p-5 border-b border-[var(--color-paper-border)] bg-[var(--color-surface)] shrink-0 space-y-3">
         <div className="flex items-center justify-between gap-3">
@@ -272,60 +337,112 @@ function ArticleFormModalContent({
 
       {/* Modal Body */}
       {activeTab === 'edit' ? (
-        <form onSubmit={handleSubmit} className="flex-1 flex flex-col min-h-0 overflow-hidden">
+        <form onSubmit={handleSubmit} className="flex-1 flex flex-col min-h-0 overflow-hidden tab-content-enter">
           <div className="p-4 sm:p-6 overflow-y-auto space-y-4 text-xs sm:text-sm flex-1 overscroll-contain">
             {saveSuccess && (
-              <div className="p-3 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-xl font-medium flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
+              <div className="p-3 bg-[var(--color-accent-soft)] text-[var(--color-accent)] border border-[var(--color-accent-border)] rounded-xl font-medium flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 shrink-0 text-[var(--color-accent)]" />
                 <span>Artikel berhasil disimpan dan disinkronkan ke basis data!</span>
               </div>
             )}
 
             {saveError && (
-              <div className="p-3 bg-rose-50 text-rose-700 border border-rose-200 rounded-xl font-medium flex items-center gap-2 animate-shake">
+              <div className="p-3 bg-[var(--color-error-soft)] text-[var(--color-error)] border border-[var(--color-error-border)] rounded-xl font-medium flex items-center gap-2 animate-shake">
                 <AlertCircle className="w-4 h-4 shrink-0" />
                 <span>{saveError}</span>
               </div>
             )}
 
-            {/* Visibility Toggle Card */}
-            <div
-              onClick={() => setFormData((prev) => ({ ...prev, isPublished: !prev.isPublished }))}
-              className={`p-3 rounded-xl border cursor-pointer select-none transition-all flex items-center justify-between gap-3 ${
-                formData.isPublished
-                  ? 'bg-emerald-50 border-emerald-200 text-emerald-900'
-                  : 'bg-zinc-50 border-zinc-200 text-zinc-700'
-              }`}
-            >
-              <div className="flex items-center gap-2.5 min-w-0">
-                {formData.isPublished ? (
-                  <Eye className="w-4 h-4 text-emerald-600 shrink-0" />
-                ) : (
-                  <EyeOff className="w-4 h-4 text-zinc-500 shrink-0" />
-                )}
-                <div className="min-w-0">
-                  <span className="font-semibold block text-xs">
-                    {formData.isPublished ? 'Status: Publikasikan ke Website' : 'Status: Simpan sebagai Draf'}
-                  </span>
-                  <span className="text-[11px] text-[var(--color-ink-muted)] block truncate">
-                    {formData.isPublished
-                      ? 'Artikel tayang langsung dan dapat dibaca di halaman /articles'
-                      : 'Artikel tersembunyi dari pengunjung publik, hanya terlihat oleh admin'}
-                  </span>
-                </div>
+            {/* Autosave Status Banner (if restored or active) */}
+            <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 rounded-xl bg-[var(--color-paper)] border border-[var(--color-paper-border)] text-xs text-[var(--color-ink-muted)]">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span>
+                  {lastSavedTime ? (
+                    <span className="text-emerald-700 font-medium">{lastSavedTime}</span>
+                  ) : (
+                    <span>Autosave aktif (perubahan disimpan lokal otomatis)</span>
+                  )}
+                </span>
               </div>
-              <input
-                type="checkbox"
-                checked={formData.isPublished}
-                onChange={(e) => setFormData((prev) => ({ ...prev, isPublished: e.target.checked }))}
-                className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 shrink-0 cursor-pointer"
-              />
+              {lastSavedTime && (
+                <button
+                  type="button"
+                  onClick={handleClearDraft}
+                  className="text-[11px] text-[var(--color-error)] hover:underline cursor-pointer"
+                >
+                  Reset Draf
+                </button>
+              )}
+            </div>
+
+            {/* Visibility & Landing Page Toggle Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {/* Visibility Toggle Card */}
+              <div
+                onClick={() => setFormData((prev) => ({ ...prev, isPublished: !prev.isPublished }))}
+                className={`p-3 rounded-xl border cursor-pointer select-none transition-all flex items-center justify-between gap-3 ${
+                  formData.isPublished
+                    ? 'bg-[var(--color-accent-soft)] border-[var(--color-accent-border)] text-[var(--color-ink)]'
+                    : 'bg-[var(--color-paper-muted)] border-[var(--color-paper-border)] text-[var(--color-ink-muted)]'
+                }`}
+              >
+                <div className="flex items-center gap-2.5 min-w-0">
+                  {formData.isPublished ? (
+                    <Eye className="w-4 h-4 text-[var(--color-accent)] shrink-0" />
+                  ) : (
+                    <EyeOff className="w-4 h-4 text-[var(--color-ink-soft)] shrink-0" />
+                  )}
+                  <div className="min-w-0">
+                    <span className="font-semibold block text-xs">
+                      {formData.isPublished ? 'Status: Publik' : 'Status: Draf'}
+                    </span>
+                    <span className="text-[11px] text-[var(--color-ink-muted)] block truncate">
+                      {formData.isPublished ? 'Tayang di /articles' : 'Hanya terlihat admin'}
+                    </span>
+                  </div>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={formData.isPublished}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, isPublished: e.target.checked }))}
+                  className="w-4 h-4 rounded text-[var(--color-accent)] focus:ring-[var(--color-accent)] shrink-0 cursor-pointer"
+                />
+              </div>
+
+              {/* Landing Page Showcase Toggle Card */}
+              <div
+                onClick={() => setFormData((prev) => ({ ...prev, showOnLandingPage: !prev.showOnLandingPage }))}
+                className={`p-3 rounded-xl border cursor-pointer select-none transition-all flex items-center justify-between gap-3 ${
+                  formData.showOnLandingPage
+                    ? 'bg-amber-50 border-amber-300 text-amber-950'
+                    : 'bg-[var(--color-paper-muted)] border-[var(--color-paper-border)] text-[var(--color-ink-muted)]'
+                }`}
+              >
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <Star className={`w-4 h-4 shrink-0 ${formData.showOnLandingPage ? 'fill-amber-500 text-amber-600' : 'text-[var(--color-ink-muted)]'}`} />
+                  <div className="min-w-0">
+                    <span className="font-semibold block text-xs">
+                      {formData.showOnLandingPage ? '★ Sorot di Beranda' : 'Tidak di Beranda'}
+                    </span>
+                    <span className="text-[11px] text-[var(--color-ink-muted)] block truncate">
+                      Disorot langsung di beranda utama
+                    </span>
+                  </div>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={formData.showOnLandingPage}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, showOnLandingPage: e.target.checked }))}
+                  className="w-4 h-4 rounded text-amber-600 focus:ring-amber-500 shrink-0 cursor-pointer"
+                />
+              </div>
             </div>
 
             {/* Title */}
             <div>
               <label className="block font-semibold text-[var(--color-ink)] mb-1">
-                Judul Artikel (H1) <span className="text-rose-500">*</span>
+                Judul Artikel (H1) <span className="text-[var(--color-error)]">*</span>
               </label>
               <input
                 type="text"
@@ -333,7 +450,7 @@ function ArticleFormModalContent({
                 value={formData.title}
                 onChange={(e) => handleTitleChange(e.target.value)}
                 placeholder="Contoh: Menemukan Kedamaian Batin Melalui Doa dan Refleksi"
-                className="w-full px-3.5 py-2.5 rounded-xl bg-[var(--color-paper)] border border-[var(--color-paper-border)] text-[var(--color-ink)] focus:outline-none focus:border-[var(--color-accent)] text-xs sm:text-sm"
+                className="form-input text-xs sm:text-sm py-2"
                 required
               />
             </div>
@@ -342,7 +459,7 @@ function ArticleFormModalContent({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div className="min-w-0">
                 <label className="block font-semibold text-[var(--color-ink)] mb-1">
-                  Slug URL <span className="text-rose-500">*</span>
+                  Slug URL <span className="text-[var(--color-error)]">*</span>
                 </label>
                 <input
                   type="text"
@@ -350,7 +467,7 @@ function ArticleFormModalContent({
                   value={formData.slug}
                   onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
                   placeholder="menemukan-kedamaian-batin"
-                  className="w-full px-3.5 py-2 rounded-xl bg-[var(--color-paper)] border border-[var(--color-paper-border)] font-mono text-xs text-[var(--color-ink)] focus:outline-none focus:border-[var(--color-accent)]"
+                  className="form-input font-mono text-xs py-2"
                   required
                 />
                 <p className="text-[10px] text-[var(--color-ink-muted)] mt-1 truncate">
@@ -368,16 +485,20 @@ function ArticleFormModalContent({
                   value={formData.category}
                   onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                   placeholder="Pilih atau ketik kategori..."
-                  className="w-full px-3.5 py-2 rounded-xl bg-[var(--color-paper)] border border-[var(--color-paper-border)] text-[var(--color-ink)] focus:outline-none focus:border-[var(--color-accent)] text-xs sm:text-sm"
+                  className="form-input text-xs sm:text-sm py-2"
                 />
                 {/* Quick Category Chips */}
-                <div className="flex flex-wrap gap-1 mt-1.5">
-                  {POPULAR_CATEGORIES.slice(0, 4).map((c) => (
+                <div className="flex flex-wrap gap-1 mt-1.5 max-h-24 overflow-y-auto no-scrollbar">
+                  {ARTICLE_CATEGORIES.map((c) => (
                     <button
                       key={c}
                       type="button"
                       onClick={() => setFormData((prev) => ({ ...prev, category: c }))}
-                      className="text-[10px] px-2 py-0.5 rounded bg-[var(--color-paper)] hover:bg-[var(--color-paper-muted)] text-[var(--color-ink-muted)] border border-[var(--color-paper-border)] cursor-pointer whitespace-nowrap"
+                      className={`text-[10px] px-2 py-0.5 rounded-lg border cursor-pointer whitespace-nowrap transition-colors chip-interactive ${
+                        formData.category === c
+                          ? 'bg-[var(--color-accent-soft)] text-[var(--color-accent)] border-[var(--color-accent-border)] font-semibold'
+                          : 'bg-[var(--color-paper)] hover:bg-[var(--color-paper-muted)] text-[var(--color-ink-muted)] border-[var(--color-paper-border)]'
+                      }`}
                     >
                       {c}
                     </button>
@@ -398,7 +519,7 @@ function ArticleFormModalContent({
                   value={formData.readTime}
                   onChange={(e) => setFormData({ ...formData, readTime: e.target.value })}
                   placeholder="misal: 5 menit baca"
-                  className="w-full px-3.5 py-2 rounded-xl bg-[var(--color-paper)] border border-[var(--color-paper-border)] text-[var(--color-ink)] focus:outline-none focus:border-[var(--color-accent)] text-xs sm:text-sm"
+                  className="form-input text-xs sm:text-sm py-2"
                 />
               </div>
 
@@ -412,7 +533,7 @@ function ArticleFormModalContent({
                   value={formData.tags}
                   onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
                   placeholder="Kecemasan, BKI, Self Love"
-                  className="w-full px-3.5 py-2 rounded-xl bg-[var(--color-paper)] border border-[var(--color-paper-border)] text-[var(--color-ink)] focus:outline-none focus:border-[var(--color-accent)] text-xs sm:text-sm"
+                  className="form-input text-xs sm:text-sm py-2"
                 />
               </div>
             </div>
@@ -435,7 +556,7 @@ function ArticleFormModalContent({
                 value={formData.excerpt}
                 onChange={(e) => setFormData({ ...formData, excerpt: e.target.value })}
                 placeholder="Tuliskan 1-2 kalimat pengantar artikel..."
-                className="w-full px-3.5 py-2 rounded-xl bg-[var(--color-paper)] border border-[var(--color-paper-border)] text-[var(--color-ink)] focus:outline-none focus:border-[var(--color-accent)] resize-y min-h-[64px] max-h-[160px] text-xs sm:text-sm"
+                className="form-input text-xs sm:text-sm py-2 resize-y min-h-[64px] max-h-[160px]"
               />
             </div>
 
@@ -443,7 +564,7 @@ function ArticleFormModalContent({
             <div>
               <div className="flex items-center justify-between mb-1">
                 <label className="block font-semibold text-[var(--color-ink)]">
-                  Konten Lengkap (Markdown) <span className="text-rose-500">*</span>
+                  Konten Lengkap (Markdown) <span className="text-[var(--color-error)]">*</span>
                 </label>
                 <span className="text-[10px] text-[var(--color-ink-muted)]">
                   ## Subjudul &bull; - Poin &bull; **Tebal**
@@ -454,7 +575,7 @@ function ArticleFormModalContent({
                 value={formData.content}
                 onChange={(e) => setFormData({ ...formData, content: e.target.value })}
                 placeholder="Tuliskan narasi lengkap artikel di sini... (gunakan ## untuk Subjudul, - untuk poin-poin)"
-                className="w-full px-3.5 py-2.5 rounded-xl bg-[var(--color-paper)] border border-[var(--color-paper-border)] font-mono text-xs text-[var(--color-ink)] focus:outline-none focus:border-[var(--color-accent)] leading-relaxed resize-y min-h-[160px] sm:min-h-[220px]"
+                className="form-input font-mono text-xs py-2 leading-relaxed resize-y min-h-[160px] sm:min-h-[220px]"
                 required
               />
             </div>
@@ -497,28 +618,46 @@ function ArticleFormModalContent({
         </form>
       ) : (
         /* Preview Tab */
-        <div className="flex-1 flex flex-col min-h-0 overflow-hidden bg-[var(--color-paper)]">
+        <div className="flex-1 flex flex-col min-h-0 overflow-hidden bg-[var(--color-paper)] tab-content-enter">
           <div className="p-4 sm:p-6 overflow-y-auto space-y-4 flex-1 overscroll-contain">
             <div className="space-y-2 pb-3 border-b border-[var(--color-paper-border)]">
-              <div className="flex items-center gap-2">
-                <span className="font-semibold text-xs text-[var(--color-accent)] px-2.5 py-0.5 rounded-full bg-[var(--color-accent-soft)]">
-                  {formData.category || 'Kategori'}
-                </span>
-                <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${
-                  formData.isPublished ? 'bg-emerald-100 text-emerald-800' : 'bg-zinc-200 text-zinc-700'
-                }`}>
-                  {formData.isPublished ? 'Status: Publik' : 'Status: Draf'}
-                </span>
-              </div>
               <h1
                 className="text-lg sm:text-2xl font-medium text-[var(--color-ink)] leading-snug"
                 style={{ fontFamily: 'var(--font-display)' }}
               >
                 {formData.title || 'Judul Artikel'}
               </h1>
-              <p className="text-xs text-[var(--color-ink-muted)]">
-                Waktu baca: {formData.readTime || '5 menit baca'} &bull; Slug: /articles/{formData.slug || 'url'}
-              </p>
+              {formData.excerpt && (
+                <p className="text-xs sm:text-sm text-[var(--color-ink-muted)] leading-relaxed">
+                  {(initialArticle?.publishedAt || 'Hari ini')} — {formData.excerpt}
+                </p>
+              )}
+              <div className="flex flex-wrap items-center gap-2 pt-1 text-xs">
+                <span className="font-semibold text-xs text-[var(--color-accent)]">
+                  {formData.category || 'Kategori'}
+                </span>
+                <span className="text-[var(--color-paper-border)]">&bull;</span>
+                <span className="text-xs text-[var(--color-ink-muted)]">
+                  {formData.isPublished ? 'Publik' : 'Draf'}
+                </span>
+                {formData.showOnLandingPage && (
+                  <>
+                    <span className="text-[var(--color-paper-border)]">&bull;</span>
+                    <span className="text-xs text-amber-700 inline-flex items-center gap-1 font-medium">
+                      <Star className="w-3 h-3 fill-amber-500 text-amber-600" />
+                      <span>Beranda</span>
+                    </span>
+                  </>
+                )}
+                <span className="text-[var(--color-paper-border)]">&bull;</span>
+                <span className="text-xs text-[var(--color-ink-muted)]">
+                  {formData.readTime || '5 menit baca'}
+                </span>
+                <span className="text-[var(--color-paper-border)]">&bull;</span>
+                <span className="text-xs text-[var(--color-ink-muted)] font-mono">
+                  /articles/{formData.slug || 'url'}
+                </span>
+              </div>
             </div>
 
             <div className="space-y-3.5 text-xs sm:text-sm text-[var(--color-ink-muted)] leading-relaxed">
@@ -620,14 +759,13 @@ export function ArticleFormModal({
       role="dialog"
       aria-modal="true"
     >
-      {/* Dedicated Full-Screen Backdrop Layer */}
+      {/* Dedicated Full-Screen Backdrop Layer - Pure Transparent Blur (Identik Navbar, Tanpa Warna Gelap, Touch & Scroll Blocked) */}
       <div
         className={cn(
-          'fixed inset-0 bg-black/65 backdrop-blur-sm transition-opacity touch-none select-none',
+          'fixed inset-0 bg-transparent backdrop-blur-md touch-none select-none pointer-events-auto',
           backdropClass
         )}
         aria-hidden="true"
-        onClick={() => !isExiting && onClose()}
         onWheel={(e) => e.preventDefault()}
         onTouchMove={(e) => e.preventDefault()}
       />

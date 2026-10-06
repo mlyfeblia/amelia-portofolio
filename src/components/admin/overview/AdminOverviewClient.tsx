@@ -88,6 +88,7 @@ export function AdminOverviewClient() {
       <OverviewHeader loading={loading} onRefresh={loadData} />
 
       <OverviewMetrics
+        loading={loading}
         waitingBookingsCount={waitingCount}
         confirmedBookingsCount={confirmedCount}
         unansweredCurhatCount={unansweredCount}

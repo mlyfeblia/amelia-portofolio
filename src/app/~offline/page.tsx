@@ -1,10 +1,10 @@
 import type { Metadata } from 'next';
-import { WifiOff, HeartHandshake, PhoneCall } from 'lucide-react';
+import { HeartHandshake, PhoneCall } from 'lucide-react';
 import OfflineActions from '@/components/pwa/OfflineActions';
 
 export const metadata: Metadata = {
   title: 'Sedang Offline | Amelia',
-  description: 'Anda sedang berada dalam mode offline. Konten yang telah dicache tetap dapat diakses.',
+  description: 'Kamu sedang berada dalam mode offline. Konten yang telah tersimpan tetap bisa dibaca secara mandiri.',
   robots: {
     index: false,
     follow: false,
@@ -18,20 +18,14 @@ export default function OfflinePage() {
       className="min-h-screen bg-[var(--color-paper)] text-[var(--color-ink)] flex flex-col justify-between px-4 sm:px-6 lg:px-8 py-12 selection:bg-[var(--color-accent-soft)] selection:text-[var(--color-accent)]"
     >
       <div className="max-w-xl mx-auto w-full my-auto py-8">
-        {/* Status Badge */}
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--color-paper-muted)] border border-[var(--color-paper-border)] text-xs font-semibold text-[var(--color-ink-muted)] mb-8 tracking-wide">
-          <WifiOff className="w-3.5 h-3.5 text-[var(--color-ink-soft)]" aria-hidden="true" />
-          <span>Mode Offline Terdeteksi</span>
-        </div>
-
         {/* Hero Title */}
         <h1 className="font-display text-3xl sm:text-4xl font-semibold tracking-tight text-[var(--color-ink)] leading-tight mb-4">
           Sambungan terputus, namun ruang ini tetap ada.
         </h1>
 
         <p className="text-[var(--color-ink-muted)] text-base sm:text-lg leading-relaxed mb-8">
-          Perangkat Anda saat ini belum terhubung ke internet. Berkat teknologi Progressive Web App (PWA), artikel
-          dan halaman yang pernah Anda buka sebelumnya tetap dapat dibaca secara mandiri.
+          Perangkatmu saat ini belum terhubung ke internet. Namun tenang saja, artikel
+          dan halaman yang pernah kamu buka sebelumnya tetap bisa dibaca secara mandiri.
         </p>
 
         {/* Calming Mindfulness / Counselor Card */}

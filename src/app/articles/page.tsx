@@ -4,7 +4,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import BreadcrumbJsonLd from '@/components/BreadcrumbJsonLd';
 import { safeJsonLd } from '@/lib/utils';
-import { ArticleListItem } from '@/components/articles/ArticleListItem';
+import { ArticlesDirectory } from '@/components/articles/ArticlesDirectory';
 import { getArticles } from '@/lib/data-store';
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://mlyfeblia.vercel.app';
@@ -12,17 +12,45 @@ const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://mlyfeblia.vercel.a
 export const revalidate = 60;
 
 export const metadata: Metadata = {
-  title: 'Artikel & Catatan Refleksi',
+  title: 'Artikel & Catatan Refleksi | Amelia - Bimbingan Konseling Islam',
   description:
-    'Kumpulan tulisan, kajian, dan catatan reflektif seputar kesehatan jiwa, navigasi krisis mahasiswa, dan etika konseling oleh Amelia.',
+    'Kumpulan tulisan ilmiah populer, panduan kesehatan mental islami, tips mengatasi burnout, overthinking, quarter-life crisis, dan etika konseling oleh Amelia.',
+  keywords: [
+    'artikel kesehatan mental',
+    'bimbingan konseling islam',
+    'thuma\'ninah',
+    'tazkiyatun nafs',
+    'overthinking',
+    'burnout mahasiswa',
+    'quarter life crisis',
+    'konselor sebaya cirebon',
+    'uin siber cirebon',
+    'amelia bki',
+  ],
+  authors: [{ name: 'Amelia', url: `${BASE_URL}/about` }],
+  creator: 'Amelia',
+  publisher: 'Amelia Portofolio & Konseling',
   alternates: {
     canonical: `${BASE_URL}/articles`,
   },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
   openGraph: {
-    title: 'Artikel & Catatan Refleksi | Amelia',
+    title: 'Artikel & Catatan Refleksi | Amelia - Bimbingan Konseling Islam',
     description:
-      'Kumpulan tulisan santai seputar kesehatan mental, cara mengatasi overthinking, dan tips menjaga ketenangan batin oleh Amelia.',
+      'Kumpulan tulisan santai dan reflektif seputar kesehatan mental, mengatasi cemas, dan menjaga ketenangan batin oleh Amelia.',
     url: `${BASE_URL}/articles`,
+    siteName: 'Amelia Portofolio & Konseling',
+    locale: 'id_ID',
     type: 'website',
     images: [
       {
@@ -37,7 +65,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Artikel & Catatan Refleksi | Amelia',
     description:
-      'Kumpulan tulisan santai seputar kesehatan mental, navigasi krisis, dan tips batin meneduhkan.',
+      'Kumpulan tulisan santai seputar kesehatan mental, navigasi krisis usia muda, dan tips batin meneduhkan.',
     images: [`${BASE_URL}/amelia.webp`],
   },
 };
@@ -59,6 +87,7 @@ export default async function ArticlesIndexPage() {
         position: idx + 1,
         url: `${BASE_URL}/articles/${art.slug}`,
         name: art.title,
+        description: art.excerpt,
       })),
     },
   };
@@ -77,8 +106,8 @@ export default async function ArticlesIndexPage() {
       />
       <Navbar />
       <main id="main-content" className="min-h-screen pt-8 sm:pt-10 md:pt-12 pb-16 sm:pb-20 md:pb-24 page-enter">
-        <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-10 space-y-12">
-          <div className="max-w-3xl space-y-3 animate-fade-in-up">
+        <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-10 space-y-10 sm:space-y-12">
+          <div className="max-w-3xl space-y-3">
             <h1
               className="text-3xl sm:text-4xl lg:text-[2.65rem] font-medium text-[var(--color-ink)] leading-tight"
               style={{ fontFamily: 'var(--font-display)' }}
@@ -90,11 +119,7 @@ export default async function ArticlesIndexPage() {
             </p>
           </div>
 
-          <div className="divide-y divide-[var(--color-paper-border)] border-y border-[var(--color-paper-border)]" data-reveal>
-            {articles.map((art) => (
-              <ArticleListItem key={art.id} article={art} />
-            ))}
-          </div>
+          <ArticlesDirectory initialArticles={articles} />
         </div>
       </main>
       <Footer />

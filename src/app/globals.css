@@ -28,14 +28,38 @@
   --color-error-soft:    #FDF2F2;
   --color-error-border:  #F7CACA;
 
+  --color-warning:        #9A6200;   /* Warm amber for pending states */
+  --color-warning-soft:   #FEF9EC;   /* Subtle amber background */
+  --color-warning-border: #FCE8B3;   /* Gentle amber border */
+
+  --color-info:           #1E5E80;   /* Calming blue for finished states */
+  --color-info-soft:      #F0F7FB;   /* Gentle blue background */
+  --color-info-border:    #CBE3F0;   /* Subtle blue boundary */
+
   /* ── Typography Fonts ───────────────────────────────────────── */
   --font-display: 'Newsreader', Georgia, 'Times New Roman', serif;
   --font-body:    'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
 
-  /* ── Transitions & Easings ──────────────────────────────────── */
-  --ease-smooth: cubic-bezier(0.16, 1, 0.3, 1);
-  --dur-fast:    150ms;
-  --dur-base:    240ms;
+  /* ── Transitions & Easings Design Tokens ─────────────────────── */
+  --ease-smooth:  cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring:  cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-in-out:  cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-out:     cubic-bezier(0, 0, 0.2, 1);
+  --ease-in:      cubic-bezier(0.4, 0, 1, 1);
+  --dur-instant:  120ms;
+  --dur-fast:     180ms;
+  --dur-base:     240ms;
+  --dur-slow:     360ms;
+
+  /* ── Standardized Elevation & Shadow Tokens ─────────────────── */
+  --shadow-2xs:        0 1px 2px rgba(25, 40, 32, 0.04);
+  --shadow-xs:         0 1px 3px rgba(25, 40, 32, 0.06), 0 1px 2px rgba(25, 40, 32, 0.03);
+  --shadow-sm:         0 2px 6px -1px rgba(25, 40, 32, 0.08), 0 1px 3px -1px rgba(25, 40, 32, 0.04);
+  --shadow-md:         0 6px 16px -2px rgba(25, 40, 32, 0.08), 0 2px 6px -1px rgba(25, 40, 32, 0.04);
+  --shadow-lg:         0 12px 28px -4px rgba(25, 40, 32, 0.10), 0 4px 10px -2px rgba(25, 40, 32, 0.05);
+  --shadow-xl:         0 20px 40px -8px rgba(25, 40, 32, 0.12), 0 8px 16px -4px rgba(25, 40, 32, 0.06);
+  --shadow-focus:      0 0 0 3px rgba(26, 86, 60, 0.14), 0 1px 2px rgba(25, 40, 32, 0.05);
+  --shadow-focus-error: 0 0 0 3px rgba(168, 36, 36, 0.14), 0 1px 2px rgba(168, 36, 36, 0.05);
 }
 
 @layer base {
@@ -46,13 +70,16 @@
   }
 
   html {
-    overflow-x: clip;
+    scrollbar-gutter: stable;
     text-size-adjust: 100%;
     -webkit-text-size-adjust: 100%;
+    overflow-x: hidden;
+    overflow-x: clip;
+    max-width: 100vw;
+    width: 100%;
   }
 
   body {
-    overflow-x: clip;
     min-height: 100dvh;
     background-color: var(--color-paper);
     color: var(--color-ink);
@@ -62,6 +89,18 @@
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+    overflow-x: clip;
+    max-width: 100%;
+    width: 100%;
+    position: relative;
+    touch-action: pan-y pinch-zoom;
+  }
+
+  main {
+    overflow-x: clip;
+    max-width: 100%;
+    width: 100%;
   }
 
   a {
@@ -350,9 +389,10 @@
   font-size: 1rem; /* 16px to prevent iOS Safari auto-zoom */
   line-height: 1.4;
   border: 1px solid var(--color-paper-border);
-  border-radius: 0.5rem;
+  border-radius: 0.625rem;
   background-color: var(--color-surface);
   color: var(--color-ink);
+  box-shadow: var(--shadow-2xs);
   word-break: break-word;
   overflow-wrap: break-word;
   transition: border-color var(--dur-fast) var(--ease-smooth), box-shadow var(--dur-fast) var(--ease-smooth), background-color var(--dur-fast) var(--ease-smooth);
@@ -364,10 +404,52 @@
   }
 }
 
+.form-input:hover:not(:focus):not(:disabled) {
+  border-color: rgba(26, 86, 60, 0.4);
+}
+
 .form-input:focus {
   outline: none;
   border-color: var(--color-accent);
-  box-shadow: 0 0 0 3px rgba(26, 86, 60, 0.12);
+  box-shadow: var(--shadow-focus);
+}
+
+.form-input-error {
+  border-color: var(--color-error) !important;
+}
+
+.form-input-error:focus {
+  box-shadow: var(--shadow-focus-error) !important;
+}
+
+/* Dedicated Search Input Utility (High-contrast, Soft Elevation, Tactile Hover) */
+.search-input {
+  width: 100%;
+  padding: 0.55rem 2.25rem 0.55rem 2.25rem;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  border: 1px solid var(--color-paper-border);
+  border-radius: 0.75rem;
+  background-color: var(--color-surface);
+  color: var(--color-ink);
+  box-shadow: var(--shadow-2xs);
+  transition: border-color var(--dur-fast) var(--ease-smooth), box-shadow var(--dur-fast) var(--ease-smooth), background-color var(--dur-fast) var(--ease-smooth);
+}
+
+.search-input:hover:not(:focus) {
+  border-color: rgba(26, 86, 60, 0.4);
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: var(--shadow-focus);
+  background-color: #FFFFFF;
+}
+
+.search-input::placeholder {
+  color: var(--color-ink-soft);
+  opacity: 0.8;
 }
 
 .form-input:disabled {
@@ -478,11 +560,11 @@ select.form-input {
   }
 }
 
-/* Page Entrance */
+/* Page Entrance - Silky smooth, eliminates vertical layout shift & blink */
 @keyframes pageEnter {
   from {
-    opacity: 0.88;
-    transform: translateY(4px);
+    opacity: 0;
+    transform: translateY(6px);
   }
   to {
     opacity: 1;
@@ -491,7 +573,7 @@ select.form-input {
 }
 
 .page-enter {
-  animation: pageEnter 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: pageEnter var(--dur-base) var(--ease-smooth) both;
 }
 
 /* Modal Transitions (Fluid Desktop Scale + Mobile Sheet Slide) */
@@ -569,12 +651,25 @@ select.form-input {
   }
 }
 
+.modal-backdrop-layer {
+  position: fixed;
+  inset: 0;
+  background-color: transparent;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  touch-action: none;
+  user-select: none;
+  pointer-events: auto;
+}
+
 .modal-backdrop-enter {
-  animation: modalBackdropFadeIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: navBackdropFadeIn 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
+  will-change: opacity;
 }
 
 .modal-backdrop-exit {
-  animation: modalBackdropFadeOut 0.18s cubic-bezier(0.4, 0, 1, 1) both;
+  animation: navBackdropFadeOut 0.2s cubic-bezier(0.4, 0, 1, 1) both;
+  will-change: opacity;
   pointer-events: none !important;
 }
 
@@ -598,6 +693,89 @@ select.form-input {
   animation: modalSheetDown 0.18s cubic-bezier(0.4, 0, 0.2, 1) both;
   will-change: transform, opacity;
   pointer-events: none !important;
+}
+
+/* ── Upgraded High-Precision Mobile Nav Dropdown Transitions ── */
+@keyframes navDropdownSlideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-14px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes navDropdownSlideUp {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-12px) scale(0.985);
+  }
+}
+
+.nav-dropdown-enter {
+  animation: navDropdownSlideDown 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
+  will-change: transform, opacity;
+  transform-origin: top center;
+}
+
+.nav-dropdown-exit {
+  animation: navDropdownSlideUp 0.2s cubic-bezier(0.4, 0, 0.2, 1) both;
+  will-change: transform, opacity;
+  transform-origin: top center;
+  pointer-events: none !important;
+}
+
+/* Upgraded Pure Frosted Transparent Blur Backdrop (Zero Dark/Black Tint) */
+@keyframes navBackdropFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes navBackdropFadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.nav-backdrop-enter {
+  animation: navBackdropFadeIn 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
+  will-change: opacity;
+}
+
+.nav-backdrop-exit {
+  animation: navBackdropFadeOut 0.2s cubic-bezier(0.4, 0, 1, 1) both;
+  will-change: opacity;
+  pointer-events: none !important;
+}
+
+/* Staggered Nav Item Cascading Entrance */
+@keyframes navItemSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.nav-item-stagger {
+  animation: navItemSlideIn 0.26s cubic-bezier(0.16, 1, 0.3, 1) both;
+  will-change: transform, opacity;
 }
 
 /* Standardized Tooltip Animation */
@@ -735,20 +913,59 @@ select.form-input {
 
 /* Tactile Micro-Interactions */
 .btn-interactive {
-  transition: transform 0.16s var(--ease-smooth), box-shadow 0.16s var(--ease-smooth), background-color 0.16s var(--ease-smooth), border-color 0.16s var(--ease-smooth);
+  transition: transform var(--dur-instant) var(--ease-smooth), box-shadow var(--dur-fast) var(--ease-smooth), background-color var(--dur-fast) var(--ease-smooth), border-color var(--dur-fast) var(--ease-smooth);
+  will-change: transform;
 }
 
 .btn-interactive:active {
   transform: scale(0.97);
 }
 
+/* Tactile Icon Buttons */
+.btn-icon-interactive {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform var(--dur-fast) var(--ease-smooth), color var(--dur-fast) var(--ease-smooth), background-color var(--dur-fast) var(--ease-smooth);
+  will-change: transform;
+}
+
+@media (hover: hover) {
+  .btn-icon-interactive:hover {
+    transform: scale(1.08);
+  }
+}
+
+.btn-icon-interactive:active {
+  transform: scale(0.92);
+}
+
 .chip-interactive {
-  transition: all 0.18s var(--ease-smooth);
+  transition: all var(--dur-fast) var(--ease-smooth);
   user-select: none;
 }
 
 .chip-interactive:active {
   transform: scale(0.96);
+}
+
+/* Micro-interaction Pop for Checkmarks & Success Badges */
+@keyframes popSuccess {
+  0% {
+    transform: scale(0.75);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.15);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-pop-success {
+  animation: popSuccess 0.24s var(--ease-spring) both;
 }
 
 /* Pulsing Status Dot */
@@ -762,26 +979,87 @@ select.form-input {
 }
 
 .animate-fade-in-up {
-  animation: fadeInUp 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: fadeInUp var(--dur-slow) var(--ease-smooth) both;
 }
 
 .animate-fade-in {
-  animation: fadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: fadeIn var(--dur-base) var(--ease-smooth) both;
 }
 
-.animate-scale-in {
-  animation: scaleIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+/* Tab switching and content crossfade transitions */
+@keyframes tabContentEnter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-/* Stagger animation utilities */
-.delay-75  { animation-delay: 75ms; }
-.delay-150 { animation-delay: 150ms; }
-.delay-225 { animation-delay: 225ms; }
-.delay-300 { animation-delay: 300ms; }
+.tab-content-enter {
+  animation: tabContentEnter var(--dur-base) var(--ease-smooth) both;
+  will-change: opacity, transform;
+}
+
+/* Unified Accordion Collapse Animation */
+.accordion-collapse {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition: grid-template-rows var(--dur-slow) var(--ease-smooth), opacity var(--dur-base) var(--ease-smooth);
+  overflow: hidden;
+}
+
+.accordion-collapse.open,
+.accordion-collapse[data-state="open"] {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+
+.accordion-collapse > div {
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Quiz Directional Step Transitions */
+@keyframes quizSlideNext {
+  from {
+    opacity: 0;
+    transform: translateX(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes quizSlidePrev {
+  from {
+    opacity: 0;
+    transform: translateX(-18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.quiz-slide-next {
+  animation: quizSlideNext 0.26s cubic-bezier(0.16, 1, 0.3, 1) both;
+  will-change: opacity, transform;
+}
+
+.quiz-slide-prev {
+  animation: quizSlidePrev 0.26s cubic-bezier(0.16, 1, 0.3, 1) both;
+  will-change: opacity, transform;
+}
 
 /* Interactive Card Elevation & Micro-transitions */
 .card-interactive {
-  transition: transform 0.28s var(--ease-smooth), box-shadow 0.28s var(--ease-smooth), border-color 0.28s var(--ease-smooth);
+  transition: transform var(--dur-base) var(--ease-smooth), box-shadow var(--dur-base) var(--ease-smooth), border-color var(--dur-base) var(--ease-smooth), background-color var(--dur-base) var(--ease-smooth);
+  will-change: transform, box-shadow;
 }
 
 @media (hover: hover) {
@@ -792,12 +1070,25 @@ select.form-input {
   }
 }
 
-/* Scroll Reveal with Progressive Enhancement (Never hides content if JS is slow/disabled) */
-html.js-reveal-ready [data-reveal]:not(.revealed),
-html.js-reveal-ready .reveal-init:not(.revealed) {
+.card-interactive:active {
+  transform: scale(0.99);
+}
+
+/* Stagger animation utilities */
+.delay-75  { animation-delay: 75ms; }
+.delay-150 { animation-delay: 150ms; }
+.delay-225 { animation-delay: 225ms; }
+.delay-300 { animation-delay: 300ms; }
+
+/* Scroll Reveal with Progressive Enhancement:
+   Only elements explicitly tagged with .reveal-pending (which are well below the initial viewport)
+   will start hidden and smoothly reveal on scroll.
+   Visible/initial content is NEVER hidden, preventing FOUC and mobile blinking. */
+[data-reveal].reveal-pending:not(.revealed),
+.reveal-init.reveal-pending:not(.revealed) {
   opacity: 0;
-  transform: translateY(18px);
-  transition: opacity 0.55s cubic-bezier(0.16, 1, 0.3, 1), transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+  transform: translateY(16px);
+  transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
   will-change: opacity, transform;
 }
 
@@ -805,7 +1096,7 @@ html.js-reveal-ready .reveal-init:not(.revealed) {
 .reveal-init.revealed {
   opacity: 1;
   transform: translateY(0);
-  transition: opacity 0.55s cubic-bezier(0.16, 1, 0.3, 1), transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* Strict Reduced Motion Accessibility Compliance */
@@ -835,7 +1126,17 @@ html.js-reveal-ready .reveal-init:not(.revealed) {
   .tooltip-enter,
   .dropdown-enter,
   .dropdown-exit,
+  .nav-dropdown-enter,
+  .nav-dropdown-exit,
+  .nav-backdrop-enter,
+  .nav-backdrop-exit,
+  .nav-item-stagger,
   .page-enter,
+  .tab-content-enter,
+  .animate-pop-success,
+  .accordion-collapse,
+  .quiz-slide-next,
+  .quiz-slide-prev,
   .modal-window-enter,
   .modal-window-exit,
   .modal-backdrop-enter,
@@ -850,3 +1151,4 @@ html.js-reveal-ready .reveal-init:not(.revealed) {
     transition: none !important;
   }
 }
+

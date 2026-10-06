@@ -73,14 +73,14 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
             className={cn(
               'pointer-events-auto flex items-center justify-between gap-3 p-3.5 rounded-xl border shadow-lg text-xs font-medium transition-all backdrop-blur-md',
               t.isExiting ? 'toast-exit' : 'toast-enter',
-              t.type === 'success' && 'bg-[var(--color-surface)]/95 border-emerald-300 text-emerald-900 shadow-emerald-900/5',
-              t.type === 'error' && 'bg-[var(--color-surface)]/95 border-rose-300 text-rose-900 shadow-rose-900/5',
+              t.type === 'success' && 'bg-[var(--color-surface)]/95 border-[var(--color-accent-border)] text-[var(--color-ink)] shadow-[var(--color-accent)]/5',
+              t.type === 'error' && 'bg-[var(--color-surface)]/95 border-[var(--color-error-border)] text-[var(--color-error)] shadow-red-900/5',
               t.type === 'info' && 'bg-[var(--color-surface)]/95 border-[var(--color-accent-border)] text-[var(--color-ink)] shadow-slate-900/5'
             )}
           >
             <div className="flex items-center gap-2.5 min-w-0">
-              {t.type === 'success' && <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />}
-              {t.type === 'error' && <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />}
+              {t.type === 'success' && <CheckCircle2 className="w-4 h-4 text-[var(--color-accent)] shrink-0" />}
+              {t.type === 'error' && <AlertCircle className="w-4 h-4 text-[var(--color-error)] shrink-0" />}
               {t.type === 'info' && <Info className="w-4 h-4 text-[var(--color-accent)] shrink-0" />}
               <span className="truncate">{t.message}</span>
             </div>

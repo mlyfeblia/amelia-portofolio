@@ -17,6 +17,7 @@ export interface PwaState {
   showBanner: boolean;
   bannerReason: PwaBannerReason;
   showIosModal: boolean;
+  showChangelogModal: boolean;
   visitCount: number;
 }
 
@@ -28,6 +29,7 @@ const SERVER_SNAPSHOT: PwaState = {
   showBanner: false,
   bannerReason: 'none',
   showIosModal: false,
+  showChangelogModal: false,
   visitCount: 1,
 };
 
@@ -36,7 +38,8 @@ const listeners = new Set<() => void>();
 
 let deferredPrompt: BeforeInstallPromptEvent | null = null;
 let initialized = false;
-let scrollListenerActive = false;
+let bannerScheduled = false;
+let bannerTimer: ReturnType<typeof setTimeout> | null = null;
 
 // Early capture of install prompt in case it fires before component mount
 if (typeof window !== 'undefined') {
@@ -95,9 +98,12 @@ export function initPwa() {
   let visitCount = 1;
   let isHiatus = false;
   let isCooldown = false;
+  let isDismissedInSession = false;
   const now = Date.now();
 
   try {
+    isDismissedInSession = sessionStorage.getItem('amelia_pwa_dismissed_session') === 'true';
+
     const rawVisits = localStorage.getItem('amelia_pwa_visits');
     const rawLastVisit = localStorage.getItem('amelia_pwa_last_visit');
     const rawDismissedAt = localStorage.getItem('amelia_pwa_dismissed_at');
@@ -123,10 +129,15 @@ export function initPwa() {
       visitCount = Math.max(previousVisits, 1);
     }
 
-    // Cooldown check: 14 days if dismissed >= 2 times, otherwise 7 days
-    const cooldownDuration = (dismissCount >= 2 ? 14 : 7) * 24 * 60 * 60 * 1000;
-    if (dismissedAt > 0 && now - dismissedAt < cooldownDuration) {
+    // Cooldown check: 30 days if dismissed >= 2 times, otherwise 14 days
+    // If dismissed >= 3 times, never prompt automatically
+    if (dismissCount >= 3) {
       isCooldown = true;
+    } else {
+      const cooldownDuration = (dismissCount >= 2 ? 30 : 14) * 24 * 60 * 60 * 1000;
+      if (dismissedAt > 0 && now - dismissedAt < cooldownDuration) {
+        isCooldown = true;
+      }
     }
   } catch {
     // Fallback for private mode
@@ -144,10 +155,14 @@ export function initPwa() {
     window.location.search.includes('install=1') ||
     window.location.search.includes('pwa=1');
 
-  // Helper to schedule smart banner display
+  // Helper to schedule smart banner display politely without ever triggering on scroll
   const scheduleSmartBanner = () => {
-    if (currentState.isInstalled) return;
+    if (currentState.isInstalled || currentState.isStandalone) return;
+    if (bannerScheduled || currentState.showBanner) return;
+    if (isDismissedInSession && !isIntentionalInstall) return;
     if (isCooldown && !isIntentionalInstall) return;
+
+    bannerScheduled = true;
 
     if (isIntentionalInstall) {
       updateState({ bannerReason: 'first-visit' });
@@ -155,41 +170,21 @@ export function initPwa() {
       return;
     }
 
-    if (isHiatus) {
-      updateState({ bannerReason: 'hiatus' });
-      setTimeout(() => updateState({ showBanner: true }), 4000);
-    } else if (visitCount >= 2) {
-      updateState({ bannerReason: 'returning' });
-      setTimeout(() => updateState({ showBanner: true }), 5000);
-    } else {
-      // First visit: gentle trigger after reading 25s OR scrolling > 35%
-      updateState({ bannerReason: 'first-visit' });
+    // Gentle, non-intrusive delays - never trigger on scroll!
+    const delay = isHiatus ? 12000 : visitCount >= 2 ? 18000 : 35000;
+    const reason: PwaBannerReason = isHiatus ? 'hiatus' : visitCount >= 2 ? 'returning' : 'first-visit';
 
-      const timer = setTimeout(() => {
-        updateState({ showBanner: true });
-        cleanupScroll();
-      }, 25000);
-
-      const handleScroll = () => {
-        const docElem = document.documentElement;
-        const totalHeight = docElem.scrollHeight - window.innerHeight;
-        if (totalHeight > 0 && window.scrollY / totalHeight >= 0.35) {
-          clearTimeout(timer);
-          updateState({ showBanner: true });
-          cleanupScroll();
-        }
-      };
-
-      const cleanupScroll = () => {
-        if (scrollListenerActive) {
-          window.removeEventListener('scroll', handleScroll);
-          scrollListenerActive = false;
-        }
-      };
-
-      window.addEventListener('scroll', handleScroll, { passive: true });
-      scrollListenerActive = true;
-    }
+    if (bannerTimer) clearTimeout(bannerTimer);
+    bannerTimer = setTimeout(() => {
+      try {
+        if (sessionStorage.getItem('amelia_pwa_dismissed_session') === 'true') return;
+      } catch {
+        // Ignore
+      }
+      if (!currentState.isInstalled && !currentState.isStandalone) {
+        updateState({ bannerReason: reason, showBanner: true });
+      }
+    }, delay);
   };
 
   // Chromium beforeinstallprompt event
@@ -224,7 +219,7 @@ export function initPwa() {
   if (isIOS && !isStandalone) {
     if (isIntentionalInstall) {
       setTimeout(() => updateState({ showIosModal: true }), 600);
-    } else if (!isCooldown) {
+    } else if (!isCooldown && !isDismissedInSession) {
       scheduleSmartBanner();
     }
   }
@@ -277,8 +272,13 @@ export async function triggerPwaInstall(): Promise<'accepted' | 'dismissed' | 'i
  * Dismiss banner and activate cooldown in localStorage
  */
 export function dismissPwaBanner() {
+  if (bannerTimer) {
+    clearTimeout(bannerTimer);
+    bannerTimer = null;
+  }
   updateState({ showBanner: false });
   try {
+    sessionStorage.setItem('amelia_pwa_dismissed_session', 'true');
     const rawDismissCount = localStorage.getItem('amelia_pwa_dismiss_count');
     const currentCount = rawDismissCount ? parseInt(rawDismissCount, 10) : 0;
     localStorage.setItem('amelia_pwa_dismissed_at', Date.now().toString());
@@ -294,6 +294,14 @@ export function openIosModal() {
 
 export function closeIosModal() {
   updateState({ showIosModal: false });
+}
+
+export function openChangelogModal() {
+  updateState({ showChangelogModal: true });
+}
+
+export function closeChangelogModal() {
+  updateState({ showChangelogModal: false });
 }
 
 function subscribe(callback: () => void) {

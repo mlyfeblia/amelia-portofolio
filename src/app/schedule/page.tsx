@@ -67,7 +67,18 @@ const scheduleServiceJsonLd = {
   },
 };
 
-export default function SchedulePage() {
+interface SchedulePageProps {
+  searchParams?: Promise<{
+    tab?: string;
+    code?: string;
+  }>;
+}
+
+export default async function SchedulePage({ searchParams }: SchedulePageProps) {
+  const params = await searchParams;
+  const initialTab = params?.tab === 'tracker' ? 'tracker' : params?.tab === 'new' ? 'new' : undefined;
+  const initialCode = typeof params?.code === 'string' ? params.code : undefined;
+
   return (
     <>
       <BreadcrumbJsonLd
@@ -81,22 +92,22 @@ export default function SchedulePage() {
         dangerouslySetInnerHTML={{ __html: safeJsonLd(scheduleServiceJsonLd) }}
       />
       <Navbar />
-      <main id="main-content" className="min-h-screen pt-8 sm:pt-10 md:pt-12 pb-16 sm:pb-20 md:pb-24 page-enter">
-        <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-10 space-y-8 animate-fade-in-up">
+      <main id="main-content" className="min-h-screen pt-6 sm:pt-10 md:pt-12 pb-14 sm:pb-20 md:pb-24 page-enter">
+        <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-10 space-y-6 sm:space-y-8 animate-fade-in-up">
           <div className="max-w-3xl space-y-2">
             <h1
-              className="text-3xl sm:text-4xl lg:text-[2.65rem] font-medium text-[var(--color-ink)] leading-tight"
+              className="text-2xl sm:text-4xl lg:text-[2.65rem] font-medium text-[var(--color-ink)] leading-tight tracking-tight"
               style={{ fontFamily: 'var(--font-display)' }}
             >
               Jadwalkan Sesi Konseling
             </h1>
-            <p className="text-base sm:text-lg text-[var(--color-ink-muted)] leading-relaxed">
+            <p className="text-sm sm:text-lg text-[var(--color-ink-muted)] leading-relaxed">
               Tentukan waktu dan format sesi yang paling tenang buatmu. Seluruh informasi yang kamu sampaikan terjamin kerahasiaannya.
             </p>
           </div>
 
-          <div className="pt-4">
-            <BookingSection />
+          <div className="pt-1 sm:pt-4">
+            <BookingSection initialTab={initialTab} initialCode={initialCode} />
           </div>
         </div>
       </main>

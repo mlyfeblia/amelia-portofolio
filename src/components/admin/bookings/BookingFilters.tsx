@@ -49,12 +49,12 @@ export function BookingFilters({
           value={search}
           onChange={(e) => onSearchChange(e.target.value)}
           placeholder="Cari nama, kode referensi, WhatsApp, email, atau topik..."
-          className="w-full pl-9 pr-9 py-2 rounded-xl bg-[var(--color-paper)] border border-[var(--color-paper-border)] text-xs sm:text-sm text-[var(--color-ink)] placeholder:text-[var(--color-ink-muted)]/70 focus:outline-none focus:border-[var(--color-accent)] focus:ring-1 focus:ring-[var(--color-accent-soft)]"
+          className="search-input w-full pl-9 pr-9 py-2 text-xs sm:text-sm text-[var(--color-ink)] placeholder:text-[var(--color-ink-muted)]/70"
         />
         {search && (
           <button
             onClick={() => onSearchChange('')}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] p-0.5"
+            className="chip-interactive absolute right-2.5 top-1/2 -translate-y-1/2 text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] p-1 rounded-lg cursor-pointer"
             aria-label="Bersihkan pencarian"
           >
             <X className="w-3.5 h-3.5" />

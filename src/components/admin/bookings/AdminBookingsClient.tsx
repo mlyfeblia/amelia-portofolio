@@ -1,20 +1,20 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Booking, BookingStatus } from '@/types';
+import { Booking, BookingStatus, BOOKING_CATEGORIES } from '@/types';
+import dynamic from 'next/dynamic';
 import { BookingHeader } from '@/components/admin/bookings/BookingHeader';
 import { BookingFilters } from '@/components/admin/bookings/BookingFilters';
 import { BookingList } from '@/components/admin/bookings/BookingList';
-import { BookingDeleteModal } from '@/components/admin/bookings/BookingDeleteModal';
+
+const BookingDeleteModal = dynamic(
+  () => import('@/components/admin/bookings/BookingDeleteModal').then((m) => m.BookingDeleteModal),
+  { ssr: false }
+);
 
 const CATEGORIES = [
   'Semua Topik',
-  'Bimbingan & Konseling Islam',
-  'Quarter-Life Crisis & Arah Hidup',
-  'Kecemasan, Stres & Overthinking',
-  'Akademik & Karir Mahasiswa',
-  'Keluarga, Pasangan & Relasi',
-  'Pengembangan Diri & Potensi',
+  ...BOOKING_CATEGORIES,
 ];
 
 export function AdminBookingsClient() {
@@ -26,6 +26,75 @@ export function AdminBookingsClient() {
   const [statusFilter, setStatusFilter] = useState<BookingStatus | 'semua'>('semua');
   const [categoryFilter, setCategoryFilter] = useState('Semua Topik');
   const [dateFilter, setDateFilter] = useState('');
+
+  // Sync filters from URL and sessionStorage on mount
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const s = params.get('status') || sessionStorage.getItem('admin_bookings_status');
+      const c = params.get('topik') || sessionStorage.getItem('admin_bookings_topik');
+      const d = params.get('tgl') || sessionStorage.getItem('admin_bookings_tgl');
+      const q = params.get('q') || sessionStorage.getItem('admin_bookings_q');
+
+      if (s) setStatusFilter(s as BookingStatus | 'semua');
+      if (c) setCategoryFilter(c);
+      if (d) setDateFilter(d);
+      if (q) setSearch(q);
+    } catch {}
+  }, []);
+
+  const syncFilterParams = (
+    s: BookingStatus | 'semua',
+    c: string,
+    d: string,
+    q: string
+  ) => {
+    try {
+      if (s && s !== 'semua') sessionStorage.setItem('admin_bookings_status', s);
+      else sessionStorage.removeItem('admin_bookings_status');
+
+      if (c && c !== 'Semua Topik') sessionStorage.setItem('admin_bookings_topik', c);
+      else sessionStorage.removeItem('admin_bookings_topik');
+
+      if (d) sessionStorage.setItem('admin_bookings_tgl', d);
+      else sessionStorage.removeItem('admin_bookings_tgl');
+
+      if (q.trim()) sessionStorage.setItem('admin_bookings_q', q.trim());
+      else sessionStorage.removeItem('admin_bookings_q');
+
+      const url = new URL(window.location.href);
+      if (s && s !== 'semua') url.searchParams.set('status', s);
+      else url.searchParams.delete('status');
+
+      if (c && c !== 'Semua Topik') url.searchParams.set('topik', c);
+      else url.searchParams.delete('topik');
+
+      if (d) url.searchParams.set('tgl', d);
+      else url.searchParams.delete('tgl');
+
+      if (q.trim()) url.searchParams.set('q', q.trim());
+      else url.searchParams.delete('q');
+
+      window.history.replaceState({}, '', url.toString());
+    } catch {}
+  };
+
+  const handleSearchChange = (val: string) => {
+    setSearch(val);
+    syncFilterParams(statusFilter, categoryFilter, dateFilter, val);
+  };
+  const handleStatusChange = (val: BookingStatus | 'semua') => {
+    setStatusFilter(val);
+    syncFilterParams(val, categoryFilter, dateFilter, search);
+  };
+  const handleCategoryChange = (val: string) => {
+    setCategoryFilter(val);
+    syncFilterParams(statusFilter, val, dateFilter, search);
+  };
+  const handleDateChange = (val: string) => {
+    setDateFilter(val);
+    syncFilterParams(statusFilter, categoryFilter, val, search);
+  };
 
   // Status updating
   const [updatingId, setUpdatingId] = useState<string | null>(null);
@@ -137,6 +206,21 @@ export function AdminBookingsClient() {
     });
   }, [bookings, statusFilter, categoryFilter, dateFilter, search]);
 
+  const handleResetFilters = () => {
+    setSearch('');
+    setStatusFilter('semua');
+    setCategoryFilter('Semua Topik');
+    setDateFilter('');
+    syncFilterParams('semua', 'Semua Topik', '', '');
+  };
+
+  const hasActiveFilters = Boolean(
+    search.trim() ||
+    statusFilter !== 'semua' ||
+    categoryFilter !== 'Semua Topik' ||
+    dateFilter.trim()
+  );
+
   return (
     <div className="space-y-5 sm:space-y-6">
       <BookingHeader
@@ -147,13 +231,13 @@ export function AdminBookingsClient() {
 
       <BookingFilters
         search={search}
-        onSearchChange={setSearch}
+        onSearchChange={handleSearchChange}
         statusFilter={statusFilter}
-        onStatusChange={setStatusFilter}
+        onStatusChange={handleStatusChange}
         categoryFilter={categoryFilter}
-        onCategoryChange={setCategoryFilter}
+        onCategoryChange={handleCategoryChange}
         dateFilter={dateFilter}
-        onDateChange={setDateFilter}
+        onDateChange={handleDateChange}
         categories={CATEGORIES}
         statusCounts={statusCounts}
         totalCount={bookings.length}
@@ -163,6 +247,12 @@ export function AdminBookingsClient() {
         bookings={filteredBookings}
         loading={loading}
         updatingId={updatingId}
+        search={search}
+        statusFilter={statusFilter}
+        categoryFilter={categoryFilter}
+        dateFilter={dateFilter}
+        hasActiveFilters={hasActiveFilters}
+        onResetFilters={handleResetFilters}
         onUpdateStatus={handleUpdateStatus}
         onDelete={(booking) => {
           setDeleteTarget(booking);

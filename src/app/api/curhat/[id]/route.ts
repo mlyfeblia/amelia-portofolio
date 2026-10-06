@@ -23,9 +23,13 @@ export async function PATCH(
     } catch {
       return NextResponse.json({ success: false, message: 'Format data JSON tidak valid' }, { status: 400 });
     }
-    const { answer, isPublic } = body;
+    const { answer, isPublic, showOnLandingPage } = body;
 
-    if (typeof answer === 'undefined' && typeof isPublic !== 'boolean') {
+    if (
+      typeof answer === 'undefined' &&
+      typeof isPublic !== 'boolean' &&
+      typeof showOnLandingPage !== 'boolean'
+    ) {
       return NextResponse.json({ success: false, message: 'Data update tidak valid' }, { status: 400 });
     }
 
@@ -33,12 +37,15 @@ export async function PATCH(
       return NextResponse.json({ success: false, message: 'Jawaban pengelola maksimal 2500 karakter' }, { status: 400 });
     }
 
-    const updateOptions: { answer?: string; isPublic?: boolean } = {};
+    const updateOptions: { answer?: string; isPublic?: boolean; showOnLandingPage?: boolean } = {};
     if (typeof answer === 'string') {
       updateOptions.answer = answer.trim();
     }
     if (typeof isPublic === 'boolean') {
       updateOptions.isPublic = isPublic;
+    }
+    if (typeof showOnLandingPage === 'boolean') {
+      updateOptions.showOnLandingPage = showOnLandingPage;
     }
 
     const updated = await updateCurhat(id, updateOptions);

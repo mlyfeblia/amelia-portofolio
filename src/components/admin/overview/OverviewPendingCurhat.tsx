@@ -58,21 +58,21 @@ export function OverviewPendingCurhat({
               key={c.id}
               className="p-4 sm:p-5 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-paper-border)] shadow-xs space-y-2.5 transition-all"
             >
-              <div className="flex items-center justify-between text-xs">
-                <span className="font-semibold text-[var(--color-ink)]">{c.alias}</span>
-                <span className="text-[10px] sm:text-[11px] px-2 py-0.5 rounded-full bg-[var(--color-accent-soft)] text-[var(--color-accent)] font-medium">
-                  {c.category}
-                </span>
-              </div>
-
               <p className="text-xs sm:text-sm text-[var(--color-ink-muted)] italic leading-relaxed line-clamp-3">
                 &ldquo;{c.message}&rdquo;
               </p>
 
-              <div className="pt-2 border-t border-[var(--color-paper-border)] flex justify-end">
+              <div className="pt-2 border-t border-[var(--color-paper-border)] flex items-center justify-between gap-2">
+                <div className="flex items-center gap-1.5 text-xs">
+                  <span className="font-semibold text-[var(--color-ink)]">{c.alias}</span>
+                  <span className="text-[var(--color-paper-border)]">&bull;</span>
+                  <span className="text-[11px] text-[var(--color-accent)] font-medium">
+                    {c.category}
+                  </span>
+                </div>
                 <Link
                   href="/admin/counseling"
-                  className="px-3 py-1.5 rounded-lg bg-[var(--color-accent)] text-white text-xs font-semibold hover:bg-[var(--color-accent-hover)] transition-all cursor-pointer inline-flex items-center gap-1 shadow-xs"
+                  className="btn-primary btn-interactive !text-xs !py-1.5 !px-3 inline-flex items-center gap-1 shadow-xs"
                 >
                   <Send className="w-3 h-3" />
                   <span>Beri Tanggapan</span>

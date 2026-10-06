@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Search, X, Eye, EyeOff } from 'lucide-react';
+import { Search, X, Eye, EyeOff, Star } from 'lucide-react';
 
 interface CounselingFiltersProps {
   search: string;
@@ -10,6 +10,8 @@ interface CounselingFiltersProps {
   onStatusChange: (st: 'semua' | 'unanswered' | 'answered') => void;
   visibilityFilter: 'semua' | 'public' | 'private';
   onVisibilityChange: (vis: 'semua' | 'public' | 'private') => void;
+  landingFilter: 'semua' | 'landing';
+  onLandingFilterChange: (l: 'semua' | 'landing') => void;
   categoryFilter: string;
   onCategoryChange: (cat: string) => void;
   categories: string[];
@@ -19,6 +21,7 @@ interface CounselingFiltersProps {
     answered: number;
     publicCount: number;
     privateCount: number;
+    landingCount: number;
   };
 }
 
@@ -29,6 +32,8 @@ export function CounselingFilters({
   onStatusChange,
   visibilityFilter,
   onVisibilityChange,
+  landingFilter,
+  onLandingFilterChange,
   categoryFilter,
   onCategoryChange,
   categories,
@@ -43,13 +48,13 @@ export function CounselingFilters({
           type="text"
           value={search}
           onChange={(e) => onSearchChange(e.target.value)}
-          placeholder="Cari nama/alias, kategori topik, isi curhat, atau jawaban..."
-          className="w-full pl-9 pr-9 py-2 rounded-xl bg-[var(--color-paper)] border border-[var(--color-paper-border)] text-xs sm:text-sm text-[var(--color-ink)] placeholder:text-[var(--color-ink-muted)]/70 focus:outline-none focus:border-[var(--color-accent)] focus:ring-1 focus:ring-[var(--color-accent-soft)]"
+          placeholder="Cari nama/alias, kategori topik, isi curhat, atau tanggapan..."
+          className="search-input w-full pl-9 pr-9 py-2 text-xs sm:text-sm text-[var(--color-ink)] placeholder:text-[var(--color-ink-muted)]/70"
         />
         {search && (
           <button
             onClick={() => onSearchChange('')}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] p-0.5 cursor-pointer"
+            className="chip-interactive absolute right-2.5 top-1/2 -translate-y-1/2 text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] p-1 rounded-lg cursor-pointer"
             aria-label="Bersihkan pencarian"
           >
             <X className="w-3.5 h-3.5" />
@@ -57,7 +62,7 @@ export function CounselingFilters({
         )}
       </div>
 
-      {/* Row 1: Status Respons & Visibilitas Publik */}
+      {/* Row 1: Status Respons, Visibilitas & Landing Page */}
       <div className="pt-2 border-t border-[var(--color-paper-border)] space-y-2.5">
         <div className="flex flex-wrap items-center justify-between gap-2.5">
           {/* Status Respon Tabs */}
@@ -81,7 +86,7 @@ export function CounselingFilters({
               type="button"
               className={`chip-interactive px-3 py-1.5 rounded-full text-xs font-medium cursor-pointer shrink-0 whitespace-nowrap ${
                 statusFilter === 'unanswered'
-                  ? 'bg-rose-600 text-white shadow-xs font-semibold'
+                  ? 'bg-[var(--color-error)] text-white shadow-xs font-semibold'
                   : 'bg-[var(--color-paper)] text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] border border-[var(--color-paper-border)]'
               }`}
             >
@@ -100,16 +105,30 @@ export function CounselingFilters({
             </button>
           </div>
 
-          {/* Visibility Tabs */}
+          {/* Visibility & Landing Page Tabs */}
           <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
-            <span className="text-[11px] font-medium text-[var(--color-ink-muted)] shrink-0 mr-1">
-              Visibilitas:
-            </span>
+            {/* Landing Filter */}
+            <button
+              onClick={() => onLandingFilterChange(landingFilter === 'landing' ? 'semua' : 'landing')}
+              type="button"
+              className={`chip-interactive inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold cursor-pointer shrink-0 whitespace-nowrap transition-colors ${
+                landingFilter === 'landing'
+                  ? 'bg-amber-500 text-white shadow-xs'
+                  : 'bg-amber-50 text-amber-900 border border-amber-300 hover:bg-amber-100'
+              }`}
+              title="Filter curhat yang disorot tampil di beranda utama (fleksibel sesuai kurasi admin)"
+            >
+              <Star className={`w-3.5 h-3.5 ${landingFilter === 'landing' ? 'fill-white text-white' : 'fill-amber-500 text-amber-600'}`} />
+              <span>★ Di Beranda ({counts.landingCount})</span>
+            </button>
+
+            <span className="text-[var(--color-paper-border)] select-none">|</span>
+
             <button
               onClick={() => onVisibilityChange('semua')}
               type="button"
               className={`chip-interactive px-2.5 py-1 rounded-lg text-xs font-medium cursor-pointer shrink-0 whitespace-nowrap ${
-                visibilityFilter === 'semua'
+                visibilityFilter === 'semua' && landingFilter !== 'landing'
                   ? 'bg-[var(--color-ink)] text-white shadow-xs font-semibold'
                   : 'bg-[var(--color-paper)] text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] border border-[var(--color-paper-border)]'
               }`}
@@ -121,8 +140,8 @@ export function CounselingFilters({
               type="button"
               className={`chip-interactive inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium cursor-pointer shrink-0 whitespace-nowrap ${
                 visibilityFilter === 'public'
-                  ? 'bg-emerald-600 text-white shadow-xs font-semibold'
-                  : 'bg-[var(--color-paper)] text-emerald-700 hover:bg-emerald-50 border border-emerald-200'
+                  ? 'bg-[var(--color-accent)] text-white shadow-xs font-semibold'
+                  : 'bg-[var(--color-paper)] text-[var(--color-accent)] hover:bg-[var(--color-accent-soft)] border border-[var(--color-accent-border)]'
               }`}
             >
               <Eye className="w-3 h-3" />
@@ -133,8 +152,8 @@ export function CounselingFilters({
               type="button"
               className={`chip-interactive inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium cursor-pointer shrink-0 whitespace-nowrap ${
                 visibilityFilter === 'private'
-                  ? 'bg-zinc-700 text-white shadow-xs font-semibold'
-                  : 'bg-[var(--color-paper)] text-zinc-600 hover:bg-zinc-100 border border-zinc-200'
+                  ? 'bg-[var(--color-ink)] text-white shadow-xs font-semibold'
+                  : 'bg-[var(--color-paper)] text-[var(--color-ink-muted)] hover:bg-[var(--color-paper-muted)] border border-[var(--color-paper-border)]'
               }`}
             >
               <EyeOff className="w-3 h-3" />

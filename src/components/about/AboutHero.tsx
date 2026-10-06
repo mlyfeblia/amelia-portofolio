@@ -1,30 +1,51 @@
 import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { MapPin, GraduationCap, Phone, Mail, ExternalLink, MessageCircle } from 'lucide-react';
+import { MapPin, GraduationCap, Phone, Mail, MessageCircle } from 'lucide-react';
 import { getGeneralWhatsAppUrl } from '@/lib/whatsapp';
+
+function InstagramIcon({ className = 'w-4 h-4' }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
+      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+      <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
+    </svg>
+  );
+}
 
 export function AboutHero() {
   return (
-    <section className="bg-[var(--color-surface)] border border-[var(--color-paper-border)] rounded-2xl p-6 sm:p-8 lg:p-10 shadow-xs animate-fade-in-up">
+    <section className="bg-[var(--color-surface)] border border-[var(--color-paper-border)] rounded-2xl p-6 sm:p-8 lg:p-10 shadow-xs">
       <div className="grid grid-cols-1 md:grid-cols-12 gap-8 lg:gap-12 items-center">
         {/* Photo Column */}
         <div className="md:col-span-4 flex justify-center">
-          <div className="relative w-48 sm:w-56 md:w-full max-w-[280px] aspect-[3/4] rounded-2xl overflow-hidden shadow-md border-2 border-[var(--color-paper-border)] bg-[var(--color-paper-muted)] group">
+          <div className="relative w-48 sm:w-56 md:w-full max-w-[280px] aspect-[3/4] rounded-2xl overflow-hidden shadow-md border-2 border-[var(--color-paper-border)] bg-[#1E2E25] group">
             <Image
               src="/amelia.webp"
               alt="Foto Profil Amelia, Mahasiswi Bimbingan Konseling UIN Siber Syekh Nurjati Cirebon"
               fill
+              priority
+              unoptimized
+              decoding="sync"
+              placeholder="blur"
+              blurDataURL="data:image/webp;base64,UklGRmwAAABXRUJQVlA4IGAAAAAwBACdASoQABQAPzmGuVOvKSWisAgB4CcJZwDImCLY9Ls72ZrEJEF4/ewA/owBQOkyjLLc5jRc6xVnRV8Ih0nQBejrOHiefbZyHM/aYbkUsYDKEbJfV2RdDH7EoOfAAAA="
               sizes="(max-width: 768px) 240px, 320px"
               className="object-cover object-top transition-transform duration-500 group-hover:scale-105"
-              priority
             />
             <div className="absolute inset-0 bg-gradient-to-t from-[var(--color-ink)]/70 via-transparent to-transparent opacity-80 pointer-events-none" />
-            <div className="absolute bottom-3 left-3 right-3 text-white text-xs pointer-events-none select-none">
-              <span className="inline-block px-2.5 py-0.5 rounded-full bg-[var(--color-accent)] font-semibold text-[11px] mb-1 shadow-xs">
-                Mahasiswi Aktif
-              </span>
-              <p className="font-medium text-white/90">UIN Siber Cirebon</p>
+            <div className="absolute bottom-3 left-3 right-3 text-white pointer-events-none select-none">
+              <p className="font-semibold text-white text-sm">Amelia</p>
+              <p className="font-medium text-white/80 text-xs">UIN Siber Cirebon</p>
             </div>
           </div>
         </div>
@@ -81,19 +102,19 @@ export function AboutHero() {
               href={getGeneralWhatsAppUrl()}
               target="_blank"
               rel="noopener noreferrer"
-              className="btn-primary text-sm min-h-[42px] px-5 inline-flex items-center gap-2"
+              className="btn-primary btn-interactive text-sm min-h-[42px] px-5 inline-flex items-center gap-2"
             >
               <MessageCircle className="w-4 h-4" />
               <span>Hubungi WhatsApp</span>
             </a>
             <a
-              href="https://linkedin.com/in/amelia"
+              href="https://www.instagram.com/mlyfeb.lia"
               target="_blank"
               rel="noopener noreferrer"
-              className="btn-secondary text-sm min-h-[42px] px-4.5 inline-flex items-center gap-2"
+              className="btn-secondary btn-interactive text-sm min-h-[42px] px-4.5 inline-flex items-center gap-2"
             >
-              <ExternalLink className="w-4 h-4 text-[var(--color-ink-soft)]" />
-              <span>Profil LinkedIn</span>
+              <InstagramIcon className="w-4 h-4 text-[var(--color-ink-soft)]" />
+              <span>Profil Instagram</span>
             </a>
             <Link
               href="/schedule"

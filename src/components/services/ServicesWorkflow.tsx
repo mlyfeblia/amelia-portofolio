@@ -20,20 +20,24 @@ export function ServicesWorkflow() {
         {steps.map((s) => (
           <div
             key={s.step}
-            className="p-5 bg-[var(--color-surface)] border border-[var(--color-paper-border)] rounded-xl space-y-2 card-interactive"
+            className="p-5 bg-[var(--color-surface)] border border-[var(--color-paper-border)] rounded-xl space-y-2 card-interactive flex flex-col justify-between"
           >
-            <span
-              className="w-7 h-7 rounded-full bg-[var(--color-accent-soft)] text-[var(--color-accent)] font-semibold text-xs flex items-center justify-center"
-              aria-hidden="true"
-            >
-              {s.step}
-            </span>
-            <h3 className="text-sm font-semibold text-[var(--color-ink)]">
-              {s.title}
-            </h3>
-            <p className="text-xs text-[var(--color-ink-muted)] leading-relaxed">
-              {s.desc}
-            </p>
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between gap-2">
+                <h3 className="text-sm font-semibold text-[var(--color-ink)]">
+                  {s.title}
+                </h3>
+                <span
+                  className="w-6 h-6 rounded-full bg-[var(--color-accent-soft)] text-[var(--color-accent)] font-semibold text-xs flex items-center justify-center shrink-0"
+                  aria-hidden="true"
+                >
+                  {s.step}
+                </span>
+              </div>
+              <p className="text-xs text-[var(--color-ink-muted)] leading-relaxed">
+                {s.desc}
+              </p>
+            </div>
           </div>
         ))}
       </div>

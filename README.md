@@ -1,6 +1,6 @@
-# 🌿 Amelia (Amel) — Portofolio & Ruang Bimbingan Digital `v1.0.0`
+# 🌿 Amelia (Amel) — Portofolio & Ruang Bimbingan Digital `v1.5.0`
 
-[![Production Status](https://img.shields.io/badge/Production-Live%20v1.0.0-1A563C?style=for-the-badge&logo=vercel&logoColor=white)](https://mlyfeblia.vercel.app)
+[![Production Status](https://img.shields.io/badge/Production-Live%20v1.5.0-1A563C?style=for-the-badge&logo=vercel&logoColor=white)](https://mlyfeblia.vercel.app)
 [![Next.js](https://img.shields.io/badge/Next.js-16.3-black?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/React-19.3-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
@@ -9,7 +9,7 @@
 
 > *"Ruang aman untuk cerita yang belum sempat diucapkan, tempat hati berlabuh dalam Thuma'ninah."* 🕊️
 
-Selamat datang di repositori resmi **Amelia (Amel) — Versi 1.0.0**, platform portofolio profesional dan ruang bimbingan konseling digital dari mahasiswi Bimbingan Konseling Islam (BKI) **Universitas Islam Negeri Siber Syekh Nurjati Cirebon (UINSSC)**.
+Selamat datang di repositori resmi **Amelia (Amel) — Versi 1.5.0**, platform portofolio profesional dan ruang bimbingan konseling digital dari mahasiswi Bimbingan Konseling Islam (BKI) **Universitas Islam Negeri Siber Syekh Nurjati Cirebon (UINSSC)**.
 
 Platform ini mengintegrasikan profil profesional praktisi layanan pelanggan (berpengalaman sejak 2020), ruang konseling sebaya (*cyber counseling*), ruang curhat anonim yang aman, asesmen mandiri kesehatan jiwa, dan artikel reflektif berbasis pendekatan psikologi Islam (*Tazkiyatun Nafs*).
 
@@ -28,30 +28,34 @@ Platform ini dibangun dengan prinsip keaslian (*human craft*) dan disiplin estet
 
 ## ✨ Fitur Utama Versi 1.0.0
 
-### 📱 1. Progressive Web App (PWA) Resilien
+### 📱 1. Progressive Web App (PWA) Resilien & Sistem Update Otomatis
 - **Offline-First Resilience:** Seluruh halaman, font, dan aset statis yang pernah dibuka di-cache secara otomatis via Service Worker berbasis [Serwist](https://serwist.pages.dev/).
+- **Sistem Pembaruan Terotomasi (v1.5.0):** Pengecekan versi periodik, banner notifikasi changelog terpusat, dan modal catatan pembaruan transparan (*frosted glass*).
 - **Fallback Offline Interaktif ([`src/app/~offline/page.tsx`](src/app/~offline/page.tsx)):** Menyediakan panduan latihan pernapasan grounding (*Tazkiyatun Nafs*), tombol muat ulang, dan akses darurat saat koneksi internet terputus.
-- **Siklus Hidup Pintar (Zero-Flicker Lifecycle):** Service Worker beroperasi tanpa double-reload atau kedipan layar pada refresh normal. Notifikasi pembaruan disajikan dalam banner elegan dengan aksi *Perbarui Sekarang*.
 - **Panduan Pasang Lintas Platform:** Dukungan instalasi native di Android, Windows, macOS, serta modal petunjuk visual khusus untuk pengguna Safari iOS (*Add to Home Screen*).
 
-### 🗓️ 2. Reservasi Jadwal Konseling Privat
+### 🗓️ 2. Reservasi Jadwal & Pelacakan Status di Perangkat
+- **Pelacakan Status Janji Temu di Perangkat:** Konseli dapat memantau status janji temu langsung di perangkat tanpa perlu registrasi/login akun (`amel_device_bookings_history`).
 - **Tiga Format Sesi Fleksibel:** *Google Meet Virtual*, *Chat Terjadwal*, dan *Tatap Muka di Lingkungan Kampus UIN Siber Cirebon*.
-- **Alur Mandiri & Validasi Berlapis:** Validasi nomor WhatsApp (9–15 digit), format email, pencegahan bentrok tanggal, dan tiket reservasi instan ber-QR code.
-- **Proteksi Spam:** Dilengkapi honeypot trap dan pembatasan frekuensi pengiriman via Upstash Redis Rate Limiting.
+- **Alur Mandiri & Validasi Berlapis:** Validasi nomor WhatsApp (9–15 digit), format email, 8 topik bimbingan konseling spesifik, dan tiket reservasi instan ber-QR code.
 
 ### 💌 3. Ruang Curhat Anonim (Dinding Interaktif)
 - **100% Rahasia & Aman:** Konseli dapat mencurahkan isi hati dan beban pikiran akademik maupun emosional tanpa mempublikasikan identitas pribadi.
+- **Paginasi & Kategori Baku:** Penataan dinding cerita berbasis paginasi dan filter topik 100% Bahasa Indonesia baku.
 - **Tanggapan Konselor Sebaya:** Jawaban reflektif dan suportif dari Amelia dipublikasikan ke dinding curhat publik setelah melalui proses kurasi.
 
-### 🪞 4. Asesmen Kesejahteraan Diri Mandiri
-- Evaluasi reflektif terstruktur berdurasi 2 menit untuk menakar beban mental, stabilitas emosi, dan kedamaian batin dengan umpan balik interpretatif yang menenangkan.
+### 🪞 4. Asesmen Kesejahteraan Jiwa Holistik 4 Dimensi
+- **Instrumen Psikologis BKI Terstandarisasi:** 8 pertanyaan terstruktur (skala 0–3, total 24 poin) yang menakar *Ritme Pikiran/Kognitif*, *Resiliensi Emosi*, *Kedamaian Batin (Thuma'ninah)*, dan *Relasi Sosial/Boundaries*.
+- **Evaluasi Multi-Dimensi & Visual Bar:** Klasifikasi fase (*Nafs Muthma'innah*, *Nafs Lawwamah*, atau *Fase Pendampingan Empatis Segera*) dilengkapi rekomendasi terarah dan tombol salin hasil.
+- **Riwayat di Perangkat:** Hasil evaluasi tersimpan lokal di browser (`amel_device_assessment_history`) dengan perbandingan tren skor antar sesi tanpa login.
 
 ### 📖 5. Artikel & Kajian Reflektif BKI
 - Kumpulan artikel mendalam tentang *Tazkiyatun Nafs*, navigasi kecemasan (*overthinking*), *Cyber Counseling*, serta relasi bimbingan konseling sebaya.
-- Dilengkapi estimasi waktu baca, filter kategori, format markdown aman, dan tombol bagikan cepat.
+- Dilengkapi estimasi waktu baca, filter kategori, format markdown aman, paginasi terstruktur, dan optimasi SEO Google Search.
 
 ### 🔐 6. Portal Administrasi Konselor
 - Dashboard terlindungi untuk memantau pendaftar konseling, memoderasi pesan curhat, dan mempublikasikan artikel baru.
+- **Batas Sesi Keamanan 30 Menit & Autosave:** Dilengkapi dialog modal interaktif perpanjangan sesi yang responsif pada layar mobile maupun desktop, serta proteksi autosave draf otomatis.
 - Otentikasi berbasis token JWT HttpOnly, hash verifikasi, dan proteksi sesi berlapis.
 
 ---
@@ -65,7 +69,7 @@ Platform ini dibangun dengan prinsip keaslian (*human craft*) dan disiplin estet
 
 ### 🔍 Search Engine Optimization (SEO) Terpadu
 - **Dynamic Metadata & Canonical URL:** Setiap halaman dilengkapi judul unik, deskripsi kontekstual, dan tautan kanonikal resmi ke domain produksi.
-- **OpenGraph & Twitter Card:** Tampilan pratinjau kaya (*rich snippet previews*) untuk pembagian di WhatsApp, Telegram, Twitter/X, dan LinkedIn.
+- **OpenGraph & Twitter Card:** Tampilan pratinjau kaya (*rich snippet previews*) untuk pembagian di WhatsApp, Telegram, Twitter/X, dan Instagram.
 - **JSON-LD Schema.org Berstandar:**
   - `Person` (Profil Amelia, afiliasi UIN Siber Cirebon, kompetensi konseling)
   - `WebSite` (Pencarian artikel terindeks)
@@ -242,7 +246,7 @@ pnpm start
 - 🌟 **Situs Produksi:** [https://mlyfeblia.vercel.app](https://mlyfeblia.vercel.app)
 - 🔗 **Domain Alternatif:** [https://amelia-portofolio.vercel.app](https://amelia-portofolio.vercel.app)
 - 📦 **Repositori Sumber:** [mlyfeblia/amelia-portofolio](https://github.com/mlyfeblia/amelia-portofolio)
-- 💼 **LinkedIn:** [linkedin.com/in/amelia](https://linkedin.com/in/amelia)
+- 📸 **Instagram:** [@mlyfeb.lia](https://www.instagram.com/mlyfeb.lia)
 
 ---
 

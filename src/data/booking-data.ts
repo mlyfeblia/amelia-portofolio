@@ -1,13 +1,7 @@
 import { Video, MessageSquare, Users } from 'lucide-react';
-import { ConsultationCategory, CounselingMode } from '@/types';
+import { ConsultationCategory, CounselingMode, BOOKING_CATEGORIES } from '@/types';
 
-export const BOOKING_CATEGORIES: ConsultationCategory[] = [
-  'Manajemen Stres & Kecemasan',
-  'Akademik & Karier',
-  'Krisis Identitas Diri & Quarter-Life Crisis',
-  'Hubungan Keluarga & Pra-Nikah',
-  'Pengembangan Diri & Spiritual Islami',
-];
+export { BOOKING_CATEGORIES };
 
 export const BOOKING_TIME_SLOTS = [
   '09:30 - 10:30 WIB (Pagi)',
@@ -44,7 +38,7 @@ export const DEFAULT_BOOKING_FORM: BookingFormState = {
   alias: '',
   phone: '',
   email: '',
-  category: 'Manajemen Stres & Kecemasan',
+  category: 'Manajemen Stres, Emosi & Burnout',
   mode: 'online_meet',
   date: '',
   timeSlot: '16:00 - 17:00 WIB (Sore)',

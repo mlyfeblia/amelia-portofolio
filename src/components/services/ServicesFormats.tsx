@@ -27,16 +27,14 @@ export function ServicesFormats() {
               <h3 className="text-base font-semibold text-[var(--color-ink)]">
                 {f.title}
               </h3>
-              <p className="text-xs font-semibold text-[var(--color-accent)] mt-1">
-                {f.dur}
-              </p>
               <p className="text-sm text-[var(--color-ink-muted)] leading-relaxed mt-2">
                 {f.desc}
               </p>
             </div>
-            <div className="pt-4 border-t border-[var(--color-paper-border)]">
-              <Link href="/schedule" className="text-xs font-semibold text-[var(--color-accent)] hover:underline">
-                Pilih format ini &rarr;
+            <div className="pt-4 border-t border-[var(--color-paper-border)] flex items-center justify-between text-xs">
+              <span className="font-semibold text-[var(--color-accent)]">{f.dur}</span>
+              <Link href="/schedule" className="font-semibold text-[var(--color-accent)] hover:underline inline-flex items-center gap-1">
+                Pilih format &rarr;
               </Link>
             </div>
           </div>

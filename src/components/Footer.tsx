@@ -1,6 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { getGeneralWhatsAppUrl } from '@/lib/whatsapp';
+import FooterVersion from '@/components/FooterVersion';
 
 const footerNav = [
   { label: 'Beranda', href: '/' },
@@ -38,7 +39,7 @@ export default function Footer() {
             <div className="pt-3 border-t border-white/10 max-w-sm">
               <Link
                 href="/#app-showcase"
-                className="text-emerald-300/90 hover:text-emerald-200 text-xs font-medium transition-colors inline-block"
+                className="text-[var(--color-accent-soft)] hover:text-white text-xs font-medium transition-colors inline-block"
               >
                 Pasang Web App &rarr;
               </Link>
@@ -91,14 +92,14 @@ export default function Footer() {
                 </a>
               </p>
               <p>
-                LinkedIn:{' '}
+                Instagram:{' '}
                 <a
-                  href="https://linkedin.com/in/amelia"
+                  href="https://www.instagram.com/mlyfeb.lia"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-white hover:underline underline-offset-2"
                 >
-                  linkedin.com/in/amelia
+                  @mlyfeb.lia
                 </a>
               </p>
               <p className="text-xs text-white/70 pt-1">
@@ -120,11 +121,18 @@ export default function Footer() {
       </div>
 
       {/* Bottom Bar */}
-      <div className="border-t border-white/10 py-6 sm:py-5">
-        <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-10 flex flex-col sm:flex-row items-center sm:justify-between gap-2.5 sm:gap-4 text-center sm:text-left">
-          <p className="text-xs text-white/75 tracking-tight">
-            &copy; {year} Amelia. Seluruh hak cipta dilindungi.
-          </p>
+      <div
+        className="border-t border-white/10 pt-6 pb-6 sm:py-5"
+        style={{ paddingBottom: 'max(1.5rem, calc(1.25rem + env(safe-area-inset-bottom, 0px)))' }}
+      >
+        <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-10 flex flex-col sm:flex-row items-center sm:justify-between gap-3 text-center sm:text-left">
+          <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4">
+            <p className="text-xs text-white/75 tracking-tight">
+              &copy; {year} Amelia. Seluruh hak cipta dilindungi.
+            </p>
+            <span className="hidden sm:inline text-white/30">&bull;</span>
+            <FooterVersion />
+          </div>
           <p className="text-[11.5px] sm:text-xs text-white/65 leading-relaxed max-w-sm sm:max-w-none">
             Kerahasiaan konseli dijaga sesuai kode etik bimbingan konseling.
           </p>

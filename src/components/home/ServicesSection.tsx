@@ -26,40 +26,46 @@ export function ServicesSection() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 lg:gap-8">
-          <div className="p-6 lg:p-7 bg-[var(--color-paper)] border border-[var(--color-paper-border)] rounded-xl space-y-3 card-interactive">
-            <h3 className="text-base font-semibold text-[var(--color-ink)]">
-              Google Meet Virtual
-            </h3>
-            <p className="text-xs font-semibold text-[var(--color-accent)]">
+          <div className="p-6 lg:p-7 bg-[var(--color-paper)] border border-[var(--color-paper-border)] rounded-xl space-y-3 card-interactive flex flex-col justify-between">
+            <div className="space-y-2">
+              <h3 className="text-base font-semibold text-[var(--color-ink)]">
+                Google Meet Virtual
+              </h3>
+              <p className="text-sm text-[var(--color-ink-muted)] leading-relaxed">
+                Diskusi interaktif langsung via video conference privat dari ruang ternyamanmu.
+              </p>
+            </div>
+            <div className="pt-3 border-t border-[var(--color-paper-border)] text-xs font-semibold text-[var(--color-accent)]">
               60 Menit · Tatap Muka Daring
-            </p>
-            <p className="text-sm text-[var(--color-ink-muted)] leading-relaxed">
-              Diskusi interaktif langsung via video conference privat dari ruang nyaman Anda.
-            </p>
+            </div>
           </div>
 
-          <div className="p-6 lg:p-7 bg-[var(--color-paper)] border border-[var(--color-paper-border)] rounded-xl space-y-3 card-interactive">
-            <h3 className="text-base font-semibold text-[var(--color-ink)]">
-              Chat Terjadwal
-            </h3>
-            <p className="text-xs font-semibold text-[var(--color-accent)]">
+          <div className="p-6 lg:p-7 bg-[var(--color-paper)] border border-[var(--color-paper-border)] rounded-xl space-y-3 card-interactive flex flex-col justify-between">
+            <div className="space-y-2">
+              <h3 className="text-base font-semibold text-[var(--color-ink)]">
+                Chat Terjadwal
+              </h3>
+              <p className="text-sm text-[var(--color-ink-muted)] leading-relaxed">
+                Percakapan mendalam via perpesanan langsung bagi yang lebih nyaman menuliskan isi hati.
+              </p>
+            </div>
+            <div className="pt-3 border-t border-[var(--color-paper-border)] text-xs font-semibold text-[var(--color-accent)]">
               60 Menit · Komunikasi Teks
-            </p>
-            <p className="text-sm text-[var(--color-ink-muted)] leading-relaxed">
-              Percakapan mendalam via perpesanan langsung bagi yang lebih nyaman menuliskan isi hati.
-            </p>
+            </div>
           </div>
 
-          <div className="p-6 lg:p-7 bg-[var(--color-paper)] border border-[var(--color-paper-border)] rounded-xl space-y-3 card-interactive">
-            <h3 className="text-base font-semibold text-[var(--color-ink)]">
-              Tatap Muka Cirebon
-            </h3>
-            <p className="text-xs font-semibold text-[var(--color-accent)]">
+          <div className="p-6 lg:p-7 bg-[var(--color-paper)] border border-[var(--color-paper-border)] rounded-xl space-y-3 card-interactive flex flex-col justify-between">
+            <div className="space-y-2">
+              <h3 className="text-base font-semibold text-[var(--color-ink)]">
+                Tatap Muka Cirebon
+              </h3>
+              <p className="text-sm text-[var(--color-ink-muted)] leading-relaxed">
+                Pertemuan luring di area kampus UIN Siber Syekh Nurjati Cirebon dengan kesepakatan waktu.
+              </p>
+            </div>
+            <div className="pt-3 border-t border-[var(--color-paper-border)] text-xs font-semibold text-[var(--color-accent)]">
               60 Menit · Langsung di Kampus
-            </p>
-            <p className="text-sm text-[var(--color-ink-muted)] leading-relaxed">
-              Pertemuan luring di area kampus UIN Siber Syekh Nurjati Cirebon dengan kesepakatan waktu.
-            </p>
+            </div>
           </div>
         </div>
       </div>

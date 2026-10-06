@@ -20,17 +20,21 @@ export function ServicesPillars() {
         {pillars.map((p) => (
           <div
             key={p.num}
-            className="p-6 bg-[var(--color-surface)] border border-[var(--color-paper-border)] rounded-xl space-y-2 card-interactive"
+            className="p-6 bg-[var(--color-surface)] border border-[var(--color-paper-border)] rounded-xl space-y-3 card-interactive flex flex-col justify-between"
           >
-            <span className="text-sm font-semibold text-[var(--color-accent)] block">
-              Pilar {p.num}
-            </span>
-            <h3 className="text-lg font-semibold text-[var(--color-ink)]">
-              {p.title}
-            </h3>
-            <p className="text-sm text-[var(--color-ink-muted)] leading-relaxed">
-              {p.desc}
-            </p>
+            <div className="space-y-2">
+              <h3 className="text-lg font-semibold text-[var(--color-ink)]">
+                {p.title}
+              </h3>
+              <p className="text-sm text-[var(--color-ink-muted)] leading-relaxed">
+                {p.desc}
+              </p>
+            </div>
+            <div className="pt-3 border-t border-[var(--color-paper-border)]">
+              <span className="text-xs font-semibold text-[var(--color-accent)]">
+                Pilar {p.num}
+              </span>
+            </div>
           </div>
         ))}
       </div>

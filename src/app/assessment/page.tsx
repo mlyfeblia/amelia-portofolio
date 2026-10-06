@@ -11,14 +11,14 @@ const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://mlyfeblia.vercel.a
 export const metadata: Metadata = {
   title: 'Asesmen Kesejahteraan Jiwa',
   description:
-    'Lakukan refleksi mandiri 2 menit untuk mengenali kondisi beban pikiran, resiliensi emosi, dan kedamaian batin Anda bersama Amelia.',
+    'Lakukan refleksi mandiri 2 menit untuk mengenali kondisi beban pikiran, resiliensi emosi, dan kedamaian batinmu bersama Amel.',
   alternates: {
     canonical: `${BASE_URL}/assessment`,
   },
   openGraph: {
     title: 'Asesmen Kesejahteraan Jiwa | Amelia',
     description:
-      'Lakukan refleksi mandiri 2 menit untuk mengenali kondisi beban pikiran, resiliensi emosi, dan kedamaian batin Anda bersama Amelia.',
+      'Lakukan refleksi mandiri 2 menit untuk mengenali kondisi beban pikiran, resiliensi emosi, dan kedamaian batinmu bersama Amel.',
     url: `${BASE_URL}/assessment`,
     type: 'website',
     images: [
@@ -60,7 +60,16 @@ const assessmentAppJsonLd = {
   },
 };
 
-export default function AssessmentPage() {
+interface AssessmentPageProps {
+  searchParams?: Promise<{
+    tab?: string;
+  }>;
+}
+
+export default async function AssessmentPage({ searchParams }: AssessmentPageProps) {
+  const params = await searchParams;
+  const initialTab = params?.tab === 'history' ? 'history' : params?.tab === 'quiz' ? 'quiz' : undefined;
+
   return (
     <>
       <BreadcrumbJsonLd
@@ -74,22 +83,22 @@ export default function AssessmentPage() {
         dangerouslySetInnerHTML={{ __html: safeJsonLd(assessmentAppJsonLd) }}
       />
       <Navbar />
-      <main id="main-content" className="min-h-screen pt-8 sm:pt-10 md:pt-12 pb-16 sm:pb-20 md:pb-24 page-enter">
-        <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-10 space-y-8 animate-fade-in-up">
+      <main id="main-content" className="min-h-screen pt-6 sm:pt-10 md:pt-12 pb-14 sm:pb-20 md:pb-24 page-enter">
+        <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-10 space-y-6 sm:space-y-8 animate-fade-in-up">
           <div className="max-w-3xl space-y-2">
             <h1
-              className="text-3xl sm:text-4xl lg:text-[2.65rem] font-medium text-[var(--color-ink)] leading-tight"
+              className="text-2xl sm:text-4xl lg:text-[2.65rem] font-medium text-[var(--color-ink)] leading-tight tracking-tight"
               style={{ fontFamily: 'var(--font-display)' }}
             >
               Asesmen Kesejahteraan Jiwa
             </h1>
-            <p className="text-base sm:text-lg text-[var(--color-ink-muted)] leading-relaxed">
+            <p className="text-sm sm:text-lg text-[var(--color-ink-muted)] leading-relaxed">
               Luangkan waktu 2 menit untuk mengecek kondisi hatimu hari ini. Instrumen refleksi sederhana ini membantumu mengenali ritme pikiran, kestabilan emosi, dan ketenteraman batin secara mandiri.
             </p>
           </div>
 
-          <div className="pt-4">
-            <AssessmentSection />
+          <div className="pt-1 sm:pt-4">
+            <AssessmentSection initialTab={initialTab} />
           </div>
         </div>
       </main>

@@ -6,6 +6,7 @@ import { ArrowRight, CheckCircle2, Phone, Check } from 'lucide-react';
 import { Booking } from '@/types';
 import { getAdminContactWhatsAppUrl } from '@/lib/whatsapp';
 import { SkeletonBookingCard } from '@/components/ui/Skeleton';
+import { Badge } from '@/components/ui/Badge';
 
 interface OverviewRecentBookingsProps {
   bookings: Booking[];
@@ -65,9 +66,9 @@ export function OverviewRecentBookings({
                 <span className="font-mono font-semibold px-2 py-0.5 rounded bg-[var(--color-paper)] border border-[var(--color-paper-border)] text-[var(--color-accent)] text-[11px]">
                   {item.code}
                 </span>
-                <span className="text-[10px] sm:text-[11px] font-medium px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-700">
-                  Menunggu Konfirmasi
-                </span>
+                <Badge variant="warning" size="xs" dot>
+                  Menunggu
+                </Badge>
               </div>
 
               <div>

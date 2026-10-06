@@ -10,9 +10,14 @@ import {
   triggerPwaInstall,
   dismissPwaBanner,
   closeIosModal,
+  openChangelogModal,
+  closeChangelogModal,
 } from '@/lib/pwa-store';
 import { useModalAnimation } from '@/lib/use-modal-animation';
 import { cn } from '@/lib/utils';
+import PwaSplashScreen from '@/components/pwa/PwaSplashScreen';
+import { PwaChangelogModal } from '@/components/pwa/PwaChangelogModal';
+import { CURRENT_APP_VERSION, getLatestRelease } from '@/data/app-version';
 
 function subscribeOnline(callback: () => void) {
   window.addEventListener('online', callback);
@@ -35,7 +40,7 @@ export default function PwaLifecycle() {
   const isOnline = useSyncExternalStore(subscribeOnline, getOnlineSnapshot, getOnlineServerSnapshot);
   const isOffline = !isOnline;
 
-  const { showBanner, bannerReason, showIosModal, isIOS, isInstalled } = usePwa();
+  const { showBanner, bannerReason, showIosModal, showChangelogModal, isIOS, isInstalled } = usePwa();
   const {
     isRendered: isIosModalRendered,
     isExiting: isIosModalExiting,
@@ -45,10 +50,66 @@ export default function PwaLifecycle() {
 
   const [updateWaiting, setUpdateWaiting] = useState(false);
   const [waitingWorker, setWaitingWorker] = useState<ServiceWorker | null>(null);
+  const [updateDismissed, setUpdateDismissed] = useState(false);
   const [showOnlineToast, setShowOnlineToast] = useState(false);
+  const [isSuppressed, setIsSuppressed] = useState(false);
+  const latestRelease = getLatestRelease();
+
+  // Suppress floating banner when user is near footer or looking at #app-showcase
+  useEffect(() => {
+    if (!showBanner) return;
+
+    let ticking = false;
+    const checkSuppression = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const doc = document.documentElement;
+          const scrollBottom = doc.scrollHeight - (window.scrollY + window.innerHeight);
+          const isNearBottom = scrollBottom < 260; // near footer
+
+          const showcaseElem = document.getElementById('app-showcase');
+          let isShowcaseVisible = false;
+          if (showcaseElem) {
+            const rect = showcaseElem.getBoundingClientRect();
+            isShowcaseVisible = rect.top < window.innerHeight && rect.bottom > 0;
+          }
+
+          setIsSuppressed(isNearBottom || isShowcaseVisible);
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    window.addEventListener('scroll', checkSuppression, { passive: true });
+    window.addEventListener('resize', checkSuppression, { passive: true });
+    checkSuppression();
+
+    return () => {
+      window.removeEventListener('scroll', checkSuppression);
+      window.removeEventListener('resize', checkSuppression);
+    };
+  }, [showBanner]);
 
   // Initialize PWA store & lifecycle listeners
   useEffect(() => {
+    // In development on localhost, unregister any stale production service workers and clear cache storage
+    // so Turbopack/development assets never conflict with cached production HTML (eliminates hydration mismatches)
+    if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then((registrations) => {
+        for (const reg of registrations) {
+          reg.unregister();
+        }
+      });
+      if ('caches' in window) {
+        caches.keys().then((keys) => {
+          for (const key of keys) {
+            caches.delete(key);
+          }
+        });
+      }
+    }
+
     initPwa();
   }, []);
 
@@ -101,9 +162,27 @@ export default function PwaLifecycle() {
     };
   }, []);
 
-  // Handle Service Worker registration updates
+  // Handle Service Worker registration updates & periodic version checks
   useEffect(() => {
-    if (typeof window === 'undefined' || !('serviceWorker' in navigator)) return;
+    if (typeof window === 'undefined') return;
+
+    // Check localStorage version against CURRENT_APP_VERSION asynchronously
+    const versionCheckTimer = setTimeout(() => {
+      try {
+        const storedVersion = localStorage.getItem('amel_app_version');
+        if (storedVersion && storedVersion !== CURRENT_APP_VERSION) {
+          setUpdateWaiting(true);
+        }
+      } catch {
+        // Ignore
+      }
+    }, 100);
+
+    if (!('serviceWorker' in navigator)) {
+      return () => clearTimeout(versionCheckTimer);
+    }
+
+    let updateInterval: NodeJS.Timeout;
 
     navigator.serviceWorker.ready.then((registration) => {
       if (registration.waiting) {
@@ -122,6 +201,11 @@ export default function PwaLifecycle() {
           }
         });
       });
+
+      // Periodically check for SW updates every 20 minutes
+      updateInterval = setInterval(() => {
+        registration.update().catch(() => {});
+      }, 20 * 60 * 1000);
     });
 
     if (window.serwist !== undefined) {
@@ -129,9 +213,32 @@ export default function PwaLifecycle() {
         setUpdateWaiting(true);
       });
     }
+
+    // Automatically check for updates when returning to the tab
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && 'serviceWorker' in navigator) {
+        navigator.serviceWorker.ready.then((reg) => {
+          reg.update().catch(() => {});
+        });
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      clearTimeout(versionCheckTimer);
+      clearInterval(updateInterval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, []);
 
   const handleApplyUpdate = useCallback(() => {
+    try {
+      localStorage.setItem('amel_app_version', CURRENT_APP_VERSION);
+    } catch {
+      // Ignore
+    }
+
     let refreshing = false;
     if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
       navigator.serviceWorker.addEventListener(
@@ -162,20 +269,20 @@ export default function PwaLifecycle() {
         return {
           title: 'Senang Bertemu Kembali!',
           description:
-            'Pasang aplikasi Amelia di layar utama ponsel Anda agar ruang konseling dan curhat selalu siap diakses kapan pun Anda butuhkan.',
+            'Pasang aplikasi Amelia di layar utama ponselmu agar ruang konseling dan curhat selalu siap diakses kapan pun kamu butuhkan.',
         };
       case 'returning':
         return {
           title: 'Akses Cepat Aplikasi Amelia',
           description:
-            'Akses langsung bimbingan konseling sebaya, curhat anonim, dan artikel refleksi dari beranda layar Anda—bahkan saat offline.',
+            'Akses langsung bimbingan konseling sebaya, curhat anonim, dan artikel refleksi dari beranda layarmu, bahkan saat offline.',
         };
       case 'first-visit':
       default:
         return {
           title: 'Pasang Aplikasi Amelia',
           description:
-            'Dapatkan pengalaman konseling yang lebih tenang dan bebas kuota dengan memasang aplikasi web resmi Amelia di perangkat Anda.',
+            'Dapatkan pengalaman konseling yang lebih tenang dan bebas kuota dengan memasang aplikasi web resmi Amelia di perangkatmu.',
         };
     }
   };
@@ -184,6 +291,9 @@ export default function PwaLifecycle() {
 
   return (
     <>
+      {/* ── Native Standalone PWA Welcome Splash Screen ────────────── */}
+      <PwaSplashScreen />
+
       {/* ── Offline Banner ────────────────────────────────────────── */}
       {isOffline && (
         <aside
@@ -216,33 +326,72 @@ export default function PwaLifecycle() {
           <div className="flex-1 min-w-0">
             <p className="text-xs font-semibold uppercase tracking-wider text-emerald-100">Kembali Terhubung</p>
             <p className="text-xs text-white/90 mt-0.5">
-              Koneksi internet Anda telah pulih. Halaman dan data tersinkronisasi.
+              Koneksi internetmu sudah pulih. Halaman dan data tersinkronisasi rapi.
             </p>
           </div>
         </aside>
       )}
 
-      {/* ── SW Update Available Banner ────────────────────────────── */}
-      {updateWaiting && (
+      {/* ── PWA Version Changelog Modal ──────────────────────────── */}
+      <PwaChangelogModal isOpen={showChangelogModal} onClose={closeChangelogModal} />
+
+      {/* ── SW Update Available Banner with Changelog Preview ─────── */}
+      {updateWaiting && !updateDismissed && (
         <aside
           role="alert"
           aria-live="assertive"
-          className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:max-w-md z-50 bg-white text-[var(--color-ink)] p-4 rounded-2xl shadow-2xl border border-[var(--color-paper-border)] flex flex-col gap-3 animate-in fade-in slide-in-from-bottom-4 duration-300"
+          className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:max-w-md z-50 bg-white text-[var(--color-ink)] p-4 sm:p-5 rounded-2xl shadow-2xl border border-[var(--color-paper-border)] flex flex-col gap-3.5 animate-in fade-in slide-in-from-bottom-4 duration-300"
         >
           <div className="flex items-start gap-3">
-            <div className="p-2 rounded-xl bg-[var(--color-accent-soft)] text-[var(--color-accent)] shrink-0">
+            <div className="p-2.5 rounded-xl bg-[var(--color-accent-soft)] text-[var(--color-accent)] shrink-0">
               <RefreshCw className="w-5 h-5 animate-spin" aria-hidden="true" />
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="font-display text-sm font-semibold text-[var(--color-ink)]">
-                Pembaruan Siap Digunakan
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-[var(--color-accent)] text-white">
+                  v{CURRENT_APP_VERSION}
+                </span>
+                <span className="text-xs font-semibold text-[var(--color-ink)]">
+                  Pembaruan Baru Tersedia
+                </span>
+              </div>
+              <h3 className="text-xs sm:text-sm font-semibold text-[var(--color-ink)] mt-1 leading-snug line-clamp-2">
+                {latestRelease.title}
               </h3>
-              <p className="text-xs text-[var(--color-ink-muted)] mt-0.5">
-                Versi terbaru dari portofolio Amelia telah tersedia. Muat ulang untuk menerapkan pembaruan.
-              </p>
             </div>
+            <button
+              type="button"
+              onClick={() => setUpdateDismissed(true)}
+              className="p-1 rounded-lg text-[var(--color-ink-soft)] hover:text-[var(--color-ink)] hover:bg-[var(--color-paper)] transition-colors cursor-pointer"
+              aria-label="Tutup pemberitahuan pembaruan"
+            >
+              <X className="w-4 h-4" />
+            </button>
           </div>
-          <div className="flex items-center justify-end gap-2 pt-1 border-t border-[var(--color-paper-border)]">
+
+          {/* Key highlights preview (top 3) */}
+          <div className="p-3 bg-[var(--color-paper)] rounded-xl border border-[var(--color-paper-border)]/70 space-y-1.5 text-xs text-[var(--color-ink-muted)]">
+            <p className="font-semibold text-[11px] text-[var(--color-ink)] uppercase tracking-wider">
+              Apa yang baru di versi ini:
+            </p>
+            <ul className="space-y-1.5" role="list">
+              {latestRelease.highlights.slice(0, 3).map((item, i) => (
+                <li key={i} className="flex items-start gap-2 leading-relaxed">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-[var(--color-accent)] shrink-0 mt-0.5" />
+                  <span className="line-clamp-2">{item}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="flex items-center justify-between gap-2 pt-1 border-t border-[var(--color-paper-border)]">
+            <button
+              type="button"
+              onClick={() => openChangelogModal()}
+              className="text-xs font-medium text-[var(--color-accent)] hover:text-[var(--color-accent-hover)] transition-colors cursor-pointer underline underline-offset-2"
+            >
+              Lihat Catatan Lengkap
+            </button>
             <button
               type="button"
               onClick={handleApplyUpdate}
@@ -254,67 +403,70 @@ export default function PwaLifecycle() {
         </aside>
       )}
 
-      {/* ── Smart PWA Install Prompt Banner ────────────────────────── */}
+      {/* ── Smart PWA Install Prompt Banner (Polite, Compact, Mobile-Ergonomic) ── */}
       {showBanner && !isInstalled && !updateWaiting && (
         <aside
           role="dialog"
           aria-label={bannerContent.title}
-          className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:max-w-md z-50 bg-white text-[var(--color-ink)] p-5 rounded-2xl shadow-2xl border border-[var(--color-paper-border)] animate-in fade-in slide-in-from-bottom-5 duration-300"
+          className={cn(
+            'fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:max-w-sm z-40 transition-all duration-300 ease-out',
+            isSuppressed
+              ? 'opacity-0 translate-y-6 pointer-events-none'
+              : 'opacity-100 translate-y-0'
+          )}
         >
-          <div className="flex items-start gap-3.5">
-            <div className="relative w-12 h-12 rounded-xl overflow-hidden shrink-0 shadow-xs border border-[var(--color-paper-border)] bg-[#f7f2eb]">
-              <Image
-                src="/icons/icon-192x192.png"
-                alt="Logo Amelia"
-                width={48}
-                height={48}
-                priority
-                className="w-full h-full object-cover"
-              />
+          <div className="bg-white/95 backdrop-blur-md text-[var(--color-ink)] p-3.5 rounded-2xl shadow-xl border border-[var(--color-paper-border)] flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0 flex-1">
+              <div className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-full overflow-hidden shrink-0 shadow-2xs border border-[var(--color-paper-border)] bg-[#FAF0E6] flex items-center justify-center">
+                <Image
+                  src="/icons/icon-192x192.png"
+                  alt="Logo Amelia"
+                  width={40}
+                  height={40}
+                  priority
+                  unoptimized
+                  decoding="sync"
+                  className="w-full h-full object-contain"
+                />
+              </div>
+              <div className="min-w-0 flex-1">
+                <h3 className="font-display text-xs sm:text-sm font-semibold text-[var(--color-ink)] leading-snug truncate">
+                  {bannerContent.title}
+                </h3>
+                <p className="text-[11px] text-[var(--color-ink-muted)] leading-tight truncate mt-0.5">
+                  Akses instan &amp; offline di layar utama
+                </p>
+              </div>
             </div>
-            <div className="flex-1 min-w-0 pr-3">
-              <h3 className="font-display text-base font-semibold text-[var(--color-ink)] leading-snug">
-                {bannerContent.title}
-              </h3>
-              <p className="text-xs text-[var(--color-ink-muted)] leading-relaxed mt-1">
-                {bannerContent.description}
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={dismissPwaBanner}
-              className="text-[var(--color-ink-soft)] hover:text-[var(--color-ink)] p-1 rounded-lg transition-colors cursor-pointer"
-              aria-label="Tutup saran pemasangan"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
 
-          <div className="flex items-center justify-end gap-2.5 mt-4 pt-3 border-t border-[var(--color-paper-border)]">
-            <button
-              type="button"
-              onClick={dismissPwaBanner}
-              className="px-3.5 py-2 text-xs font-medium text-[var(--color-ink-soft)] hover:text-[var(--color-ink)] transition-colors cursor-pointer"
-            >
-              Nanti Saja
-            </button>
-            <button
-              type="button"
-              onClick={() => triggerPwaInstall()}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[var(--color-accent)] text-white text-xs font-medium hover:bg-[var(--color-accent-hover)] transition-colors cursor-pointer shadow-xs active:scale-95"
-            >
-              {isIOS ? (
-                <>
-                  <Share2 className="w-3.5 h-3.5" aria-hidden="true" />
-                  <span>Petunjuk Pasang di iPhone</span>
-                </>
-              ) : (
-                <>
-                  <Download className="w-3.5 h-3.5" aria-hidden="true" />
-                  <span>Pasang Aplikasi</span>
-                </>
-              )}
-            </button>
+            <div className="flex items-center gap-1.5 shrink-0">
+              <button
+                type="button"
+                onClick={() => triggerPwaInstall()}
+                className="btn-interactive inline-flex items-center gap-1 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl bg-[var(--color-accent)] text-white text-xs font-medium hover:bg-[var(--color-accent-hover)] transition-colors cursor-pointer shadow-2xs active:scale-95"
+              >
+                {isIOS ? (
+                  <>
+                    <Share2 className="w-3.5 h-3.5" aria-hidden="true" />
+                    <span>Pasang</span>
+                  </>
+                ) : (
+                  <>
+                    <Download className="w-3.5 h-3.5" aria-hidden="true" />
+                    <span>Pasang</span>
+                  </>
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={dismissPwaBanner}
+                className="p-1.5 rounded-lg text-[var(--color-ink-soft)] hover:text-[var(--color-ink)] hover:bg-[var(--color-paper)] transition-colors cursor-pointer"
+                aria-label="Tutup saran pemasangan"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         </aside>
       )}
@@ -327,14 +479,13 @@ export default function PwaLifecycle() {
           aria-labelledby="ios-modal-title"
           className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 overflow-y-auto"
         >
-          {/* Dedicated full-viewport backdrop with strong blur, scroll blocked */}
+          {/* Dedicated full-viewport backdrop with strong blur, scroll blocked - Cannot Be Dismissed By Touching Backdrop */}
           <div
             className={cn(
-              'fixed inset-0 bg-black/60 backdrop-blur-md transition-opacity touch-none select-none',
+              'fixed inset-0 bg-transparent backdrop-blur-md touch-none select-none pointer-events-auto',
               iosBackdropClass
             )}
             aria-hidden="true"
-            onClick={() => !isIosModalExiting && closeIosModal()}
             onWheel={(e) => e.preventDefault()}
             onTouchMove={(e) => e.preventDefault()}
           />
@@ -349,13 +500,13 @@ export default function PwaLifecycle() {
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl overflow-hidden shadow-xs border border-[var(--color-paper-border)] bg-[#f7f2eb] shrink-0">
+                <div className="w-10 h-10 rounded-full overflow-hidden shadow-xs border border-[var(--color-paper-border)] bg-[#FAF0E6] shrink-0 flex items-center justify-center">
                   <Image
                     src="/icons/icon-192x192.png"
                     alt="Logo Amelia"
                     width={40}
                     height={40}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-contain"
                   />
                 </div>
                 <div>
@@ -407,7 +558,7 @@ export default function PwaLifecycle() {
                 <div>
                   <span className="font-semibold block text-[var(--color-ink)]">3. Ketuk Tambah</span>
                   <span className="text-[var(--color-ink-muted)] text-xs leading-relaxed">
-                    Ketuk <strong>Tambah</strong> di sudut kanan atas. Selesai! Ikon aplikasi Amelia akan langsung terpasang di beranda HP Anda.
+                    Ketuk <strong>Tambah</strong> di sudut kanan atas. Selesai! Ikon aplikasi Amelia akan langsung terpasang di beranda ponselmu.
                   </span>
                 </div>
               </li>

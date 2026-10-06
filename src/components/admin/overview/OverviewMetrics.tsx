@@ -6,15 +6,17 @@ import {
   Clock, 
   CheckCircle2, 
   MessageSquareText, 
-  FileText, 
-  ArrowRight 
+  FileText,
+  ArrowRight,
 } from 'lucide-react';
+import { SkeletonMetricCard } from '@/components/ui/Skeleton';
 
 interface OverviewMetricsProps {
   waitingBookingsCount: number;
   confirmedBookingsCount: number;
   unansweredCurhatCount: number;
   articlesCount: number;
+  loading?: boolean;
 }
 
 export function OverviewMetrics({
@@ -22,7 +24,19 @@ export function OverviewMetrics({
   confirmedBookingsCount,
   unansweredCurhatCount,
   articlesCount,
+  loading = false,
 }: OverviewMetricsProps) {
+  if (loading) {
+    return (
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
+        <SkeletonMetricCard />
+        <SkeletonMetricCard />
+        <SkeletonMetricCard />
+        <SkeletonMetricCard />
+      </div>
+    );
+  }
+
   return (
     <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
       {/* Card 1: Perlu Konfirmasi */}
@@ -32,7 +46,7 @@ export function OverviewMetrics({
       >
         <div className="flex items-center justify-between text-xs text-[var(--color-ink-muted)] mb-2 sm:mb-3">
           <span className="text-[11px] sm:text-xs">Perlu Konfirmasi</span>
-          <span className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-amber-500/10 text-amber-700 flex items-center justify-center">
+          <span className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[var(--color-warning-soft)] text-[var(--color-warning)] flex items-center justify-center">
             <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
           </span>
         </div>
@@ -76,7 +90,7 @@ export function OverviewMetrics({
       >
         <div className="flex items-center justify-between text-xs text-[var(--color-ink-muted)] mb-2 sm:mb-3">
           <span className="text-[11px] sm:text-xs">Curhat Menanti</span>
-          <span className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-rose-500/10 text-rose-600 flex items-center justify-center">
+          <span className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[var(--color-error-soft)] text-[var(--color-error)] flex items-center justify-center">
             <MessageSquareText className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
           </span>
         </div>

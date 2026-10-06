@@ -58,8 +58,21 @@ export default async function Home() {
     getCurhatList(true),
   ]);
 
-  const answeredCurhat = curhatMessages.filter((c) => c.isPublic && c.isAnswered).slice(0, 2);
-  const featuredArticles = articles.slice(0, 2);
+  // Landing page curhat: tampilkan semua yang disematkan admin (showOnLandingPage), default fallback 2 item terbaru
+  const publicAnswered = curhatMessages.filter((c) => c.isPublic && c.isAnswered);
+  const landingCurhatPinned = publicAnswered.filter((c) => c.showOnLandingPage);
+  const remainingCurhat = publicAnswered.filter((c) => !c.showOnLandingPage);
+  const answeredCurhat = landingCurhatPinned.length > 0
+    ? landingCurhatPinned
+    : remainingCurhat.slice(0, 2);
+
+  // Landing page articles: tampilkan semua yang disematkan admin (showOnLandingPage), default fallback 2 item terbaru
+  const publishedArticles = articles.filter((a) => a.isPublished !== false);
+  const landingArticlesPinned = publishedArticles.filter((a) => a.showOnLandingPage);
+  const remainingArticles = publishedArticles.filter((a) => !a.showOnLandingPage);
+  const featuredArticles = landingArticlesPinned.length > 0
+    ? landingArticlesPinned
+    : remainingArticles.slice(0, 2);
 
   return (
     <div className="min-h-screen flex flex-col bg-[var(--color-paper)]">

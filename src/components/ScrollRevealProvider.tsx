@@ -8,6 +8,8 @@ import { usePathname } from 'next/navigation';
  * Ultra-lightweight, hardware-accelerated intersection observer for scroll reveal animations.
  * Observes all elements marked with `[data-reveal]` or `.reveal-init` and adds `.revealed`.
  * Automatically respects `prefers-reduced-motion`.
+ * 
+ * Never hides content within or near the initial viewport to guarantee zero-FOUC and zero-flicker on mobile & desktop.
  */
 export default function ScrollRevealProvider() {
   const pathname = usePathname();
@@ -31,24 +33,42 @@ export default function ScrollRevealProvider() {
         });
       },
       {
-        rootMargin: '0px 0px -30px 0px',
+        rootMargin: '0px 0px -40px 0px',
         threshold: 0.05,
       }
     );
 
     const elements = document.querySelectorAll('[data-reveal], .reveal-init');
+    // Generous viewport buffer (110% of window height) so any content even slightly visible or near the fold
+    // is immediately marked revealed and NEVER vanishes or flashes on initial render / refresh.
+    const initialThreshold = window.innerHeight * 1.1;
+
+    let savedScroll = 0;
+    try {
+      const fullPath = window.location.pathname + window.location.search;
+      const savedRaw = sessionStorage.getItem('scroll_pos_' + fullPath) || sessionStorage.getItem('scroll_pos_' + window.location.pathname);
+      if (savedRaw) savedScroll = parseInt(savedRaw, 10);
+    } catch {
+      // Ignore sessionStorage issues
+    }
+
+    const currentScrollY = Math.max(window.scrollY, savedScroll);
+
     elements.forEach((el) => {
       const rect = el.getBoundingClientRect();
-      // If above the viewport bottom, reveal immediately so top content never blinks or flickers
-      if (rect.top < window.innerHeight * 0.95) {
+      const absoluteTop = rect.top + window.scrollY;
+
+      // Reveal immediately if within viewport or above/near the refreshed scroll position
+      if (
+        rect.top <= initialThreshold ||
+        (currentScrollY > 0 && absoluteTop <= currentScrollY + initialThreshold)
+      ) {
         el.classList.add('revealed');
       } else {
+        el.classList.add('reveal-pending');
         observer.observe(el);
       }
     });
-
-    // Enable progressive reveal animations only AFTER visible elements are already marked .revealed
-    document.documentElement.classList.add('js-reveal-ready');
 
     return () => {
       observer.disconnect();
@@ -57,3 +77,4 @@ export default function ScrollRevealProvider() {
 
   return null;
 }
+

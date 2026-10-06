@@ -1,11 +1,13 @@
-import { ConsultationCategory, CounselingMode } from '@/types';
+import { ConsultationCategory, CounselingMode, BOOKING_CATEGORIES as CANONICAL_BOOKING_CATEGORIES } from '@/types';
 
 /**
  * Strict server-side input validation and sanitization.
  * Prevents payload bloat, XSS injection, and malformed database records.
  */
 
-export const BOOKING_CATEGORIES: readonly ConsultationCategory[] = [
+export const BOOKING_CATEGORIES: readonly string[] = [
+  ...CANONICAL_BOOKING_CATEGORIES,
+  // Backwards compatibility for existing records
   'Akademik & Karier',
   'Krisis Identitas Diri & Quarter-Life Crisis',
   'Manajemen Stres & Kecemasan',
@@ -205,6 +207,7 @@ export interface ValidatedArticleUpdateInput {
   content?: string;
   tags?: string[];
   isPublished?: boolean;
+  showOnLandingPage?: boolean;
 }
 
 export function validateArticleUpdateInput(body: unknown): ValidationResult<ValidatedArticleUpdateInput> {
@@ -220,6 +223,13 @@ export function validateArticleUpdateInput(body: unknown): ValidationResult<Vali
       return { success: false, error: 'Status publikasi harus bernilai boolean.' };
     }
     result.isPublished = b.isPublished;
+  }
+
+  if (b.showOnLandingPage !== undefined) {
+    if (typeof b.showOnLandingPage !== 'boolean') {
+      return { success: false, error: 'Status beranda harus bernilai boolean.' };
+    }
+    result.showOnLandingPage = b.showOnLandingPage;
   }
 
   if (b.title !== undefined) {
@@ -305,6 +315,7 @@ export interface ValidatedArticleCreateInput {
   content: string;
   tags: string[];
   isPublished?: boolean;
+  showOnLandingPage?: boolean;
 }
 
 export function validateArticleCreateInput(body: unknown): ValidationResult<ValidatedArticleCreateInput> {
@@ -314,8 +325,9 @@ export function validateArticleCreateInput(body: unknown): ValidationResult<Vali
 
   const b = body as Record<string, unknown>;
 
-  // isPublished
+  // isPublished & showOnLandingPage
   const isPublished = typeof b.isPublished === 'boolean' ? b.isPublished : true;
+  const showOnLandingPage = typeof b.showOnLandingPage === 'boolean' ? b.showOnLandingPage : false;
 
   // Title
   if (typeof b.title !== 'string') return { success: false, error: 'Judul artikel wajib diisi.' };
@@ -381,6 +393,7 @@ export function validateArticleCreateInput(body: unknown): ValidationResult<Vali
       content,
       tags,
       isPublished,
+      showOnLandingPage,
     },
   };
 }

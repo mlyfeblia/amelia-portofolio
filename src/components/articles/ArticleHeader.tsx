@@ -17,25 +17,6 @@ export function ArticleHeader({ article }: { article: Article }) {
       </Link>
 
       <header className="mb-10 pb-8 border-b border-[var(--color-paper-border)] space-y-4">
-        <div className="flex flex-wrap items-center gap-3 text-xs sm:text-sm">
-          <span className="font-semibold text-[var(--color-accent)] px-3 py-1 rounded-full bg-[var(--color-accent-soft)]">
-            {article.category}
-          </span>
-          <span className="text-[var(--color-paper-border)]" aria-hidden="true">&bull;</span>
-          <span className="inline-flex items-center gap-1.5 text-[var(--color-ink-soft)]">
-            <Clock className="w-3.5 h-3.5" aria-hidden="true" />
-            {article.readTime}
-          </span>
-          <span className="text-[var(--color-paper-border)]" aria-hidden="true">&bull;</span>
-          <time
-            dateTime={getIsoDateString(article.publishedAt)}
-            className="inline-flex items-center gap-1.5 text-[var(--color-ink-soft)]"
-          >
-            <Calendar className="w-3.5 h-3.5" aria-hidden="true" />
-            {article.publishedAt}
-          </time>
-        </div>
-
         {/* Single H1 per page */}
         <h1
           id="article-title"
@@ -46,8 +27,25 @@ export function ArticleHeader({ article }: { article: Article }) {
         </h1>
 
         <p className="text-lg sm:text-xl text-[var(--color-ink-muted)] leading-relaxed italic pt-1">
+          {article.publishedAt ? (
+            <time dateTime={getIsoDateString(article.publishedAt)} className="font-medium not-italic">
+              {article.publishedAt} —{' '}
+            </time>
+          ) : null}
           {article.excerpt}
         </p>
+
+        {/* Metadata bar below title and excerpt */}
+        <div className="flex flex-wrap items-center gap-3 text-xs sm:text-sm pt-2">
+          <span className="font-semibold text-[var(--color-accent)] tracking-wide">
+            {article.category}
+          </span>
+          <span className="text-[var(--color-paper-border)]" aria-hidden="true">&bull;</span>
+          <span className="inline-flex items-center gap-1.5 text-[var(--color-ink-soft)]">
+            <Clock className="w-3.5 h-3.5" aria-hidden="true" />
+            {article.readTime}
+          </span>
+        </div>
 
         {/* Byline */}
         <div

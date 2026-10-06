@@ -1,6 +1,8 @@
 import React from 'react';
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
+import { ArrowUpRight, ArrowLeft } from 'lucide-react';
 import { getArticleBySlug, getArticles } from '@/lib/data-store';
 import { getIsoDateString } from '@/lib/utils';
 import Navbar from '@/components/Navbar';
@@ -32,29 +34,54 @@ export async function generateMetadata(props: {
 
   if (!article) {
     return {
-      title: 'Artikel Tidak Ditemukan',
-      description: 'Artikel yang Anda cari tidak tersedia.',
-      robots: { index: false },
+      title: 'Artikel Tidak Ditemukan | Amelia',
+      description: 'Artikel yang kamu cari tidak tersedia atau belum dipublikasikan.',
+      robots: { index: false, follow: false },
     };
   }
 
   const url = `${BASE_URL}/articles/${slug}`;
+  const keywordsList = [
+    ...(article.tags ?? []),
+    article.category,
+    'Kesehatan Mental Islami',
+    'Bimbingan Konseling Islam',
+    'Amelia BKI',
+    'UIN Siber Syekh Nurjati Cirebon',
+    'Konselor Sebaya',
+  ];
 
   return {
-    title: article.title,
+    title: `${article.title} | Amelia`,
     description: article.excerpt,
-    keywords: [...(article.tags ?? []), 'BKI', 'Bimbingan Konseling Islam', 'Amelia', 'UIN Siber Cirebon'],
-    authors: [{ name: 'Amelia', url: BASE_URL }],
+    keywords: keywordsList,
+    authors: [{ name: 'Amelia', url: `${BASE_URL}/about` }],
+    creator: 'Amelia',
+    publisher: 'Amelia Portofolio & Konseling',
     alternates: {
       canonical: url,
+    },
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        'max-video-preview': -1,
+        'max-image-preview': 'large',
+        'max-snippet': -1,
+      },
     },
     openGraph: {
       type: 'article',
       locale: 'id_ID',
       url,
+      siteName: 'Amelia Portofolio & Konseling',
       title: article.title,
       description: article.excerpt,
       publishedTime: getIsoDateString(article.publishedAt),
+      modifiedTime: getIsoDateString(article.publishedAt),
+      section: article.category,
       authors: ['Amelia'],
       tags: article.tags,
       images: [
@@ -62,7 +89,7 @@ export async function generateMetadata(props: {
           url: `${BASE_URL}/amelia.webp`,
           width: 1200,
           height: 1500,
-          alt: `${article.title} | Amelia`,
+          alt: `${article.title} - Amelia Konseling Sebaya`,
         },
       ],
     },
@@ -79,11 +106,24 @@ export default async function ArticleDetailPage(props: {
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await props.params;
-  const article = await getArticleBySlug(slug, true);
+  const [article, allArticles] = await Promise.all([
+    getArticleBySlug(slug, true),
+    getArticles(true),
+  ]);
 
   if (!article) {
     notFound();
   }
+
+  // Find related articles (same category or shared tags, excluding self)
+  const relatedArticles = allArticles
+    .filter((a) => a.slug !== slug)
+    .sort((a, b) => {
+      const aSameCategory = a.category === article.category ? 1 : 0;
+      const bSameCategory = b.category === article.category ? 1 : 0;
+      return bSameCategory - aSameCategory;
+    })
+    .slice(0, 2);
 
   return (
     <>
@@ -91,13 +131,16 @@ export default async function ArticleDetailPage(props: {
         title={article.title}
         excerpt={article.excerpt}
         slug={slug}
+        category={article.category}
         publishedAt={article.publishedAt}
         tags={article.tags}
+        content={article.content}
       />
       <BreadcrumbJsonLd
         items={[
           { name: 'Beranda', url: BASE_URL },
           { name: 'Artikel', url: `${BASE_URL}/articles` },
+          { name: article.category, url: `${BASE_URL}/articles` },
           { name: article.title, url: `${BASE_URL}/articles/${slug}` },
         ]}
       />
@@ -108,13 +151,79 @@ export default async function ArticleDetailPage(props: {
         tabIndex={-1}
         style={{ backgroundColor: 'var(--color-paper)' }}
       >
-        <div className="max-w-5xl mx-auto px-5 sm:px-8 lg:px-10 pt-8 sm:pt-10 md:pt-12 pb-16 sm:pb-20 md:pb-24 animate-fade-in-up">
+        <div className="max-w-5xl mx-auto px-5 sm:px-8 lg:px-10 pt-8 sm:pt-10 md:pt-12 pb-16 sm:pb-20 md:pb-24">
+          <div className="mb-6">
+            <Link
+              href="/articles"
+              className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-medium text-[var(--color-ink-muted)] hover:text-[var(--color-accent)] transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>Kembali ke Direktori Artikel</span>
+            </Link>
+          </div>
+
           <article aria-labelledby="article-title">
             <ArticleHeader article={article} />
             <div className="mb-12" aria-label="Isi artikel">
               <ArticleMarkdownRenderer content={article.content} />
             </div>
             <ArticleTags tags={article.tags} />
+
+            {/* Related Articles for SEO Internal Linking */}
+            {relatedArticles.length > 0 && (
+              <section className="mt-14 pt-10 border-t border-[var(--color-paper-border)] space-y-6" aria-label="Tulisan Terkait">
+                <div className="space-y-1">
+                  <h3
+                    className="text-xl sm:text-2xl font-medium text-[var(--color-ink)]"
+                    style={{ fontFamily: 'var(--font-display)' }}
+                  >
+                    Tulisan Refleksi Terkait
+                  </h3>
+                  <p className="text-xs sm:text-sm text-[var(--color-ink-muted)]">
+                    Baca juga ulasan lain seputar {article.category.toLowerCase()} dan kesehatan mental.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  {relatedArticles.map((rel) => (
+                    <div
+                      key={rel.id}
+                      className="p-5 sm:p-6 bg-[var(--color-surface)] border border-[var(--color-paper-border)] rounded-2xl flex flex-col justify-between space-y-3 card-interactive shadow-xs"
+                    >
+                      <div className="space-y-2">
+                        <h4
+                          className="text-base sm:text-lg font-medium text-[var(--color-ink)] leading-snug line-clamp-2"
+                          style={{ fontFamily: 'var(--font-display)' }}
+                        >
+                          <Link href={`/articles/${rel.slug}`} className="hover:text-[var(--color-accent)] transition-colors">
+                            {rel.title}
+                          </Link>
+                        </h4>
+                        <p className="text-xs text-[var(--color-ink-muted)] line-clamp-2 leading-relaxed">
+                          {rel.publishedAt ? `${rel.publishedAt} — ` : ''}{rel.excerpt}
+                        </p>
+                      </div>
+
+                      <div className="pt-2 flex items-center justify-between text-xs text-[var(--color-ink-soft)] border-t border-[var(--color-paper-border)]">
+                        <span className="inline-flex items-center gap-1.5">
+                          <span className="font-medium text-[var(--color-accent)]">{rel.category}</span>
+                          <span>•</span>
+                          <span>{rel.readTime}</span>
+                        </span>
+                        <Link
+                          href={`/articles/${rel.slug}`}
+                          className="font-semibold text-[var(--color-accent)] hover:underline inline-flex items-center gap-1"
+                        >
+                          <span>Baca</span>
+                          <ArrowUpRight className="w-3.5 h-3.5" />
+                        </Link>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
             <ArticleCta />
           </article>
         </div>

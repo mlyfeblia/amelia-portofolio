@@ -5,13 +5,9 @@ import Image from 'next/image';
 import { Send, AlertCircle, CheckCircle2, Lock, Download, PenLine } from 'lucide-react';
 import { Spinner } from '@/components/ui/Spinner';
 import { usePwa, triggerPwaInstall } from '@/lib/pwa-store';
+import { CURHAT_CATEGORIES } from '@/types';
 
-const CATEGORIES = [
-  'Quarter-Life Crisis',
-  'Kecemasan & Ibadah',
-  'Akademik & Burnout',
-  'Keluarga & Relasi',
-];
+const CATEGORIES = CURHAT_CATEGORIES;
 
 interface CurhatFormProps {
   onSuccess: () => void;
@@ -25,7 +21,7 @@ export function CurhatForm({ onSuccess }: CurhatFormProps) {
   const { isInstalled } = usePwa();
 
   const [alias, setAlias] = useState('');
-  const [category, setCategory] = useState(CATEGORIES[0]);
+  const [category, setCategory] = useState<string>(CATEGORIES[0]);
   const [message, setMessage] = useState('');
   const [botTrap, setBotTrap] = useState('');
 
@@ -108,7 +104,7 @@ export function CurhatForm({ onSuccess }: CurhatFormProps) {
           <button
             onClick={() => setSent(false)}
             type="button"
-            className="btn-secondary text-xs py-1.5 px-3 mt-2 inline-flex items-center gap-1.5 cursor-pointer"
+            className="btn-secondary btn-interactive text-xs py-1.5 px-3 mt-2 inline-flex items-center gap-1.5 cursor-pointer"
           >
             <PenLine className="w-3.5 h-3.5 text-[var(--color-ink-soft)]" />
             <span>Tulis Pesan Lain</span>
@@ -138,7 +134,7 @@ export function CurhatForm({ onSuccess }: CurhatFormProps) {
               <button
                 type="button"
                 onClick={() => triggerPwaInstall()}
-                className="px-3 py-1.5 rounded-lg bg-[var(--color-accent)] text-white text-[11px] font-medium hover:bg-[var(--color-accent-hover)] transition-colors shrink-0 shadow-xs cursor-pointer inline-flex items-center gap-1 active:scale-95"
+                className="btn-primary btn-interactive !text-[11px] !py-1 !px-2.5 shrink-0 inline-flex items-center gap-1"
               >
                 <Download className="w-3 h-3" />
                 <span>Pasang</span>
@@ -224,7 +220,7 @@ export function CurhatForm({ onSuccess }: CurhatFormProps) {
               </label>
               <span className="text-[11px] text-[var(--color-ink-soft)]">
                 {message.trim().length < 10 ? (
-                  <span className="text-amber-700 font-medium">Min. 10 ({message.trim().length}/10)</span>
+                  <span className="text-[var(--color-ink-soft)] font-medium">Min. 10 ({message.trim().length}/10)</span>
                 ) : (
                   <span className="text-[var(--color-accent)] font-medium">{message.trim().length}/1000</span>
                 )}

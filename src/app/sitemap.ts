@@ -61,9 +61,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const articleRoutes: MetadataRoute.Sitemap = articles.map((art) => ({
     url: `${BASE_URL}/articles/${art.slug}`,
-    lastModified: parseIndonesianDate(art.publishedAt),
-    changeFrequency: 'monthly' as const,
-    priority: 0.7,
+    lastModified: parseIndonesianDate(art.publishedAt) || new Date(),
+    changeFrequency: 'weekly' as const,
+    priority: 0.8,
     images: [`${BASE_URL}/amelia.webp`],
   }));
 

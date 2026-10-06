@@ -20,7 +20,7 @@ export function AssessmentCallout() {
           </div>
           <Link
             href="/assessment"
-            className="btn-primary min-h-[46px] px-6 text-sm shrink-0 inline-flex items-center gap-2"
+            className="btn-primary btn-interactive min-h-[46px] px-6 text-sm shrink-0 inline-flex items-center gap-2"
           >
             <ClipboardCheck className="w-4 h-4" />
             <span>Mulai Asesmen Diri</span>

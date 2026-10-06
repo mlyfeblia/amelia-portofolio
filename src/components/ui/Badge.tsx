@@ -11,17 +11,17 @@ export interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
 const VARIANT_MAP = {
   neutral: 'bg-[var(--color-paper-muted)] text-[var(--color-ink-muted)] border-[var(--color-paper-border)]',
   accent: 'bg-[var(--color-accent-soft)] text-[var(--color-accent)] border-[var(--color-accent-border)]',
-  warning: 'bg-amber-500/10 text-amber-700 border-amber-500/25',
-  danger: 'bg-rose-500/10 text-rose-700 border-rose-500/25',
-  info: 'bg-sky-500/10 text-sky-700 border-sky-500/25',
+  warning: 'bg-[var(--color-warning-soft)] text-[var(--color-warning)] border-[var(--color-warning-border)]',
+  danger: 'bg-[var(--color-error-soft)] text-[var(--color-error)] border-[var(--color-error-border)]',
+  info: 'bg-[var(--color-info-soft)] text-[var(--color-info)] border-[var(--color-info-border)]',
 };
 
 const DOT_COLOR_MAP = {
   neutral: 'bg-[var(--color-ink-soft)]',
   accent: 'bg-[var(--color-accent)]',
-  warning: 'bg-amber-500',
-  danger: 'bg-rose-500',
-  info: 'bg-sky-500',
+  warning: 'bg-[var(--color-warning)]',
+  danger: 'bg-[var(--color-error)]',
+  info: 'bg-[var(--color-info)]',
 };
 
 const SIZE_MAP = {

@@ -1,6 +1,22 @@
 import React from 'react';
 import Link from 'next/link';
+import { Clock } from 'lucide-react';
 import { AnonymousMessage } from '@/types';
+
+function formatDate(isoString?: string) {
+  if (!isoString) return '';
+  try {
+    const d = new Date(isoString);
+    return new Intl.DateTimeFormat('id-ID', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      timeZone: 'Asia/Jakarta',
+    }).format(d);
+  } catch {
+    return '';
+  }
+}
 
 interface CurhatPreviewSectionProps {
   messages: AnonymousMessage[];
@@ -32,33 +48,57 @@ export function CurhatPreviewSection({ messages }: CurhatPreviewSectionProps) {
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
+        <div
+          className={`grid grid-cols-1 ${
+            messages.length === 3
+              ? 'md:grid-cols-3'
+              : messages.length >= 4
+              ? 'sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4'
+              : 'md:grid-cols-2'
+          } gap-6 lg:gap-8`}
+        >
           {messages.map((item) => (
             <div
               key={item.id}
-              className="p-6 lg:p-7 bg-[var(--color-paper)] border border-[var(--color-paper-border)] rounded-xl space-y-4 card-interactive"
+              className="p-6 lg:p-7 bg-[var(--color-paper)] border border-[var(--color-paper-border)] rounded-xl space-y-4 card-interactive flex flex-col justify-between"
             >
-              <div className="flex items-center justify-between text-xs sm:text-sm">
-                <span className="font-semibold text-[var(--color-ink)]">{item.alias}</span>
-                <span className="text-[var(--color-accent)] font-medium px-2.5 py-0.5 rounded-full bg-[var(--color-accent-soft)]">
+              <div className="space-y-3.5">
+                {/* Nama samaran tetap di paling atas */}
+                <span className="font-semibold text-[var(--color-ink)] text-sm sm:text-base block">
+                  {item.alias}
+                </span>
+
+                <blockquote className="text-sm sm:text-base text-[var(--color-ink-muted)] italic leading-relaxed break-words [overflow-wrap:anywhere]">
+                  &ldquo;{item.message}&rdquo;
+                </blockquote>
+
+                {item.answer && (
+                  <div className="pt-3 border-t border-[var(--color-paper-border)] space-y-1.5">
+                    <span className="text-xs font-semibold text-[var(--color-accent)] block uppercase tracking-wider">
+                      Tanggapan Amel:
+                    </span>
+                    <p className="text-xs sm:text-sm text-[var(--color-ink)] leading-relaxed line-clamp-3 break-words [overflow-wrap:anywhere]">
+                      {item.answer}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Di paling bawahnya waktu terus baru deh kategori */}
+              <div className="pt-3 border-t border-[var(--color-paper-border)] flex items-center gap-2 text-xs text-[var(--color-ink-soft)]">
+                {item.createdAt && (
+                  <>
+                    <span className="text-[11px] text-[var(--color-ink-soft)] flex items-center gap-1">
+                      <Clock className="w-3 h-3 text-[var(--color-ink-soft)]" />
+                      {formatDate(item.createdAt)}
+                    </span>
+                    <span className="text-[var(--color-paper-border)]" aria-hidden="true">&bull;</span>
+                  </>
+                )}
+                <span className="text-xs font-medium text-[var(--color-accent)]">
                   {item.category}
                 </span>
               </div>
-
-              <blockquote className="text-sm sm:text-base text-[var(--color-ink-muted)] italic leading-relaxed break-words [overflow-wrap:anywhere]">
-                &ldquo;{item.message}&rdquo;
-              </blockquote>
-
-              {item.answer && (
-                <div className="pt-3 border-t border-[var(--color-paper-border)] space-y-1.5">
-                  <span className="text-xs font-semibold text-[var(--color-accent)] block uppercase tracking-wider">
-                    Tanggapan Amel:
-                  </span>
-                  <p className="text-xs sm:text-sm text-[var(--color-ink)] leading-relaxed line-clamp-3 break-words [overflow-wrap:anywhere]">
-                    {item.answer}
-                  </p>
-                </div>
-              )}
             </div>
           ))}
         </div>

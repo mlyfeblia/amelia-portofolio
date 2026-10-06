@@ -14,16 +14,16 @@ export function getAdminContactEmailUrl(params: AdminContactEmailParams): string
   const subject = `Konfirmasi Jadwal Bimbingan Konseling Amelia [${params.code}]`;
   const body = `Halo ${params.clientName},
 
-Semoga pesan ini menjumpai Anda dalam keadaan sehat dan tenang.
+Semoga pesan ini menjumpaimu dalam keadaan sehat dan tenang.
 
 Perkenalkan, saya Amelia (Amel), konselor sebaya bimbingan konseling Islam UIN Siber Syekh Nurjati Cirebon.
 
-Terkait dengan permohonan sesi konseling yang telah Anda ajukan di website:
+Terkait dengan permohonan sesi konseling yang telah kamu ajukan di website:
 - Kode Reservasi: ${params.code}
 - Tanggal: ${params.date}
 - Sesi Waktu: ${params.slot}
 
-Saya ingin mengonfirmasi kesiapan sesi kita. Apakah jadwal tersebut sudah sesuai untuk Anda?
+Aku ingin mengonfirmasi kesiapan sesi kita. Apakah jadwal tersebut sudah pas untukmu?
 
 Jika ada hal yang ingin ditanyakan, penyesuaian jadwal, atau topik yang ingin dipersiapkan sebelum sesi dimulai, silakan langsung membalas email ini atau melalui WhatsApp resmi konseling di +62 822-1044-5785.
 

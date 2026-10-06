@@ -39,9 +39,6 @@ export function AboutWorkExperience() {
                 </p>
               </div>
               <div className="flex items-center gap-2 text-right">
-                <span className="text-xs px-2.5 py-1 rounded-md bg-[var(--color-accent-soft)] text-[var(--color-accent)] font-medium">
-                  {exp.badge}
-                </span>
                 <span className="text-xs text-[var(--color-ink-soft)] font-medium">
                   {exp.period}
                 </span>

@@ -25,14 +25,14 @@ export function AboutCta() {
           href={getGeneralWhatsAppUrl()}
           target="_blank"
           rel="noopener noreferrer"
-          className="btn-primary text-sm min-h-[42px] px-5 inline-flex items-center gap-2"
+          className="btn-primary btn-interactive text-sm min-h-[42px] px-5 inline-flex items-center gap-2"
         >
           <MessageCircle className="w-4 h-4" />
           <span>WhatsApp Langsung</span>
         </a>
         <Link
           href="/schedule"
-          className="btn-secondary text-sm min-h-[42px] px-5 inline-flex items-center gap-2"
+          className="btn-secondary btn-interactive text-sm min-h-[42px] px-5 inline-flex items-center gap-2"
         >
           <Calendar className="w-4 h-4 text-[var(--color-ink-soft)]" />
           <span>Janji Temu Konseling</span>

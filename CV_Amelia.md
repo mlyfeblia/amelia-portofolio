@@ -1,6 +1,6 @@
 # AMELIA
 
-Cirebon, Jawa Barat, Indonesia | +62 822-1044-5785 | [mlyfeblia150207@gmail.com](mailto:mlyfeblia150207@gmail.com) | [linkedin.com/in/amelia](https://linkedin.com/in/amelia)
+Cirebon, Jawa Barat, Indonesia | +62 822-1044-5785 | [mlyfeblia150207@gmail.com](mailto:mlyfeblia150207@gmail.com) | [instagram.com/mlyfeb.lia](https://www.instagram.com/mlyfeb.lia)
 
 ---
 

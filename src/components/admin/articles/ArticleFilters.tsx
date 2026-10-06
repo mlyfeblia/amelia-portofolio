@@ -8,6 +8,8 @@ interface ArticleFiltersProps {
   onSearchChange: (value: string) => void;
   statusFilter: 'semua' | 'published' | 'draft';
   onStatusChange: (st: 'semua' | 'published' | 'draft') => void;
+  landingFilter: 'semua' | 'landing';
+  onLandingFilterChange: (l: 'semua' | 'landing') => void;
   selectedCategory: string;
   onSelectCategory: (category: string) => void;
   categories: string[];
@@ -15,6 +17,7 @@ interface ArticleFiltersProps {
     total: number;
     published: number;
     draft: number;
+    landingCount: number;
   };
 }
 
@@ -23,6 +26,8 @@ export function ArticleFilters({
   onSearchChange,
   statusFilter,
   onStatusChange,
+  landingFilter,
+  onLandingFilterChange,
   selectedCategory,
   onSelectCategory,
   categories,
@@ -38,12 +43,12 @@ export function ArticleFilters({
           value={search}
           onChange={(e) => onSearchChange(e.target.value)}
           placeholder="Cari judul artikel, topik kategori, slug URL, atau tag..."
-          className="w-full pl-9 pr-9 py-2 rounded-xl bg-[var(--color-paper)] border border-[var(--color-paper-border)] text-xs sm:text-sm text-[var(--color-ink)] placeholder:text-[var(--color-ink-muted)]/70 focus:outline-none focus:border-[var(--color-accent)] focus:ring-1 focus:ring-[var(--color-accent-soft)]"
+          className="search-input w-full pl-9 pr-9 py-2 text-xs sm:text-sm text-[var(--color-ink)] placeholder:text-[var(--color-ink-muted)]/70"
         />
         {search && (
           <button
             onClick={() => onSearchChange('')}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] p-0.5 cursor-pointer"
+            className="chip-interactive absolute right-2.5 top-1/2 -translate-y-1/2 text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] p-1 rounded-lg cursor-pointer"
             aria-label="Bersihkan pencarian"
           >
             <X className="w-3.5 h-3.5" />
@@ -51,9 +56,9 @@ export function ArticleFilters({
         )}
       </div>
 
-      {/* Row: Status Publikasi & Kategori */}
+      {/* Row: Status Publikasi, Landing Page & Kategori */}
       <div className="pt-2 border-t border-[var(--color-paper-border)] space-y-2.5">
-        {/* Status Publikasi Tabs */}
+        {/* Status Publikasi & Landing Page Tabs */}
         <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
           <span className="text-[11px] font-medium text-[var(--color-ink-muted)] shrink-0 mr-1">
             Status:
@@ -62,7 +67,7 @@ export function ArticleFilters({
             onClick={() => onStatusChange('semua')}
             type="button"
             className={`chip-interactive px-3 py-1.5 rounded-full text-xs font-medium cursor-pointer shrink-0 whitespace-nowrap ${
-              statusFilter === 'semua'
+              statusFilter === 'semua' && landingFilter !== 'landing'
                 ? 'bg-[var(--color-accent)] text-white shadow-xs font-semibold'
                 : 'bg-[var(--color-paper)] text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] border border-[var(--color-paper-border)]'
             }`}
@@ -73,9 +78,9 @@ export function ArticleFilters({
             onClick={() => onStatusChange('published')}
             type="button"
             className={`chip-interactive inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium cursor-pointer shrink-0 whitespace-nowrap ${
-              statusFilter === 'published'
-                ? 'bg-emerald-600 text-white shadow-xs font-semibold'
-                : 'bg-[var(--color-paper)] text-emerald-700 hover:bg-emerald-50 border border-emerald-200'
+              statusFilter === 'published' && landingFilter !== 'landing'
+                ? 'bg-[var(--color-accent)] text-white shadow-xs font-semibold'
+                : 'bg-[var(--color-paper)] text-[var(--color-accent)] hover:bg-[var(--color-accent-soft)] border border-[var(--color-accent-border)]'
             }`}
           >
             <Eye className="w-3 h-3" />
@@ -85,13 +90,30 @@ export function ArticleFilters({
             onClick={() => onStatusChange('draft')}
             type="button"
             className={`chip-interactive inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium cursor-pointer shrink-0 whitespace-nowrap ${
-              statusFilter === 'draft'
-                ? 'bg-zinc-700 text-white shadow-xs font-semibold'
-                : 'bg-[var(--color-paper)] text-zinc-600 hover:bg-zinc-100 border border-zinc-200'
+              statusFilter === 'draft' && landingFilter !== 'landing'
+                ? 'bg-[var(--color-ink)] text-white shadow-xs font-semibold'
+                : 'bg-[var(--color-paper)] text-[var(--color-ink-muted)] hover:bg-[var(--color-paper-muted)] border border-[var(--color-paper-border)]'
             }`}
           >
             <EyeOff className="w-3 h-3" />
             <span>Draf / Tersembunyi ({counts.draft})</span>
+          </button>
+
+          <span className="text-[var(--color-paper-border)] select-none shrink-0 mx-0.5">|</span>
+
+          {/* Landing Showcase Filter Button */}
+          <button
+            onClick={() => onLandingFilterChange(landingFilter === 'landing' ? 'semua' : 'landing')}
+            type="button"
+            className={`chip-interactive inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold cursor-pointer shrink-0 whitespace-nowrap transition-colors ${
+              landingFilter === 'landing'
+                ? 'bg-amber-500 text-white shadow-xs font-bold'
+                : 'bg-amber-50 text-amber-900 border border-amber-300 hover:bg-amber-100'
+            }`}
+            title="Filter artikel yang disorot tampil di beranda utama (fleksibel sesuai kurasi admin)"
+          >
+            <span className={landingFilter === 'landing' ? 'text-white' : 'text-amber-500'}>★</span>
+            <span>Di Beranda ({counts.landingCount})</span>
           </button>
         </div>
 

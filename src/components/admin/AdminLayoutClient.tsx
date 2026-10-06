@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { 
@@ -9,10 +9,18 @@ import {
   CalendarDays, 
   MessageSquareText, 
   FileText, 
-  LogOut
+  LogOut,
+  Clock,
+  RotateCw
 } from 'lucide-react';
+import dynamic from 'next/dynamic';
 import { AdminAuthProvider, useAdminAuth } from '@/context/AdminAuthContext';
 import { cn } from '@/lib/utils';
+
+const AdminSessionModal = dynamic(
+  () => import('./AdminSessionModal').then((m) => m.AdminSessionModal),
+  { ssr: false }
+);
 
 const adminNav = [
   { label: 'Ringkasan', href: '/admin', icon: LayoutDashboard },
@@ -21,9 +29,26 @@ const adminNav = [
   { label: 'Artikel', href: '/admin/articles', icon: FileText },
 ];
 
+function formatTimer(seconds: number) {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+}
+
 function AdminHeader() {
   const pathname = usePathname();
-  const { logout } = useAdminAuth();
+  const { logout, remainingSeconds, refreshSession } = useAdminAuth();
+  const [refreshing, setRefreshing] = useState(false);
+  const [showSessionModal, setShowSessionModal] = useState(false);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await refreshSession();
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   return (
     <header className="sticky top-0 z-30 bg-[var(--color-paper)]/95 backdrop-blur-md border-b border-[var(--color-paper-border)]">
@@ -54,15 +79,56 @@ function AdminHeader() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 sm:gap-3">
+            {/* 30-Minute Session Countdown Widget - Clickable on mobile & desktop to open session modal */}
+            <button
+              type="button"
+              onClick={() => setShowSessionModal(true)}
+              className={cn(
+                'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-xs font-mono font-medium transition-all duration-200 cursor-pointer active:scale-95 shadow-2xs',
+                remainingSeconds <= 120
+                  ? 'bg-red-50 text-red-600 border-red-200 animate-pulse hover:bg-red-100'
+                  : remainingSeconds <= 300
+                  ? 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100'
+                  : 'bg-[var(--color-surface)] text-[var(--color-ink-muted)] border-[var(--color-paper-border)] hover:border-[var(--color-accent)] hover:text-[var(--color-accent)]'
+              )}
+              title="Klik untuk melihat status sesi atau memperpanjang batas waktu 30 menit."
+              aria-label={`Sesi tersisa ${formatTimer(remainingSeconds)}. Klik untuk membuka dialog perpanjangan sesi.`}
+            >
+              <Clock className="w-3.5 h-3.5 shrink-0" />
+              <span>Sesi: {formatTimer(remainingSeconds)}</span>
+            </button>
+
+            {/* Quick extend session button for desktop */}
+            <button
+              onClick={handleRefresh}
+              disabled={refreshing}
+              type="button"
+              className="btn-interactive hidden sm:inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-[var(--color-surface)] hover:bg-[var(--color-accent-soft)] hover:text-[var(--color-accent)] border border-[var(--color-paper-border)] cursor-pointer disabled:opacity-50"
+              title="Perpanjang sesi 30 menit ke depan"
+            >
+              <RotateCw className={cn('w-3 h-3', refreshing && 'animate-spin')} />
+              <span>Perpanjang</span>
+            </button>
+
+            {/* Session Details Modal Dialog */}
+            <AdminSessionModal
+              isOpen={showSessionModal}
+              onClose={() => setShowSessionModal(false)}
+              remainingSeconds={remainingSeconds}
+              onRefresh={handleRefresh}
+              refreshing={refreshing}
+            />
+
+            {/* Logout button */}
             <button
               onClick={logout}
               type="button"
-              className="btn-interactive inline-flex items-center gap-1.5 text-xs text-[var(--color-ink-muted)] hover:text-red-600 px-3 py-1.5 rounded-lg hover:bg-[var(--color-surface)] border border-transparent hover:border-[var(--color-paper-border)] cursor-pointer"
+              className="btn-interactive inline-flex items-center gap-1.5 text-xs text-[var(--color-ink-muted)] hover:text-[var(--color-error)] px-3 py-1.5 rounded-lg hover:bg-[var(--color-surface)] border border-transparent hover:border-[var(--color-paper-border)] cursor-pointer"
               title="Keluar dari sesi admin"
             >
               <LogOut className="w-3.5 h-3.5" />
-              <span>Keluar</span>
+              <span className="hidden sm:inline">Keluar</span>
             </button>
           </div>
         </div>

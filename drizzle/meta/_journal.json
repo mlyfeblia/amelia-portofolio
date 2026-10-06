@@ -15,6 +15,13 @@
       "when": 1791131572703,
       "tag": "0001_closed_ezekiel_stane",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791270498225,
+      "tag": "0002_faithful_morgan_stark",
+      "breakpoints": true
     }
   ]
 }

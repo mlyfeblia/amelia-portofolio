@@ -22,7 +22,7 @@ export function ArticleCta() {
       </div>
       <Link
         href="/schedule"
-        className="btn-primary min-h-[46px] px-6 text-sm shrink-0 inline-flex items-center gap-2"
+        className="btn-primary btn-interactive min-h-[46px] px-6 text-sm shrink-0 inline-flex items-center gap-2"
       >
         <Calendar className="w-4 h-4" aria-hidden="true" />
         <span>Jadwalkan Konsultasi</span>

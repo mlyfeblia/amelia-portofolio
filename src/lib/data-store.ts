@@ -2,7 +2,7 @@ import crypto from 'crypto';
 import { revalidatePath } from 'next/cache';
 import { db, isDatabaseConfigured } from '@/db';
 import { articles, bookings, curhat } from '@/db/schema';
-import { desc, eq, and } from 'drizzle-orm';
+import { desc, eq, and, inArray } from 'drizzle-orm';
 import { Booking, AnonymousMessage, Article } from '@/types';
 
 // Fallback articles in case of offline/build-time isolation
@@ -44,7 +44,8 @@ Jika kamu merasa beban pikiranmu sudah terlalu berat untuk dipikul sendirian, ja
     category: 'Kesehatan Mental Islami',
     readTime: '5 menit baca',
     publishedAt: '24 September 2026',
-    tags: ["Thuma'ninah", 'Overthinking', 'Digital Well-being', 'Tazkiyatun Nafs', 'BKI']
+    tags: ["Thuma'ninah", 'Overthinking', 'Kesehatan Mental', 'Tazkiyatun Nafs', 'BKI'],
+    showOnLandingPage: true,
   },
   {
     id: 'art-2',
@@ -80,14 +81,16 @@ Untuk melatih pikiran agar lebih tangguh dan tenang dalam menghadapi rintangan, 
 
 Kamu berhak mendapatkan ruang dengar yang tulus tanpa perlu takut dihakimi. Setiap proses bertumbuh butuh waktu, dan tidak apa-apa jika hari ini kamu baru bisa melangkah perlahan.
     `,
-    category: 'Kajian Konseling',
+    category: 'Cyber Counseling & Edukasi Sebaya',
     readTime: '6 menit baca',
     publishedAt: '18 September 2026',
-    tags: ['CBT', 'Tazkiyatun Nafs', 'Kesehatan Mental', 'Konselor Sebaya']
+    tags: ['CBT', 'Tazkiyatun Nafs', 'Kesehatan Mental', 'Konselor Sebaya'],
+    showOnLandingPage: true,
   },
   {
     id: 'art-3',
     slug: 'cyber-counseling-ethics-privacy-guide',
+    showOnLandingPage: false,
     title: 'Etika Cyber Counseling dan Rahasia Menjaga Ruang Dengar Aman Tanpa Takut Dihakimi',
     excerpt: 'Bercerita lewat layar sering terasa lebih melegakan bagi generasi digital. Inilah komitmen etika kerahasiaan dan kenyamanan konseling daring bersama Amel.',
     content: `
@@ -121,10 +124,10 @@ Jika ini pertama kalinya kamu ingin mencoba sesi konseling virtual, kamu bisa me
 
 Ruang konseling bersama Amel selalu terbuka untuk mendengarkan setiap keluh kesahmu. Mari luapkan perlahan, karena kamu tidak harus memikul semuanya sendirian.
     `,
-    category: 'Cyber Counseling',
+    category: 'Cyber Counseling & Edukasi Sebaya',
     readTime: '5 menit baca',
     publishedAt: '10 September 2026',
-    tags: ['Cyber Counseling', 'Safe Space', 'Etika Konseling', 'Generasi Digital']
+    tags: ['Konseling Daring', 'Ruang Aman', 'Etika Konseling', 'Generasi Digital']
   },
   {
     id: 'art-4',
@@ -162,10 +165,10 @@ Untuk keluar dari jeratan burnout tanpa rasa bersalah, mulailah dengan langkah-l
 
 Jangan menunggu energimu habis sampai titik nol baru mencari pertolongan. Pulihkan jiwamu perlahan, karena kesehatan mentalmu jauh lebih berharga daripada nilai di atas kertas.
     `,
-    category: 'Pengembangan Diri',
+    category: 'Pengembangan Diri & Spiritual',
     readTime: '5 menit baca',
     publishedAt: '28 September 2026',
-    tags: ['Academic Burnout', 'Self Compassion', 'Tips Mahasiswa', 'Manajemen Stres']
+    tags: ['Academic Burnout', 'Belas Kasih Diri', 'Tips Mahasiswa', 'Manajemen Stres']
   },
   {
     id: 'art-5',
@@ -197,10 +200,10 @@ Kepercayaan diri bukanlah sesuatu yang muncul dalam semalam. Ini adalah otot keb
 
 Jika rasa cemasmu terasa sangat mengganggu keseharian dan membuatmu menarik diri dari pergaulan, ruang konseling bersama Amel selalu siap mendampingi prosesmu.
     `,
-    category: 'Kepercayaan Diri',
+    category: 'Manajemen Emosi & Overthinking',
     readTime: '5 menit baca',
     publishedAt: '29 September 2026',
-    tags: ['Social Anxiety', 'Percaya Diri', 'Tips Mahasiswa', 'Konselor Sebaya']
+    tags: ['Kecemasan Sosial', 'Percaya Diri', 'Regulasi Emosi', 'Konselor Sebaya']
   },
   {
     id: 'art-6',
@@ -232,7 +235,7 @@ Kamu tidak perlu memiliki semua jawaban untuk sepuluh tahun ke depan hari ini. C
 
 Bila kamu butuh teman diskusi yang hangat untuk memetakan minat dan arah kariermu, mari jadwalkan sesi bimbingan bersama Amel.
     `,
-    category: 'Kesehatan Mental Islami',
+    category: 'Quarter-Life Crisis & Self Growth',
     readTime: '6 menit baca',
     publishedAt: '26 September 2026',
     tags: ['Quarter-Life Crisis', 'Tazkiyatun Nafs', 'Tawakkal', 'Arah Hidup']
@@ -257,20 +260,17 @@ Mendengarkan dengan penuh empati menciptakan ruang aman (*safe space*) di mana k
 
 ### Tiga Kunci Menjadi Teman Dengar yang Baik
 
-Jika kamu ingin menjadi sahabat yang nyaman untuk berbagi cerita bagi orang-orang di sekitarmu, latihlah tiga hal ini:
-
+Berikut tiga hal yang bisa kita latih:
 1. **Tahan Keinginan Memotong dan Menghakimi**: Biarkan sahabatmu menuntaskan ceritanya sampai selesai. Berikan jeda hening agar mereka bisa memproses emosi di dalam dada.
 2. **Validasi Emosi yang Muncul**: Gunakan kalimat sederhana seperti "Aku paham ini pasti sangat berat untukmu" atau "Terima kasih sudah mau berbagi cerita yang tidak mudah ini kepadaku".
 3. **Jaga Kerahasiaan Secara Utuh**: Jangan pernah menjadikan cerita rahasia sahabatmu sebagai bahan obrolan dengan orang lain. Kepercayaan yang rusak sangat sulit untuk dibangun kembali.
 
 Menjadi pendengar yang baik adalah bentuk sedekah batin yang sangat luhur. Lewat telinga yang tulus dan tatapan yang hangat, kita membantu meringankan beban saudara kita.
-
-Di ruang konseling Amelia, setiap cerita dijaga kerahasiaannya dengan komitmen etika profesi yang amanah dan penuh kasih sayang.
     `,
-    category: 'Kajian Konseling',
+    category: 'Cyber Counseling & Edukasi Sebaya',
     readTime: '5 menit baca',
     publishedAt: '22 September 2026',
-    tags: ['Active Listening', 'Empati', 'Peer Counselor', 'Komunikasi']
+    tags: ['Mendengarkan Aktif', 'Empati', 'Konselor Sebaya', 'Komunikasi']
   },
   {
     id: 'art-8',
@@ -299,62 +299,242 @@ Ketenangan batin (*thuma'ninah*) dapat kita latih setiap hari melalui praktik-pr
 - **Penuhi Kebutuhan Tidur Tanpa Beban**: Niatkan tidur malam sebagai ikhtiar mengumpulkan energi agar esok hari bisa beribadah dan menebar kebaikan dengan lebih maksimal.
 
 Merawat diri sendiri adalah prasyarat utama sebelum kamu bisa menolong orang lain. Kamu tidak bisa menuangkan air dari teko yang kosong.
-
-Jika kamu merasa lelah yang berkepanjangan dan butuh ruang tenang untuk menyusun kembali ritme hidupmu, Amelia siap menemani langkahmu.
     `,
     category: 'Kesehatan Mental Islami',
     readTime: '5 menit baca',
     publishedAt: '15 September 2026',
-    tags: ["Thuma'ninah", 'Mindfulness', 'Self Care', 'Istirahat Berkualitas']
+    tags: ["Thuma'ninah", 'Ketenangan Batin', 'Merawat Diri', 'Istirahat Berkualitas']
+  },
+  {
+    id: 'art-9',
+    slug: 'reconciling-inner-child-islamic-healing',
+    title: 'Menyembuhkan Luka Batin Masa Kecil (Inner Child) dengan Kehangatan Spiritualitas dan Belas Kasih Diri',
+    excerpt: 'Sering merasa cemas berlebihan atau takut ditolak? Kenali bagaimana luka batin masa lalu membentuk caramu memandang diri, dan langkah memulihkannya dengan pendekatan BKI.',
+    content: `
+Pernahkah kamu merasa ada bagian di dalam dirimu yang sangat takut diabaikan, mudah merasa tidak berharga saat dikritik, atau selalu merasa harus menjadi sosok sempurna agar disayangi orang lain?
+
+Dalam psikologi modern, bagian diri yang rapuh dan membawa memori masa lalu ini kerap disebut sebagai inner child. Setiap pengalaman masa kecil—baik berupa pujian tulus maupun bentakan yang melukai—membentuk cetak biru emosional yang terus kita bawa hingga usia dewasa.
+
+## Mengapa Luka Batin Masa Lalu Membutuhkan Pemulihan?
+
+Banyak orang mengira bahwa bertambahnya usia secara otomatis menyembuhkan trauma masa lalu. Padahal, waktu semata tidak pernah menyembuhkan luka batin jika kita terus menekan atau menyangkal rasa sakit tersebut.
+
+Luka yang tidak dirawat akan bermutasi menjadi pola pertahanan diri yang destruktif:
+- Menjadi people pleaser yang kesulitan berkata tidak karena takut ditinggalkan.
+- Takut berkomitmen dalam hubungan karena trauma melihat pertengkaran orang tua.
+- Menghukum diri sendiri secara berlebihan setiap kali melakukan kesalahan kecil.
+
+Dalam kacamata Bimbingan Konseling Islam (BKI), proses penyembuhan luka batin (healing) berakar pada konsep tazkiyatun nafs (penyucian dan perbaikan jiwa) yang dipadukan dengan self-compassion (belas kasih kepada diri sendiri).
+
+### Memeluk Diri dengan Rahmat Illahi
+
+Islam mengajarkan bahwa Allah menciptakan manusia dengan fitrah kemuliaan (*wa laqad karramna bani Adam*). Luka dan kekurangan yang kamu alami di masa lalu tidak pernah mengurangi kehormatanmu di mata Sang Maha Pencipta.
+
+Berikut adalah tiga langkah awal untuk mulai berdamai dengan masa lalu:
+
+1. **Akui Keberadaan Rasa Sakit Tanpa Rasa Malu**: Menangis di hadapan Allah saat mengingat kepedihan masa lalu bukanlah tanda kelemahan iman. Justru, mengakui kerapuhan adalah pintu pertama menuju keikhlasan.
+2. **Ubah Suara Kritik Internal Menjadi Suara Kasih Sayang**: Ketika kepalamu mulai memvonis "Kamu tidak berguna", gantilah dengan afirmasi penuh hikmah: "Aku pernah terluka, tapi hari ini aku sedang belajar melangkah dan berhak disayangi."
+3. **Minta Pertolongan Ruang Konseling yang Aman**: Berbicara dengan konselor sebaya membantumu mengurai benang kusut emosi yang selama ini terkunci rapat di dalam dada.
+
+Kamu yang hari ini bukan lagi anak kecil yang tidak berdaya menghadapi situasi sulit. Kamu kini memiliki ruang dan keberanian untuk memeluk dirimu sendiri dengan penuh kehangatan.
+    `,
+    category: 'Kesehatan Mental Islami',
+    readTime: '6 menit baca',
+    publishedAt: '02 Oktober 2026',
+    tags: ['Inner Child', 'Penyembuhan Batin', 'Resiliensi', 'Belas Kasih Diri', 'BKI'],
+    showOnLandingPage: false,
+  },
+  {
+    id: 'art-10',
+    slug: 'family-conflict-communication-compassion',
+    title: 'Seni Berkomunikasi Hangat dengan Orang Tua: Mengurai Friksi Antargenerasi Tanpa Melukai Hati',
+    excerpt: 'Perbedaan cara pandang antara harapan orang tua dan aspirasi anak sering kali memicu ketegangan. Bagaimana membangun dialog asertif yang santun dan menyejukkan?',
+    content: `
+Dilema antara berbakti kepada orang tua (*birrul walidain*) dan memperjuangkan impian pribadi adalah salah satu beban terberat yang paling sering dicurahkan oleh mahasiswa dan dewasa muda.
+
+Orang tua sering kali menginginkan kepastian dan jalur aman, sementara generasi muda ingin mengeksplorasi minat dan panggilan jiwanya. Ketika kedua kutub ini berbenturan tanpa jembatan komunikasi yang tepat, suasana rumah bisa berubah menjadi hening yang mencekam atau dipenuhi adu argumen yang melelahkan.
+
+## Memahami Akar Kekhawatiran Orang Tua
+
+Langkah pertama dalam meredakan friksi antargenerasi adalah mengubah lensa pandang kita. Sering kali, apa yang tampak sebagai sikap menuntut dari orang tua sebenarnya bersumber dari rasa cemas yang mendalam terhadap masa depan anaknya.
+
+Generasi orang tua kita tumbuh di era dengan tantangan ekonomi dan sosial yang berbeda. Bagi mereka, keamanan karier adalah wujud cinta tertinggi. Ketika mereka menentang pilihanmu, yang sebenarnya mereka tolak bukan dirimu, melainkan rasa takut jika kamu harus menderita di kemudian hari.
+
+### Tiga Rumus Komunikasi Asertif Islami (Qaulan Layyina)
+
+Al-Qur'an mengajarkan prinsip *qaulan layyina* (perkataan yang lemah lembut) dan *qaulan karima* (perkataan yang mulia) ketika berbicara kepada orang tua. Kita bisa menerapkannya melalui strategi berikut:
+
+- **Pilih Waktu Bicara di Luar Momen Emosional**: Jangan memulai diskusi sensitif tentang jurusan, karier, atau pasangan saat orang tua baru pulang bekerja dalam keadaan lelah. Cari waktu santai saat suasana hati sedang lapang.
+- **Gunakan Pendekatan 'I-Message'**: Alih-alih berkata "Bapak tidak pernah mau mengerti saya", gunakan kalimat "Saya merasa sangat cemas dan tertekan jika harus memaksakan hal yang tidak saya kuasai".
+- **Tunjukkan Tanggung Jawab Nyata**: Sikap dewasa yang konsisten dalam keseharian jauh lebih meyakinkan orang tua daripada seribu kata perdebatan.
+
+Membangun kesepahaman butuh kesabaran dan waktu. Di ruang konseling Amelia, kita bisa bersama-sama berlatih menyusun simulasi percakapan agar pesan hatimu tersampaikan dengan indah tanpa mengurangi rasa hormat.
+    `,
+    category: 'Hubungan, Pertemanan & Pasangan',
+    readTime: '5 menit baca',
+    publishedAt: '03 Oktober 2026',
+    tags: ['Keluarga', 'Komunikasi Asertif', 'Harmoni', 'Birrul Walidain', 'Konseling'],
+    showOnLandingPage: false,
+  },
+  {
+    id: 'art-11',
+    slug: 'emotional-regulation-techniques-for-stress',
+    title: 'Panduan Praktis Regulasi Emosi Saat Didera Tekanan Hidup: Menjinakkan Marah dan Sedih Secara Sehat',
+    excerpt: 'Emosi bukan musuh yang harus dipadamkan paksa, melainkan pesan biologis yang perlu didengar. Simak teknik regulasi diri praktis agar tidak mudah tersulut stres.',
+    content: `
+Pernahkah kamu merasa emosimu meledak hanya karena hal sepele, seperti laptop yang mendadak lambat atau perkataan teman yang sedikit menyindir? Setelah ledakan itu reda, yang tersisa hanyalah rasa lelah, penyesalan, dan rasa bersalah yang mengganjal.
+
+Banyak orang diajarkan untuk menahan atau menekan emosi negatif. Padahal secara psikologis, emosi yang ditekan tidak pernah benar-benar hilang; ia hanya tersimpan di bawah sadar dan sewaktu-waktu akan meledak dengan daya rusak yang lebih besar.
+
+## Emosi Adalah Sinyal, Bukan Identitasmu
+
+Kunci penting dalam regulasi emosi (*emotional regulation*) adalah menyadari bahwa **kamu bukanlah emosimu**. Marah, sedih, kecewa, dan takut adalah tamu yang datang membawa pesan, bukan tuan rumah di dalam jiwamu.
+
+Ketika rasa marah muncul, ia memberitahumu bahwa ada batasan pribadimu yang dilanggar. Ketika rasa sedih hadir, ia menandakan bahwa ada hal berharga yang hilang atau terluka.
+
+### Teknik 'STOPP' Menghadapi Badai Emosi
+
+Ketika tekanan terasa memuncak dan emosi mulai meluap, gunakan protokol sederhana ini:
+
+1. **S - Stop (Berhenti Sejenak)**: Jangan langsung bertindak, membalas chat, atau mengambil keputusan. Hentikan gerakanmu selama lima detik.
+2. **T - Take a breath (Tarik Napas)**: Ambil napas lambat melalui hidung dan hembuskan panjang lewat mulut untuk memberi sinyal aman pada otak rasionalmu.
+3. **O - Observe (Amati Perasaanmu)**: Tanyakan dalam hati: "Apa yang sedang aku rasakan saat ini? Di mana letak sensasi fisik ketegangan ini di tubuhku?"
+4. **P - Perspective (Ubah Sudut Pandang)**: Ambil jarak sejenak. Apakah hal ini masih akan menjadi masalah besar dalam satu tahun ke depan?
+5. **P - Proceed (Langkah Bijak Berikutnya)**: Pilihlah respon yang paling mendekatkanmu pada nilai-nilai kebaikan, bukan pada kepuasan melampiaskan amarah.
+
+Dalam tradisi Nabi SAW, saat marah kita dianjurkan untuk mengubah posisi: jika berdiri maka duduklah, jika duduk maka berbaringlah, dan basuhlah wajahmu dengan air wudhu. Ini adalah kearifan neurosains kuno yang terbukti menurunkan temperatur tubuh dan mengistirahatkan amigdala secara instan.
+
+Belajar mengelola emosi adalah proses seumur hidup. Jadilah teman yang ramah bagi jiwamu sendiri di setiap fase perjalanannya.
+    `,
+    category: 'Manajemen Emosi & Overthinking',
+    readTime: '5 menit baca',
+    publishedAt: '04 Oktober 2026',
+    tags: ['Regulasi Emosi', 'Manajemen Stres', 'Kecerdasan Emosional', 'Sabar & Solat'],
+    showOnLandingPage: false,
   }
 ];
 
 // Fallback Bookings for offline/demo/unconfigured database state
 const fallbackBookings: Booking[] = [
   {
+    id: 'bk-c9bd48cd-b1ce-4fbd-8ebb-d93b87cdaf16',
+    code: 'BKI-2610-167F8D',
+    name: 'HAJATURRACHMAN',
+    alias: 'Hajatur',
+    phone: '081234567899',
+    email: 'hajatur@example.com',
+    category: 'Persiapan Menikah (Pra-Nikah)',
+    mode: 'online_meet',
+    date: '2026-10-07',
+    timeSlot: '16:00 - 17:00 WIB (Sore)',
+    notes: 'Konsultasi persiapan pernikahan dan keselarasan nilai keluarga.',
+    status: 'selesai',
+    createdAt: '2026-10-04T12:00:00Z',
+  },
+  {
+    id: 'bk-5',
+    code: 'BKI-2610-D91F44',
+    name: 'Dewi Lestari',
+    alias: 'Dewi',
+    phone: '081388776655',
+    email: 'dewi.lestari@example.com',
+    category: 'Persiapan Menikah (Pra-Nikah)',
+    mode: 'online_meet',
+    date: '2026-10-08',
+    timeSlot: '13:30 - 14:30 WIB (Siang)',
+    notes: 'Ingin berdiskusi mengenai kesiapan mental dan komunikasi pra-nikah dengan calon pasangan.',
+    status: 'terkonfirmasi',
+    createdAt: '2026-10-03T08:30:00Z',
+  },
+  {
+    id: 'bk-7',
+    code: 'BKI-2610-3F0A88',
+    name: 'Nadia Utami',
+    alias: 'Nadia',
+    phone: '087855443322',
+    email: 'nadia.utami@example.com',
+    category: 'Kecemasan & Overthinking',
+    mode: 'online_chat',
+    date: '2026-10-09',
+    timeSlot: '19:30 - 20:30 WIB (Malam)',
+    notes: 'Sering mengalami overthinking menjelang ujian komprehensif dan butuh teknik relaksasi mandiri.',
+    status: 'menunggu',
+    createdAt: '2026-10-04T10:00:00Z',
+  },
+  {
+    id: 'bk-6',
+    code: 'BKI-2610-8C7E19',
+    name: 'Rizky Pratama',
+    alias: 'Rizky',
+    phone: '085211223344',
+    email: 'rizky.p@example.com',
+    category: 'Quarter-Life Crisis & Arah Hidup',
+    mode: 'tatap_muka_cirebon',
+    date: '2026-10-04',
+    timeSlot: '16:00 - 17:00 WIB (Sore)',
+    notes: 'Konsultasi lanjutan tentang eksplorasi minat karier dan mengatasi tekanan lingkungan pergaulan.',
+    status: 'selesai',
+    createdAt: '2026-10-01T14:15:00Z',
+  },
+  {
     id: 'bk-1790581539331',
-    code: 'BKI-2609-227',
+    code: 'BKI-2609-B84D02',
     name: 'Ahmad Fauzi',
     alias: 'Fauzi',
     phone: '081299887766',
     email: 'fauzi@example.com',
-    category: 'Krisis Identitas Diri & Quarter-Life Crisis',
+    category: 'Quarter-Life Crisis & Arah Hidup',
     mode: 'online_meet',
     date: '2026-10-05',
-    timeSlot: '16:00 - 17:00 WIB',
+    timeSlot: '16:00 - 17:00 WIB (Sore)',
     notes: 'Menemukan arah hidup setelah lulus semester ini.',
     status: 'menunggu',
     createdAt: '2026-09-28T07:45:39.331Z',
   },
   {
     id: 'bk-1',
-    code: 'BKI-2609-001',
+    code: 'BKI-2609-A7C12D',
     name: 'Rahmat Hidayat',
     alias: 'Rahmat',
     phone: '081234567890',
     email: 'rahmat@example.com',
-    category: 'Akademik & Karier',
+    category: 'Akademik, Skripsi & Perkuliahan',
     mode: 'online_meet',
     date: '2026-09-30',
-    timeSlot: '15:30 - 16:30 WIB',
+    timeSlot: '15:30 - 16:30 WIB (Sore)',
     notes: 'Konsultasi seputar kebimbangan memilih topik riset dan adaptasi perkuliahan.',
     status: 'terkonfirmasi',
     createdAt: '2026-09-26T10:00:00Z',
   },
   {
     id: 'bk-2',
-    code: 'BKI-2609-002',
+    code: 'BKI-2609-E3F91B',
     name: 'Siti Nurhaliza',
     alias: 'Siti',
     phone: '085712345678',
     email: 'siti@example.com',
-    category: 'Manajemen Stres & Kecemasan',
+    category: 'Manajemen Stres, Emosi & Burnout',
     mode: 'online_chat',
     date: '2026-10-02',
-    timeSlot: '19:30 - 20:30 WIB',
+    timeSlot: '19:30 - 20:30 WIB (Malam)',
     notes: 'Ingin berbagi cerita tentang adaptasi lingkungan kos dan menjaga ketenangan pikiran.',
     status: 'menunggu',
     createdAt: '2026-09-27T14:30:00Z',
+  },
+  {
+    id: 'bk-8',
+    code: 'BKI-2610-7B5E21',
+    name: 'Fajar Nugroho',
+    alias: 'Fajar',
+    phone: '081900112233',
+    email: 'fajar.nugroho@example.com',
+    category: 'Pengembangan Diri & Spiritual Islami',
+    mode: 'online_meet',
+    date: '2026-10-06',
+    timeSlot: '09:30 - 10:30 WIB (Pagi)',
+    notes: 'Permintaan reschedule karena jadwal bentrok dengan dinas luar kota.',
+    status: 'dibatalkan',
+    createdAt: '2026-10-02T16:20:00Z',
   },
 ];
 
@@ -363,94 +543,189 @@ const fallbackCurhat: AnonymousMessage[] = [
   {
     id: 'cur-1',
     alias: 'Bunga di Ujung Jalan',
-    category: 'Quarter-Life Crisis',
+    category: 'Quarter-Life Crisis & Arah Hidup',
     message: 'Kak Amel, saya mahasiswa tingkat akhir dan merasa tertinggal jauh dari teman-teman yang sudah kerja dan mandiri finansial. Rasanya setiap bangun pagi dada sesak dan takut gagal membahagiakan orang tua. Bagaimana cara meredam rasa rendah diri ini ya kak?',
     answer: 'Halo sahabat yang baik. Perasaanmu sangat valid dan manusiawi. Namun ingat, hidup bukanlah perlombaan lari cepat dengan satu garis finis yang sama. Allah menetapkan maqom (kedudukan) dan waktu mekar setiap bunga secara unik. Fokuslah pada langkah kecil yang bisa kamu ambil hari ini. Kamu tidak terlambat, kamu sedang ditempa. Jangan biarkan layar media orang lain meredupkan cahaya prosesmu sendiri ya.',
     isAnswered: true,
     isPublic: true,
+    showOnLandingPage: true,
     createdAt: '2026-09-22T09:30:00Z',
     answeredAt: '2026-09-22T14:15:00Z',
   },
   {
     id: 'cur-2',
     alias: 'Hamba Allah - Cirebon',
-    category: 'Kecemasan & Ibadah',
+    category: 'Spiritualitas & Ibadah',
     message: 'Saya sering sekali merasa cemas berlebihan sampai susah khusyuk saat sholat. Pikiran selalu loncat ke skripsi dan masalah keluarga. Apakah ini tanda iman saya lemah kak Amel?',
     answer: 'Sama sekali bukan pertanda imanmu lemah, sahabat. Kecemasan adalah sinyal biologis dan psikologis bahwa sistem sarafmu sedang kelebihan beban (overstimulated). Ketika pikiran melayang dalam sholat, jangan mencela dirimu. Tarik nafas lembut, sadari bahwa kamu sedang menghadap Sang Maha Penyayang, dan perlahan kembalikan fokus pada bacaan. Ibadah dalam keadaan berjuang melawan rasa cemas justru memiliki nilai kesabaran yang sangat mulia di mata Allah.',
     isAnswered: true,
     isPublic: true,
+    showOnLandingPage: true,
     createdAt: '2026-09-25T11:20:00Z',
     answeredAt: '2026-09-25T16:00:00Z',
   },
   {
     id: 'cur-3',
     alias: 'Pejuang Skripsi',
-    category: 'Akademik & Burnout',
+    category: 'Akademik, Skripsi & Kuliah',
     message: 'Kak, bagaimana membedakan antara rasa malas biasa dengan kelelahan mental (burnout)? Rasanya ingin istirahat tapi merasa bersalah terus.',
     answer: 'Rasa bersalah saat istirahat adalah tanda khas burnout! Malas biasanya disertai rasa santai, sedangkan burnout tetap dipenuhi kecemasan meskipun tubuh sedang tidak mengerjakan apa-apa. Tubuh dan jiwamu memiliki hak untuk beristirahat ("Inna linafsika \'alaika haqqa"). Berikan dirimu izin beristirahat tanpa syarat selama 1 hari penuh untuk mengisi ulang baterai jiwamu.',
     isAnswered: true,
     isPublic: true,
+    showOnLandingPage: false,
     createdAt: '2026-09-27T08:10:00Z',
     answeredAt: '2026-09-27T10:45:00Z',
   },
   {
     id: 'cur-4',
     alias: 'Mahasiswa Rantau',
-    category: 'Adaptasi & Hubungan Sosial',
+    category: 'Pertemanan & Sosial',
     message: 'Kak Amel, ini tahun pertama saya merantau kuliah di Cirebon. Rasanya sepi sekali, susah berbaur dengan teman sekelas karena kendala bahasa dan budaya. Setiap malam rindu rumah sampai menangis. Gimana cara menguatkan hati ya kak?',
     answer: 'Peluk hangat untukmu, sahabat perantau. Rasa rindu rumah (homesick) adalah tanda betapa berharganya kehangatan keluarga bagimu, bukan tanda kelemahan. Beri dirimu waktu beradaptasi secara bertahap. Mulailah dari sapaan kecil kepada satu teman di sebelahmu. Cirebon kota yang ramah dan penuh berkah; perlahan tempat ini juga akan menjadi rumah kedua bagimu. Kamu tidak sendirian, pintu ruang curhat Amel selalu terbuka.',
     isAnswered: true,
     isPublic: true,
+    showOnLandingPage: false,
     createdAt: '2026-09-28T13:15:00Z',
     answeredAt: '2026-09-28T16:30:00Z',
   },
   {
     id: 'cur-5',
     alias: 'Jiwa yang Gelisah',
-    category: 'Karier & Ekspektasi Diri',
+    category: 'Keluarga & Rumah',
     message: 'Saya merasa terjebak di jurusan yang bukan minat saya demi menyenangkan orang tua. Sekarang di semester 5 nilai mulai turun dan kehilangan motivasi belajar total. Mau bicara jujur takut dicap anak durhaka kak.',
     answer: 'Dilema antara bakti dan panggilan jiwa memang salah satu ujian terberat mahasiswa. Berbicara jujur dengan bahasa yang santun (qaulan layyina) bukanlah kedurhakaan, melainkan bentuk ikhtiar mencari jalan keluar bersama. Sering kali orang tua menuntut bukan karena ingin mengekang, melainkan karena khawatir akan masa depanmu. Kita bisa bersama-sama menyusun cara komunikasi asertif agar niat baikmu tersampaikan tanpa melukai hati mereka.',
     isAnswered: true,
     isPublic: true,
+    showOnLandingPage: false,
     createdAt: '2026-09-29T10:40:00Z',
     answeredAt: '2026-09-29T14:20:00Z',
   },
   {
     id: 'cur-6',
+    alias: 'Pejuang Komitmen',
+    category: 'Percintaan & Pasangan',
+    message: 'Kak Amel, saya dan pasangan sering berbeda cara pandang tentang rencana masa depan dan restu orang tua. Setiap kali membicarakan kelanjutan hubungan selalu berujung overthinking dan takut patah hati lagi. Bagaimana cara menjaga ketenangan dan saling memahami tanpa memaksakan kehendak?',
+    answer: 'Hubungan yang sehat dibangun atas keterbukaan, rasa hormat, dan kesabaran berproses. Ketika cemas melanda, jangan putuskan hal penting dalam keadaan emosi meluap. Ajak pasangan berbicara santai dengan fokus pada titik temu dan niat baik bersama. Ingatlah bahwa takdir terbaik selalu membersamai hati yang tulus berikhtiar dan menyerahkan hasil akhir pada ridho Illahi.',
+    isAnswered: true,
+    isPublic: true,
+    showOnLandingPage: false,
+    createdAt: '2026-09-29T15:20:00Z',
+    answeredAt: '2026-09-29T18:00:00Z',
+  },
+  {
+    id: 'cur-7',
     alias: 'Sahabat Pendiam',
-    category: 'Kepercayaan Diri & Kecemasan',
+    category: 'Kesehatan Mental & Emosi',
     message: 'Setiap ada tugas presentasi di kelas, jantung saya berdegup kencang, tangan dingin, dan suara bergetar sampai blank. Saya merasa minder karena teman-teman lain terlihat begitu percaya diri saat berbicara di depan umum.',
     answer: 'Kecemasan berbicara di depan umum (glossophobia) dialami oleh lebih dari 70% orang, termasuk mereka yang tampak tenang di luar. Kuncinya bukan menghilangkan rasa gugup seketika, melainkan berteman dengan rasa gugup tersebut. Cobalah teknik relaksasi pernapasan 4-7-8 sebelum maju, dan ingat bahwa audiens tidak sedang mengincarmu untuk mencari kesalahan. Langkah kecil latihan mandiri akan membantumu bertumbuh setahap demi setahap.',
     isAnswered: true,
     isPublic: true,
+    showOnLandingPage: false,
     createdAt: '2026-09-30T09:10:00Z',
     answeredAt: '2026-09-30T11:50:00Z',
   },
   {
-    id: 'cur-7',
-    alias: 'Pencari Ketenangan',
-    category: 'Trauma & Pemulihan Batin',
-    message: 'Kak Amel, saya punya luka batin masa lalu akibat perlakuan teman sekolah yang merundung (bully). Sampai sekarang rasa dendam dan trauma itu sering muncul tiba-tiba saat melihat hal serupa. Bagaimana cara benar-benar berdamai dan ikhlas ya kak?',
-    answer: 'Memaafkan bukan berarti membenarkan tindakan orang yang melukaimu, melainkan melepaskan belenggu racun dendam dari dalam hatimu sendiri. Luka batin membutuhkan proses penyembuhan yang bertahap, persis seperti luka fisik. Jangan paksa dirimu untuk langsung merasa ikhlas jika hati masih perih. Akui rasa sakit itu di hadapan Allah dalam sujudmu, lalu serahkan keadilan kepada-Nya. Jiwamu terlalu berharga untuk terus memikul beban kesalahan orang lain.',
-    isAnswered: true,
-    isPublic: true,
-    createdAt: '2026-10-01T08:25:00Z',
-    answeredAt: '2026-10-01T12:00:00Z',
-  },
-  {
     id: 'cur-8',
     alias: 'Pejuang Hening',
-    category: 'Digital Well-being',
+    category: 'Karier, Kerja & Finansial',
     message: 'Saya merasa lelah mental setiap kali buka media sosial. Melihat teman-teman magang di perusahaan besar, ikut lomba sana-sini, rasanya diri ini tidak ada apa-apanya dan hidup berjalan di tempat.',
     answer: 'Media sosial adalah panggung etalase di mana orang hanya memajang momen terbaiknya, bukan proses jatuh bangun di belakang layar. Membandingkan proses aslimu dengan highlight orang lain adalah jebakan yang tidak adil bagi dirimu sendiri. Cobalah berpuasa media sosial selama akhir pekan. Fokus pada satu keterampilan kecil yang ingin kamu asah hari ini. Ukuran keberhasilanmu adalah dirimu kemarin, bukan feed orang lain.',
     isAnswered: true,
     isPublic: true,
+    showOnLandingPage: false,
     createdAt: '2026-10-01T15:00:00Z',
     answeredAt: '2026-10-01T18:30:00Z',
   },
+  {
+    id: 'cur-9',
+    alias: 'Pencari Suaka Batin',
+    category: 'Kesehatan Mental & Emosi',
+    message: 'Kak Amel, saya punya trauma masa kecil karena sering dibanding-bandingkan dengan saudara kandung oleh orang tua. Sekarang di usia 21 tahun, setiap ada orang yang memuji orang lain di depan saya, hati saya langsung merasa tidak aman dan cemas luar biasa. Bagaimana cara mengobati luka ini ya kak?',
+    answer: 'Peluk hangat untuk batinmu yang telah berjuang sekian lama, sahabat. Luka perbandingan masa kecil memang menggoreskan ilusi keliru bahwa kasih sayang dan penerimaan harus diperebutkan. Di hadapan Allah, nilaimu bersifat mutlak dan tidak bergantung pada seberapa unggul kamu dibanding saudaramu. Ketika rasa cemas itu datang, letakkan tangan di dada dan bisikkan lembut: "Aku aman hari ini, dan aku berharga apa adanya". Memulihkan luka masa kecil adalah proses bertahap, dan kamu berhak mendapatkan ruang untuk didengar seutuhnya.',
+    isAnswered: true,
+    isPublic: true,
+    showOnLandingPage: false,
+    createdAt: '2026-10-02T11:20:00Z',
+    answeredAt: '2026-10-02T15:45:00Z',
+  },
+  {
+    id: 'cur-10',
+    alias: 'Bintang Hening',
+    category: 'Kesehatan Mental & Emosi',
+    message: 'Kak, sudah 6 bulan sejak ibu saya berpulang, tapi rasa sepi dan hampa di rumah masih sangat mencekik. Teman-teman bilang saya harus move on dan kuat, tapi rasanya saya masih ingin menangis setiap kali melihat barang-barang peninggalan almarhumah. Apakah salah jika saya masih berduka begini?',
+    answer: 'Sama sekali tidak salah, sahabat. Berduka (grief) bukanlah tugas yang memiliki tenggat waktu kelulusan. Air matamu adalah bukti nyata betapa besar cinta yang tertanam antara kamu dan ibunda tercinta. Jangan paksa dirimu untuk pura-pura kuat di hadapan orang lain. Izinkan hatimu merasakan rindu itu, lalu alirkan rasa rindu tersebut menjadi doa-doa tulus dan sedekah atas nama almarhumah. Setiap kebaikan yang kamu lakukan hari ini adalah perpanjangan pahala bagi ibunda di sisi-Nya.',
+    isAnswered: true,
+    isPublic: true,
+    showOnLandingPage: false,
+    createdAt: '2026-10-03T09:15:00Z',
+    answeredAt: '2026-10-03T14:00:00Z',
+  },
+  {
+    id: 'cur-11',
+    alias: 'Pendengar yang Lelah',
+    category: 'Pertemanan & Sosial',
+    message: 'Saya selalu jadi tempat curhat semua teman dari pagi sampai malam. Tapi giliran saya yang sedang sedih dan butuh didengarkan, mereka semua mendadak sibuk atau mengalihkan topik ke masalah mereka sendiri. Rasanya lelah sekali kak menjadi tempat sampah emosi orang lain.',
+    answer: 'Menjadi orang yang empatik adalah anugerah yang indah, namun empati tanpa batas (healthy boundaries) akan membakar energimu sendiri hingga abu. Kamu berhak—bahkan wajib—mengatakan: "Maaf ya, hari ini energiku sedang terbatas, mungkin kita bisa cerita lain waktu". Hubungan pertemanan yang sehat adalah jalan dua arah yang saling menghidupkan, bukan yang satu memeras dan yang lain terkuras. Rawat dulu dirimu sendiri sebelum menampung air mata orang lain ya.',
+    isAnswered: true,
+    isPublic: true,
+    showOnLandingPage: false,
+    createdAt: '2026-10-04T13:40:00Z',
+    answeredAt: '2026-10-04T17:10:00Z',
+  },
 ];
 
+function initLocalJsonBackup() {
+  try {
+    if (typeof process !== 'undefined' && process.cwd) {
+      // Use dynamic require to avoid bundling issues in edge runtimes
+      const fs = require('fs');
+      const path = require('path');
+      const dbPath = path.join(process.cwd(), 'data', 'db.json');
+      if (fs.existsSync(dbPath)) {
+        const raw = fs.readFileSync(dbPath, 'utf8');
+        const data = JSON.parse(raw);
+        if (Array.isArray(data.articles) && data.articles.length > 0) {
+          fallbackArticles.splice(0, fallbackArticles.length, ...data.articles);
+        }
+        if (Array.isArray(data.bookings) && data.bookings.length > 0) {
+          fallbackBookings.splice(0, fallbackBookings.length, ...data.bookings);
+        }
+        if (Array.isArray(data.curhatList) && data.curhatList.length > 0) {
+          fallbackCurhat.splice(0, fallbackCurhat.length, ...data.curhatList);
+        }
+      }
+    }
+  } catch {
+    // Graceful fallback to default in-memory constants
+  }
+}
+
+initLocalJsonBackup();
+
+function saveLocalJsonBackup() {
+  try {
+    if (typeof process !== 'undefined' && process.cwd) {
+      const fs = require('fs');
+      const path = require('path');
+      const dataDir = path.join(process.cwd(), 'data');
+      if (!fs.existsSync(dataDir)) {
+        fs.mkdirSync(dataDir, { recursive: true });
+      }
+      const dbPath = path.join(dataDir, 'db.json');
+      const payload = {
+        articles: fallbackArticles,
+        bookings: fallbackBookings,
+        curhatList: fallbackCurhat,
+      };
+      fs.writeFileSync(dbPath, JSON.stringify(payload, null, 2), 'utf8');
+    }
+  } catch {
+    // Safe to ignore in read-only serverless lambdas
+  }
+}
+
 function revalidateDataPaths(types: ('bookings' | 'curhat' | 'articles')[]) {
+  saveLocalJsonBackup();
   try {
     if (types.includes('bookings')) {
       revalidatePath('/schedule');
@@ -475,25 +750,62 @@ function revalidateDataPaths(types: ('bookings' | 'curhat' | 'articles')[]) {
   }
 }
 
+let hasAutoSeededBookings = false;
+let hasAutoSeededCurhat = false;
+let hasAutoSeededArticles = false;
+
 // Bookings
 export async function getBookings(limit: number = 100, offset: number = 0): Promise<Booking[]> {
   if (isDatabaseConfigured && db) {
     try {
       const safeLimit = Math.min(Math.max(1, limit), 200);
       const safeOffset = Math.max(0, offset);
-      const rows = await db
+      let rows = await db
         .select()
         .from(bookings)
         .orderBy(desc(bookings.createdAt))
         .limit(safeLimit)
         .offset(safeOffset);
-      if (rows && rows.length > 0) {
-        return rows.map((r) => ({
-          ...r,
-          alias: r.alias ?? undefined,
-          notes: r.notes ?? '',
-        })) as Booking[];
+
+      if (rows.length === 0 && offset === 0 && !hasAutoSeededBookings) {
+        hasAutoSeededBookings = true;
+        try {
+          for (const bk of fallbackBookings) {
+            await db
+              .insert(bookings)
+              .values({
+                id: bk.id,
+                code: bk.code,
+                name: bk.name,
+                alias: bk.alias || null,
+                phone: bk.phone,
+                email: bk.email,
+                category: bk.category,
+                mode: bk.mode,
+                date: bk.date,
+                timeSlot: bk.timeSlot,
+                notes: bk.notes || '',
+                status: bk.status,
+                createdAt: bk.createdAt,
+              })
+              .onConflictDoNothing();
+          }
+          rows = await db
+            .select()
+            .from(bookings)
+            .orderBy(desc(bookings.createdAt))
+            .limit(safeLimit)
+            .offset(safeOffset);
+        } catch (seedErr) {
+          console.error('Auto-seed bookings failed:', seedErr);
+        }
       }
+
+      return rows.map((r) => ({
+        ...r,
+        alias: r.alias ?? undefined,
+        notes: r.notes ?? '',
+      })) as Booking[];
     } catch (error) {
       console.error('Error in getBookings from db, falling back to in-memory store:', error);
     }
@@ -633,6 +945,87 @@ export async function deleteBooking(id: string): Promise<boolean> {
   return deleted;
 }
 
+export async function getBookingByCode(code: string): Promise<Booking | null> {
+  const cleanCode = code.trim().toUpperCase();
+  if (!cleanCode) return null;
+
+  if (isDatabaseConfigured && db) {
+    try {
+      let [row] = await db
+        .select()
+        .from(bookings)
+        .where(eq(bookings.code, cleanCode))
+        .limit(1);
+
+      if (!row && !hasAutoSeededBookings) {
+        await getBookings(1, 0);
+        const [recheck] = await db
+          .select()
+          .from(bookings)
+          .where(eq(bookings.code, cleanCode))
+          .limit(1);
+        row = recheck;
+      }
+
+      if (row) {
+        return {
+          ...row,
+          alias: row.alias ?? undefined,
+          notes: row.notes ?? '',
+        } as Booking;
+      }
+
+      return null;
+    } catch (error) {
+      console.error('Error fetching booking by code from db:', error);
+    }
+  }
+
+  const found = fallbackBookings.find((b) => b.code.toUpperCase() === cleanCode);
+  return found || null;
+}
+
+export async function getBookingsByCodes(codes: string[]): Promise<Booking[]> {
+  const cleanCodes = Array.from(
+    new Set(
+      codes
+        .map((c) => (typeof c === 'string' ? c.trim().toUpperCase() : ''))
+        .filter((c) => Boolean(c) && c.length >= 4)
+    )
+  ).slice(0, 20);
+
+  if (cleanCodes.length === 0) return [];
+
+  if (isDatabaseConfigured && db) {
+    try {
+      let rows = await db
+        .select()
+        .from(bookings)
+        .where(inArray(bookings.code, cleanCodes))
+        .orderBy(desc(bookings.createdAt));
+
+      if (rows.length === 0 && !hasAutoSeededBookings) {
+        await getBookings(1, 0);
+        rows = await db
+          .select()
+          .from(bookings)
+          .where(inArray(bookings.code, cleanCodes))
+          .orderBy(desc(bookings.createdAt));
+      }
+
+      return rows.map((r) => ({
+        ...r,
+        alias: r.alias ?? undefined,
+        notes: r.notes ?? '',
+      })) as Booking[];
+    } catch (error) {
+      console.error('Error fetching bookings by codes from db:', error);
+    }
+  }
+
+  return fallbackBookings.filter((b) => cleanCodes.includes(b.code.toUpperCase()));
+}
+
 // Curhat / Anonymous Q&A
 export async function getCurhatList(
   onlyPublic: boolean = false,
@@ -644,7 +1037,7 @@ export async function getCurhatList(
       const safeLimit = Math.min(Math.max(1, limit), 200);
       const safeOffset = Math.max(0, offset);
 
-      const rows = onlyPublic
+      let rows = onlyPublic
         ? await db
             .select()
             .from(curhat)
@@ -659,13 +1052,51 @@ export async function getCurhatList(
             .limit(safeLimit)
             .offset(safeOffset);
 
-      if (rows && rows.length > 0) {
-        return rows.map((r) => ({
-          ...r,
-          answer: r.answer ?? undefined,
-          answeredAt: r.answeredAt ?? undefined,
-        })) as AnonymousMessage[];
+      if (rows.length === 0 && offset === 0 && !hasAutoSeededCurhat) {
+        hasAutoSeededCurhat = true;
+        try {
+          for (const c of fallbackCurhat) {
+            await db
+              .insert(curhat)
+              .values({
+                id: c.id,
+                alias: c.alias,
+                category: c.category,
+                message: c.message,
+                answer: c.answer || null,
+                isAnswered: c.isAnswered,
+                isPublic: c.isPublic,
+                showOnLandingPage: c.showOnLandingPage ?? false,
+                createdAt: c.createdAt,
+                answeredAt: c.answeredAt || null,
+              })
+              .onConflictDoNothing();
+          }
+          rows = onlyPublic
+            ? await db
+                .select()
+                .from(curhat)
+                .where(eq(curhat.isPublic, true))
+                .orderBy(desc(curhat.createdAt))
+                .limit(safeLimit)
+                .offset(safeOffset)
+            : await db
+                .select()
+                .from(curhat)
+                .orderBy(desc(curhat.createdAt))
+                .limit(safeLimit)
+                .offset(safeOffset);
+        } catch (seedErr) {
+          console.error('Auto-seed curhat failed:', seedErr);
+        }
       }
+
+      return rows.map((r) => ({
+        ...r,
+        answer: r.answer ?? undefined,
+        answeredAt: r.answeredAt ?? undefined,
+        showOnLandingPage: r.showOnLandingPage ?? false,
+      })) as AnonymousMessage[];
     } catch (error) {
       console.error('Error in getCurhatList from db:', error);
     }
@@ -680,9 +1111,11 @@ export async function createCurhat(data: {
   category: string;
   message: string;
   isPublic: boolean;
+  showOnLandingPage?: boolean;
 }): Promise<AnonymousMessage> {
   const id = `cur-${crypto.randomUUID()}`;
   const createdAt = new Date().toISOString();
+  const showOnLandingPage = data.showOnLandingPage ?? false;
   const newCurhat: AnonymousMessage = {
     id,
     alias: data.alias || 'Teman Curhat',
@@ -690,6 +1123,7 @@ export async function createCurhat(data: {
     message: data.message,
     isAnswered: false,
     isPublic: data.isPublic,
+    showOnLandingPage,
     createdAt,
   };
 
@@ -704,6 +1138,7 @@ export async function createCurhat(data: {
           message: data.message,
           isAnswered: false,
           isPublic: data.isPublic,
+          showOnLandingPage,
           createdAt,
         })
         .returning();
@@ -713,6 +1148,7 @@ export async function createCurhat(data: {
           ...newRow,
           answer: newRow.answer ?? undefined,
           answeredAt: newRow.answeredAt ?? undefined,
+          showOnLandingPage: newRow.showOnLandingPage ?? false,
         } as AnonymousMessage;
         fallbackCurhat.unshift(result);
         revalidateDataPaths(['curhat']);
@@ -733,6 +1169,7 @@ export async function updateCurhat(
   options: {
     answer?: string;
     isPublic?: boolean;
+    showOnLandingPage?: boolean;
   }
 ): Promise<AnonymousMessage | null> {
   let updatedCurhat: AnonymousMessage | null = null;
@@ -752,6 +1189,10 @@ export async function updateCurhat(
         updateData.isPublic = options.isPublic;
       }
 
+      if (typeof options.showOnLandingPage === 'boolean') {
+        updateData.showOnLandingPage = options.showOnLandingPage;
+      }
+
       const [updated] = await db
         .update(curhat)
         .set(updateData)
@@ -763,6 +1204,7 @@ export async function updateCurhat(
           ...updated,
           answer: updated.answer ?? undefined,
           answeredAt: updated.answeredAt ?? undefined,
+          showOnLandingPage: updated.showOnLandingPage ?? false,
         } as AnonymousMessage;
       }
     } catch (error) {
@@ -780,6 +1222,9 @@ export async function updateCurhat(
     }
     if (typeof options.isPublic === 'boolean') {
       fallbackCurhat[idx].isPublic = options.isPublic;
+    }
+    if (typeof options.showOnLandingPage === 'boolean') {
+      fallbackCurhat[idx].showOnLandingPage = options.showOnLandingPage;
     }
     if (!updatedCurhat) {
       updatedCurhat = fallbackCurhat[idx];
@@ -830,16 +1275,45 @@ export async function deleteCurhat(id: string): Promise<boolean> {
 export async function getArticles(onlyPublished = false): Promise<Article[]> {
   if (isDatabaseConfigured && db) {
     try {
-      const rows = onlyPublished
-        ? await db.select().from(articles).where(eq(articles.isPublished, true))
-        : await db.select().from(articles);
-      if (rows && rows.length > 0) {
-        return rows.map((r) => ({
-          ...r,
-          tags: Array.isArray(r.tags) ? r.tags : [],
-          isPublished: r.isPublished ?? true,
-        })) as Article[];
+      let rows = onlyPublished
+        ? await db.select().from(articles).where(eq(articles.isPublished, true)).orderBy(desc(articles.id))
+        : await db.select().from(articles).orderBy(desc(articles.id));
+
+      if (rows.length === 0 && !hasAutoSeededArticles) {
+        hasAutoSeededArticles = true;
+        try {
+          for (const a of fallbackArticles) {
+            await db
+              .insert(articles)
+              .values({
+                id: a.id,
+                slug: a.slug,
+                title: a.title,
+                excerpt: a.excerpt,
+                content: a.content,
+                category: a.category,
+                readTime: a.readTime,
+                publishedAt: a.publishedAt,
+                tags: a.tags,
+                isPublished: a.isPublished ?? true,
+                showOnLandingPage: a.showOnLandingPage ?? false,
+              })
+              .onConflictDoNothing();
+          }
+          rows = onlyPublished
+            ? await db.select().from(articles).where(eq(articles.isPublished, true)).orderBy(desc(articles.id))
+            : await db.select().from(articles).orderBy(desc(articles.id));
+        } catch (seedErr) {
+          console.error('Auto-seed articles failed:', seedErr);
+        }
       }
+
+      return rows.map((r) => ({
+        ...r,
+        tags: Array.isArray(r.tags) ? r.tags : [],
+        isPublished: r.isPublished ?? true,
+        showOnLandingPage: r.showOnLandingPage ?? false,
+      })) as Article[];
     } catch (error) {
       console.error('Error in getArticles from db:', error);
     }
@@ -854,17 +1328,28 @@ export async function getArticles(onlyPublished = false): Promise<Article[]> {
 export async function getArticleBySlug(slug: string, onlyPublished = false): Promise<Article | null> {
   if (isDatabaseConfigured && db) {
     try {
-      const query = onlyPublished
+      let [row] = await (onlyPublished
         ? db.select().from(articles).where(and(eq(articles.slug, slug), eq(articles.isPublished, true))).limit(1)
-        : db.select().from(articles).where(eq(articles.slug, slug)).limit(1);
-      const [row] = await query;
+        : db.select().from(articles).where(eq(articles.slug, slug)).limit(1));
+
+      if (!row && !hasAutoSeededArticles) {
+        await getArticles(false);
+        const [recheck] = await (onlyPublished
+          ? db.select().from(articles).where(and(eq(articles.slug, slug), eq(articles.isPublished, true))).limit(1)
+          : db.select().from(articles).where(eq(articles.slug, slug)).limit(1));
+        row = recheck;
+      }
+
       if (row) {
         return {
           ...row,
           tags: Array.isArray(row.tags) ? row.tags : [],
           isPublished: row.isPublished ?? true,
+          showOnLandingPage: row.showOnLandingPage ?? false,
         } as Article;
       }
+
+      return null;
     } catch (error) {
       console.error('Error in getArticleBySlug from db:', error);
     }
@@ -891,6 +1376,7 @@ export async function updateArticle(
     if (data.readTime !== undefined) updateData.readTime = data.readTime;
     if (data.tags !== undefined) updateData.tags = data.tags;
     if (data.isPublished !== undefined) updateData.isPublished = data.isPublished;
+    if (data.showOnLandingPage !== undefined) updateData.showOnLandingPage = data.showOnLandingPage;
 
     let updatedArticle: Article | null = null;
 
@@ -908,6 +1394,7 @@ export async function updateArticle(
             ...updated,
             tags: Array.isArray(updated.tags) ? updated.tags : [],
             isPublished: updated.isPublished ?? true,
+            showOnLandingPage: updated.showOnLandingPage ?? false,
           } as Article;
         }
       } catch (dbErr) {
@@ -956,6 +1443,7 @@ export async function createArticle(
     }).format(new Date()),
     tags: Array.isArray(data.tags) ? data.tags : [],
     isPublished: data.isPublished !== undefined ? data.isPublished : true,
+    showOnLandingPage: data.showOnLandingPage !== undefined ? data.showOnLandingPage : false,
   };
 
   if (isDatabaseConfigured && db) {
@@ -966,6 +1454,7 @@ export async function createArticle(
           ...inserted,
           tags: Array.isArray(inserted.tags) ? inserted.tags : [],
           isPublished: inserted.isPublished ?? true,
+          showOnLandingPage: inserted.showOnLandingPage ?? false,
         } as Article;
 
         fallbackArticles.unshift(newArticle);
@@ -982,6 +1471,7 @@ export async function createArticle(
     ...insertData,
     tags: Array.isArray(insertData.tags) ? insertData.tags : [],
     isPublished: insertData.isPublished,
+    showOnLandingPage: insertData.showOnLandingPage,
   };
   fallbackArticles.unshift(fallbackArticle);
   revalidateDataPaths(['articles']);

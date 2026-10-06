@@ -7,7 +7,8 @@ import {
   EyeOff, 
   Trash2, 
   HeartHandshake, 
-  Send 
+  Send,
+  Star
 } from 'lucide-react';
 import { AnonymousMessage } from '@/types';
 import { CounselingReplyBox } from './CounselingReplyBox';
@@ -36,10 +37,12 @@ interface CounselingCardProps {
   item: AnonymousMessage;
   isReplying: boolean;
   isToggling: boolean;
+  isTogglingLanding?: boolean;
   onStartReply: () => void;
   onCancelReply: () => void;
-  onSaveReply: (text: string, isPublic: boolean) => Promise<void>;
+  onSaveReply: (text: string, isPublic: boolean, showOnLandingPage: boolean) => Promise<void>;
   onTogglePrivacy: () => void;
+  onToggleLanding: () => void;
   onDelete: () => void;
 }
 
@@ -47,10 +50,12 @@ export function CounselingCard({
   item,
   isReplying,
   isToggling,
+  isTogglingLanding = false,
   onStartReply,
   onCancelReply,
   onSaveReply,
   onTogglePrivacy,
+  onToggleLanding,
   onDelete,
 }: CounselingCardProps) {
   return (
@@ -61,14 +66,18 @@ export function CounselingCard({
           <span className="font-semibold text-[var(--color-ink)] text-sm sm:text-base">
             {item.alias}
           </span>
-          <span className="text-[11px] sm:text-xs px-2.5 py-0.5 rounded-full bg-[var(--color-accent-soft)] text-[var(--color-accent)] font-medium">
+          <span className="text-[var(--color-paper-border)]">&bull;</span>
+          <span className="text-[11px] sm:text-xs text-[var(--color-accent)] font-medium">
             {item.category}
           </span>
           {item.createdAt && (
-            <span className="text-[10px] sm:text-[11px] text-[var(--color-ink-muted)] flex items-center gap-1">
-              <Calendar className="w-3 h-3 text-[var(--color-ink-muted)]" />
-              {formatDate(item.createdAt)}
-            </span>
+            <>
+              <span className="text-[var(--color-paper-border)]">&bull;</span>
+              <span className="text-[10px] sm:text-[11px] text-[var(--color-ink-muted)] flex items-center gap-1">
+                <Calendar className="w-3 h-3 text-[var(--color-ink-muted)]" />
+                {formatDate(item.createdAt)}
+              </span>
+            </>
           )}
         </div>
 
@@ -76,8 +85,28 @@ export function CounselingCard({
           {item.isAnswered ? (
             <Badge variant="accent" size="xs" dot>Dijawab</Badge>
           ) : (
-            <Badge variant="warning" size="xs" dot>Menanti Respon</Badge>
+            <Badge variant="warning" size="xs" dot>Menunggu</Badge>
           )}
+
+          {/* Landing Page Toggle Button with Star icon */}
+          <button
+            onClick={onToggleLanding}
+            disabled={isTogglingLanding}
+            type="button"
+            title={item.showOnLandingPage ? 'Hapus curhat ini dari halaman beranda (landing page)' : 'Tampilkan curhat ini di halaman beranda (landing page)'}
+            className={`btn-interactive inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-lg border cursor-pointer whitespace-nowrap disabled:opacity-60 transition-colors ${
+              item.showOnLandingPage
+                ? 'bg-amber-100 text-amber-900 border-amber-300 hover:bg-amber-200'
+                : 'bg-[var(--color-paper-muted)] text-[var(--color-ink-muted)] border-[var(--color-paper-border)] hover:bg-[var(--color-paper-border)] hover:text-[var(--color-ink)]'
+            }`}
+          >
+            {isTogglingLanding ? (
+              <Spinner size="xs" variant="muted" label="Menyimpan status beranda..." />
+            ) : (
+              <Star className={`w-3.5 h-3.5 ${item.showOnLandingPage ? 'fill-amber-500 text-amber-600' : 'text-[var(--color-ink-soft)]'}`} />
+            )}
+            <span>{isTogglingLanding ? 'Menyimpan...' : item.showOnLandingPage ? '★ Di Beranda' : '+ Beranda'}</span>
+          </button>
 
           {/* Privacy Toggle Button with clear badge */}
           <button
@@ -87,16 +116,16 @@ export function CounselingCard({
             title={`Klik untuk ubah visibilitas ke ${item.isPublic ? 'Privat' : 'Publik'}`}
             className={`btn-interactive inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-lg border cursor-pointer whitespace-nowrap disabled:opacity-60 ${
               item.isPublic
-                ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
-                : 'bg-zinc-100 text-zinc-600 border-zinc-200 hover:bg-zinc-200'
+                ? 'bg-[var(--color-accent-soft)] text-[var(--color-accent)] border-[var(--color-accent-border)] hover:bg-[var(--color-accent-border)]/50'
+                : 'bg-[var(--color-paper-muted)] text-[var(--color-ink-muted)] border-[var(--color-paper-border)] hover:bg-[var(--color-paper-border)]'
             }`}
           >
             {isToggling ? (
               <Spinner size="xs" variant="muted" label="Menyimpan visibilitas..." />
             ) : item.isPublic ? (
-              <Eye className="w-3.5 h-3.5 text-emerald-600" />
+              <Eye className="w-3.5 h-3.5 text-[var(--color-accent)]" />
             ) : (
-              <EyeOff className="w-3.5 h-3.5 text-zinc-500" />
+              <EyeOff className="w-3.5 h-3.5 text-[var(--color-ink-soft)]" />
             )}
             <span>{isToggling ? 'Menyimpan...' : item.isPublic ? 'Publik' : 'Privat'}</span>
           </button>
@@ -106,7 +135,7 @@ export function CounselingCard({
             <button
               onClick={onDelete}
               type="button"
-              className="btn-interactive p-1.5 rounded-lg text-[var(--color-ink-muted)] hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer shrink-0"
+              className="btn-interactive p-1.5 rounded-lg text-[var(--color-ink-muted)] hover:text-[var(--color-error)] hover:bg-[var(--color-error-soft)] transition-colors cursor-pointer shrink-0"
               aria-label="Hapus pesan curhat ini"
             >
               <Trash2 className="w-3.5 h-3.5" />
@@ -142,12 +171,17 @@ export function CounselingCard({
 
       {/* Reply Box or Trigger Button */}
       {isReplying ? (
-        <CounselingReplyBox
-          initialText={item.answer || ''}
-          initialPublic={item.isPublic}
-          onCancel={onCancelReply}
-          onSave={onSaveReply}
-        />
+        <div className="tab-content-enter">
+          <CounselingReplyBox
+            initialText={item.answer || ''}
+            initialPublic={item.isPublic}
+            initialLanding={item.showOnLandingPage ?? false}
+            itemId={item.id}
+            itemAlias={item.alias}
+            onCancel={onCancelReply}
+            onSave={onSaveReply}
+          />
+        </div>
       ) : (
         <div className="flex items-center justify-end gap-2 pt-1">
           <button
