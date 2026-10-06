@@ -231,7 +231,7 @@ export default async function ArticleDetailPage(props: {
                           className="text-base sm:text-lg font-medium text-[var(--color-ink)] group-hover:text-[var(--color-accent)] leading-snug line-clamp-2 transition-colors duration-200"
                           style={{ fontFamily: 'var(--font-display)' }}
                         >
-                          <Link href={`/articles/${rel.slug}`}>
+                          <Link href={`/articles/${rel.slug}`} className="hover:underline underline-offset-4 decoration-[var(--color-accent)]/60">
                             {rel.title}
                           </Link>
                         </h4>

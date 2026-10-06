@@ -11,7 +11,7 @@ export function ArticleSidebar({ currentCategory }: ArticleSidebarProps) {
   return (
     <aside className="space-y-6" aria-label="Informasi Penulis dan Topik">
       {/* Profile Card */}
-      <div className="p-5 sm:p-6 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-paper-border)] hover:border-[var(--color-accent-border)] hover:shadow-xs transition-all duration-200 space-y-4 shadow-2xs group">
+      <div className="p-5 sm:p-6 rounded-2xl bg-[var(--color-surface)] border-2 border-[var(--color-paper-border)] hover:border-[var(--color-accent)] hover:shadow-md transition-all duration-300 space-y-4 shadow-2xs group">
         <div className="flex items-center gap-3.5">
           <div className="relative w-12 h-12 rounded-full overflow-hidden border border-[var(--color-accent-border)] bg-[var(--color-accent-soft)] shrink-0 shadow-2xs group-hover:scale-105 transition-transform duration-200">
             <Image

@@ -59,7 +59,7 @@ export function ArticleHeader({ article }: { article: Article }) {
       {/* 3. Lead In / Excerpt Paragraph */}
       {article.excerpt && (
         <div className="pt-2">
-          <p className="text-base sm:text-lg text-[var(--color-ink)]/90 leading-relaxed font-normal bg-[var(--color-paper-muted)]/50 p-4 sm:p-5 rounded-xl border-l-3 border-[var(--color-accent)] hover:bg-[var(--color-paper-muted)]/80 hover:border-l-4 hover:shadow-2xs transition-all duration-200">
+          <p className="text-base sm:text-lg text-[var(--color-ink)]/90 leading-relaxed font-normal bg-[var(--color-paper-muted)]/50 p-4 sm:p-5 rounded-xl border-l-4 border-[var(--color-accent)] hover:bg-[var(--color-paper-muted)]/80 hover:shadow-xs hover:border-[var(--color-accent-hover)] transition-[background-color,border-color,box-shadow] duration-300 ease-out">
             {article.excerpt}
           </p>
         </div>
