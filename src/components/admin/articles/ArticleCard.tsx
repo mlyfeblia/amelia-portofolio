@@ -63,95 +63,98 @@ export function ArticleCard({
             </span>
           </div>
         </div>
-      </div>
 
-      {/* Full-Width Action Buttons Toolbar */}
-      <div className="pt-2 border-t border-[var(--color-paper-border)] flex flex-wrap items-center justify-between gap-2">
-        <div className="flex flex-wrap items-center gap-1.5 flex-1 min-w-0">
-          {/* Landing Page Showcase Toggle */}
-          {onToggleLanding && (
-            <button
-              onClick={() => onToggleLanding(article)}
-              disabled={isTogglingLanding}
-              type="button"
-              title={article.showOnLandingPage ? 'Hapus artikel ini dari halaman beranda (landing page)' : 'Tampilkan artikel ini di halaman beranda (landing page)'}
-              className={`btn-interactive inline-flex items-center justify-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold border cursor-pointer whitespace-nowrap disabled:opacity-60 transition-colors ${
-                article.showOnLandingPage
-                  ? 'bg-amber-100 text-amber-900 border-amber-300 hover:bg-amber-200'
-                  : 'bg-[var(--color-paper-muted)] text-[var(--color-ink-muted)] border-[var(--color-paper-border)] hover:bg-[var(--color-paper-border)] hover:text-[var(--color-ink)]'
-              }`}
-            >
-              {isTogglingLanding ? (
-                <Spinner size="xs" variant="muted" label="Menyimpan status beranda..." />
-              ) : (
-                <Star className={`w-3.5 h-3.5 ${article.showOnLandingPage ? 'fill-amber-500 text-amber-600' : 'text-[var(--color-ink-soft)]'}`} />
-              )}
-              <span>{isTogglingLanding ? 'Menyimpan...' : article.showOnLandingPage ? '★ Di Beranda' : '+ Beranda'}</span>
-            </button>
-          )}
-
-          {/* 1-Click Visibility Toggle Button */}
-          {onTogglePublish && (
-            <button
-              onClick={() => onTogglePublish(article)}
-              disabled={isToggling}
-              type="button"
-              title={isPublic ? 'Sembunyikan dari publik (jadikan draf)' : 'Terbitkan ke website publik'}
-              className={`btn-interactive inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold border cursor-pointer whitespace-nowrap disabled:opacity-60 ${
-                isPublic
-                  ? 'bg-[var(--color-accent-soft)] text-[var(--color-accent)] border-[var(--color-accent-border)] hover:bg-[var(--color-accent-border)]/50'
-                  : 'bg-[var(--color-paper-muted)] text-[var(--color-ink-muted)] border-[var(--color-paper-border)] hover:bg-[var(--color-paper-border)]'
-              }`}
-            >
-              {isToggling ? (
-                <Spinner size="xs" variant="muted" label="Menyimpan status publikasi..." />
-              ) : isPublic ? (
-                <Eye className="w-3.5 h-3.5 text-[var(--color-accent)]" />
-              ) : (
-                <EyeOff className="w-3.5 h-3.5 text-[var(--color-ink-soft)]" />
-              )}
-              <span>{isToggling ? 'Menyimpan...' : isPublic ? 'Publik' : 'Draf'}</span>
-            </button>
-          )}
-
-          {/* Edit Button */}
-          <button
-            onClick={() => onEdit(article)}
-            type="button"
-            className="btn-interactive inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--color-accent-soft)] text-[var(--color-accent)] hover:bg-[var(--color-accent)] hover:text-white text-xs font-semibold cursor-pointer"
-          >
-            <Edit3 className="w-3.5 h-3.5" />
-            <span>Ubah</span>
-          </button>
-        </div>
-
-        {/* Right-aligned Icon Actions: Public Preview Link & Delete Button */}
-        <div className="flex items-center gap-1 shrink-0">
-          {/* Public Preview Link */}
-          {isPublic && (
-            <Tooltip content="Buka di web publik" position="top">
-              <Link
-                href={`/articles/${article.slug}`}
-                target="_blank"
-                className="btn-interactive inline-flex items-center justify-center p-1.5 rounded-lg bg-[var(--color-surface)] border border-[var(--color-paper-border)] hover:bg-[var(--color-paper-muted)] text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] text-xs cursor-pointer"
-                aria-label="Buka tampilan web publik"
+        {/* Action Buttons Column: 2 Rows */}
+        <div className="flex flex-col gap-2 shrink-0 self-stretch sm:self-start sm:items-end pt-2 sm:pt-0 border-t sm:border-t-0 border-[var(--color-paper-border)]">
+          {/* Row 1: + Beranda, Publik/Draf, Ubah */}
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            {/* Landing Page Showcase Toggle */}
+            {onToggleLanding && (
+              <button
+                onClick={() => onToggleLanding(article)}
+                disabled={isTogglingLanding}
+                type="button"
+                title={article.showOnLandingPage ? 'Hapus artikel ini dari halaman beranda (landing page)' : 'Tampilkan artikel ini di halaman beranda (landing page)'}
+                className={`btn-interactive flex-1 sm:flex-initial inline-flex items-center justify-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold border cursor-pointer whitespace-nowrap disabled:opacity-60 transition-colors ${
+                  article.showOnLandingPage
+                    ? 'bg-amber-100 text-amber-900 border-amber-300 hover:bg-amber-200'
+                    : 'bg-[var(--color-paper-muted)] text-[var(--color-ink-muted)] border-[var(--color-paper-border)] hover:bg-[var(--color-paper-border)] hover:text-[var(--color-ink)]'
+                }`}
               >
-                <ExternalLink className="w-3.5 h-3.5" />
-              </Link>
-            </Tooltip>
-          )}
+                {isTogglingLanding ? (
+                  <Spinner size="xs" variant="muted" label="Menyimpan status beranda..." />
+                ) : (
+                  <Star className={`w-3.5 h-3.5 ${article.showOnLandingPage ? 'fill-amber-500 text-amber-600' : 'text-[var(--color-ink-soft)]'}`} />
+                )}
+                <span>{isTogglingLanding ? 'Menyimpan...' : article.showOnLandingPage ? '★ Di Beranda' : '+ Beranda'}</span>
+              </button>
+            )}
 
-          {/* Delete Button */}
-          <Tooltip content="Hapus artikel" position="top">
+            {/* 1-Click Visibility Toggle Button */}
+            {onTogglePublish && (
+              <button
+                onClick={() => onTogglePublish(article)}
+                disabled={isToggling}
+                type="button"
+                title={isPublic ? 'Sembunyikan dari publik (jadikan draf)' : 'Terbitkan ke website publik'}
+                className={`btn-interactive flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold border cursor-pointer whitespace-nowrap disabled:opacity-60 ${
+                  isPublic
+                    ? 'bg-[var(--color-accent-soft)] text-[var(--color-accent)] border-[var(--color-accent-border)] hover:bg-[var(--color-accent-border)]/50'
+                    : 'bg-[var(--color-paper-muted)] text-[var(--color-ink-muted)] border-[var(--color-paper-border)] hover:bg-[var(--color-paper-border)]'
+                }`}
+              >
+                {isToggling ? (
+                  <Spinner size="xs" variant="muted" label="Menyimpan status publikasi..." />
+                ) : isPublic ? (
+                  <Eye className="w-3.5 h-3.5 text-[var(--color-accent)]" />
+                ) : (
+                  <EyeOff className="w-3.5 h-3.5 text-[var(--color-ink-soft)]" />
+                )}
+                <span>{isToggling ? 'Menyimpan...' : isPublic ? 'Publik' : 'Draf'}</span>
+              </button>
+            )}
+
+            {/* Edit Button */}
             <button
-              onClick={() => onDelete(article)}
+              onClick={() => onEdit(article)}
               type="button"
-              className="btn-interactive inline-flex items-center justify-center p-1.5 rounded-lg border border-[var(--color-paper-border)] hover:border-red-300 text-[var(--color-ink-muted)] hover:text-[var(--color-error)] hover:bg-[var(--color-error-soft)] transition-colors cursor-pointer"
-              aria-label="Hapus artikel ini"
+              className="btn-interactive flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--color-accent-soft)] text-[var(--color-accent)] hover:bg-[var(--color-accent)] hover:text-white text-xs font-semibold cursor-pointer"
             >
-              <Trash2 className="w-3.5 h-3.5" />
+              <Edit3 className="w-3.5 h-3.5" />
+              <span>Ubah</span>
             </button>
-          </Tooltip>
+          </div>
+
+          {/* Row 2: ExternalLink & Hapus/Trash */}
+          <div className="flex items-center gap-1.5 sm:gap-2 justify-end w-full">
+            {/* Public Preview Link */}
+            {isPublic && (
+              <Tooltip content="Buka di web publik" position="top">
+                <Link
+                  href={`/articles/${article.slug}`}
+                  target="_blank"
+                  className="btn-interactive inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[var(--color-surface)] border border-[var(--color-paper-border)] hover:bg-[var(--color-paper-muted)] text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] text-xs cursor-pointer"
+                  aria-label="Buka tampilan web publik"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  <span className="text-[11px] font-medium sm:hidden">Lihat Web</span>
+                </Link>
+              </Tooltip>
+            )}
+
+            {/* Delete Button */}
+            <Tooltip content="Hapus artikel" position="top">
+              <button
+                onClick={() => onDelete(article)}
+                type="button"
+                className="btn-interactive inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-[var(--color-paper-border)] hover:border-red-300 text-[var(--color-ink-muted)] hover:text-[var(--color-error)] hover:bg-[var(--color-error-soft)] text-xs transition-colors cursor-pointer"
+                aria-label="Hapus artikel ini"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span className="text-[11px] font-medium sm:hidden">Hapus</span>
+              </button>
+            </Tooltip>
+          </div>
         </div>
       </div>
 
