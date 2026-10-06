@@ -22,9 +22,10 @@ const maxConnections = process.env.DB_MAX_CONNECTIONS
 
 const connectionString = env.DATABASE_URL;
 
-const isLocalhost =
-  connectionString.includes('localhost') ||
-  connectionString.includes('127.0.0.1');
+const isLocalhost = Boolean(
+  connectionString &&
+  (connectionString.includes('localhost') || connectionString.includes('127.0.0.1'))
+);
 
 export const conn = isDatabaseConfigured
   ? (globalForDb.conn ??

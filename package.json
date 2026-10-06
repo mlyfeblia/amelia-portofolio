@@ -11,7 +11,9 @@
     "db:push": "drizzle-kit push",
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
-    "db:seed": "node scripts/seed.mjs"
+    "db:seed": "node scripts/seed.mjs",
+    "db:verify": "node scripts/verify-db-deep.mjs",
+    "test:integration": "node scripts/e2e-api-integration.mjs"
   },
   "dependencies": {
     "@serwist/next": "^9.5.12",

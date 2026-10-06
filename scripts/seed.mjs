@@ -28,7 +28,7 @@ async function seed() {
       console.log(`Seeding ${data.articles.length} articles...`);
       for (const art of data.articles) {
         await sql`
-          INSERT INTO articles (id, slug, title, excerpt, content, category, read_time, published_at, tags, is_published)
+          INSERT INTO articles (id, slug, title, excerpt, content, category, read_time, published_at, tags, is_published, show_on_landing_page)
           VALUES (
             ${art.id},
             ${art.slug},
@@ -39,7 +39,8 @@ async function seed() {
             ${art.readTime},
             ${art.publishedAt},
             ${JSON.stringify(art.tags || [])}::jsonb,
-            ${art.isPublished !== undefined ? Boolean(art.isPublished) : true}
+            ${art.isPublished !== undefined ? Boolean(art.isPublished) : true},
+            ${art.showOnLandingPage !== undefined ? Boolean(art.showOnLandingPage) : false}
           )
           ON CONFLICT (id) DO UPDATE SET
             slug = EXCLUDED.slug,
@@ -50,7 +51,8 @@ async function seed() {
             read_time = EXCLUDED.read_time,
             published_at = EXCLUDED.published_at,
             tags = EXCLUDED.tags,
-            is_published = EXCLUDED.is_published;
+            is_published = EXCLUDED.is_published,
+            show_on_landing_page = EXCLUDED.show_on_landing_page;
         `;
       }
     }
@@ -86,7 +88,7 @@ async function seed() {
       console.log(`Seeding ${data.curhatList.length} curhat messages...`);
       for (const cur of data.curhatList) {
         await sql`
-          INSERT INTO curhat (id, alias, category, message, answer, is_answered, is_public, created_at, answered_at)
+          INSERT INTO curhat (id, alias, category, message, answer, is_answered, is_public, show_on_landing_page, created_at, answered_at)
           VALUES (
             ${cur.id},
             ${cur.alias},
@@ -95,10 +97,16 @@ async function seed() {
             ${cur.answer || null},
             ${Boolean(cur.isAnswered)},
             ${Boolean(cur.isPublic)},
+            ${cur.showOnLandingPage !== undefined ? Boolean(cur.showOnLandingPage) : false},
             ${cur.createdAt},
             ${cur.answeredAt || null}
           )
-          ON CONFLICT (id) DO NOTHING;
+          ON CONFLICT (id) DO UPDATE SET
+            answer = EXCLUDED.answer,
+            is_answered = EXCLUDED.is_answered,
+            is_public = EXCLUDED.is_public,
+            show_on_landing_page = EXCLUDED.show_on_landing_page,
+            answered_at = EXCLUDED.answered_at;
         `;
       }
     }
