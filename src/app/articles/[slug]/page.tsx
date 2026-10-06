@@ -224,14 +224,14 @@ export default async function ArticleDetailPage(props: {
                   {relatedArticles.map((rel) => (
                     <div
                       key={rel.id}
-                      className="p-5 sm:p-6 bg-[var(--color-surface)] border border-[var(--color-paper-border)] rounded-2xl flex flex-col justify-between space-y-3 card-interactive shadow-2xs"
+                      className="group p-5 sm:p-6 bg-[var(--color-surface)] border border-[var(--color-paper-border)] hover:border-[var(--color-accent)] hover:shadow-sm rounded-2xl flex flex-col justify-between space-y-3 card-interactive shadow-2xs transition-all duration-200"
                     >
                       <div className="space-y-2">
                         <h4
-                          className="text-base sm:text-lg font-medium text-[var(--color-ink)] leading-snug line-clamp-2"
+                          className="text-base sm:text-lg font-medium text-[var(--color-ink)] group-hover:text-[var(--color-accent)] leading-snug line-clamp-2 transition-colors duration-200"
                           style={{ fontFamily: 'var(--font-display)' }}
                         >
-                          <Link href={`/articles/${rel.slug}`} className="hover:text-[var(--color-accent)] transition-colors">
+                          <Link href={`/articles/${rel.slug}`}>
                             {rel.title}
                           </Link>
                         </h4>
@@ -248,10 +248,10 @@ export default async function ArticleDetailPage(props: {
                         </span>
                         <Link
                           href={`/articles/${rel.slug}`}
-                          className="font-semibold text-[var(--color-accent)] hover:underline inline-flex items-center gap-1"
+                          className="font-semibold text-[var(--color-accent)] group-hover:translate-x-0.5 hover:underline inline-flex items-center gap-1 transition-transform duration-200"
                         >
                           <span>Baca</span>
-                          <ArrowUpRight className="w-3.5 h-3.5" />
+                          <ArrowUpRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform duration-200" />
                         </Link>
                       </div>
                     </div>

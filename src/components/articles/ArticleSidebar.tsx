@@ -11,9 +11,9 @@ export function ArticleSidebar({ currentCategory }: ArticleSidebarProps) {
   return (
     <aside className="space-y-6" aria-label="Informasi Penulis dan Topik">
       {/* Profile Card */}
-      <div className="p-5 sm:p-6 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-paper-border)] space-y-4 shadow-2xs">
+      <div className="p-5 sm:p-6 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-paper-border)] hover:border-[var(--color-accent-border)] hover:shadow-xs transition-all duration-200 space-y-4 shadow-2xs group">
         <div className="flex items-center gap-3.5">
-          <div className="relative w-12 h-12 rounded-full overflow-hidden border border-[var(--color-accent-border)] bg-[var(--color-accent-soft)] shrink-0 shadow-2xs">
+          <div className="relative w-12 h-12 rounded-full overflow-hidden border border-[var(--color-accent-border)] bg-[var(--color-accent-soft)] shrink-0 shadow-2xs group-hover:scale-105 transition-transform duration-200">
             <Image
               src="/amelia.webp"
               alt="Amelia"
@@ -23,7 +23,7 @@ export function ArticleSidebar({ currentCategory }: ArticleSidebarProps) {
             />
           </div>
           <div>
-            <h3 className="text-base font-semibold text-[var(--color-ink)]">
+            <h3 className="text-base font-semibold text-[var(--color-ink)] group-hover:text-[var(--color-accent)] transition-colors duration-200">
               Amelia (Amel)
             </h3>
             <p className="text-xs text-[var(--color-ink-soft)] line-clamp-1">
@@ -55,7 +55,7 @@ export function ArticleSidebar({ currentCategory }: ArticleSidebarProps) {
       </div>
 
       {/* Topics Guidance Box */}
-      <div className="p-4 sm:p-5 rounded-2xl bg-[var(--color-paper-muted)]/60 border border-[var(--color-paper-border)] space-y-2.5">
+      <div className="p-4 sm:p-5 rounded-2xl bg-[var(--color-paper-muted)]/60 border border-[var(--color-paper-border)] hover:border-[var(--color-accent-border)] hover:bg-[var(--color-paper-muted)]/90 transition-all duration-200 space-y-2.5">
         <div className="flex items-center gap-2 text-xs font-semibold text-[var(--color-ink)]">
           <Compass className="w-3.5 h-3.5 text-[var(--color-accent)]" />
           <span>Fokus Topik</span>
