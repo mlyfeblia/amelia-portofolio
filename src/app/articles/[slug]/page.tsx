@@ -88,9 +88,9 @@ export async function generateMetadata(props: {
       tags: article.tags,
       images: [
         {
-          url: `${BASE_URL}/amelia.webp`,
+          url: `${BASE_URL}/articles/${slug}/opengraph-image`,
           width: 1200,
-          height: 1500,
+          height: 630,
           alt: `${article.title} - Amelia Konseling Sebaya`,
         },
       ],
@@ -99,7 +99,7 @@ export async function generateMetadata(props: {
       card: 'summary_large_image',
       title: article.title,
       description: article.excerpt,
-      images: [`${BASE_URL}/amelia.webp`],
+      images: [`${BASE_URL}/articles/${slug}/opengraph-image`],
     },
   };
 }

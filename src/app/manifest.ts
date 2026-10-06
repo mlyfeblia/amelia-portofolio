@@ -10,11 +10,13 @@ export default function manifest(): MetadataRoute.Manifest {
     id: '/',
     scope: '/',
     display: 'standalone',
+    display_override: ['window-controls-overlay', 'standalone', 'minimal-ui'],
     orientation: 'portrait-primary',
     background_color: '#FBF9F5',
     theme_color: '#1A563C',
     lang: 'id',
     dir: 'ltr',
+    prefer_related_applications: false,
     categories: ['education', 'health', 'lifestyle'],
     icons: [
       {

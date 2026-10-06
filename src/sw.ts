@@ -4,6 +4,7 @@ import {
   Serwist,
   NetworkOnly,
   CacheFirst,
+  NetworkFirst,
   ExpirationPlugin,
 } from 'serwist';
 
@@ -27,7 +28,23 @@ const serwist = new Serwist({
       matcher: ({ url }) => url.pathname.startsWith('/api/') || url.pathname.startsWith('/admin'),
       handler: new NetworkOnly(),
     },
-    // 2. Static images & favicons (CacheFirst with 30-day eviction)
+    // 2. Offline reading for articles: NetworkFirst (fresh on network, available offline from cache)
+    {
+      matcher: ({ url, request }) =>
+        request.destination === 'document' && url.pathname.startsWith('/articles'),
+      handler: new NetworkFirst({
+        cacheName: 'amelia-articles-cache',
+        plugins: [
+          new ExpirationPlugin({
+            maxEntries: 32,
+            maxAgeSeconds: 7 * 24 * 60 * 60, // 7 days
+            maxAgeFrom: 'last-used',
+          }),
+        ],
+        networkTimeoutSeconds: 3,
+      }),
+    },
+    // 3. Static images & favicons (CacheFirst with 30-day eviction)
     {
       matcher: ({ url }) =>
         /\.(?:png|jpg|jpeg|svg|webp|avif|ico)$/i.test(url.pathname) &&
@@ -43,7 +60,7 @@ const serwist = new Serwist({
         ],
       }),
     },
-    // 3. Serwist default Next.js App Router caching strategies (RSC, chunks, Google fonts)
+    // 4. Serwist default Next.js App Router caching strategies (RSC, chunks, Google fonts)
     ...defaultCache,
   ],
   fallbacks: {

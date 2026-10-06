@@ -36,19 +36,33 @@ export function ArticleJsonLd({
     description: excerpt,
     articleSection: category,
     articleBody: excerpt,
-    image: [`${BASE_URL}/amelia.webp`],
+    image: [
+      `${BASE_URL}/articles/${slug}/opengraph-image`,
+      `${BASE_URL}/amelia.webp`,
+    ],
+    thumbnailUrl: `${BASE_URL}/articles/${slug}/opengraph-image`,
     url: `${BASE_URL}/articles/${slug}`,
     datePublished: publishedIso,
     dateModified: publishedIso,
     wordCount: wordCount,
+    timeRequired: wordCount ? `PT${Math.max(1, Math.ceil(wordCount / 180))}M` : 'PT5M',
+    speakable: {
+      '@type': 'SpeakableSpecification',
+      cssSelector: ['#article-title', '.article-excerpt', '.article-content'],
+    },
     author: {
       '@type': 'Person',
       name: 'Amelia',
+      alternateName: 'Amel',
       url: `${BASE_URL}/about`,
       jobTitle: 'Konselor Sebaya & Mahasiswi Bimbingan Konseling Islam',
+      gender: 'Female',
+      sameAs: ['https://www.instagram.com/mlyfeb.lia'],
       affiliation: {
         '@type': 'EducationalOrganization',
         name: 'UIN Siber Syekh Nurjati Cirebon',
+        alternateName: 'Universitas Islam Negeri Siber Syekh Nurjati Cirebon',
+        url: 'https://uinssc.ac.id',
       },
     },
     publisher: {
@@ -58,11 +72,18 @@ export function ArticleJsonLd({
       logo: {
         '@type': 'ImageObject',
         url: `${BASE_URL}/icon.png`,
+        width: 512,
+        height: 512,
       },
     },
-    keywords: [category, ...tags, 'BKI', 'Konseling Sebaya', 'UIN Siber Cirebon'].join(', '),
+    copyrightHolder: {
+      '@type': 'Person',
+      name: 'Amelia',
+    },
+    copyrightYear: new Date().getFullYear(),
+    keywords: [category, ...tags, 'BKI', 'Konseling Sebaya', 'UIN Siber Cirebon', 'Kesehatan Mental Islami'].join(', '),
     inLanguage: 'id-ID',
-    isAccessibleForFree: 'true',
+    isAccessibleForFree: true,
   };
 
   return (

@@ -63,8 +63,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     url: `${BASE_URL}/articles/${art.slug}`,
     lastModified: parseIndonesianDate(art.publishedAt) || new Date(),
     changeFrequency: 'weekly' as const,
-    priority: 0.8,
-    images: [`${BASE_URL}/amelia.webp`],
+    priority: 0.85,
+    images: [
+      `${BASE_URL}/articles/${art.slug}/opengraph-image`,
+      `${BASE_URL}/amelia.webp`,
+    ],
   }));
 
   return [...staticRoutes, ...articleRoutes];

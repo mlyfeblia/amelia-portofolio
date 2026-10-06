@@ -76,6 +76,14 @@ function renderInlineMarkdown(text: string): React.ReactNode {
   });
 }
 
+function slugifyHeading(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, '')
+    .trim()
+    .replace(/\s+/g, '-');
+}
+
 /**
  * Render Markdown content cleanly into semantically structured HTML.
  * Handles headings (H2, H3), blockquotes, horizontal rules, lists, and prose paragraphs with comfortable reading line-height.
@@ -84,7 +92,7 @@ export function ArticleMarkdownRenderer({ content }: { content: string }) {
   const paragraphs = content.trim().split(/\n\s*\n/);
 
   return (
-    <div className="space-y-6 text-[15px] sm:text-base md:text-[17px] text-[var(--color-ink)] leading-[1.8] sm:leading-[1.85]">
+    <div className="article-content space-y-6 text-[15px] sm:text-base md:text-[17px] text-[var(--color-ink)] leading-[1.8] sm:leading-[1.85]">
       {paragraphs.map((para, idx) => {
         const trimmed = para.trim();
 
@@ -95,25 +103,43 @@ export function ArticleMarkdownRenderer({ content }: { content: string }) {
 
         // Heading 2
         if (trimmed.startsWith('## ')) {
+          const rawText = trimmed.replace(/^##\s+/, '');
+          const id = slugifyHeading(rawText);
           return (
             <h2
               key={idx}
-              className="text-xl sm:text-2xl md:text-[1.65rem] font-medium text-[var(--color-ink)] pt-8 pb-1 leading-snug tracking-tight"
+              id={id}
+              className="group text-xl sm:text-2xl md:text-[1.65rem] font-medium text-[var(--color-ink)] pt-8 pb-1 leading-snug tracking-tight scroll-mt-24"
               style={{ fontFamily: 'var(--font-display)' }}
             >
-              {renderInlineMarkdown(trimmed.replace(/^##\s+/, ''))}
+              <a
+                href={`#${id}`}
+                className="hover:text-[var(--color-accent)] transition-colors focus:outline-none"
+                title={`Tautan ke bagian: ${rawText}`}
+              >
+                {renderInlineMarkdown(rawText)}
+              </a>
             </h2>
           );
         }
 
         // Heading 3
         if (trimmed.startsWith('### ')) {
+          const rawText = trimmed.replace(/^###\s+/, '');
+          const id = slugifyHeading(rawText);
           return (
             <h3
               key={idx}
-              className="text-lg sm:text-xl font-semibold text-[var(--color-ink)] pt-5 pb-1 leading-snug"
+              id={id}
+              className="group text-lg sm:text-xl font-semibold text-[var(--color-ink)] pt-5 pb-1 leading-snug scroll-mt-24"
             >
-              {renderInlineMarkdown(trimmed.replace(/^###\s+/, ''))}
+              <a
+                href={`#${id}`}
+                className="hover:text-[var(--color-accent)] transition-colors focus:outline-none"
+                title={`Tautan ke bagian: ${rawText}`}
+              >
+                {renderInlineMarkdown(rawText)}
+              </a>
             </h3>
           );
         }
