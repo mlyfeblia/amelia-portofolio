@@ -12,7 +12,10 @@ export function ArticleListItem({ article }: { article: Article }) {
           className="text-xl sm:text-2xl font-medium text-[var(--color-ink)] group-hover:text-[var(--color-accent)] transition-colors leading-snug"
           style={{ fontFamily: 'var(--font-display)' }}
         >
-          <Link href={`/articles/${article.slug}`}>
+          <Link
+            href={`/articles/${article.slug}`}
+            className="hover:underline underline-offset-4 decoration-[var(--color-accent)]/60"
+          >
             {article.title}
           </Link>
         </h2>
