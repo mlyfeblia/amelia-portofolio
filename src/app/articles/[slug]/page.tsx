@@ -127,7 +127,7 @@ export default async function ArticleDetailPage(props: {
       const bSameCategory = b.category === article.category ? 1 : 0;
       return bSameCategory - aSameCategory;
     })
-    .slice(0, 2);
+    .slice(0, 3);
 
   return (
     <>
@@ -220,7 +220,7 @@ export default async function ArticleDetailPage(props: {
                   </p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                   {relatedArticles.map((rel) => (
                     <div
                       key={rel.id}
@@ -235,7 +235,7 @@ export default async function ArticleDetailPage(props: {
                             {rel.title}
                           </Link>
                         </h4>
-                        <p className="text-xs sm:text-sm text-[var(--color-ink-muted)] line-clamp-2 leading-relaxed">
+                        <p className="text-xs sm:text-sm text-[var(--color-ink-muted)] line-clamp-3 leading-relaxed">
                           {rel.publishedAt ? `${rel.publishedAt} — ` : ''}{rel.excerpt}
                         </p>
                       </div>
