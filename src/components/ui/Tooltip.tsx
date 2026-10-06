@@ -9,6 +9,7 @@ export interface TooltipProps {
   position?: 'top' | 'bottom' | 'left' | 'right';
   delay?: number;
   className?: string;
+  wrapperClassName?: string;
 }
 
 /**
@@ -21,6 +22,7 @@ export function Tooltip({
   position = 'top',
   delay = 120,
   className,
+  wrapperClassName,
 }: TooltipProps) {
   const id = useId();
   const [isVisible, setIsVisible] = useState(false);
@@ -49,7 +51,7 @@ export function Tooltip({
 
   return (
     <span
-      className="relative inline-flex items-center"
+      className={cn("relative inline-flex items-center", wrapperClassName)}
       onMouseEnter={show}
       onMouseLeave={hide}
       onFocus={show}
