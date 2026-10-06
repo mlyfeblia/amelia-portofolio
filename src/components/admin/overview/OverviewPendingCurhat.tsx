@@ -19,8 +19,8 @@ export function OverviewPendingCurhat({
 
   return (
     <div className="lg:col-span-5 space-y-3.5">
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0">
           <h2
             className="text-base sm:text-lg font-medium text-[var(--color-ink)]"
             style={{ fontFamily: 'var(--font-display)' }}
@@ -33,10 +33,10 @@ export function OverviewPendingCurhat({
         </div>
         <Link
           href="/admin/counseling"
-          className="text-xs font-semibold text-[var(--color-accent)] hover:underline inline-flex items-center gap-1"
+          className="btn-interactive inline-flex items-center gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg bg-[var(--color-paper-muted)] hover:bg-[var(--color-paper-border)] text-[var(--color-accent)] font-semibold text-xs shrink-0 whitespace-nowrap border border-[var(--color-paper-border)] transition-colors group"
         >
-          Semua ({curhatList.length})
-          <ArrowRight className="w-3 h-3" />
+          <span>Semua ({curhatList.length})</span>
+          <ArrowRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5" />
         </Link>
       </div>
 
