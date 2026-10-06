@@ -191,67 +191,9 @@ export default async function ArticleDetailPage(props: {
               </div>
 
               {/* Share & Copy Link Section */}
-              <div className="mb-12">
+              <div className="mb-4">
                 <ArticleShareBar title={article.title} url={articleFullUrl} />
               </div>
-
-              {/* Related Articles for SEO Internal Linking */}
-              {relatedArticles.length > 0 && (
-                <section className="pt-8 border-t border-[var(--color-paper-border)] space-y-5" aria-label="Tulisan Terkait">
-                  <div className="space-y-1">
-                    <h3
-                      className="text-xl sm:text-2xl font-medium text-[var(--color-ink)]"
-                      style={{ fontFamily: 'var(--font-display)' }}
-                    >
-                      Tulisan Refleksi Terkait
-                    </h3>
-                    <p className="text-xs sm:text-sm text-[var(--color-ink-muted)]">
-                      Baca juga ulasan lain seputar {article.category.toLowerCase()} dan bimbingan konseling.
-                    </p>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {relatedArticles.map((rel) => (
-                      <div
-                        key={rel.id}
-                        className="p-5 bg-[var(--color-surface)] border border-[var(--color-paper-border)] rounded-2xl flex flex-col justify-between space-y-3 card-interactive shadow-2xs"
-                      >
-                        <div className="space-y-2">
-                          <h4
-                            className="text-base font-medium text-[var(--color-ink)] leading-snug line-clamp-2"
-                            style={{ fontFamily: 'var(--font-display)' }}
-                          >
-                            <Link href={`/articles/${rel.slug}`} className="hover:text-[var(--color-accent)] transition-colors">
-                              {rel.title}
-                            </Link>
-                          </h4>
-                          <p className="text-xs text-[var(--color-ink-muted)] line-clamp-2 leading-relaxed">
-                            {rel.publishedAt ? `${rel.publishedAt} — ` : ''}{rel.excerpt}
-                          </p>
-                        </div>
-
-                        <div className="pt-2 flex items-center justify-between text-xs text-[var(--color-ink-soft)] border-t border-[var(--color-paper-border)]">
-                          <span className="inline-flex items-center gap-1.5">
-                            <span className="font-medium text-[var(--color-accent)]">{rel.category}</span>
-                            <span>•</span>
-                            <span>{rel.readTime}</span>
-                          </span>
-                          <Link
-                            href={`/articles/${rel.slug}`}
-                            className="font-semibold text-[var(--color-accent)] hover:underline inline-flex items-center gap-1"
-                          >
-                            <span>Baca</span>
-                            <ArrowUpRight className="w-3.5 h-3.5" />
-                          </Link>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </section>
-              )}
-
-              {/* Consultation CTA Banner */}
-              <ArticleCta />
             </article>
 
             {/* Desktop Sticky Sidebar */}
@@ -259,6 +201,67 @@ export default async function ArticleDetailPage(props: {
               <ArticleSidebar currentCategory={article.category} />
             </div>
 
+          </div>
+
+          {/* Full-width Bottom Sections on Desktop (Tulisan Terkait & CTA Konseling) */}
+          <div className="mt-12 sm:mt-16 space-y-10 sm:space-y-12">
+            {/* Related Articles for SEO Internal Linking */}
+            {relatedArticles.length > 0 && (
+              <section className="pt-8 sm:pt-10 border-t border-[var(--color-paper-border)] space-y-6" aria-label="Tulisan Terkait">
+                <div className="space-y-1">
+                  <h3
+                    className="text-xl sm:text-2xl font-medium text-[var(--color-ink)]"
+                    style={{ fontFamily: 'var(--font-display)' }}
+                  >
+                    Tulisan Refleksi Terkait
+                  </h3>
+                  <p className="text-xs sm:text-sm text-[var(--color-ink-muted)]">
+                    Baca juga ulasan lain seputar {article.category.toLowerCase()} dan bimbingan konseling.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  {relatedArticles.map((rel) => (
+                    <div
+                      key={rel.id}
+                      className="p-5 sm:p-6 bg-[var(--color-surface)] border border-[var(--color-paper-border)] rounded-2xl flex flex-col justify-between space-y-3 card-interactive shadow-2xs"
+                    >
+                      <div className="space-y-2">
+                        <h4
+                          className="text-base sm:text-lg font-medium text-[var(--color-ink)] leading-snug line-clamp-2"
+                          style={{ fontFamily: 'var(--font-display)' }}
+                        >
+                          <Link href={`/articles/${rel.slug}`} className="hover:text-[var(--color-accent)] transition-colors">
+                            {rel.title}
+                          </Link>
+                        </h4>
+                        <p className="text-xs sm:text-sm text-[var(--color-ink-muted)] line-clamp-2 leading-relaxed">
+                          {rel.publishedAt ? `${rel.publishedAt} — ` : ''}{rel.excerpt}
+                        </p>
+                      </div>
+
+                      <div className="pt-2 flex items-center justify-between text-xs text-[var(--color-ink-soft)] border-t border-[var(--color-paper-border)]">
+                        <span className="inline-flex items-center gap-1.5">
+                          <span className="font-medium text-[var(--color-accent)]">{rel.category}</span>
+                          <span>•</span>
+                          <span>{rel.readTime}</span>
+                        </span>
+                        <Link
+                          href={`/articles/${rel.slug}`}
+                          className="font-semibold text-[var(--color-accent)] hover:underline inline-flex items-center gap-1"
+                        >
+                          <span>Baca</span>
+                          <ArrowUpRight className="w-3.5 h-3.5" />
+                        </Link>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* Consultation CTA Banner */}
+            <ArticleCta />
           </div>
         </div>
       </main>
