@@ -179,13 +179,10 @@ export default function Navbar() {
                   href="/schedule"
                   onClick={() => setOpen(false)}
                   tabIndex={open ? -1 : 0}
-                  style={{
-                    transition: 'all var(--dur-base) var(--ease-smooth)',
-                  }}
-                  className="inline-flex items-center justify-center gap-1.5 h-8 md:h-9 px-3 md:px-4 text-xs md:text-sm font-semibold rounded-lg text-white bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] shadow-[0_1px_2px_rgba(25,40,32,0.1)] hover:-translate-y-[1px] hover:shadow-[0_4px_12px_rgba(26,86,60,0.22)] active:scale-[0.98] active:shadow-[0_1px_3px_rgba(26,86,60,0.15)] whitespace-nowrap select-none cursor-pointer"
+                  className="inline-flex items-center justify-center gap-1.5 h-8 md:h-9 px-3 md:px-4 text-xs md:text-sm font-semibold rounded-lg text-white bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] shadow-[0_1px_2px_rgba(25,40,32,0.1)] hover:-translate-y-[1px] hover:shadow-[0_4px_12px_rgba(26,86,60,0.22)] active:scale-[0.98] active:shadow-[0_1px_3px_rgba(26,86,60,0.15)] whitespace-nowrap select-none cursor-pointer transform-gpu [backface-visibility:hidden] [contain:paint] transition-[background-color,border-color,box-shadow,transform] duration-200 ease-out"
                 >
                   <Calendar className="w-3.5 h-3.5 shrink-0" />
-                  <span>Janji Temu</span>
+                  <span className="transform-gpu [backface-visibility:hidden]">Janji Temu</span>
                 </Link>
               </div>
 
