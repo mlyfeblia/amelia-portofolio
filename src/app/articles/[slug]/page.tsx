@@ -256,7 +256,7 @@ export default async function ArticleDetailPage(props: {
 
             {/* Desktop Sticky Sidebar */}
             <div className="hidden lg:block lg:col-span-4">
-              <ArticleSidebar />
+              <ArticleSidebar currentCategory={article.category} />
             </div>
 
           </div>

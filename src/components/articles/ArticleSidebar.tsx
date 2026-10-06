@@ -1,9 +1,13 @@
 import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Calendar, MessageCircleHeart } from 'lucide-react';
+import { Calendar, Compass, MessageCircleHeart } from 'lucide-react';
 
-export function ArticleSidebar() {
+interface ArticleSidebarProps {
+  currentCategory: string;
+}
+
+export function ArticleSidebar({ currentCategory }: ArticleSidebarProps) {
   return (
     <aside className="space-y-6 lg:sticky lg:top-24">
       {/* Profile Card */}
@@ -46,6 +50,26 @@ export function ArticleSidebar() {
           >
             <MessageCircleHeart className="w-3.5 h-3.5 text-[var(--color-accent)]" />
             <span>Kirim Cerita Anonim</span>
+          </Link>
+        </div>
+      </div>
+
+      {/* Topics Guidance Box */}
+      <div className="p-4 sm:p-5 rounded-2xl bg-[var(--color-paper-muted)]/60 border border-[var(--color-paper-border)] space-y-2.5">
+        <div className="flex items-center gap-2 text-xs font-semibold text-[var(--color-ink)]">
+          <Compass className="w-3.5 h-3.5 text-[var(--color-accent)]" />
+          <span>Fokus Topik</span>
+        </div>
+        <p className="text-xs text-[var(--color-ink-muted)] leading-relaxed">
+          Tulisan ini berada di bawah kategori <strong className="text-[var(--color-ink)]">{currentCategory}</strong>. Seluruh materi disusun secara mandiri dengan rujukan literatur psikologi dan nilai tazkiyatun nafs.
+        </p>
+        <div className="pt-1">
+          <Link
+            href="/articles"
+            className="text-xs font-semibold text-[var(--color-accent)] hover:underline inline-flex items-center gap-1"
+          >
+            <span>Jelajahi kategori lain</span>
+            <span>&rarr;</span>
           </Link>
         </div>
       </div>
