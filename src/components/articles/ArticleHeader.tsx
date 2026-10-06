@@ -39,7 +39,7 @@ export function ArticleHeader({ article }: { article: Article }) {
           </div>
         </div>
 
-        {/* Date, Category, and Read Time */}
+        {/* Date and Read Time */}
         <div className="flex items-center gap-2 text-xs sm:text-sm text-[var(--color-ink-muted)]">
           {article.publishedAt && (
             <>
@@ -49,10 +49,6 @@ export function ArticleHeader({ article }: { article: Article }) {
               <span className="text-[var(--color-paper-border)]" aria-hidden="true">•</span>
             </>
           )}
-          <span className="font-semibold text-[var(--color-accent)]">
-            {article.category}
-          </span>
-          <span className="text-[var(--color-paper-border)]" aria-hidden="true">•</span>
           <span className="inline-flex items-center gap-1 text-[var(--color-ink-soft)]">
             <Clock className="w-3.5 h-3.5" aria-hidden="true" />
             <span>{article.readTime}</span>
