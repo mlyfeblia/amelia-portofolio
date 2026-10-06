@@ -279,7 +279,7 @@ export default function Navbar() {
               <Link
                 href="/schedule"
                 onClick={() => setOpen(false)}
-                className="btn-primary text-sm py-2.5 px-4 w-full text-center justify-center shadow-xs inline-flex items-center gap-2 hover:-translate-y-0.5 hover:shadow-md hover:bg-[var(--color-accent-hover)] active:translate-y-0 active:scale-[0.98] transition-all duration-200 ease-out"
+                className="w-full py-2.5 px-4 rounded-xl bg-[var(--color-accent)] text-white text-xs font-semibold hover:bg-[var(--color-accent-hover)] shadow-xs inline-flex items-center justify-center gap-2 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 active:scale-[0.98] transition-all duration-200 ease-out select-none cursor-pointer"
               >
                 <Calendar className="w-4 h-4" />
                 <span>Janji Temu Konseling</span>
@@ -291,7 +291,7 @@ export default function Navbar() {
                   setOpen(false);
                   triggerPwaInstall();
                 }}
-                className="w-full py-2.5 px-4 rounded-xl bg-white border border-[var(--color-paper-border)] text-[var(--color-ink)] text-xs font-medium hover:text-[var(--color-accent)] hover:border-[var(--color-accent-border)] hover:bg-[var(--color-paper-muted)] hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-all duration-200 ease-out flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full py-2.5 px-4 rounded-xl bg-white border border-[var(--color-paper-border)] text-[var(--color-ink)] text-xs font-medium hover:text-[var(--color-accent)] hover:border-[var(--color-accent-border)] hover:bg-[var(--color-paper-muted)] hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-all duration-200 ease-out flex items-center justify-center gap-2 select-none cursor-pointer"
               >
                 <Smartphone className="w-4 h-4 text-[var(--color-accent)]" />
                 <span>{isInstalled ? 'Aplikasi Amelia (Terpasang)' : 'Pasang Aplikasi Amelia'}</span>
