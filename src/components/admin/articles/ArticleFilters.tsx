@@ -62,121 +62,96 @@ export function ArticleFilters({
         )}
       </div>
 
-      {/* Row: Status Publikasi, Landing Page & Kategori */}
-      <div className="pt-2 border-t border-[var(--color-paper-border)] space-y-2.5">
-        {/* Status Publikasi & Landing Page Tabs */}
-        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
-          <span className="text-[11px] font-medium text-[var(--color-ink-muted)] shrink-0 mr-1">
-            Status:
-          </span>
-          <button
-            onClick={() => onStatusChange('semua')}
-            type="button"
-            className={`chip-interactive px-3 py-1.5 rounded-full text-xs font-medium cursor-pointer shrink-0 whitespace-nowrap ${
-              statusFilter === 'semua' && landingFilter !== 'landing'
-                ? 'bg-[var(--color-accent)] text-white shadow-xs font-semibold'
-                : 'bg-[var(--color-paper)] text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] border border-[var(--color-paper-border)]'
-            }`}
+      {/* Unified Filters Row: 3 Dropdowns (Status & Tampilan, Kategori, Tanggal Rilis) */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-2 border-t border-[var(--color-paper-border)] text-xs">
+        {/* 1. Status Publikasi & Beranda Dropdown */}
+        <div className="flex items-center gap-2 bg-[var(--color-paper)] px-3 py-1.5 rounded-xl border border-[var(--color-paper-border)]">
+          <Eye className="w-3.5 h-3.5 text-[var(--color-ink-muted)] shrink-0" />
+          <select
+            value={landingFilter === 'landing' ? 'landing' : statusFilter}
+            onChange={(e) => {
+              const val = e.target.value;
+              if (val === 'landing') {
+                onLandingFilterChange('landing');
+                onStatusChange('semua');
+              } else {
+                onLandingFilterChange('semua');
+                onStatusChange(val as 'semua' | 'published' | 'draft');
+              }
+            }}
+            className="w-full bg-transparent text-xs text-[var(--color-ink)] focus:outline-none cursor-pointer"
           >
-            Semua ({counts.total})
-          </button>
-          <button
-            onClick={() => onStatusChange('published')}
-            type="button"
-            className={`chip-interactive inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium cursor-pointer shrink-0 whitespace-nowrap ${
-              statusFilter === 'published' && landingFilter !== 'landing'
-                ? 'bg-[var(--color-accent)] text-white shadow-xs font-semibold'
-                : 'bg-[var(--color-paper)] text-[var(--color-accent)] hover:bg-[var(--color-accent-soft)] border border-[var(--color-accent-border)]'
-            }`}
-          >
-            <Eye className="w-3 h-3" />
-            <span>Publik ({counts.published})</span>
-          </button>
-          <button
-            onClick={() => onStatusChange('draft')}
-            type="button"
-            className={`chip-interactive inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium cursor-pointer shrink-0 whitespace-nowrap ${
-              statusFilter === 'draft' && landingFilter !== 'landing'
-                ? 'bg-[var(--color-ink)] text-white shadow-xs font-semibold'
-                : 'bg-[var(--color-paper)] text-[var(--color-ink-muted)] hover:bg-[var(--color-paper-muted)] border border-[var(--color-paper-border)]'
-            }`}
-          >
-            <EyeOff className="w-3 h-3" />
-            <span>Draf / Tersembunyi ({counts.draft})</span>
-          </button>
-
-          <span className="text-[var(--color-paper-border)] select-none shrink-0 mx-0.5">|</span>
-
-          {/* Landing Showcase Filter Button */}
-          <button
-            onClick={() => onLandingFilterChange(landingFilter === 'landing' ? 'semua' : 'landing')}
-            type="button"
-            className={`chip-interactive inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold cursor-pointer shrink-0 whitespace-nowrap transition-colors ${
-              landingFilter === 'landing'
-                ? 'bg-amber-500 text-white shadow-xs font-bold'
-                : 'bg-amber-50 text-amber-900 border border-amber-300 hover:bg-amber-100'
-            }`}
-            title="Filter artikel yang disorot tampil di beranda utama (fleksibel sesuai kurasi admin)"
-          >
-            <span className={landingFilter === 'landing' ? 'text-white' : 'text-amber-500'}>★</span>
-            <span>Di Beranda ({counts.landingCount})</span>
-          </button>
+            <option value="semua">Status: Semua ({counts.total})</option>
+            <option value="published">Status: Publik ({counts.published})</option>
+            <option value="draft">Status: Draf / Tersembunyi ({counts.draft})</option>
+            <option value="landing">Tampilan: ★ Di Beranda ({counts.landingCount})</option>
+          </select>
+          {(statusFilter !== 'semua' || landingFilter === 'landing') && (
+            <button
+              onClick={() => {
+                onStatusChange('semua');
+                onLandingFilterChange('semua');
+              }}
+              className="text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] p-0.5"
+              title="Reset filter status"
+              type="button"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
 
-        {/* Row 2: Secondary Dropdowns (Kategori & Tanggal Rilis) matching bookings style */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2 border-t border-[var(--color-paper-border)] text-xs">
-          {/* Category Dropdown */}
-          <div className="flex items-center gap-2 bg-[var(--color-paper)] px-3 py-1.5 rounded-xl border border-[var(--color-paper-border)]">
-            <Filter className="w-3.5 h-3.5 text-[var(--color-ink-muted)] shrink-0" />
-            <select
-              value={selectedCategory}
-              onChange={(e) => onSelectCategory(e.target.value)}
-              className="w-full bg-transparent text-xs text-[var(--color-ink)] focus:outline-none cursor-pointer"
+        {/* 2. Category Dropdown */}
+        <div className="flex items-center gap-2 bg-[var(--color-paper)] px-3 py-1.5 rounded-xl border border-[var(--color-paper-border)]">
+          <Filter className="w-3.5 h-3.5 text-[var(--color-ink-muted)] shrink-0" />
+          <select
+            value={selectedCategory}
+            onChange={(e) => onSelectCategory(e.target.value)}
+            className="w-full bg-transparent text-xs text-[var(--color-ink)] focus:outline-none cursor-pointer"
+          >
+            {categories.map((cat) => (
+              <option key={cat} value={cat}>
+                {cat === 'Semua' ? 'Topik: Semua Topik' : cat}
+              </option>
+            ))}
+          </select>
+          {selectedCategory !== 'Semua' && (
+            <button
+              onClick={() => onSelectCategory('Semua')}
+              className="text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] p-0.5"
+              title="Reset pilihan kategori"
+              type="button"
             >
-              {categories.map((cat) => (
-                <option key={cat} value={cat}>
-                  {cat === 'Semua' ? 'Semua Topik' : cat}
-                </option>
-              ))}
-            </select>
-            {selectedCategory !== 'Semua' && (
-              <button
-                onClick={() => onSelectCategory('Semua')}
-                className="text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] p-0.5"
-                title="Reset pilihan kategori"
-                type="button"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            )}
-          </div>
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
 
-          {/* Date Dropdown / Clear */}
-          <div className="flex items-center gap-2 bg-[var(--color-paper)] px-3 py-1.5 rounded-xl border border-[var(--color-paper-border)]">
-            <Calendar className="w-3.5 h-3.5 text-[var(--color-ink-muted)] shrink-0" />
-            <select
-              value={dateFilter}
-              onChange={(e) => onDateChange(e.target.value)}
-              className="w-full bg-transparent text-xs text-[var(--color-ink)] focus:outline-none cursor-pointer"
+        {/* 3. Date Dropdown / Clear */}
+        <div className="flex items-center gap-2 bg-[var(--color-paper)] px-3 py-1.5 rounded-xl border border-[var(--color-paper-border)]">
+          <Calendar className="w-3.5 h-3.5 text-[var(--color-ink-muted)] shrink-0" />
+          <select
+            value={dateFilter}
+            onChange={(e) => onDateChange(e.target.value)}
+            className="w-full bg-transparent text-xs text-[var(--color-ink)] focus:outline-none cursor-pointer"
+          >
+            <option value="">Tanggal: Semua</option>
+            {availableDates.map((item) => (
+              <option key={item.value} value={item.value}>
+                {item.label} ({item.count})
+              </option>
+            ))}
+          </select>
+          {dateFilter && (
+            <button
+              onClick={() => onDateChange('')}
+              className="text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] p-0.5"
+              title="Hapus filter tanggal"
+              type="button"
             >
-              <option value="">Semua Tanggal</option>
-              {availableDates.map((item) => (
-                <option key={item.value} value={item.value}>
-                  {item.label} ({item.count})
-                </option>
-              ))}
-            </select>
-            {dateFilter && (
-              <button
-                onClick={() => onDateChange('')}
-                className="text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] p-0.5"
-                title="Hapus filter tanggal"
-                type="button"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            )}
-          </div>
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
       </div>
     </div>

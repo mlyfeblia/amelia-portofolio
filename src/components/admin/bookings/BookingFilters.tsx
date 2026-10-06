@@ -64,36 +64,37 @@ export function BookingFilters({
         )}
       </div>
 
-      {/* Status Tabs */}
-      <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1 border-t border-[var(--color-paper-border)] pt-2.5">
-        {STATUS_TABS.map((tab) => {
-          const count = tab.value === 'semua' ? totalCount : statusCounts[tab.value] || 0;
-          const isActive = statusFilter === tab.value;
-
-          return (
+      {/* Unified Filters Row: 3 Dropdowns (Status, Topik, Tanggal) */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-2 border-t border-[var(--color-paper-border)] text-xs">
+        {/* Status Dropdown */}
+        <div className="flex items-center gap-2 bg-[var(--color-paper)] px-3 py-1.5 rounded-xl border border-[var(--color-paper-border)]">
+          <Filter className="w-3.5 h-3.5 text-[var(--color-ink-muted)] shrink-0" />
+          <select
+            value={statusFilter}
+            onChange={(e) => onStatusChange(e.target.value as BookingStatus | 'semua')}
+            className="w-full bg-transparent text-xs text-[var(--color-ink)] focus:outline-none cursor-pointer"
+          >
+            {STATUS_TABS.map((tab) => {
+              const count = tab.value === 'semua' ? totalCount : statusCounts[tab.value] || 0;
+              return (
+                <option key={tab.value} value={tab.value}>
+                  Status: {tab.label} ({count})
+                </option>
+              );
+            })}
+          </select>
+          {statusFilter !== 'semua' && (
             <button
-              key={tab.value}
-              onClick={() => onStatusChange(tab.value)}
+              onClick={() => onStatusChange('semua')}
+              className="text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] p-0.5"
+              title="Reset status"
               type="button"
-              className={`chip-interactive inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium shrink-0 cursor-pointer whitespace-nowrap ${
-                isActive
-                  ? 'bg-[var(--color-accent)] text-white shadow-xs font-semibold'
-                  : 'bg-[var(--color-paper)] text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] border border-[var(--color-paper-border)]'
-              }`}
             >
-              <span>{tab.label}</span>
-              <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
-                isActive ? 'bg-white/20 text-white' : 'bg-[var(--color-paper-muted)] text-[var(--color-ink-muted)]'
-              }`}>
-                {count}
-              </span>
+              <X className="w-3.5 h-3.5" />
             </button>
-          );
-        })}
-      </div>
+          )}
+        </div>
 
-      {/* Secondary Filters: Category & Date on Mobile/Desktop */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2 border-t border-[var(--color-paper-border)] text-xs">
         {/* Category Dropdown */}
         <div className="flex items-center gap-2 bg-[var(--color-paper)] px-3 py-1.5 rounded-xl border border-[var(--color-paper-border)]">
           <Filter className="w-3.5 h-3.5 text-[var(--color-ink-muted)] shrink-0" />
@@ -104,10 +105,20 @@ export function BookingFilters({
           >
             {categories.map((cat) => (
               <option key={cat} value={cat}>
-                {cat}
+                {cat === 'Semua Topik' ? 'Topik: Semua Topik' : cat}
               </option>
             ))}
           </select>
+          {categoryFilter !== 'Semua Topik' && (
+            <button
+              onClick={() => onCategoryChange('Semua Topik')}
+              className="text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] p-0.5"
+              title="Reset pilihan topik"
+              type="button"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
 
         {/* Date Dropdown / Clear */}
@@ -118,7 +129,7 @@ export function BookingFilters({
             onChange={(e) => onDateChange(e.target.value)}
             className="w-full bg-transparent text-xs text-[var(--color-ink)] focus:outline-none cursor-pointer"
           >
-            <option value="">Semua Tanggal</option>
+            <option value="">Tanggal: Semua</option>
             {availableDates.map((item) => (
               <option key={item.value} value={item.value}>
                 {item.label} ({item.count})
