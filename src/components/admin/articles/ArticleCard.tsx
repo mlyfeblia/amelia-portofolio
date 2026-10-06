@@ -63,9 +63,11 @@ export function ArticleCard({
             </span>
           </div>
         </div>
+      </div>
 
-        {/* Action Buttons: Unified, Compact, and Aligned */}
-        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 shrink-0 self-stretch sm:self-start justify-end pt-2.5 sm:pt-0 border-t sm:border-t-0 border-[var(--color-paper-border)]">
+      {/* Full-Width Action Buttons Toolbar */}
+      <div className="pt-2 border-t border-[var(--color-paper-border)] flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center gap-1.5 flex-1 min-w-0">
           {/* Landing Page Showcase Toggle */}
           {onToggleLanding && (
             <button
@@ -116,40 +118,40 @@ export function ArticleCard({
           <button
             onClick={() => onEdit(article)}
             type="button"
-            className="btn-interactive inline-flex items-center justify-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-[var(--color-accent-soft)] text-[var(--color-accent)] hover:bg-[var(--color-accent)] hover:text-white text-xs font-semibold cursor-pointer"
+            className="btn-interactive inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--color-accent-soft)] text-[var(--color-accent)] hover:bg-[var(--color-accent)] hover:text-white text-xs font-semibold cursor-pointer"
           >
             <Edit3 className="w-3.5 h-3.5" />
             <span>Ubah</span>
           </button>
+        </div>
 
-          {/* Icon Actions Group: Preview & Delete */}
-          <div className="flex items-center gap-1 border-l border-[var(--color-paper-border)] pl-1.5 ml-0.5">
-            {/* Public Preview Link */}
-            {isPublic && (
-              <Tooltip content="Buka di web publik" position="top">
-                <Link
-                  href={`/articles/${article.slug}`}
-                  target="_blank"
-                  className="btn-interactive inline-flex items-center justify-center p-1.5 rounded-lg bg-[var(--color-surface)] border border-[var(--color-paper-border)] hover:bg-[var(--color-paper-muted)] text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] text-xs cursor-pointer"
-                  aria-label="Buka tampilan web publik"
-                >
-                  <ExternalLink className="w-3.5 h-3.5" />
-                </Link>
-              </Tooltip>
-            )}
-
-            {/* Delete Button */}
-            <Tooltip content="Hapus artikel" position="top">
-              <button
-                onClick={() => onDelete(article)}
-                type="button"
-                className="btn-interactive inline-flex items-center justify-center p-1.5 rounded-lg border border-transparent hover:border-red-200 text-[var(--color-ink-muted)] hover:text-[var(--color-error)] hover:bg-[var(--color-error-soft)] transition-colors cursor-pointer"
-                aria-label="Hapus artikel ini"
+        {/* Right-aligned Icon Actions: Public Preview Link & Delete Button */}
+        <div className="flex items-center gap-1 shrink-0">
+          {/* Public Preview Link */}
+          {isPublic && (
+            <Tooltip content="Buka di web publik" position="top">
+              <Link
+                href={`/articles/${article.slug}`}
+                target="_blank"
+                className="btn-interactive inline-flex items-center justify-center p-1.5 rounded-lg bg-[var(--color-surface)] border border-[var(--color-paper-border)] hover:bg-[var(--color-paper-muted)] text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] text-xs cursor-pointer"
+                aria-label="Buka tampilan web publik"
               >
-                <Trash2 className="w-3.5 h-3.5" />
-              </button>
+                <ExternalLink className="w-3.5 h-3.5" />
+              </Link>
             </Tooltip>
-          </div>
+          )}
+
+          {/* Delete Button */}
+          <Tooltip content="Hapus artikel" position="top">
+            <button
+              onClick={() => onDelete(article)}
+              type="button"
+              className="btn-interactive inline-flex items-center justify-center p-1.5 rounded-lg border border-[var(--color-paper-border)] hover:border-red-300 text-[var(--color-ink-muted)] hover:text-[var(--color-error)] hover:bg-[var(--color-error-soft)] transition-colors cursor-pointer"
+              aria-label="Hapus artikel ini"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          </Tooltip>
         </div>
       </div>
 
