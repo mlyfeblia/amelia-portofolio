@@ -15,6 +15,7 @@ interface ArticleListProps {
   statusFilter?: string;
   selectedCategory?: string;
   landingFilter?: string;
+  dateFilter?: string;
   hasActiveFilters?: boolean;
   onResetFilters?: () => void;
   onEdit: (art: Article) => void;
@@ -33,6 +34,7 @@ export function ArticleList({
   statusFilter = 'semua',
   selectedCategory = 'Semua',
   landingFilter = 'semua',
+  dateFilter,
   hasActiveFilters,
   onResetFilters,
   onEdit,
@@ -84,6 +86,11 @@ export function ArticleList({
                 {landingFilter === 'landing' && (
                   <span className="block mt-0.5 text-[11px] text-[var(--color-ink-soft)]">
                     Filter: Hanya di Beranda
+                  </span>
+                )}
+                {dateFilter && (
+                  <span className="block mt-0.5 text-[11px] text-[var(--color-ink-soft)]">
+                    Filter tanggal rilis: &ldquo;{dateFilter}&rdquo;
                   </span>
                 )}
               </p>

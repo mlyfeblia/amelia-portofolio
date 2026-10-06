@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Search, X, Eye, EyeOff } from 'lucide-react';
+import { Search, X, Eye, EyeOff, Filter, Calendar } from 'lucide-react';
 
 interface ArticleFiltersProps {
   search: string;
@@ -12,6 +12,9 @@ interface ArticleFiltersProps {
   onLandingFilterChange: (l: 'semua' | 'landing') => void;
   selectedCategory: string;
   onSelectCategory: (category: string) => void;
+  dateFilter: string;
+  onDateChange: (d: string) => void;
+  availableDates: { value: string; label: string; count: number }[];
   categories: string[];
   counts: {
     total: number;
@@ -30,6 +33,9 @@ export function ArticleFilters({
   onLandingFilterChange,
   selectedCategory,
   onSelectCategory,
+  dateFilter,
+  onDateChange,
+  availableDates,
   categories,
   counts,
 }: ArticleFiltersProps) {
@@ -117,25 +123,60 @@ export function ArticleFilters({
           </button>
         </div>
 
-        {/* Categories Horizontal Pills */}
-        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-1.5 border-t border-[var(--color-paper-border)]">
-          <span className="text-[11px] font-medium text-[var(--color-ink-muted)] shrink-0 mr-1">
-            Kategori:
-          </span>
-          {categories.map((cat) => (
-            <button
-              key={cat}
-              onClick={() => onSelectCategory(cat)}
-              type="button"
-              className={`chip-interactive px-2.5 py-1 rounded-lg text-xs whitespace-nowrap cursor-pointer shrink-0 ${
-                selectedCategory === cat
-                  ? 'bg-[var(--color-accent-soft)] text-[var(--color-accent)] font-semibold border border-[var(--color-accent-border)]'
-                  : 'bg-[var(--color-paper)] text-[var(--color-ink-muted)] border border-transparent hover:bg-[var(--color-paper-muted)]'
-              }`}
+        {/* Row 2: Secondary Dropdowns (Kategori & Tanggal Rilis) matching bookings style */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2 border-t border-[var(--color-paper-border)] text-xs">
+          {/* Category Dropdown */}
+          <div className="flex items-center gap-2 bg-[var(--color-paper)] px-3 py-1.5 rounded-xl border border-[var(--color-paper-border)]">
+            <Filter className="w-3.5 h-3.5 text-[var(--color-ink-muted)] shrink-0" />
+            <select
+              value={selectedCategory}
+              onChange={(e) => onSelectCategory(e.target.value)}
+              className="w-full bg-transparent text-xs text-[var(--color-ink)] focus:outline-none cursor-pointer"
             >
-              {cat}
-            </button>
-          ))}
+              {categories.map((cat) => (
+                <option key={cat} value={cat}>
+                  {cat === 'Semua' ? 'Semua Topik' : cat}
+                </option>
+              ))}
+            </select>
+            {selectedCategory !== 'Semua' && (
+              <button
+                onClick={() => onSelectCategory('Semua')}
+                className="text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] p-0.5"
+                title="Reset pilihan kategori"
+                type="button"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+
+          {/* Date Dropdown / Clear */}
+          <div className="flex items-center gap-2 bg-[var(--color-paper)] px-3 py-1.5 rounded-xl border border-[var(--color-paper-border)]">
+            <Calendar className="w-3.5 h-3.5 text-[var(--color-ink-muted)] shrink-0" />
+            <select
+              value={dateFilter}
+              onChange={(e) => onDateChange(e.target.value)}
+              className="w-full bg-transparent text-xs text-[var(--color-ink)] focus:outline-none cursor-pointer"
+            >
+              <option value="">Semua Tanggal</option>
+              {availableDates.map((item) => (
+                <option key={item.value} value={item.value}>
+                  {item.label} ({item.count})
+                </option>
+              ))}
+            </select>
+            {dateFilter && (
+              <button
+                onClick={() => onDateChange('')}
+                className="text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] p-0.5"
+                title="Hapus filter tanggal"
+                type="button"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>

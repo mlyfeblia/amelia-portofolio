@@ -26,6 +26,7 @@ export function AdminArticlesClient() {
   const [statusFilter, setStatusFilter] = useState<'semua' | 'published' | 'draft'>('semua');
   const [landingFilter, setLandingFilter] = useState<'semua' | 'landing'>('semua');
   const [selectedCategory, setSelectedCategory] = useState('Semua');
+  const [dateFilter, setDateFilter] = useState('');
 
   // Sync filters from URL and sessionStorage on mount
   useEffect(() => {
@@ -34,11 +35,13 @@ export function AdminArticlesClient() {
       const s = params.get('status') || sessionStorage.getItem('admin_articles_status');
       const l = params.get('landing') || sessionStorage.getItem('admin_articles_landing');
       const k = params.get('kategori') || sessionStorage.getItem('admin_articles_kategori');
+      const d = params.get('tgl') || sessionStorage.getItem('admin_articles_tgl');
       const q = params.get('q') || sessionStorage.getItem('admin_articles_q');
 
       if (s) setStatusFilter(s as 'semua' | 'published' | 'draft');
       if (l) setLandingFilter(l as 'semua' | 'landing');
       if (k) setSelectedCategory(k);
+      if (d) setDateFilter(d);
       if (q) setSearch(q);
     } catch {}
   }, []);
@@ -47,6 +50,7 @@ export function AdminArticlesClient() {
     s: 'semua' | 'published' | 'draft',
     l: 'semua' | 'landing',
     k: string,
+    d: string,
     q: string
   ) => {
     try {
@@ -58,6 +62,9 @@ export function AdminArticlesClient() {
 
       if (k && k !== 'Semua') sessionStorage.setItem('admin_articles_kategori', k);
       else sessionStorage.removeItem('admin_articles_kategori');
+
+      if (d) sessionStorage.setItem('admin_articles_tgl', d);
+      else sessionStorage.removeItem('admin_articles_tgl');
 
       if (q.trim()) sessionStorage.setItem('admin_articles_q', q.trim());
       else sessionStorage.removeItem('admin_articles_q');
@@ -72,6 +79,9 @@ export function AdminArticlesClient() {
       if (k && k !== 'Semua') url.searchParams.set('kategori', k);
       else url.searchParams.delete('kategori');
 
+      if (d) url.searchParams.set('tgl', d);
+      else url.searchParams.delete('tgl');
+
       if (q.trim()) url.searchParams.set('q', q.trim());
       else url.searchParams.delete('q');
 
@@ -81,19 +91,23 @@ export function AdminArticlesClient() {
 
   const handleSearchChange = (val: string) => {
     setSearch(val);
-    syncFilterParams(statusFilter, landingFilter, selectedCategory, val);
+    syncFilterParams(statusFilter, landingFilter, selectedCategory, dateFilter, val);
   };
   const handleStatusChange = (val: 'semua' | 'published' | 'draft') => {
     setStatusFilter(val);
-    syncFilterParams(val, landingFilter, selectedCategory, search);
+    syncFilterParams(val, landingFilter, selectedCategory, dateFilter, search);
   };
   const handleLandingChange = (val: 'semua' | 'landing') => {
     setLandingFilter(val);
-    syncFilterParams(statusFilter, val, selectedCategory, search);
+    syncFilterParams(statusFilter, val, selectedCategory, dateFilter, search);
   };
   const handleCategoryChange = (val: string) => {
     setSelectedCategory(val);
-    syncFilterParams(statusFilter, landingFilter, val, search);
+    syncFilterParams(statusFilter, landingFilter, val, dateFilter, search);
+  };
+  const handleDateChange = (val: string) => {
+    setDateFilter(val);
+    syncFilterParams(statusFilter, landingFilter, selectedCategory, val, search);
   };
 
   // Modal States
@@ -260,6 +274,25 @@ export function AdminArticlesClient() {
     return ['Semua', ...Array.from(set)];
   }, [articles]);
 
+  // Available unique dates from publishedAt sorted descending
+  const availableDates = useMemo(() => {
+    const dateCounts: Record<string, number> = {};
+    articles.forEach((a) => {
+      if (a.publishedAt && a.publishedAt.trim()) {
+        const val = a.publishedAt.trim();
+        dateCounts[val] = (dateCounts[val] || 0) + 1;
+      }
+    });
+
+    return Object.keys(dateCounts)
+      .sort((a, b) => b.localeCompare(a))
+      .map((dateStr) => ({
+        value: dateStr,
+        label: dateStr,
+        count: dateCounts[dateStr],
+      }));
+  }, [articles]);
+
   // Filtered Articles
   const filteredArticles = useMemo(() => {
     return articles.filter((art) => {
@@ -273,6 +306,8 @@ export function AdminArticlesClient() {
         landingFilter === 'semua' || (landingFilter === 'landing' && art.showOnLandingPage);
 
       const matchesCategory = selectedCategory === 'Semua' || art.category === selectedCategory;
+      const matchesDate = !dateFilter || (art.publishedAt && art.publishedAt.includes(dateFilter));
+
       const q = search.toLowerCase();
       const matchesSearch =
         !q ||
@@ -282,23 +317,25 @@ export function AdminArticlesClient() {
         art.excerpt.toLowerCase().includes(q) ||
         (art.tags && art.tags.some((t) => t.toLowerCase().includes(q)));
 
-      return matchesStatus && matchesLanding && matchesCategory && matchesSearch;
+      return matchesStatus && matchesLanding && matchesCategory && matchesDate && matchesSearch;
     });
-  }, [articles, statusFilter, landingFilter, selectedCategory, search]);
+  }, [articles, statusFilter, landingFilter, selectedCategory, dateFilter, search]);
 
   const handleResetFilters = () => {
     setSearch('');
     setStatusFilter('semua');
     setLandingFilter('semua');
     setSelectedCategory('Semua');
-    syncFilterParams('semua', 'semua', 'Semua', '');
+    setDateFilter('');
+    syncFilterParams('semua', 'semua', 'Semua', '', '');
   };
 
   const hasActiveFilters = Boolean(
     search.trim() ||
     statusFilter !== 'semua' ||
     landingFilter !== 'semua' ||
-    selectedCategory !== 'Semua'
+    selectedCategory !== 'Semua' ||
+    dateFilter.trim()
   );
 
   return (
@@ -319,6 +356,9 @@ export function AdminArticlesClient() {
         onLandingFilterChange={handleLandingChange}
         selectedCategory={selectedCategory}
         onSelectCategory={handleCategoryChange}
+        dateFilter={dateFilter}
+        onDateChange={handleDateChange}
+        availableDates={availableDates}
         categories={categoriesList}
         counts={statusCounts}
       />
@@ -332,6 +372,7 @@ export function AdminArticlesClient() {
         statusFilter={statusFilter}
         selectedCategory={selectedCategory}
         landingFilter={landingFilter}
+        dateFilter={dateFilter}
         hasActiveFilters={hasActiveFilters}
         onResetFilters={handleResetFilters}
         onEdit={handleOpenEdit}

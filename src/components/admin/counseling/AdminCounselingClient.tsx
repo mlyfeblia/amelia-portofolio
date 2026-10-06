@@ -22,6 +22,7 @@ export function AdminCounselingClient() {
   const [statusFilter, setStatusFilter] = useState<'semua' | 'unanswered' | 'answered'>('semua');
   const [visibilityFilter, setVisibilityFilter] = useState<'semua' | 'public' | 'private'>('semua');
   const [landingFilter, setLandingFilter] = useState<'semua' | 'landing'>('semua');
+  const [dateFilter, setDateFilter] = useState('');
 
   // Sync filters from URL and sessionStorage on mount
   useEffect(() => {
@@ -31,12 +32,14 @@ export function AdminCounselingClient() {
       const k = params.get('kategori') || sessionStorage.getItem('admin_counseling_kategori');
       const v = params.get('vis') || sessionStorage.getItem('admin_counseling_vis');
       const l = params.get('landing') || sessionStorage.getItem('admin_counseling_landing');
+      const d = params.get('tgl') || sessionStorage.getItem('admin_counseling_tgl');
       const q = params.get('q') || sessionStorage.getItem('admin_counseling_q');
 
       if (s) setStatusFilter(s as 'semua' | 'unanswered' | 'answered');
       if (k) setCategoryFilter(k);
       if (v) setVisibilityFilter(v as 'semua' | 'public' | 'private');
       if (l) setLandingFilter(l as 'semua' | 'landing');
+      if (d) setDateFilter(d);
       if (q) setSearch(q);
     } catch {}
   }, []);
@@ -46,6 +49,7 @@ export function AdminCounselingClient() {
     k: string,
     v: 'semua' | 'public' | 'private',
     l: 'semua' | 'landing',
+    d: string,
     q: string
   ) => {
     try {
@@ -60,6 +64,9 @@ export function AdminCounselingClient() {
 
       if (l && l !== 'semua') sessionStorage.setItem('admin_counseling_landing', l);
       else sessionStorage.removeItem('admin_counseling_landing');
+
+      if (d) sessionStorage.setItem('admin_counseling_tgl', d);
+      else sessionStorage.removeItem('admin_counseling_tgl');
 
       if (q.trim()) sessionStorage.setItem('admin_counseling_q', q.trim());
       else sessionStorage.removeItem('admin_counseling_q');
@@ -77,6 +84,9 @@ export function AdminCounselingClient() {
       if (l && l !== 'semua') url.searchParams.set('landing', l);
       else url.searchParams.delete('landing');
 
+      if (d) url.searchParams.set('tgl', d);
+      else url.searchParams.delete('tgl');
+
       if (q.trim()) url.searchParams.set('q', q.trim());
       else url.searchParams.delete('q');
 
@@ -86,23 +96,27 @@ export function AdminCounselingClient() {
 
   const handleSearchChange = (val: string) => {
     setSearch(val);
-    syncFilterParams(statusFilter, categoryFilter, visibilityFilter, landingFilter, val);
+    syncFilterParams(statusFilter, categoryFilter, visibilityFilter, landingFilter, dateFilter, val);
   };
   const handleStatusChange = (val: 'semua' | 'unanswered' | 'answered') => {
     setStatusFilter(val);
-    syncFilterParams(val, categoryFilter, visibilityFilter, landingFilter, search);
+    syncFilterParams(val, categoryFilter, visibilityFilter, landingFilter, dateFilter, search);
   };
   const handleCategoryChange = (val: string) => {
     setCategoryFilter(val);
-    syncFilterParams(statusFilter, val, visibilityFilter, landingFilter, search);
+    syncFilterParams(statusFilter, val, visibilityFilter, landingFilter, dateFilter, search);
   };
   const handleVisibilityChange = (val: 'semua' | 'public' | 'private') => {
     setVisibilityFilter(val);
-    syncFilterParams(statusFilter, categoryFilter, val, landingFilter, search);
+    syncFilterParams(statusFilter, categoryFilter, val, landingFilter, dateFilter, search);
   };
   const handleLandingChange = (val: 'semua' | 'landing') => {
     setLandingFilter(val);
-    syncFilterParams(statusFilter, categoryFilter, visibilityFilter, val, search);
+    syncFilterParams(statusFilter, categoryFilter, visibilityFilter, val, dateFilter, search);
+  };
+  const handleDateChange = (val: string) => {
+    setDateFilter(val);
+    syncFilterParams(statusFilter, categoryFilter, visibilityFilter, landingFilter, val, search);
   };
 
   // Replying & Action States
@@ -268,6 +282,49 @@ export function AdminCounselingClient() {
     return Array.from(set);
   }, [curhatList]);
 
+  // Available unique dates from createdAt sorted descending with Indonesian labels
+  const availableDates = useMemo(() => {
+    const dateCounts: Record<string, number> = {};
+    curhatList.forEach((c) => {
+      if (c.createdAt) {
+        // extract YYYY-MM-DD
+        const dateKey = c.createdAt.slice(0, 10);
+        if (dateKey) {
+          dateCounts[dateKey] = (dateCounts[dateKey] || 0) + 1;
+        }
+      }
+    });
+
+    const todayStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jakarta' }).format(new Date());
+
+    return Object.keys(dateCounts)
+      .sort((a, b) => b.localeCompare(a))
+      .map((dateStr) => {
+        let formattedLabel = dateStr;
+        try {
+          const [y, m, d] = dateStr.split('-').map(Number);
+          if (y && m && d) {
+            const dt = new Date(y, m - 1, d);
+            formattedLabel = new Intl.DateTimeFormat('id-ID', {
+              weekday: 'short',
+              day: 'numeric',
+              month: 'short',
+              year: 'numeric',
+            }).format(dt);
+          }
+        } catch {}
+
+        const isToday = dateStr === todayStr;
+        const label = isToday ? `Hari Ini (${formattedLabel})` : formattedLabel;
+
+        return {
+          value: dateStr,
+          label,
+          count: dateCounts[dateStr],
+        };
+      });
+  }, [curhatList]);
+
   const filtered = useMemo(() => {
     return curhatList.filter((c) => {
       const matchesCategory = categoryFilter === 'Semua' || c.category === categoryFilter;
@@ -283,6 +340,8 @@ export function AdminCounselingClient() {
         landingFilter === 'semua' ||
         (landingFilter === 'landing' && c.showOnLandingPage);
 
+      const matchesDate = !dateFilter || (c.createdAt && c.createdAt.startsWith(dateFilter));
+
       const q = search.toLowerCase().trim();
       const matchesSearch =
         !q ||
@@ -291,9 +350,9 @@ export function AdminCounselingClient() {
         c.message.toLowerCase().includes(q) ||
         (c.answer && c.answer.toLowerCase().includes(q));
 
-      return matchesCategory && matchesStatus && matchesVisibility && matchesLanding && matchesSearch;
+      return matchesCategory && matchesStatus && matchesVisibility && matchesLanding && matchesDate && matchesSearch;
     });
-  }, [curhatList, categoryFilter, statusFilter, visibilityFilter, landingFilter, search]);
+  }, [curhatList, categoryFilter, statusFilter, visibilityFilter, landingFilter, dateFilter, search]);
 
   const unansweredCount = curhatList.filter((c) => !c.isAnswered).length;
   const answeredCount = curhatList.filter((c) => c.isAnswered).length;
@@ -307,7 +366,8 @@ export function AdminCounselingClient() {
     setVisibilityFilter('semua');
     setLandingFilter('semua');
     setCategoryFilter('Semua');
-    syncFilterParams('semua', 'Semua', 'semua', 'semua', '');
+    setDateFilter('');
+    syncFilterParams('semua', 'Semua', 'semua', 'semua', '', '');
   };
 
   const hasActiveFilters = Boolean(
@@ -315,7 +375,8 @@ export function AdminCounselingClient() {
     statusFilter !== 'semua' ||
     visibilityFilter !== 'semua' ||
     landingFilter !== 'semua' ||
-    categoryFilter !== 'Semua'
+    categoryFilter !== 'Semua' ||
+    dateFilter.trim()
   );
 
   return (
@@ -339,6 +400,9 @@ export function AdminCounselingClient() {
         onLandingFilterChange={handleLandingChange}
         categoryFilter={categoryFilter}
         onCategoryChange={handleCategoryChange}
+        dateFilter={dateFilter}
+        onDateChange={handleDateChange}
+        availableDates={availableDates}
         categories={categoriesList}
         counts={{
           total: curhatList.length,
@@ -361,6 +425,7 @@ export function AdminCounselingClient() {
         categoryFilter={categoryFilter}
         visibilityFilter={visibilityFilter}
         landingFilter={landingFilter}
+        dateFilter={dateFilter}
         hasActiveFilters={hasActiveFilters}
         onResetFilters={handleResetFilters}
         onStartReply={(item) => setReplyingId(item.id)}

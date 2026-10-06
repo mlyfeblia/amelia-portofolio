@@ -17,6 +17,7 @@ interface CounselingListProps {
   categoryFilter?: string;
   visibilityFilter?: string;
   landingFilter?: string;
+  dateFilter?: string;
   hasActiveFilters?: boolean;
   onResetFilters?: () => void;
   onStartReply: (item: AnonymousMessage) => void;
@@ -38,6 +39,7 @@ export function CounselingList({
   categoryFilter = 'Semua',
   visibilityFilter = 'semua',
   landingFilter = 'semua',
+  dateFilter,
   hasActiveFilters,
   onResetFilters,
   onStartReply,
@@ -95,6 +97,11 @@ export function CounselingList({
                 {landingFilter === 'landing' && (
                   <span className="block mt-0.5 text-[11px] text-[var(--color-ink-soft)]">
                     Filter: Hanya di Beranda
+                  </span>
+                )}
+                {dateFilter && (
+                  <span className="block mt-0.5 text-[11px] text-[var(--color-ink-soft)]">
+                    Filter tanggal: &ldquo;{dateFilter}&rdquo;
                   </span>
                 )}
               </p>
