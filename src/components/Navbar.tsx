@@ -115,12 +115,22 @@ export default function Navbar() {
     <>
       <header
         className={cn(
-          'z-50 bg-[var(--color-paper)]/95 backdrop-blur-md border-b border-[var(--color-paper-border)] transition-shadow duration-200 overflow-visible',
-          open ? 'fixed top-0 inset-x-0' : 'sticky top-0',
-          scrolled ? 'shadow-xs' : ''
+          'z-50 bg-[var(--color-paper)]/95 backdrop-blur-md border-b border-[var(--color-paper-border)] overflow-visible transform-gpu [backface-visibility:hidden] [perspective:1000px] will-change-transform',
+          open ? 'fixed top-0 inset-x-0' : 'sticky top-0'
         )}
+        style={{
+          WebkitBackdropFilter: 'blur(12px)',
+        }}
         role="banner"
       >
+        {/* Hardware-accelerated smooth shadow overlay (Zero repaint jitter on mobile scroll) */}
+        <div
+          className={cn(
+            'absolute inset-0 pointer-events-none shadow-xs transition-opacity duration-300 ease-out z-[-1]',
+            scrolled ? 'opacity-100' : 'opacity-0'
+          )}
+          aria-hidden="true"
+        />
         <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-10 h-16 flex items-center justify-between gap-6 overflow-visible">
 
           {/* Wordmark logo with elegant lift and color shift hover animation */}
