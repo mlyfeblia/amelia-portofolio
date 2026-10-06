@@ -9,7 +9,7 @@ interface ArticleSidebarProps {
 
 export function ArticleSidebar({ currentCategory }: ArticleSidebarProps) {
   return (
-    <aside className="space-y-6 lg:sticky lg:top-24">
+    <aside className="space-y-6" aria-label="Informasi Penulis dan Topik">
       {/* Profile Card */}
       <div className="p-5 sm:p-6 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-paper-border)] space-y-4 shadow-2xs">
         <div className="flex items-center gap-3.5">

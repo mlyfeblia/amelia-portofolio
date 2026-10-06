@@ -196,8 +196,8 @@ export default async function ArticleDetailPage(props: {
               </div>
             </article>
 
-            {/* Desktop Sticky Sidebar */}
-            <div className="hidden lg:block lg:col-span-4">
+            {/* Desktop Sticky Sidebar (Terkunci di bawah Navbar h-16 dan berhenti otomatis saat batas akhir grid artikel tercapai) */}
+            <div className="hidden lg:block lg:col-span-4 sticky top-20 self-start">
               <ArticleSidebar currentCategory={article.category} />
             </div>
 
