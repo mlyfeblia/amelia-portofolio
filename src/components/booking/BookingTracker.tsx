@@ -295,16 +295,13 @@ export function BookingTracker({ initialCode, onCodeChange, onNavigateToNewBooki
         <>
           {/* Section 1: Search Form */}
           <div className="p-3.5 sm:p-5 rounded-2xl bg-[var(--color-paper)]/70 border border-[var(--color-paper-border)] space-y-3.5 shadow-2xs">
-            <div className="flex items-center justify-between gap-2">
+            <div>
               <label 
                 htmlFor="booking-track-input"
                 className="text-xs sm:text-sm font-semibold text-[var(--color-ink)]"
               >
                 Lacak Status Janji Temu
               </label>
-              <span className="text-[10px] sm:text-[11px] font-mono text-[var(--color-ink-muted)] bg-[var(--color-surface)] px-2 py-0.5 rounded-md border border-[var(--color-paper-border)] shrink-0">
-                Format: BKI-YYMM-XXXXXX
-              </span>
             </div>
 
             <form onSubmit={handleSubmitSearch} className="space-y-3">
