@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Search, X, Eye, EyeOff, Filter, Calendar } from 'lucide-react';
+import { Search, X, Eye, Filter, Calendar } from 'lucide-react';
 
 interface ArticleFiltersProps {
   search: string;
@@ -48,6 +48,9 @@ export function ArticleFilters({
           type="text"
           value={search}
           onChange={(e) => onSearchChange(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') onSearchChange('');
+          }}
           placeholder="Cari judul artikel, topik kategori, slug URL, atau tag..."
           className="search-input w-full pl-9 pr-9 py-2 text-xs sm:text-sm text-[var(--color-ink)] placeholder:text-[var(--color-ink-muted)]/70"
         />

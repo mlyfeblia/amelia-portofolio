@@ -5,6 +5,7 @@ import { BookOpen, Plus, SearchX, RotateCcw } from 'lucide-react';
 import { Article } from '@/types';
 import { ArticleCard } from './ArticleCard';
 import { SkeletonArticleCard } from '@/components/ui/Skeleton';
+import { PaginationBar } from '@/components/ui/PaginationBar';
 
 interface ArticleListProps {
   articles: Article[];
@@ -23,6 +24,11 @@ interface ArticleListProps {
   onTogglePublish?: (art: Article) => void;
   onToggleLanding?: (art: Article) => void;
   onCreateNew: () => void;
+  currentPage?: number;
+  totalPages?: number;
+  totalItems?: number;
+  itemsPerPage?: number;
+  onPageChange?: (page: number) => void;
 }
 
 export function ArticleList({
@@ -42,6 +48,11 @@ export function ArticleList({
   onTogglePublish,
   onToggleLanding,
   onCreateNew,
+  currentPage,
+  totalPages,
+  totalItems,
+  itemsPerPage,
+  onPageChange,
 }: ArticleListProps) {
   if (loading) {
     return (
@@ -138,19 +149,32 @@ export function ArticleList({
   }
 
   return (
-    <div className="grid grid-cols-1 gap-3.5 sm:gap-4 tab-content-enter">
-      {articles.map((art) => (
-        <ArticleCard
-          key={art.id}
-          article={art}
-          isToggling={togglingId === art.id}
-          isTogglingLanding={togglingLandingId === art.id}
-          onEdit={onEdit}
-          onDelete={onDelete}
-          onTogglePublish={onTogglePublish}
-          onToggleLanding={onToggleLanding}
+    <div className="space-y-4">
+      <div key={currentPage} className="grid grid-cols-1 gap-3.5 sm:gap-4 pagination-slide-enter">
+        {articles.map((art) => (
+          <ArticleCard
+            key={art.id}
+            article={art}
+            isToggling={togglingId === art.id}
+            isTogglingLanding={togglingLandingId === art.id}
+            onEdit={onEdit}
+            onDelete={onDelete}
+            onTogglePublish={onTogglePublish}
+            onToggleLanding={onToggleLanding}
+          />
+        ))}
+      </div>
+
+      {totalPages && totalPages > 1 && onPageChange && (
+        <PaginationBar
+          currentPage={currentPage || 1}
+          totalPages={totalPages}
+          totalItems={totalItems || articles.length}
+          itemsPerPage={itemsPerPage || 6}
+          itemLabel="artikel"
+          onPageChange={onPageChange}
         />
-      ))}
+      )}
     </div>
   );
 }

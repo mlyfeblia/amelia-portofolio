@@ -13,7 +13,7 @@ interface PwaChangelogModalProps {
 }
 
 export function PwaChangelogModal({ isOpen, onClose }: PwaChangelogModalProps) {
-  const { isRendered, isExiting, backdropClass, windowClass } = useModalAnimation({ isOpen });
+  const { isRendered, backdropClass, windowClass } = useModalAnimation({ isOpen });
 
   // Escape key handler
   useEffect(() => {

@@ -4,6 +4,7 @@ import Script from 'next/script';
 import ScrollRevealProvider from '@/components/ScrollRevealProvider';
 import ScrollRestorationProvider from '@/components/ScrollRestorationProvider';
 import PwaLifecycle from '@/components/pwa/PwaLifecycle';
+import TabVisibilityManager from '@/components/TabVisibilityManager';
 import { ToastProvider } from '@/context/ToastContext';
 import { safeJsonLd } from '@/lib/utils';
 import './globals.css';
@@ -255,6 +256,7 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-screen antialiased">
+        <TabVisibilityManager />
         <ScrollRestorationProvider />
         <ScrollRevealProvider />
         <PwaLifecycle />

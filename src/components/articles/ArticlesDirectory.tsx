@@ -1,55 +1,96 @@
 'use client';
 
-import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { Search, X, BookOpen, ChevronLeft, ChevronRight } from 'lucide-react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { Search, X, BookOpen } from 'lucide-react';
 import { Article, ARTICLE_CATEGORIES } from '@/types';
 import { ArticleListItem } from './ArticleListItem';
+import { PaginationBar } from '@/components/ui/PaginationBar';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 
 const ARTICLES_PER_PAGE = 6;
+const ITEMS_PER_PAGE = ARTICLES_PER_PAGE;
 
 interface ArticlesDirectoryProps {
   initialArticles: Article[];
 }
 
 export function ArticlesDirectory({ initialArticles }: ArticlesDirectoryProps) {
-  const [activeCategory, setActiveCategory] = useState<string>('Semua');
-  const [searchQuery, setSearchQuery] = useState<string>('');
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  // Sync category, query, and page from URL on mount
-  useEffect(() => {
+  const [activeCategory, setActiveCategory] = useState<string>(() => {
+    if (typeof window === 'undefined') return 'Semua';
     try {
       const params = new URLSearchParams(window.location.search);
-      const catParam = params.get('category');
-      const qParam = params.get('q');
+      return params.get('kategori') || params.get('category') || 'Semua';
+    } catch {
+      return 'Semua';
+    }
+  });
+
+  const [searchQuery, setSearchQuery] = useState<string>(() => {
+    if (typeof window === 'undefined') return '';
+    try {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('q') || '';
+    } catch {
+      return '';
+    }
+  });
+
+  const [currentPage, setCurrentPage] = useState<number>(() => {
+    if (typeof window === 'undefined') return 1;
+    try {
+      const params = new URLSearchParams(window.location.search);
       const pageParam = params.get('page');
-
-      if (catParam) setActiveCategory(catParam);
-      else setActiveCategory('Semua');
-
-      if (qParam) setSearchQuery(qParam);
-      else setSearchQuery('');
-
       if (pageParam) {
         const p = parseInt(pageParam, 10);
-        if (!isNaN(p) && p > 0) setCurrentPage(p);
-      } else {
-        setCurrentPage(1);
+        if (!isNaN(p) && p > 0) return p;
       }
+    } catch {
+      // ignore
+    }
+    return 1;
+  });
+  const containerRef = useRef<HTMLDivElement>(null);
 
-      // Clear any legacy sticky sessionStorage
+  // Listen to popstate and clean legacy storage
+  useEffect(() => {
+    try {
       sessionStorage.removeItem('articles_category');
       sessionStorage.removeItem('articles_q');
       sessionStorage.removeItem('articles_page');
     } catch {}
+
+    const handlePopState = () => {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const cat = params.get('kategori') || params.get('category');
+        const q = params.get('q');
+        const page = params.get('page');
+
+        setActiveCategory(cat || 'Semua');
+        setSearchQuery(q || '');
+        if (page) {
+          const p = parseInt(page, 10);
+          if (!isNaN(p) && p > 0) setCurrentPage(p);
+        } else {
+          setCurrentPage(1);
+        }
+      } catch {}
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
-  const syncParams = (cat: string, q: string, page: number) => {
+  const syncParams = useCallback((cat: string, q: string, page: number) => {
     try {
       const url = new URL(window.location.href);
-      if (cat && cat !== 'Semua') url.searchParams.set('category', cat);
-      else url.searchParams.delete('category');
+      if (cat && cat !== 'Semua') {
+        url.searchParams.set('category', cat);
+        url.searchParams.delete('kategori');
+      } else {
+        url.searchParams.delete('category');
+        url.searchParams.delete('kategori');
+      }
 
       if (q.trim()) url.searchParams.set('q', q.trim());
       else url.searchParams.delete('q');
@@ -59,7 +100,7 @@ export function ArticlesDirectory({ initialArticles }: ArticlesDirectoryProps) {
 
       window.history.replaceState({}, '', url.toString());
     } catch {}
-  };
+  }, []);
 
   // Dynamic list of categories from existing articles + predefined categories
   const categories = useMemo(() => {
@@ -98,6 +139,14 @@ export function ArticlesDirectory({ initialArticles }: ArticlesDirectoryProps) {
     return filteredArticles.slice(startIndex, startIndex + ARTICLES_PER_PAGE);
   }, [filteredArticles, safePage]);
 
+  // Debounced URL param sync for search query (300ms)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      syncParams(activeCategory, searchQuery, currentPage);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [activeCategory, searchQuery, currentPage, syncParams]);
+
   const handleCategoryChange = (cat: string) => {
     setActiveCategory(cat);
     setCurrentPage(1);
@@ -107,7 +156,6 @@ export function ArticlesDirectory({ initialArticles }: ArticlesDirectoryProps) {
   const handleSearchChange = (val: string) => {
     setSearchQuery(val);
     setCurrentPage(1);
-    syncParams(activeCategory, val, 1);
   };
 
   const handlePageChange = (newPage: number) => {
@@ -119,15 +167,12 @@ export function ArticlesDirectory({ initialArticles }: ArticlesDirectoryProps) {
     }
   };
 
-  const startItem = totalItems === 0 ? 0 : (safePage - 1) * ARTICLES_PER_PAGE + 1;
-  const endItem = Math.min(safePage * ARTICLES_PER_PAGE, totalItems);
-
   return (
     <div ref={containerRef} className="space-y-6 sm:space-y-8" id="articles-directory-container">
       {/* Search & Filter Controls */}
       <div className="space-y-3">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-4">
-          <div>
+          <div className="min-w-0">
             <h2 className="text-base sm:text-lg font-semibold text-[var(--color-ink)]">
               Eksplorasi Topik &amp; Kategori
             </h2>
@@ -140,6 +185,9 @@ export function ArticlesDirectory({ initialArticles }: ArticlesDirectoryProps) {
               type="text"
               value={searchQuery}
               onChange={(e) => handleSearchChange(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Escape') handleSearchChange('');
+              }}
               placeholder="Cari judul, topik, atau kata kunci..."
               className="search-input text-xs sm:text-sm pl-9 pr-9"
               aria-label="Cari artikel"
@@ -158,46 +206,38 @@ export function ArticlesDirectory({ initialArticles }: ArticlesDirectoryProps) {
           </div>
         </div>
 
-        {/* Category Pills */}
-        <div
-          className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-1 no-scrollbar"
-          role="tablist"
-          aria-label="Filter kategori artikel"
-        >
-        {categories.map((cat) => {
-          const isActive = activeCategory === cat;
-          const count =
-            cat === 'Semua'
-              ? initialArticles.length
-              : initialArticles.filter((a) => a.category === cat).length;
+        {/* Category Tabs */}
+        <div className="relative -mx-1 px-1">
+          <Tabs value={activeCategory} onValueChange={handleCategoryChange}>
+            <TabsList aria-label="Filter kategori artikel">
+              {categories.map((cat) => {
+                const count =
+                  cat === 'Semua'
+                    ? initialArticles.length
+                    : initialArticles.filter((a) => a.category === cat).length;
 
-          return (
-            <button
-              key={cat}
-              id={`tab-${cat}`}
-              role="tab"
-              aria-selected={isActive}
-              onClick={() => handleCategoryChange(cat)}
-              type="button"
-              className={`chip-interactive inline-flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 text-xs sm:text-sm rounded-xl whitespace-nowrap cursor-pointer transition-all ${
-                isActive
-                  ? 'bg-[var(--color-accent)] text-white font-semibold shadow-xs'
-                  : 'bg-[var(--color-surface)] border border-[var(--color-paper-border)] text-[var(--color-ink-muted)] hover:border-[var(--color-accent)] hover:text-[var(--color-ink)]'
-              }`}
-            >
-              <span>{cat}</span>
-              <span
-                className={`text-[10px] px-1.5 py-0.5 rounded-full font-mono ${
-                  isActive
-                    ? 'bg-white/20 text-white'
-                    : 'bg-[var(--color-paper-border)]/60 text-[var(--color-ink-soft)]'
-                }`}
-              >
-                {count}
-              </span>
-            </button>
-          );
-        })}
+                return (
+                  <TabsTrigger
+                    key={cat}
+                    value={cat}
+                    badge={
+                      <span
+                        className={`text-[10px] px-1.5 py-0.5 rounded-full font-mono ${
+                          activeCategory === cat
+                            ? 'bg-white/20 text-white font-bold'
+                            : 'bg-[var(--color-paper-border)]/60 text-[var(--color-ink-soft)]'
+                        }`}
+                      >
+                        {count}
+                      </span>
+                    }
+                  >
+                    {cat}
+                  </TabsTrigger>
+                );
+              })}
+            </TabsList>
+          </Tabs>
         </div>
       </div>
 
@@ -267,7 +307,7 @@ export function ArticlesDirectory({ initialArticles }: ArticlesDirectoryProps) {
       ) : (
         <div
           key={`${activeCategory}-${safePage}`}
-          className="divide-y divide-[var(--color-paper-border)] border-y border-[var(--color-paper-border)] tab-content-enter"
+          className="divide-y divide-[var(--color-paper-border)] border-y border-[var(--color-paper-border)] pagination-slide-enter"
           data-reveal
         >
           {paginatedArticles.map((art) => (
@@ -278,59 +318,14 @@ export function ArticlesDirectory({ initialArticles }: ArticlesDirectoryProps) {
 
       {/* Pagination Controls */}
       {totalPages > 1 && (
-        <nav
-          className="pt-4 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs"
-          aria-label="Navigasi halaman artikel"
-        >
-          <div className="text-[var(--color-ink-muted)]">
-            Menampilkan <span className="font-semibold text-[var(--color-ink)]">{startItem}</span> -{' '}
-            <span className="font-semibold text-[var(--color-ink)]">{endItem}</span> dari{' '}
-            <span className="font-semibold text-[var(--color-ink)]">{totalItems}</span> artikel
-          </div>
-
-          <div className="flex items-center gap-1.5">
-            <button
-              type="button"
-              onClick={() => handlePageChange(safePage - 1)}
-              disabled={safePage <= 1}
-              className="btn-interactive p-2 rounded-xl border border-[var(--color-paper-border)] bg-[var(--color-surface)] text-[var(--color-ink)] disabled:opacity-40 disabled:cursor-not-allowed hover:border-[var(--color-accent)] hover:text-[var(--color-accent)] cursor-pointer"
-              aria-label="Halaman sebelumnya"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-
-            <div className="flex items-center gap-1">
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => {
-                const isActive = pageNum === safePage;
-                return (
-                  <button
-                    key={pageNum}
-                    type="button"
-                    onClick={() => handlePageChange(pageNum)}
-                    aria-current={isActive ? 'page' : undefined}
-                    className={`btn-interactive min-w-[36px] h-9 px-2 text-xs font-semibold rounded-xl border cursor-pointer transition-colors ${
-                      isActive
-                        ? 'bg-[var(--color-accent)] text-white border-[var(--color-accent)] shadow-xs'
-                        : 'bg-[var(--color-surface)] border-[var(--color-paper-border)] text-[var(--color-ink-muted)] hover:border-[var(--color-accent)] hover:text-[var(--color-ink)]'
-                    }`}
-                  >
-                    {pageNum}
-                  </button>
-                );
-              })}
-            </div>
-
-            <button
-              type="button"
-              onClick={() => handlePageChange(safePage + 1)}
-              disabled={safePage >= totalPages}
-              className="btn-interactive p-2 rounded-xl border border-[var(--color-paper-border)] bg-[var(--color-surface)] text-[var(--color-ink)] disabled:opacity-40 disabled:cursor-not-allowed hover:border-[var(--color-accent)] hover:text-[var(--color-accent)] cursor-pointer"
-              aria-label="Halaman selanjutnya"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
-        </nav>
+        <PaginationBar
+          currentPage={safePage}
+          totalPages={totalPages}
+          totalItems={totalItems}
+          itemsPerPage={ITEMS_PER_PAGE}
+          itemLabel="artikel"
+          onPageChange={handlePageChange}
+        />
       )}
     </div>
   );

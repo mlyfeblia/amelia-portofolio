@@ -5,6 +5,7 @@ import Footer from '@/components/Footer';
 import BookingSection from '@/components/BookingSection';
 import BreadcrumbJsonLd from '@/components/BreadcrumbJsonLd';
 import { safeJsonLd } from '@/lib/utils';
+import type { CounselingMode } from '@/types';
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://mlyfeblia.vercel.app';
 
@@ -71,6 +72,8 @@ interface SchedulePageProps {
   searchParams?: Promise<{
     tab?: string;
     code?: string;
+    format?: string;
+    mode?: string;
   }>;
 }
 
@@ -78,6 +81,11 @@ export default async function SchedulePage({ searchParams }: SchedulePageProps) 
   const params = await searchParams;
   const initialTab = params?.tab === 'tracker' ? 'tracker' : params?.tab === 'new' ? 'new' : undefined;
   const initialCode = typeof params?.code === 'string' ? params.code : undefined;
+  const rawMode = params?.format || params?.mode;
+  const initialMode: CounselingMode | undefined =
+    rawMode && ['online_meet', 'online_chat', 'tatap_muka_cirebon'].includes(rawMode)
+      ? (rawMode as CounselingMode)
+      : undefined;
 
   return (
     <>
@@ -93,7 +101,7 @@ export default async function SchedulePage({ searchParams }: SchedulePageProps) 
       />
       <Navbar />
       <main id="main-content" className="min-h-screen pt-6 sm:pt-10 md:pt-12 pb-14 sm:pb-20 md:pb-24 page-enter">
-        <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-10 space-y-6 sm:space-y-8 animate-fade-in-up">
+        <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-10 space-y-6 sm:space-y-8">
           <div className="max-w-3xl space-y-2">
             <h1
               className="text-2xl sm:text-4xl lg:text-[2.65rem] font-medium text-[var(--color-ink)] leading-tight tracking-tight"
@@ -107,7 +115,7 @@ export default async function SchedulePage({ searchParams }: SchedulePageProps) 
           </div>
 
           <div className="pt-1 sm:pt-4">
-            <BookingSection initialTab={initialTab} initialCode={initialCode} />
+            <BookingSection initialTab={initialTab} initialCode={initialCode} initialMode={initialMode} />
           </div>
         </div>
       </main>

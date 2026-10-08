@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server';
-import { updateBookingStatus, deleteBooking } from '@/lib/data-store';
+import { updateBookingStatus, deleteBooking, getBookingById } from '@/lib/data-store';
 import { BookingStatus } from '@/types';
 import { isAuthenticatedAdmin } from '@/lib/admin-auth';
 import { telemetry } from '@/lib/telemetry';
+import { sendBookingStatusUpdateEmail } from '@/lib/resend';
+import { sendPushNotificationToBooking } from '@/lib/web-push-server';
 
 export async function PATCH(
   request: Request,
@@ -35,9 +37,36 @@ export async function PATCH(
       );
     }
 
+    const existing = await getBookingById(id);
     const updated = await updateBookingStatus(id, status as BookingStatus);
     if (!updated) {
       return NextResponse.json({ success: false, message: 'Janji temu tidak ditemukan' }, { status: 404 });
+    }
+
+    // Trigger non-blocking email notification if status changed and client has an email
+    if (existing && existing.status !== status && updated.email) {
+      sendBookingStatusUpdateEmail(updated, status as BookingStatus).catch((err) => {
+        telemetry.error('Failed to trigger background booking status update email', err, {
+          bookingCode: updated.code,
+          status,
+        });
+      });
+    }
+
+    // Trigger non-blocking Web Push notification to client device
+    if (existing && existing.status !== status) {
+      const statusTitle = status === 'terkonfirmasi' ? 'Jadwal Konseling Terkonfirmasi!' : status === 'selesai' ? 'Sesi Konseling Selesai' : `Status Jadwal: ${status}`;
+      const statusBody = status === 'terkonfirmasi'
+        ? 'Alhamdulillah, jadwal konselingmu telah dikonfirmasi oleh Amel. Buka web untuk melihat detail.'
+        : status === 'selesai'
+        ? 'Sesi konselingmu telah selesai dilaksanakan. Terima kasih atas kepercayaanmu.'
+        : `Status reservasi [${updated.code}] diperbarui menjadi ${status}.`;
+
+      sendPushNotificationToBooking(updated.code, {
+        title: statusTitle,
+        body: statusBody,
+        url: `/schedule?code=${updated.code}`,
+      }).catch(() => {});
     }
 
     return NextResponse.json({ success: true, data: updated });

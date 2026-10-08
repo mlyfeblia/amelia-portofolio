@@ -24,14 +24,15 @@ export function getDeviceBookings(): DeviceBookingRecord[] {
   if (typeof window === 'undefined') return emptyBookings;
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) {
+      cachedRaw = null;
+      cachedRecords = emptyBookings;
+      return cachedRecords;
+    }
     if (raw === cachedRaw) {
       return cachedRecords;
     }
     cachedRaw = raw;
-    if (!raw) {
-      cachedRecords = emptyBookings;
-      return cachedRecords;
-    }
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed)) {
       cachedRecords = emptyBookings;
@@ -63,6 +64,7 @@ export function subscribeDeviceBookings(callback: () => void): () => void {
 function notifySubscribers() {
   if (typeof window !== 'undefined') {
     cachedRaw = null;
+    cachedRecords = [];
     window.dispatchEvent(new Event('amel_booking_storage_change'));
   }
 }
@@ -108,6 +110,8 @@ export function saveDeviceBooking(entry: {
 
     const updated = [newRecord, ...filtered].slice(0, 20); // Keep max 20 recent bookings
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    cachedRaw = null;
+    cachedRecords = [];
     notifySubscribers();
   } catch {
     // localStorage might be unavailable in private browsing mode
@@ -123,7 +127,13 @@ export function removeDeviceBooking(code: string): void {
     const cleanCode = code.trim().toUpperCase();
     const existing = getDeviceBookings();
     const updated = existing.filter((b) => b.code.toUpperCase() !== cleanCode);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    if (updated.length === 0) {
+      localStorage.removeItem(STORAGE_KEY);
+    } else {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    }
+    cachedRaw = null;
+    cachedRecords = [];
     notifySubscribers();
   } catch {
     // ignore
@@ -137,6 +147,8 @@ export function clearAllDeviceBookings(): void {
   if (typeof window === 'undefined') return;
   try {
     localStorage.removeItem(STORAGE_KEY);
+    cachedRaw = null;
+    cachedRecords = [];
     notifySubscribers();
   } catch {
     // ignore

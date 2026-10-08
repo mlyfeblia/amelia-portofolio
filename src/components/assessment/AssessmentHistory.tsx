@@ -231,14 +231,14 @@ export function AssessmentHistory({ onStartNew }: AssessmentHistoryProps) {
                     type="button"
                     onClick={() => toggleExpand(record.id)}
                     aria-expanded={isExpanded}
-                    className="group/btn text-xs font-medium text-[var(--color-accent)] hover:text-[var(--color-accent-hover)] transition-all duration-200 inline-flex items-center justify-between sm:justify-start gap-1.5 cursor-pointer py-1 w-full sm:w-auto active:scale-[0.99]"
+                    className="btn-secondary btn-interactive px-2.5 py-1 text-[11px] min-[340px]:text-xs font-medium rounded-lg border border-[var(--color-paper-border)] bg-[var(--color-surface)] hover:border-[var(--color-accent-border)] hover:bg-[var(--color-accent-soft)]/50 text-[var(--color-ink)] hover:text-[var(--color-accent)] inline-flex items-center justify-between sm:justify-start gap-1.5 cursor-pointer shadow-2xs transition-all duration-200"
                   >
                     <span className="leading-snug transition-colors duration-200">
                       {isExpanded ? 'Sembunyikan Rincian' : 'Lihat Rekomendasi & Catatan Lengkap'}
                     </span>
                     <ChevronDown
                       className={`w-3.5 h-3.5 shrink-0 transition-transform duration-300 ease-in-out ${
-                        isExpanded ? 'rotate-180 text-[var(--color-accent-hover)]' : 'rotate-0'
+                        isExpanded ? 'rotate-180 text-[var(--color-accent)]' : 'rotate-0 text-[var(--color-ink-muted)]'
                       }`}
                     />
                   </button>
@@ -252,9 +252,9 @@ export function AssessmentHistory({ onStartNew }: AssessmentHistoryProps) {
                     })}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="group/wa text-xs font-semibold text-[#25D366] hover:underline inline-flex items-center gap-1.5 py-1 shrink-0 self-start sm:self-auto hover:translate-x-0.5 active:scale-95 transition-all duration-200"
+                    className="btn-interactive px-2.5 py-1 text-[11px] min-[340px]:text-xs font-semibold rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-800 hover:bg-emerald-100/80 inline-flex items-center gap-1.5 shrink-0 self-start sm:self-auto shadow-2xs transition-all duration-200"
                   >
-                    <MessageCircle className="w-3.5 h-3.5 shrink-0 transition-transform duration-200 group-hover/wa:scale-110 group-hover/wa:-rotate-6" />
+                    <MessageCircle className="w-3.5 h-3.5 shrink-0 text-emerald-600" />
                     <span>Konsultasikan</span>
                   </a>
                 </div>

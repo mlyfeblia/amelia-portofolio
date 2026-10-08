@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
@@ -15,6 +16,7 @@ import { ArticleTags } from '@/components/articles/ArticleTags';
 import { ArticleCta } from '@/components/articles/ArticleCta';
 import { ArticleShareBar } from '@/components/articles/ArticleShareBar';
 import { ArticleSidebar } from '@/components/articles/ArticleSidebar';
+import { ArticleMobileTopicExplorer } from '@/components/articles/ArticleMobileTopicExplorer';
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://mlyfeblia.vercel.app';
 
@@ -53,6 +55,12 @@ export async function generateMetadata(props: {
     'Konselor Sebaya',
   ];
 
+  const ogImageUrl = article.coverImage
+    ? article.coverImage.startsWith('http')
+      ? article.coverImage
+      : `${BASE_URL}${article.coverImage}`
+    : `${BASE_URL}/articles/${slug}/opengraph-image`;
+
   return {
     title: `${article.title} | Amelia`,
     description: article.excerpt,
@@ -88,7 +96,7 @@ export async function generateMetadata(props: {
       tags: article.tags,
       images: [
         {
-          url: `${BASE_URL}/articles/${slug}/opengraph-image`,
+          url: ogImageUrl,
           width: 1200,
           height: 630,
           alt: `${article.title} - Amelia Konseling Sebaya`,
@@ -99,7 +107,7 @@ export async function generateMetadata(props: {
       card: 'summary_large_image',
       title: article.title,
       description: article.excerpt,
-      images: [`${BASE_URL}/articles/${slug}/opengraph-image`],
+      images: [ogImageUrl],
     },
   };
 }
@@ -131,6 +139,8 @@ export default async function ArticleDetailPage(props: {
 
   return (
     <>
+      {/* Preload avatar Amel untuk eliminasi kedipan saat page-enter */}
+      <link rel="preload" as="image" href="/amelia.webp" type="image/webp" />
       <ArticleJsonLd
         title={article.title}
         excerpt={article.excerpt}
@@ -139,6 +149,7 @@ export default async function ArticleDetailPage(props: {
         publishedAt={article.publishedAt}
         tags={article.tags}
         content={article.content}
+        coverImage={article.coverImage}
       />
       <BreadcrumbJsonLd
         items={[
@@ -162,7 +173,7 @@ export default async function ArticleDetailPage(props: {
             <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm text-[var(--color-ink-muted)]">
               <Link
                 href="/articles"
-                className="inline-flex items-center gap-1.5 font-medium hover:text-[var(--color-accent)] transition-colors"
+                className="btn-interactive inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[var(--color-surface)] border border-[var(--color-paper-border)] hover:border-[var(--color-accent-border)] hover:bg-[var(--color-accent-soft)]/50 shadow-2xs text-xs font-medium text-[var(--color-ink)] hover:text-[var(--color-accent)] transition-all"
               >
                 <ArrowLeft className="w-3.5 h-3.5" />
                 <span>Direktori Artikel</span>
@@ -181,6 +192,21 @@ export default async function ArticleDetailPage(props: {
             <article aria-labelledby="article-title" className="lg:col-span-8 min-w-0">
               <ArticleHeader article={article} />
 
+              {/* Cover Image (Hanya muncul di dalam artikel detail) */}
+              {article.coverImage && (
+                <div className="relative aspect-video sm:aspect-21/9 w-full rounded-2xl overflow-hidden mb-8 border border-[var(--color-paper-border)] shadow-xs bg-[var(--color-paper-muted)]/50">
+                  <Image
+                    src={article.coverImage}
+                    alt={article.title}
+                    fill
+                    priority
+                    unoptimized
+                    className="object-cover"
+                    sizes="(max-width: 1024px) 100vw, 860px"
+                  />
+                </div>
+              )}
+
               <div className="mb-10" aria-label="Isi artikel">
                 <ArticleMarkdownRenderer content={article.content} />
               </div>
@@ -193,6 +219,11 @@ export default async function ArticleDetailPage(props: {
               {/* Share & Copy Link Section */}
               <div>
                 <ArticleShareBar title={article.title} url={articleFullUrl} />
+              </div>
+
+              {/* Mobile Focus Topic & Quick Category Explorer */}
+              <div className="mt-8 block lg:hidden">
+                <ArticleMobileTopicExplorer currentCategory={article.category} />
               </div>
             </article>
 
@@ -240,15 +271,15 @@ export default async function ArticleDetailPage(props: {
                         </p>
                       </div>
 
-                      <div className="pt-2 flex items-center justify-between text-xs text-[var(--color-ink-soft)] border-t border-[var(--color-paper-border)]">
-                        <span className="inline-flex items-center gap-1.5">
-                          <span className="font-medium text-[var(--color-accent)]">{rel.category}</span>
-                          <span>•</span>
-                          <span>{rel.readTime}</span>
-                        </span>
+                      <div className="pt-2 flex flex-col min-[340px]:flex-row min-[340px]:items-center justify-between gap-2 text-xs text-[var(--color-ink-soft)] border-t border-[var(--color-paper-border)]">
+                        <div className="flex items-center gap-1.5 flex-wrap min-w-0">
+                          <span className="font-medium text-[var(--color-accent)] truncate max-w-[170px] min-[340px]:max-w-none">{rel.category}</span>
+                          <span className="text-[var(--color-paper-border)] shrink-0">•</span>
+                          <span className="shrink-0">{rel.readTime}</span>
+                        </div>
                         <Link
                           href={`/articles/${rel.slug}`}
-                          className="font-semibold text-[var(--color-accent)] group-hover:translate-x-0.5 hover:underline inline-flex items-center gap-1 transition-transform duration-200"
+                          className="font-semibold text-[var(--color-accent)] group-hover:translate-x-0.5 hover:underline inline-flex items-center gap-1 transition-transform duration-200 shrink-0 self-start min-[340px]:self-auto"
                         >
                           <span>Baca</span>
                           <ArrowUpRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform duration-200" />

@@ -1,3 +1,5 @@
+import { CounselingMode } from '@/types';
+
 export interface ServicePillar {
   num: string;
   title: string;
@@ -6,6 +8,7 @@ export interface ServicePillar {
 
 export interface ServiceFormat {
   title: string;
+  mode: CounselingMode;
   dur: string;
   desc: string;
 }
@@ -42,16 +45,19 @@ export const pillars: ServicePillar[] = [
 export const formats: ServiceFormat[] = [
   {
     title: 'Google Meet Virtual',
+    mode: 'online_meet',
     dur: '60 Menit · Tatap Muka Daring',
     desc: 'Cocok buat kamu yang nyaman berdiskusi lewat tatap muka langsung dari kamar atau sudut tenang rumahmu.',
   },
   {
     title: 'Chat Terjadwal',
+    mode: 'online_chat',
     dur: '60 Menit · Komunikasi Teks',
     desc: 'Pilihan pas bagi kamu yang lebih leluasa dan tenang mengekspresikan isi hati lewat ketikan kata demi kata.',
   },
   {
     title: 'Tatap Muka di Kampus',
+    mode: 'tatap_muka_cirebon',
     dur: '60 Menit · Wilayah Cirebon',
     desc: 'Pertemuan langsung di area kampus UIN Siber Cirebon bagi sahabat yang berada di domisili sekitar.',
   },

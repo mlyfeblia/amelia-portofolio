@@ -16,7 +16,7 @@ export function BookingHeader({
 }: BookingHeaderProps) {
   return (
     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
-      <div>
+      <div className="min-w-0">
         <h1
           className="text-xl sm:text-2xl lg:text-3xl font-medium text-[var(--color-ink)] leading-tight"
           style={{ fontFamily: 'var(--font-display)' }}
@@ -32,7 +32,7 @@ export function BookingHeader({
         onClick={onRefresh}
         disabled={loading}
         type="button"
-        className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl bg-[var(--color-surface)] border border-[var(--color-paper-border)] text-xs font-medium text-[var(--color-ink)] hover:bg-[var(--color-paper-muted)] transition-all cursor-pointer self-start sm:self-auto shrink-0"
+        className="btn-interactive inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[var(--color-surface)] border border-[var(--color-paper-border)] hover:border-[var(--color-accent-border)] hover:bg-[var(--color-accent-soft)]/50 text-xs font-semibold text-[var(--color-ink)] hover:text-[var(--color-accent)] shadow-2xs cursor-pointer shrink-0 self-start sm:self-auto transition-all disabled:opacity-60"
       >
         <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
         <span>Segarkan</span>

@@ -4,6 +4,7 @@ import { isAuthenticatedAdmin } from '@/lib/admin-auth';
 import { checkDistributedRateLimit, getClientIp } from '@/lib/rate-limiter';
 import { validateCurhatInput } from '@/lib/validators';
 import { telemetry } from '@/lib/telemetry';
+import { sendAdminCurhatAlertEmail } from '@/lib/resend';
 
 export async function GET(request: Request) {
   try {
@@ -78,6 +79,9 @@ export async function POST(request: Request) {
     }
 
     const newCurhat = await createCurhat(validation.data);
+
+    // Trigger async email notification to admin in background
+    sendAdminCurhatAlertEmail(newCurhat).catch((e) => console.error('Admin curhat alert email error:', e));
 
     return NextResponse.json({
       success: true,

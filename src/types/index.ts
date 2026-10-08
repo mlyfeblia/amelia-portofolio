@@ -88,6 +88,8 @@ export interface Article {
   tags: string[];
   isPublished?: boolean;
   showOnLandingPage?: boolean;
+  views?: number;
+  coverImage?: string;
 }
 
 export interface AssessmentQuestion {

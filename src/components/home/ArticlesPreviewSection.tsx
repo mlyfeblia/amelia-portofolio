@@ -1,7 +1,8 @@
 import React from 'react';
 import Link from 'next/link';
-import { ArrowUpRight } from 'lucide-react';
+import { ArrowRight, BookOpen, Eye } from 'lucide-react';
 import { Article } from '@/types';
+import { formatIndonesianDate } from '@/lib/utils';
 
 interface ArticlesPreviewSectionProps {
   articles: Article[];
@@ -12,9 +13,9 @@ export function ArticlesPreviewSection({ articles }: ArticlesPreviewSectionProps
 
   return (
     <section className="py-16 sm:py-24 border-b border-[var(--color-paper-border)]" data-reveal>
-      <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-10 space-y-8 lg:space-y-10">
+      <div className="max-w-7xl mx-auto px-3.5 min-[340px]:px-5 sm:px-8 lg:px-10 space-y-8 lg:space-y-10">
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-          <div>
+          <div className="min-w-0">
             <h2
               className="text-2xl sm:text-3xl lg:text-[2.25rem] font-medium text-[var(--color-ink)] leading-snug"
               style={{ fontFamily: 'var(--font-display)' }}
@@ -27,9 +28,11 @@ export function ArticlesPreviewSection({ articles }: ArticlesPreviewSectionProps
           </div>
           <Link
             href="/articles"
-            className="text-sm font-semibold text-[var(--color-accent)] hover:underline shrink-0 inline-flex items-center gap-1"
+            className="btn-secondary btn-interactive inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-[var(--color-ink)] hover:text-[var(--color-accent)] bg-[var(--color-surface)] border border-[var(--color-paper-border)] hover:border-[var(--color-accent-border)] hover:bg-[var(--color-accent-soft)]/50 shadow-2xs shrink-0 self-start sm:self-auto transition-all"
           >
-            Kunjungi direktori artikel &rarr;
+            <BookOpen className="w-3.5 h-3.5 text-[var(--color-accent)] shrink-0" aria-hidden="true" />
+            <span>Kunjungi Direktori Artikel</span>
+            <ArrowRight className="w-3.5 h-3.5 text-[var(--color-ink-muted)] shrink-0" aria-hidden="true" />
           </Link>
         </div>
 
@@ -45,9 +48,9 @@ export function ArticlesPreviewSection({ articles }: ArticlesPreviewSectionProps
           {articles.map((art) => (
             <article
               key={art.id}
-              className="p-6 lg:p-7 bg-[var(--color-surface)] border border-[var(--color-paper-border)] rounded-xl space-y-3.5 flex flex-col justify-between hover:border-[var(--color-accent-border)] transition-colors shadow-xs card-interactive"
+              className="p-4 min-[340px]:p-5 sm:p-6 lg:p-7 bg-[var(--color-surface)] border border-[var(--color-paper-border)] rounded-xl space-y-3.5 flex flex-col justify-between hover:border-[var(--color-accent-border)] transition-colors shadow-xs card-interactive"
             >
-              <div className="space-y-2.5">
+              <div className="space-y-2.5 min-w-0">
                 <h3
                   className="text-lg sm:text-xl font-medium text-[var(--color-ink)] leading-snug"
                   style={{ fontFamily: 'var(--font-display)' }}
@@ -56,23 +59,32 @@ export function ArticlesPreviewSection({ articles }: ArticlesPreviewSectionProps
                     {art.title}
                   </Link>
                 </h3>
-                <p className="text-sm text-[var(--color-ink-muted)] leading-relaxed line-clamp-2">
-                  {art.publishedAt ? `${art.publishedAt} — ` : ''}{art.excerpt}
+                <p className="text-sm text-[var(--color-ink-muted)] leading-relaxed line-clamp-2 break-words">
+                  {art.publishedAt ? `${formatIndonesianDate(art.publishedAt) || art.publishedAt} — ` : ''}{art.excerpt}
                 </p>
               </div>
 
-              <div className="pt-3 border-t border-[var(--color-paper-border)] flex items-center justify-between text-xs sm:text-sm text-[var(--color-ink-soft)]">
-                <span className="inline-flex items-center gap-1.5">
-                  <span className="font-medium text-[var(--color-accent)]">{art.category}</span>
-                  <span>•</span>
-                  <span>{art.readTime}</span>
-                </span>
+              <div className="pt-3 border-t border-[var(--color-paper-border)] flex flex-col min-[340px]:flex-row min-[340px]:items-center justify-between gap-2 text-xs text-[var(--color-ink-soft)]">
+                <div className="flex items-center gap-1.5 flex-wrap min-w-0">
+                  <span className="font-semibold text-[var(--color-accent)] truncate max-w-[130px] min-[340px]:max-w-none">{art.category}</span>
+                  <span className="text-[var(--color-paper-border)] shrink-0">•</span>
+                  <span className="shrink-0">{art.readTime}</span>
+                  {typeof art.views === 'number' && art.views > 0 && (
+                    <>
+                      <span className="text-[var(--color-paper-border)] shrink-0">•</span>
+                      <span className="inline-flex items-center gap-1 text-[var(--color-ink-muted)] shrink-0">
+                        <Eye className="w-3 h-3 text-[var(--color-accent)]" />
+                        <span>{art.views} pembaca</span>
+                      </span>
+                    </>
+                  )}
+                </div>
                 <Link
                   href={`/articles/${art.slug}`}
-                  className="font-semibold text-[var(--color-accent)] hover:underline inline-flex items-center gap-1"
+                  className="btn-secondary btn-interactive inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-[var(--color-ink)] hover:text-[var(--color-accent)] bg-[var(--color-surface)] border border-[var(--color-paper-border)] hover:border-[var(--color-accent-border)] hover:bg-[var(--color-accent-soft)]/50 shadow-2xs shrink-0 self-start min-[340px]:self-auto transition-all"
                 >
-                  Baca tulisan
-                  <ArrowUpRight className="w-4 h-4" />
+                  <BookOpen className="w-3.5 h-3.5 text-[var(--color-accent)] shrink-0" aria-hidden="true" />
+                  <span>Baca Tulisan</span>
                 </Link>
               </div>
             </article>

@@ -208,6 +208,7 @@ export interface ValidatedArticleUpdateInput {
   tags?: string[];
   isPublished?: boolean;
   showOnLandingPage?: boolean;
+  coverImage?: string;
 }
 
 export function validateArticleUpdateInput(body: unknown): ValidationResult<ValidatedArticleUpdateInput> {
@@ -217,6 +218,16 @@ export function validateArticleUpdateInput(body: unknown): ValidationResult<Vali
 
   const b = body as Record<string, unknown>;
   const result: ValidatedArticleUpdateInput = {};
+
+  if (b.coverImage !== undefined) {
+    if (b.coverImage === null || b.coverImage === '') {
+      result.coverImage = undefined;
+    } else if (typeof b.coverImage === 'string') {
+      result.coverImage = sanitizeString(b.coverImage).slice(0, 500);
+    } else {
+      return { success: false, error: 'Foto sampul harus berupa URL teks yang valid.' };
+    }
+  }
 
   if (b.isPublished !== undefined) {
     if (typeof b.isPublished !== 'boolean') {
@@ -316,6 +327,7 @@ export interface ValidatedArticleCreateInput {
   tags: string[];
   isPublished?: boolean;
   showOnLandingPage?: boolean;
+  coverImage?: string;
 }
 
 export function validateArticleCreateInput(body: unknown): ValidationResult<ValidatedArticleCreateInput> {
@@ -328,6 +340,12 @@ export function validateArticleCreateInput(body: unknown): ValidationResult<Vali
   // isPublished & showOnLandingPage
   const isPublished = typeof b.isPublished === 'boolean' ? b.isPublished : true;
   const showOnLandingPage = typeof b.showOnLandingPage === 'boolean' ? b.showOnLandingPage : false;
+
+  // coverImage (optional)
+  let coverImage: string | undefined = undefined;
+  if (typeof b.coverImage === 'string' && b.coverImage.trim()) {
+    coverImage = sanitizeString(b.coverImage.trim()).slice(0, 500);
+  }
 
   // Title
   if (typeof b.title !== 'string') return { success: false, error: 'Judul artikel wajib diisi.' };
@@ -394,6 +412,7 @@ export function validateArticleCreateInput(body: unknown): ValidationResult<Vali
       tags,
       isPublished,
       showOnLandingPage,
+      coverImage,
     },
   };
 }

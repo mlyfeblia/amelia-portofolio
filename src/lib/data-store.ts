@@ -1,9 +1,12 @@
 import crypto from 'crypto';
+import fs from 'node:fs';
+import path from 'node:path';
 import { revalidatePath } from 'next/cache';
 import { db, isDatabaseConfigured } from '@/db';
-import { articles, bookings, curhat } from '@/db/schema';
-import { desc, eq, and, inArray } from 'drizzle-orm';
+import { articles, bookings, curhat, pushSubscriptions } from '@/db/schema';
+import { desc, eq, and, inArray, sql } from 'drizzle-orm';
 import { Booking, AnonymousMessage, Article } from '@/types';
+import { ensureValidIsoTimestamp } from '@/lib/utils';
 
 // Fallback articles in case of offline/build-time isolation
 const fallbackArticles: Article[] = [
@@ -46,6 +49,8 @@ Jika kamu merasa beban pikiranmu sudah terlalu berat untuk dipikul sendirian, ja
     publishedAt: '24 September 2026',
     tags: ["Thuma'ninah", 'Overthinking', 'Kesehatan Mental', 'Tazkiyatun Nafs', 'BKI'],
     showOnLandingPage: true,
+    views: 143,
+    coverImage: '/images/articles/mental-health.webp',
   },
   {
     id: 'art-2',
@@ -86,12 +91,13 @@ Kamu berhak mendapatkan ruang dengar yang tulus tanpa perlu takut dihakimi. Seti
     publishedAt: '18 September 2026',
     tags: ['CBT', 'Tazkiyatun Nafs', 'Kesehatan Mental', 'Konselor Sebaya'],
     showOnLandingPage: true,
+    views: 98,
+    coverImage: '/images/articles/counseling.webp',
   },
   {
     id: 'art-3',
     slug: 'cyber-counseling-ethics-privacy-guide',
-    showOnLandingPage: false,
-    title: 'Etika Cyber Counseling dan Rahasia Menjaga Ruang Dengar Aman Tanpa Takut Dihakimi',
+    title: 'Etika Cyber Counseling dan Rahasia Menjaga Ruang Dengar Aman tanpa Takut Dihakimi',
     excerpt: 'Bercerita lewat layar sering terasa lebih melegakan bagi generasi digital. Inilah komitmen etika kerahasiaan dan kenyamanan konseling daring bersama Amel.',
     content: `
 Bagi banyak anak muda zaman sekarang, masuk ke ruangan konseling fisik bisa terasa sangat menegangkan. Ada ketakutan terlihat oleh orang lain, rasa canggung berhadapan langsung, atau takut dinilai sebagai orang yang bermasalah.
@@ -127,7 +133,10 @@ Ruang konseling bersama Amel selalu terbuka untuk mendengarkan setiap keluh kesa
     category: 'Cyber Counseling & Edukasi Sebaya',
     readTime: '5 menit baca',
     publishedAt: '10 September 2026',
-    tags: ['Konseling Daring', 'Ruang Aman', 'Etika Konseling', 'Generasi Digital']
+    tags: ['Konseling Daring', 'Ruang Aman', 'Etika Konseling', 'Generasi Digital'],
+    showOnLandingPage: false,
+    views: 76,
+    coverImage: '/images/articles/peer-listening.webp',
   },
   {
     id: 'art-4',
@@ -165,10 +174,13 @@ Untuk keluar dari jeratan burnout tanpa rasa bersalah, mulailah dengan langkah-l
 
 Jangan menunggu energimu habis sampai titik nol baru mencari pertolongan. Pulihkan jiwamu perlahan, karena kesehatan mentalmu jauh lebih berharga daripada nilai di atas kertas.
     `,
-    category: 'Pengembangan Diri & Spiritual',
+    category: 'Akademik, Karier & Produktivitas',
     readTime: '5 menit baca',
     publishedAt: '28 September 2026',
-    tags: ['Academic Burnout', 'Belas Kasih Diri', 'Tips Mahasiswa', 'Manajemen Stres']
+    tags: ['Academic Burnout', 'Belas Kasih Diri', 'Tips Mahasiswa', 'Manajemen Stres'],
+    showOnLandingPage: true,
+    views: 115,
+    coverImage: '/images/articles/academic.webp',
   },
   {
     id: 'art-5',
@@ -203,7 +215,10 @@ Jika rasa cemasmu terasa sangat mengganggu keseharian dan membuatmu menarik diri
     category: 'Manajemen Emosi & Overthinking',
     readTime: '5 menit baca',
     publishedAt: '29 September 2026',
-    tags: ['Kecemasan Sosial', 'Percaya Diri', 'Regulasi Emosi', 'Konselor Sebaya']
+    tags: ['Kecemasan Sosial', 'Percaya Diri', 'Regulasi Emosi', 'Konselor Sebaya'],
+    showOnLandingPage: false,
+    views: 64,
+    coverImage: '/images/articles/overthinking.webp',
   },
   {
     id: 'art-6',
@@ -238,12 +253,15 @@ Bila kamu butuh teman diskusi yang hangat untuk memetakan minat dan arah karierm
     category: 'Quarter-Life Crisis & Self Growth',
     readTime: '6 menit baca',
     publishedAt: '26 September 2026',
-    tags: ['Quarter-Life Crisis', 'Tazkiyatun Nafs', 'Tawakkal', 'Arah Hidup']
+    tags: ['Quarter-Life Crisis', 'Tazkiyatun Nafs', 'Tawakkal', 'Arah Hidup'],
+    showOnLandingPage: false,
+    views: 88,
+    coverImage: '/images/articles/self-growth.webp',
   },
   {
     id: 'art-7',
     slug: 'active-listening-safe-space-peer-counseling',
-    title: 'Kekuatan Mendengarkan Tanpa Menghakimi: Seni Menjadi Teman Cerita yang Menenangkan',
+    title: 'Kekuatan Mendengarkan tanpa Menghakimi: Seni Menjadi Teman Cerita yang Menenangkan',
     excerpt: 'Sering kali orang yang bercerita tidak butuh disuguhi rentetan solusi instan, melainkan telinga yang tulus mendengar dan hati yang memvalidasi perasaannya.',
     content: `
 Pernahkah kamu menceritakan beban hidupmu kepada seseorang, namun yang kamu dapatkan hanyalah kalimat "Ah, kamu kurang bersyukur" atau "Masalahmu belum seberapa dibanding masalahku"?
@@ -270,7 +288,10 @@ Menjadi pendengar yang baik adalah bentuk sedekah batin yang sangat luhur. Lewat
     category: 'Cyber Counseling & Edukasi Sebaya',
     readTime: '5 menit baca',
     publishedAt: '22 September 2026',
-    tags: ['Mendengarkan Aktif', 'Empati', 'Konselor Sebaya', 'Komunikasi']
+    tags: ['Mendengarkan Aktif', 'Empati', 'Konselor Sebaya', 'Komunikasi'],
+    showOnLandingPage: false,
+    views: 53,
+    coverImage: '/images/articles/relationships.webp',
   },
   {
     id: 'art-8',
@@ -303,7 +324,10 @@ Merawat diri sendiri adalah prasyarat utama sebelum kamu bisa menolong orang lai
     category: 'Kesehatan Mental Islami',
     readTime: '5 menit baca',
     publishedAt: '15 September 2026',
-    tags: ["Thuma'ninah", 'Ketenangan Batin', 'Merawat Diri', 'Istirahat Berkualitas']
+    tags: ["Thuma'ninah", 'Ketenangan Batin', 'Merawat Diri', 'Istirahat Berkualitas'],
+    showOnLandingPage: false,
+    views: 91,
+    coverImage: '/images/articles/mindfulness-islamic.webp',
   },
   {
     id: 'art-9',
@@ -343,6 +367,8 @@ Kamu yang hari ini bukan lagi anak kecil yang tidak berdaya menghadapi situasi s
     publishedAt: '02 Oktober 2026',
     tags: ['Inner Child', 'Penyembuhan Batin', 'Resiliensi', 'Belas Kasih Diri', 'BKI'],
     showOnLandingPage: false,
+    views: 124,
+    coverImage: '/images/articles/future-hope.webp',
   },
   {
     id: 'art-10',
@@ -375,6 +401,8 @@ Membangun kesepahaman butuh kesabaran dan waktu. Di ruang konseling Amelia, kita
     publishedAt: '03 Oktober 2026',
     tags: ['Keluarga', 'Komunikasi Asertif', 'Harmoni', 'Birrul Walidain', 'Konseling'],
     showOnLandingPage: false,
+    views: 70,
+    coverImage: '/images/articles/relationships.webp',
   },
   {
     id: 'art-11',
@@ -411,6 +439,8 @@ Belajar mengelola emosi adalah proses seumur hidup. Jadilah teman yang ramah bag
     publishedAt: '04 Oktober 2026',
     tags: ['Regulasi Emosi', 'Manajemen Stres', 'Kecerdasan Emosional', 'Sabar & Solat'],
     showOnLandingPage: false,
+    views: 82,
+    coverImage: '/images/articles/overthinking.webp',
   }
 ];
 
@@ -677,15 +707,20 @@ const fallbackCurhat: AnonymousMessage[] = [
 function initLocalJsonBackup() {
   try {
     if (typeof process !== 'undefined' && process.cwd) {
-      // Use dynamic require to avoid bundling issues in edge runtimes
-      const fs = require('fs');
-      const path = require('path');
       const dbPath = path.join(process.cwd(), 'data', 'db.json');
       if (fs.existsSync(dbPath)) {
         const raw = fs.readFileSync(dbPath, 'utf8');
         const data = JSON.parse(raw);
         if (Array.isArray(data.articles) && data.articles.length > 0) {
-          fallbackArticles.splice(0, fallbackArticles.length, ...data.articles);
+          fallbackArticles.splice(
+            0,
+            fallbackArticles.length,
+            ...data.articles.map((a: Article) => ({
+              ...a,
+              views: a.views ?? 0,
+              coverImage: a.coverImage || undefined,
+            }))
+          );
         }
         if (Array.isArray(data.bookings) && data.bookings.length > 0) {
           fallbackBookings.splice(0, fallbackBookings.length, ...data.bookings);
@@ -703,10 +738,13 @@ function initLocalJsonBackup() {
 initLocalJsonBackup();
 
 function saveLocalJsonBackup() {
+  // Never attempt to write to filesystem in serverless environments (e.g. Vercel read-only filesystem)
+  if (process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME) {
+    return;
+  }
+
   try {
     if (typeof process !== 'undefined' && process.cwd) {
-      const fs = require('fs');
-      const path = require('path');
       const dataDir = path.join(process.cwd(), 'data');
       if (!fs.existsSync(dataDir)) {
         fs.mkdirSync(dataDir, { recursive: true });
@@ -720,7 +758,7 @@ function saveLocalJsonBackup() {
       fs.writeFileSync(dbPath, JSON.stringify(payload, null, 2), 'utf8');
     }
   } catch {
-    // Safe to ignore in read-only serverless lambdas
+    // Safe to ignore in read-only filesystems
   }
 }
 
@@ -786,7 +824,7 @@ export async function getBookings(limit: number = 100, offset: number = 0): Prom
                 timeSlot: bk.timeSlot,
                 notes: bk.notes || '',
                 status: bk.status,
-                createdAt: bk.createdAt,
+                createdAt: ensureValidIsoTimestamp(bk.createdAt),
               })
               .onConflictDoNothing();
           }
@@ -945,6 +983,45 @@ export async function deleteBooking(id: string): Promise<boolean> {
   return deleted;
 }
 
+export async function getBookingById(id: string): Promise<Booking | null> {
+  if (!id) return null;
+
+  if (isDatabaseConfigured && db) {
+    try {
+      let [row] = await db
+        .select()
+        .from(bookings)
+        .where(eq(bookings.id, id))
+        .limit(1);
+
+      if (!row && !hasAutoSeededBookings) {
+        await getBookings(1, 0);
+        const [recheck] = await db
+          .select()
+          .from(bookings)
+          .where(eq(bookings.id, id))
+          .limit(1);
+        row = recheck;
+      }
+
+      if (row) {
+        return {
+          ...row,
+          alias: row.alias ?? undefined,
+          notes: row.notes ?? '',
+        } as Booking;
+      }
+
+      return null;
+    } catch (error) {
+      console.error('Error fetching booking by id from db:', error);
+    }
+  }
+
+  const found = fallbackBookings.find((b) => b.id === id);
+  return found || null;
+}
+
 export async function getBookingByCode(code: string): Promise<Booking | null> {
   const cleanCode = code.trim().toUpperCase();
   if (!cleanCode) return null;
@@ -1067,8 +1144,8 @@ export async function getCurhatList(
                 isAnswered: c.isAnswered,
                 isPublic: c.isPublic,
                 showOnLandingPage: c.showOnLandingPage ?? false,
-                createdAt: c.createdAt,
-                answeredAt: c.answeredAt || null,
+                createdAt: ensureValidIsoTimestamp(c.createdAt),
+                answeredAt: c.answeredAt ? ensureValidIsoTimestamp(c.answeredAt) : null,
               })
               .onConflictDoNothing();
           }
@@ -1293,10 +1370,12 @@ export async function getArticles(onlyPublished = false): Promise<Article[]> {
                 content: a.content,
                 category: a.category,
                 readTime: a.readTime,
-                publishedAt: a.publishedAt,
+                publishedAt: ensureValidIsoTimestamp(a.publishedAt),
                 tags: a.tags,
                 isPublished: a.isPublished ?? true,
                 showOnLandingPage: a.showOnLandingPage ?? false,
+                views: a.views ?? 0,
+                coverImage: a.coverImage || null,
               })
               .onConflictDoNothing();
           }
@@ -1313,6 +1392,8 @@ export async function getArticles(onlyPublished = false): Promise<Article[]> {
         tags: Array.isArray(r.tags) ? r.tags : [],
         isPublished: r.isPublished ?? true,
         showOnLandingPage: r.showOnLandingPage ?? false,
+        views: r.views ?? 0,
+        coverImage: r.coverImage || undefined,
       })) as Article[];
     } catch (error) {
       console.error('Error in getArticles from db:', error);
@@ -1320,9 +1401,10 @@ export async function getArticles(onlyPublished = false): Promise<Article[]> {
   }
 
   // Fallback to in-memory static articles for offline/build-time isolation
-  return onlyPublished
+  const list = onlyPublished
     ? fallbackArticles.filter((a) => a.isPublished !== false)
     : fallbackArticles;
+  return list.map((a) => ({ ...a, views: a.views ?? 0, coverImage: a.coverImage || undefined }));
 }
 
 export async function getArticleBySlug(slug: string, onlyPublished = false): Promise<Article | null> {
@@ -1346,6 +1428,8 @@ export async function getArticleBySlug(slug: string, onlyPublished = false): Pro
           tags: Array.isArray(row.tags) ? row.tags : [],
           isPublished: row.isPublished ?? true,
           showOnLandingPage: row.showOnLandingPage ?? false,
+          views: row.views ?? 0,
+          coverImage: row.coverImage || undefined,
         } as Article;
       }
 
@@ -1359,7 +1443,38 @@ export async function getArticleBySlug(slug: string, onlyPublished = false): Pro
   const found = fallbackArticles.find((a) => a.slug === slug);
   if (!found) return null;
   if (onlyPublished && found.isPublished === false) return null;
-  return found;
+  return { ...found, views: found.views ?? 0, coverImage: found.coverImage || undefined };
+}
+
+export async function incrementArticleViews(slug: string): Promise<number> {
+  let currentViews = 0;
+
+  if (isDatabaseConfigured && db) {
+    try {
+      const updated = await db
+        .update(articles)
+        .set({ views: sql`COALESCE(${articles.views}, 0) + 1` })
+        .where(eq(articles.slug, slug))
+        .returning({ views: articles.views });
+
+      if (updated && updated.length > 0) {
+        currentViews = updated[0].views ?? 0;
+      }
+    } catch (dbErr) {
+      console.error('Failed to increment article views in db:', dbErr);
+    }
+  }
+
+  // Update in fallback articles
+  const fallback = fallbackArticles.find((a) => a.slug === slug);
+  if (fallback) {
+    fallback.views = (fallback.views || 0) + 1;
+    if (!currentViews) currentViews = fallback.views;
+  }
+
+  saveLocalJsonBackup();
+
+  return currentViews || 1;
 }
 
 export async function updateArticle(
@@ -1377,6 +1492,9 @@ export async function updateArticle(
     if (data.tags !== undefined) updateData.tags = data.tags;
     if (data.isPublished !== undefined) updateData.isPublished = data.isPublished;
     if (data.showOnLandingPage !== undefined) updateData.showOnLandingPage = data.showOnLandingPage;
+    if (data.views !== undefined) updateData.views = data.views;
+    if (data.coverImage !== undefined) updateData.coverImage = data.coverImage || null;
+    if (data.publishedAt !== undefined) updateData.publishedAt = ensureValidIsoTimestamp(data.publishedAt);
 
     let updatedArticle: Article | null = null;
 
@@ -1395,6 +1513,8 @@ export async function updateArticle(
             tags: Array.isArray(updated.tags) ? updated.tags : [],
             isPublished: updated.isPublished ?? true,
             showOnLandingPage: updated.showOnLandingPage ?? false,
+            views: updated.views ?? 0,
+            coverImage: updated.coverImage || undefined,
           } as Article;
         }
       } catch (dbErr) {
@@ -1427,6 +1547,7 @@ export async function createArticle(
   data: Omit<Article, 'id' | 'publishedAt'> & { publishedAt?: string }
 ): Promise<Article> {
   const id = `art-${Date.now()}`;
+  const publishedAt = ensureValidIsoTimestamp(data.publishedAt);
   const insertData = {
     id,
     slug: data.slug,
@@ -1435,15 +1556,12 @@ export async function createArticle(
     content: data.content,
     category: data.category,
     readTime: data.readTime || '5 menit baca',
-    publishedAt: data.publishedAt || new Intl.DateTimeFormat('id-ID', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-      timeZone: 'Asia/Jakarta',
-    }).format(new Date()),
+    publishedAt,
     tags: Array.isArray(data.tags) ? data.tags : [],
     isPublished: data.isPublished !== undefined ? data.isPublished : true,
     showOnLandingPage: data.showOnLandingPage !== undefined ? data.showOnLandingPage : false,
+    views: data.views !== undefined ? data.views : 0,
+    coverImage: data.coverImage || null,
   };
 
   if (isDatabaseConfigured && db) {
@@ -1455,6 +1573,8 @@ export async function createArticle(
           tags: Array.isArray(inserted.tags) ? inserted.tags : [],
           isPublished: inserted.isPublished ?? true,
           showOnLandingPage: inserted.showOnLandingPage ?? false,
+          views: inserted.views ?? 0,
+          coverImage: inserted.coverImage || undefined,
         } as Article;
 
         fallbackArticles.unshift(newArticle);
@@ -1472,6 +1592,8 @@ export async function createArticle(
     tags: Array.isArray(insertData.tags) ? insertData.tags : [],
     isPublished: insertData.isPublished,
     showOnLandingPage: insertData.showOnLandingPage,
+    views: insertData.views ?? 0,
+    coverImage: data.coverImage || undefined,
   };
   fallbackArticles.unshift(fallbackArticle);
   revalidateDataPaths(['articles']);
@@ -1501,3 +1623,121 @@ export async function deleteArticle(id: string): Promise<boolean> {
 
   return deleted;
 }
+
+// Push Subscriptions (Web Push API - Preparation for Phase 4)
+export interface PushSubscriptionItem {
+  id: string;
+  endpoint: string;
+  p256dh: string;
+  auth: string;
+  role: string;
+  bookingCode?: string | null;
+  createdAt: string;
+}
+
+const fallbackPushSubscriptions: PushSubscriptionItem[] = [];
+
+export async function savePushSubscription(sub: {
+  endpoint: string;
+  p256dh: string;
+  auth: string;
+  role?: string;
+  bookingCode?: string;
+}): Promise<PushSubscriptionItem | null> {
+  const id = `sub-${crypto.randomUUID()}`;
+  const role = sub.role || 'client';
+  const bookingCode = sub.bookingCode || null;
+  const createdAt = new Date().toISOString();
+
+  if (isDatabaseConfigured && db) {
+    try {
+      const [saved] = await db
+        .insert(pushSubscriptions)
+        .values({
+          id,
+          endpoint: sub.endpoint,
+          p256dh: sub.p256dh,
+          auth: sub.auth,
+          role,
+          bookingCode,
+          createdAt,
+        })
+        .onConflictDoUpdate({
+          target: pushSubscriptions.endpoint,
+          set: {
+            p256dh: sub.p256dh,
+            auth: sub.auth,
+            role,
+            bookingCode,
+          },
+        })
+        .returning();
+
+      if (saved) {
+        return saved;
+      }
+    } catch (err) {
+      console.error('Failed to save push subscription in db:', err);
+    }
+  }
+
+  // Fallback in-memory
+  const existingIdx = fallbackPushSubscriptions.findIndex((s) => s.endpoint === sub.endpoint);
+  const item: PushSubscriptionItem = {
+    id,
+    endpoint: sub.endpoint,
+    p256dh: sub.p256dh,
+    auth: sub.auth,
+    role,
+    bookingCode,
+    createdAt,
+  };
+  if (existingIdx !== -1) {
+    fallbackPushSubscriptions[existingIdx] = item;
+  } else {
+    fallbackPushSubscriptions.push(item);
+  }
+  return item;
+}
+
+export async function getPushSubscriptions(role?: string): Promise<PushSubscriptionItem[]> {
+  if (isDatabaseConfigured && db) {
+    try {
+      if (role) {
+        return await db
+          .select()
+          .from(pushSubscriptions)
+          .where(eq(pushSubscriptions.role, role));
+      }
+      return await db.select().from(pushSubscriptions);
+    } catch (err) {
+      console.error('Failed to get push subscriptions from db:', err);
+    }
+  }
+  return role
+    ? fallbackPushSubscriptions.filter((s) => s.role === role)
+    : fallbackPushSubscriptions;
+}
+
+export async function deletePushSubscription(endpoint: string): Promise<boolean> {
+  let deleted = false;
+  if (isDatabaseConfigured && db) {
+    try {
+      const [res] = await db
+        .delete(pushSubscriptions)
+        .where(eq(pushSubscriptions.endpoint, endpoint))
+        .returning();
+      if (res) deleted = true;
+    } catch (err) {
+      console.error('Failed to delete push subscription from db:', err);
+    }
+  }
+
+  const idx = fallbackPushSubscriptions.findIndex((s) => s.endpoint === endpoint);
+  if (idx !== -1) {
+    fallbackPushSubscriptions.splice(idx, 1);
+    deleted = true;
+  }
+  return deleted;
+}
+

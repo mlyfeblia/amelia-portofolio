@@ -22,6 +22,13 @@
       "when": 1791270498225,
       "tag": "0002_faithful_morgan_stark",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1791469386286,
+      "tag": "0003_clammy_firestar",
+      "breakpoints": true
     }
   ]
 }

@@ -11,6 +11,7 @@ interface ArticleJsonLdProps {
   publishedAt: string;
   tags: string[];
   content?: string;
+  coverImage?: string;
 }
 
 export function ArticleJsonLd({
@@ -21,9 +22,15 @@ export function ArticleJsonLd({
   publishedAt,
   tags,
   content,
+  coverImage,
 }: ArticleJsonLdProps) {
   const publishedIso = getIsoDateString(publishedAt);
   const wordCount = content ? content.trim().split(/\s+/).filter(Boolean).length : undefined;
+  const fullCoverUrl = coverImage
+    ? coverImage.startsWith('http')
+      ? coverImage
+      : `${BASE_URL}${coverImage}`
+    : undefined;
 
   const data = {
     '@context': 'https://schema.org',
@@ -37,10 +44,11 @@ export function ArticleJsonLd({
     articleSection: category,
     articleBody: excerpt,
     image: [
+      ...(fullCoverUrl ? [fullCoverUrl] : []),
       `${BASE_URL}/articles/${slug}/opengraph-image`,
       `${BASE_URL}/amelia.webp`,
     ],
-    thumbnailUrl: `${BASE_URL}/articles/${slug}/opengraph-image`,
+    thumbnailUrl: fullCoverUrl || `${BASE_URL}/articles/${slug}/opengraph-image`,
     url: `${BASE_URL}/articles/${slug}`,
     datePublished: publishedIso,
     dateModified: publishedIso,

@@ -10,6 +10,8 @@ import {
   triggerPwaInstall,
   dismissPwaBanner,
   closeIosModal,
+  closeBrowserGuideModal,
+  closeInstalledInfoModal,
   openChangelogModal,
   closeChangelogModal,
 } from '@/lib/pwa-store';
@@ -17,7 +19,16 @@ import { useModalAnimation } from '@/lib/use-modal-animation';
 import { cn } from '@/lib/utils';
 import PwaSplashScreen from '@/components/pwa/PwaSplashScreen';
 import { PwaChangelogModal } from '@/components/pwa/PwaChangelogModal';
+import { PwaBrowserGuideModal } from '@/components/pwa/PwaBrowserGuideModal';
+import { PwaInstalledInfoModal } from '@/components/pwa/PwaInstalledInfoModal';
+import { NotificationPromptModal } from '@/components/pwa/NotificationPromptModal';
+import {
+  isNotificationSupported,
+  getNotificationPermission,
+  NOTIFICATION_PROMPT_EVENT,
+} from '@/lib/notifications';
 import { CURRENT_APP_VERSION, getLatestRelease } from '@/data/app-version';
+import { initOfflineQueueSync } from '@/lib/offline-queue';
 
 function subscribeOnline(callback: () => void) {
   window.addEventListener('online', callback);
@@ -40,10 +51,18 @@ export default function PwaLifecycle() {
   const isOnline = useSyncExternalStore(subscribeOnline, getOnlineSnapshot, getOnlineServerSnapshot);
   const isOffline = !isOnline;
 
-  const { showBanner, bannerReason, showIosModal, showChangelogModal, isIOS, isInstalled } = usePwa();
+  const {
+    showBanner,
+    bannerReason,
+    showIosModal,
+    showChangelogModal,
+    showBrowserGuideModal,
+    showInstalledInfoModal,
+    isIOS,
+    isInstalled,
+  } = usePwa();
   const {
     isRendered: isIosModalRendered,
-    isExiting: isIosModalExiting,
     backdropClass: iosBackdropClass,
     windowClass: iosWindowClass,
   } = useModalAnimation({ isOpen: showIosModal });
@@ -53,6 +72,7 @@ export default function PwaLifecycle() {
   const [updateDismissed, setUpdateDismissed] = useState(false);
   const [showOnlineToast, setShowOnlineToast] = useState(false);
   const [isSuppressed, setIsSuppressed] = useState(false);
+  const [showNotificationPromptModal, setShowNotificationPromptModal] = useState(false);
   const latestRelease = getLatestRelease();
 
   // Suppress floating banner when user is near footer or looking at #app-showcase
@@ -111,6 +131,10 @@ export default function PwaLifecycle() {
     }
 
     initPwa();
+    const cleanupQueue = initOfflineQueueSync();
+    return () => {
+      cleanupQueue();
+    };
   }, []);
 
   // Close iOS guide modal on Escape key press
@@ -161,6 +185,51 @@ export default function PwaLifecycle() {
       window.removeEventListener('offline', handleOfflineEvent);
     };
   }, []);
+
+  // Listen for explicit custom event triggers for NotificationPromptModal
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const handleOpenNotifPrompt = () => {
+      setShowNotificationPromptModal(true);
+    };
+
+    window.addEventListener(NOTIFICATION_PROMPT_EVENT, handleOpenNotifPrompt);
+    return () => {
+      window.removeEventListener(NOTIFICATION_PROMPT_EVENT, handleOpenNotifPrompt);
+    };
+  }, []);
+
+  // Politely trigger notification prompt in standalone PWA mode if not yet granted or dismissed recently
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const timer = setTimeout(() => {
+      if (!isNotificationSupported()) return;
+      if (getNotificationPermission() !== 'default') return;
+
+      try {
+        const dismissedAt = localStorage.getItem('amelia_notif_prompt_dismissed');
+        if (dismissedAt) {
+          const elapsed = Date.now() - parseInt(dismissedAt, 10);
+          // 3-day cooldown
+          if (elapsed < 3 * 24 * 60 * 60 * 1000) return;
+        }
+
+        if (
+          isInstalled ||
+          (typeof window.matchMedia === 'function' &&
+            window.matchMedia('(display-mode: standalone)').matches)
+        ) {
+          setShowNotificationPromptModal(true);
+        }
+      } catch {
+        // Ignore
+      }
+    }, 4500);
+
+    return () => clearTimeout(timer);
+  }, [isInstalled]);
 
   // Handle Service Worker registration updates & periodic version checks
   useEffect(() => {
@@ -334,6 +403,18 @@ export default function PwaLifecycle() {
 
       {/* ── PWA Version Changelog Modal ──────────────────────────── */}
       <PwaChangelogModal isOpen={showChangelogModal} onClose={closeChangelogModal} />
+
+      {/* ── Browser / Android PWA Installation Guide Modal ──────────── */}
+      <PwaBrowserGuideModal isOpen={showBrowserGuideModal} onClose={closeBrowserGuideModal} />
+
+      {/* ── PWA Installed Status & System Info Modal ───────────────── */}
+      <PwaInstalledInfoModal isOpen={showInstalledInfoModal} onClose={closeInstalledInfoModal} />
+
+      {/* ── Web & PWA Browser Notification Prompt Modal ────────────── */}
+      <NotificationPromptModal
+        isOpen={showNotificationPromptModal}
+        onClose={() => setShowNotificationPromptModal(false)}
+      />
 
       {/* ── SW Update Available Banner with Changelog Preview ─────── */}
       {updateWaiting && !updateDismissed && (

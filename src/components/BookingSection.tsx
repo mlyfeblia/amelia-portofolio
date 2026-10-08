@@ -5,6 +5,7 @@ import { AlertCircle, CalendarPlus, Search } from 'lucide-react';
 import {
   BookingFormState,
   DEFAULT_BOOKING_FORM,
+  BOOKING_MODES,
   getTodayDateString,
   getMaxBookingDateString,
 } from '@/data/booking-data';
@@ -12,46 +13,130 @@ import { BookingSuccessCard } from './booking/BookingSuccessCard';
 import { BookingClientInfoStep } from './booking/BookingClientInfoStep';
 import { BookingSessionDetailsStep } from './booking/BookingSessionDetailsStep';
 import { BookingTracker } from './booking/BookingTracker';
+import { ConfirmDecisionModal } from '@/components/ui/ConfirmDecisionModal';
 import { saveDeviceBooking, useDeviceBookings } from '@/lib/booking-storage';
+import {
+  isNotificationSupported,
+  getNotificationPermission,
+  dispatchLocalNotification,
+  triggerNotificationPromptModal,
+  registerWebPushSubscription,
+} from '@/lib/notifications';
+import { CounselingMode } from '@/types';
+import { formatPersonName } from '@/lib/text-formatter';
 
 interface BookingSectionProps {
   initialTab?: 'new' | 'tracker';
   initialCode?: string;
+  initialMode?: CounselingMode;
 }
 
-export default function BookingSection({ initialTab, initialCode }: BookingSectionProps = {}) {
+export default function BookingSection({ initialTab, initialCode, initialMode }: BookingSectionProps = {}) {
   const formId = useId();
-  const [activeTab, setActiveTab] = useState<'new' | 'tracker'>(initialTab || 'new');
-  const deviceBookings = useDeviceBookings();
-  const deviceBookingCount = deviceBookings.length;
-  const [trackCode, setTrackCode] = useState<string>(initialCode || '');
+  const [form, setForm] = useState<BookingFormState>(() => {
+    let mode = DEFAULT_BOOKING_FORM.mode;
+    if (initialMode && ['online_meet', 'online_chat', 'tatap_muka_cirebon'].includes(initialMode)) {
+      mode = initialMode;
+    } else if (typeof window !== 'undefined') {
+      try {
+        const searchParams = new URLSearchParams(window.location.search);
+        const modeParam = searchParams.get('format') || searchParams.get('mode');
+        if (modeParam && ['online_meet', 'online_chat', 'tatap_muka_cirebon'].includes(modeParam)) {
+          mode = modeParam as CounselingMode;
+        }
+      } catch {}
+    }
+    return {
+      ...DEFAULT_BOOKING_FORM,
+      mode,
+    };
+  });
 
-  // Keep tab & trackCode synchronized with URL on mount
-  React.useEffect(() => {
+  const [activeTab, setActiveTab] = useState<'new' | 'tracker'>(() => {
+    if (initialTab) return initialTab;
+    if (typeof window === 'undefined') return 'new';
     try {
       const searchParams = new URLSearchParams(window.location.search);
       const tabParam = searchParams.get('tab');
       const hash = window.location.hash;
-
       if (tabParam === 'tracker' || hash === '#tracker' || hash === '#lacak') {
-        setActiveTab('tracker');
-      } else if (tabParam === 'new') {
-        setActiveTab('new');
+        return 'tracker';
       }
-
-      const codeParam = searchParams.get('code');
-      if (codeParam) {
-        setTrackCode(codeParam);
-      } else {
-        setTrackCode('');
-        sessionStorage.removeItem('booking_track_code');
+      if (tabParam === 'new') {
+        return 'new';
       }
     } catch {}
+    return 'new';
+  });
+
+  const deviceBookings = useDeviceBookings();
+  const deviceBookingCount = deviceBookings.length;
+  const [trackCode, setTrackCode] = useState<string>(() => {
+    if (initialCode) return initialCode;
+    if (typeof window === 'undefined') return '';
+    try {
+      const searchParams = new URLSearchParams(window.location.search);
+      return searchParams.get('code') || '';
+    } catch {
+      return '';
+    }
+  });
+
+  // Sync prop changes during render
+  const [prevInitialTab, setPrevInitialTab] = useState(initialTab);
+  if (prevInitialTab !== initialTab) {
+    setPrevInitialTab(initialTab);
+    if (initialTab) setActiveTab(initialTab);
+  }
+
+  const [prevInitialCode, setPrevInitialCode] = useState(initialCode);
+  if (prevInitialCode !== initialCode) {
+    setPrevInitialCode(initialCode);
+    if (initialCode) setTrackCode(initialCode);
+  }
+
+  // Listen to browser back/forward and hash changes
+  React.useEffect(() => {
+    const handlePopState = () => {
+      try {
+        const searchParams = new URLSearchParams(window.location.search);
+        const tabParam = searchParams.get('tab');
+        const hash = window.location.hash;
+
+        if (tabParam === 'tracker' || hash === '#tracker' || hash === '#lacak') {
+          setActiveTab('tracker');
+        } else if (tabParam === 'new') {
+          setActiveTab('new');
+        }
+
+        const codeParam = searchParams.get('code');
+        if (codeParam) {
+          setTrackCode(codeParam);
+        }
+
+        const modeParam = searchParams.get('format') || searchParams.get('mode');
+        if (
+          modeParam &&
+          ['online_meet', 'online_chat', 'tatap_muka_cirebon'].includes(modeParam)
+        ) {
+          setForm((prev) => ({
+            ...prev,
+            mode: modeParam as CounselingMode,
+          }));
+        }
+      } catch {}
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    window.addEventListener('hashchange', handlePopState);
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+      window.removeEventListener('hashchange', handlePopState);
+    };
   }, []);
 
   const handleTabChange = (tab: 'new' | 'tracker') => {
     setActiveTab(tab);
-    // When switching tabs, reset trackCode so returning to tracker is always clean & empty
     setTrackCode('');
     try {
       sessionStorage.removeItem('booking_active_tab');
@@ -81,10 +166,9 @@ export default function BookingSection({ initialTab, initialCode }: BookingSecti
       window.history.replaceState({}, '', url.toString());
     } catch {}
   };
-
-  const [form, setForm] = useState<BookingFormState>(DEFAULT_BOOKING_FORM);
   const [botTrap, setBotTrap] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showBookingConfirmModal, setShowBookingConfirmModal] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState<{
     code: string;
@@ -94,10 +178,12 @@ export default function BookingSection({ initialTab, initialCode }: BookingSecti
     slot: string;
   } | null>(null);
 
-  const handleChange = (key: keyof BookingFormState, value: string) =>
-    setForm((prev) => ({ ...prev, [key]: value }));
+  const handleChange = (key: keyof BookingFormState, value: string) => {
+    const formattedValue = key === 'name' || key === 'alias' ? formatPersonName(value) : value;
+    setForm((prev) => ({ ...prev, [key]: formattedValue }));
+  };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
     // Silently trap automated bot submissions
@@ -147,6 +233,11 @@ export default function BookingSection({ initialTab, initialCode }: BookingSecti
       return;
     }
 
+    setError('');
+    setShowBookingConfirmModal(true);
+  };
+
+  const executeBookingSubmit = async () => {
     setLoading(true);
     setError('');
     try {
@@ -169,6 +260,21 @@ export default function BookingSection({ initialTab, initialCode }: BookingSecti
         timeSlot: newBooking.timeSlot,
       });
 
+      // Dispatch local notification if permission is granted, or politely prompt if default
+      if (isNotificationSupported()) {
+        const permission = getNotificationPermission();
+        if (permission === 'granted') {
+          dispatchLocalNotification('Jadwal Konseling Terkirim', {
+            body: `Kode reservasi kamu: ${newBooking.code}. Cek email atau simpan kode ini ya!`,
+          });
+          registerWebPushSubscription(newBooking.code).catch(() => {});
+        } else if (permission === 'default') {
+          setTimeout(() => {
+            triggerNotificationPromptModal();
+          }, 1200);
+        }
+      }
+
       setSuccess({
         code: newBooking.code,
         name: newBooking.name,
@@ -177,8 +283,10 @@ export default function BookingSection({ initialTab, initialCode }: BookingSecti
         slot: newBooking.timeSlot,
       });
       setForm(DEFAULT_BOOKING_FORM);
+      setShowBookingConfirmModal(false);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Terjadi kendala sistem. Silakan ulangi sesaat lagi.');
+      setShowBookingConfirmModal(false);
     } finally {
       setLoading(false);
     }
@@ -329,6 +437,39 @@ export default function BookingSection({ initialTab, initialCode }: BookingSecti
         )}
         </div>
       </div>
+
+      {/* Confirmation Modal for Booking Submission */}
+      <ConfirmDecisionModal
+        isOpen={showBookingConfirmModal}
+        onClose={() => setShowBookingConfirmModal(false)}
+        onConfirm={executeBookingSubmit}
+        title="Kirim Permohonan Jadwal Konseling?"
+        description="Pastikan kontak WhatsApp dan email kamu aktif untuk menerima konfirmasi jadwal dan panduan pertemuan bersama Kak Amel."
+        confirmLabel="Ya, Kirim Permohonan"
+        variant="primary"
+        loading={loading}
+        icon={<CalendarPlus className="w-5 h-5 text-[var(--color-accent)]" />}
+        itemDetail={
+          <div className="space-y-1.5 text-xs text-[var(--color-ink)]">
+            <div className="flex justify-between gap-2">
+              <span className="text-[var(--color-ink-muted)]">Konseli:</span>
+              <span className="font-semibold text-right break-words">{form.name} {form.alias ? `(${form.alias})` : ''}</span>
+            </div>
+            <div className="flex justify-between gap-2">
+              <span className="text-[var(--color-ink-muted)]">Kontak:</span>
+              <span className="font-medium text-right break-words">{form.phone} • {form.email}</span>
+            </div>
+            <div className="flex justify-between gap-2">
+              <span className="text-[var(--color-ink-muted)]">Jadwal:</span>
+              <span className="font-semibold text-right">{form.date} • {form.timeSlot}</span>
+            </div>
+            <div className="flex justify-between gap-2">
+              <span className="text-[var(--color-ink-muted)]">Format:</span>
+              <span className="font-medium text-right">{BOOKING_MODES.find((m) => m.id === form.mode)?.label || form.mode}</span>
+            </div>
+          </div>
+        }
+      />
     </div>
   );
 }

@@ -13,10 +13,13 @@
     "db:studio": "drizzle-kit studio",
     "db:seed": "node scripts/seed.mjs",
     "db:verify": "node scripts/verify-db-deep.mjs",
-    "test:integration": "node scripts/e2e-api-integration.mjs"
+    "test:integration": "node scripts/e2e-api-integration.mjs",
+    "test:slug": "tsx scripts/test-slug-generator.ts"
   },
   "dependencies": {
+    "@insforge/sdk": "^1.5.2",
     "@serwist/next": "^9.5.12",
+    "@sindresorhus/slugify": "^3.0.1",
     "@upstash/ratelimit": "^2.2.0",
     "@upstash/redis": "^1.39.0",
     "clsx": "^2.1.1",
@@ -26,6 +29,7 @@
     "postgres": "^3.4.9",
     "react": "19.3.0",
     "react-dom": "19.3.0",
+    "resend": "^6.32.0",
     "serwist": "^9.5.12",
     "tailwind-merge": "^3.7.0"
   },

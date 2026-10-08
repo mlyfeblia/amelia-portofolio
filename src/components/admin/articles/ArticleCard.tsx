@@ -1,12 +1,14 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
-import { Clock, Calendar, Edit3, ExternalLink, Trash2, Eye, EyeOff, Star } from 'lucide-react';
+import { Clock, Edit3, ExternalLink, Trash2, Eye, EyeOff, Star, Image as ImageIcon } from 'lucide-react';
 import { Article } from '@/types';
+import { formatIndonesianDate } from '@/lib/utils';
 import { Badge } from '@/components/ui/Badge';
 import { Spinner } from '@/components/ui/Spinner';
 import { Tooltip } from '@/components/ui/Tooltip';
+import { ConfirmDecisionModal } from '@/components/ui/ConfirmDecisionModal';
 
 interface ArticleCardProps {
   article: Article;
@@ -28,9 +30,54 @@ export function ArticleCard({
   onToggleLanding,
 }: ArticleCardProps) {
   const isPublic = article.isPublished !== false;
+  const [confirmAction, setConfirmAction] = useState<'publish' | 'landing' | null>(null);
+
+  const getModalProps = () => {
+    if (confirmAction === 'publish') {
+      return {
+        title: isPublic ? 'Ubah Artikel Menjadi Draf?' : 'Terbitkan Artikel ke Publik?',
+        description: isPublic
+          ? 'Artikel ini tidak akan lagi terlihat oleh publik di halaman direktori artikel.'
+          : 'Artikel ini akan langsung tampil di direktori artikel dan dapat diakses pembaca.',
+        variant: isPublic ? ('warning' as const) : ('primary' as const),
+        confirmLabel: isPublic ? 'Ya, Jadikan Draf' : 'Ya, Terbitkan',
+        icon: isPublic ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />,
+        loading: isToggling,
+        onConfirm: () => {
+          if (onTogglePublish) {
+            onTogglePublish(article);
+          }
+          setConfirmAction(null);
+        },
+      };
+    }
+
+    if (confirmAction === 'landing') {
+      return {
+        title: article.showOnLandingPage ? 'Hapus dari Beranda Utama?' : 'Tampilkan di Beranda Utama?',
+        description: article.showOnLandingPage
+          ? 'Artikel ini tidak akan lagi ditampilkan di etalase sorotan halaman depan.'
+          : 'Artikel ini akan ditampilkan sebagai sorotan utama di bagian artikel pilihan halaman depan.',
+        variant: article.showOnLandingPage ? ('warning' as const) : ('primary' as const),
+        confirmLabel: article.showOnLandingPage ? 'Hapus dari Beranda' : 'Tampilkan di Beranda',
+        icon: <Star className="w-5 h-5" />,
+        loading: isTogglingLanding,
+        onConfirm: () => {
+          if (onToggleLanding) {
+            onToggleLanding(article);
+          }
+          setConfirmAction(null);
+        },
+      };
+    }
+
+    return null;
+  };
+
+  const modalProps = getModalProps();
 
   return (
-    <div className="card-interactive p-4 sm:p-6 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-paper-border)] shadow-xs space-y-3.5">
+    <div className="card-interactive p-3.5 sm:p-6 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-paper-border)] shadow-xs space-y-3.5">
       {/* Header Info & Actions */}
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
         <div className="space-y-1.5 flex-1 min-w-0">
@@ -42,7 +89,7 @@ export function ArticleCard({
           </h2>
 
           <p className="text-xs sm:text-sm text-[var(--color-ink-muted)] leading-relaxed line-clamp-2">
-            {article.publishedAt ? `${article.publishedAt} — ` : ''}{article.excerpt}
+            {article.publishedAt ? `${formatIndonesianDate(article.publishedAt) || article.publishedAt} — ` : ''}{article.excerpt}
           </p>
 
           <div className="flex flex-wrap items-center gap-2 pt-1 text-xs">
@@ -61,22 +108,36 @@ export function ArticleCard({
               <Clock className="w-3 h-3" />
               {article.readTime}
             </span>
+            <span className="text-[var(--color-paper-border)]">&bull;</span>
+            <span className="inline-flex items-center gap-1 text-[11px] font-mono text-[var(--color-ink-soft)] bg-[var(--color-surface)] border border-[var(--color-paper-border)] px-2 py-0.5 rounded-lg">
+              <Eye className="w-3 h-3" />
+              <span>{article.views || 0} views</span>
+            </span>
+            {article.coverImage && (
+              <>
+                <span className="text-[var(--color-paper-border)]">&bull;</span>
+                <span className="inline-flex items-center gap-1 text-[11px] text-[var(--color-accent)] bg-[var(--color-accent-soft)]/60 border border-[var(--color-accent-border)]/50 px-2 py-0.5 rounded-lg font-medium">
+                  <ImageIcon className="w-3 h-3" />
+                  <span>Ada Foto</span>
+                </span>
+              </>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Action Buttons Toolbar: Desktop = Single Row, Mobile = 2 Full-Width Grid Rows */}
-      <div className="pt-2.5 sm:pt-3 border-t border-[var(--color-paper-border)] flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-        {/* Left Actions (Desktop) / Row 1 (Mobile: Full Width 3 Buttons) */}
-        <div className="grid grid-cols-3 sm:flex sm:items-center gap-1.5 sm:gap-2 w-full sm:w-auto">
+      {/* Action Buttons Toolbar: Desktop = Single Row, Mobile = Flex Wrap Rows */}
+      <div className="pt-2.5 sm:pt-3 border-t border-[var(--color-paper-border)] flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-2.5">
+        {/* Left Actions / Primary toggles */}
+        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 w-full sm:w-auto">
           {/* Landing Page Showcase Toggle */}
           {onToggleLanding && (
             <button
-              onClick={() => onToggleLanding(article)}
+              onClick={() => setConfirmAction('landing')}
               disabled={isTogglingLanding}
               type="button"
               title={article.showOnLandingPage ? 'Hapus artikel ini dari halaman beranda (landing page)' : 'Tampilkan artikel ini di halaman beranda (landing page)'}
-              className={`btn-interactive inline-flex items-center justify-center gap-1 px-2 sm:px-2.5 py-1.5 rounded-lg text-xs font-semibold border cursor-pointer whitespace-nowrap disabled:opacity-60 transition-colors w-full sm:w-auto ${
+              className={`btn-interactive inline-flex items-center justify-center gap-1 px-2 sm:px-2.5 py-1.5 rounded-lg text-[11px] sm:text-xs font-semibold border cursor-pointer whitespace-nowrap disabled:opacity-60 transition-colors flex-1 min-[320px]:flex-initial sm:w-auto ${
                 article.showOnLandingPage
                   ? 'bg-amber-100 text-amber-900 border-amber-300 hover:bg-amber-200'
                   : 'bg-[var(--color-paper-muted)] text-[var(--color-ink-muted)] border-[var(--color-paper-border)] hover:bg-[var(--color-paper-border)] hover:text-[var(--color-ink)]'
@@ -94,11 +155,11 @@ export function ArticleCard({
           {/* 1-Click Visibility Toggle Button */}
           {onTogglePublish && (
             <button
-              onClick={() => onTogglePublish(article)}
+              onClick={() => setConfirmAction('publish')}
               disabled={isToggling}
               type="button"
               title={isPublic ? 'Sembunyikan dari publik (jadikan draf)' : 'Terbitkan ke website publik'}
-              className={`btn-interactive inline-flex items-center justify-center gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-lg text-xs font-semibold border cursor-pointer whitespace-nowrap disabled:opacity-60 w-full sm:w-auto ${
+              className={`btn-interactive inline-flex items-center justify-center gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-lg text-[11px] sm:text-xs font-semibold border cursor-pointer whitespace-nowrap disabled:opacity-60 flex-1 min-[320px]:flex-initial sm:w-auto ${
                 isPublic
                   ? 'bg-[var(--color-accent-soft)] text-[var(--color-accent)] border-[var(--color-accent-border)] hover:bg-[var(--color-accent-border)]/50'
                   : 'bg-[var(--color-paper-muted)] text-[var(--color-ink-muted)] border-[var(--color-paper-border)] hover:bg-[var(--color-paper-border)]'
@@ -119,67 +180,81 @@ export function ArticleCard({
           <button
             onClick={() => onEdit(article)}
             type="button"
-            className="btn-interactive inline-flex items-center justify-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-lg bg-[var(--color-accent-soft)] text-[var(--color-accent)] hover:bg-[var(--color-accent)] hover:text-white text-xs font-semibold cursor-pointer w-full sm:w-auto"
+            className="btn-interactive inline-flex items-center justify-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-[var(--color-accent-soft)] text-[var(--color-accent)] hover:bg-[var(--color-accent)] hover:text-white text-[11px] sm:text-xs font-semibold cursor-pointer flex-1 min-[320px]:flex-initial sm:w-auto"
           >
             <Edit3 className="w-3.5 h-3.5" />
             <span>Ubah</span>
           </button>
         </div>
 
-        {/* Right Actions (Desktop) / Row 2 (Mobile: Full Width 2 Buttons) */}
-        <div className="grid grid-cols-2 sm:flex sm:items-center gap-1.5 sm:gap-2 w-full sm:w-auto shrink-0 justify-end">
+        {/* Right Actions / Secondary tools */}
+        <div className="flex flex-wrap sm:flex-nowrap items-center gap-1.5 sm:gap-2 w-full sm:w-auto shrink-0 justify-start sm:justify-end">
           {/* Public Preview Link */}
           {isPublic && (
-            <Tooltip content="Buka di web publik" position="top" wrapperClassName="w-full sm:w-auto">
+            <Tooltip content="Buka di web publik" position="top" wrapperClassName="flex-1 min-[320px]:flex-initial sm:w-auto">
               <Link
                 href={`/articles/${article.slug}`}
                 target="_blank"
-                className="btn-interactive inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--color-surface)] border border-[var(--color-paper-border)] hover:bg-[var(--color-paper-muted)] text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] text-xs cursor-pointer w-full sm:w-auto"
+                className="btn-interactive inline-flex items-center justify-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-[var(--color-surface)] border border-[var(--color-paper-border)] hover:bg-[var(--color-paper-muted)] text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] text-[11px] sm:text-xs cursor-pointer w-full sm:w-auto"
                 aria-label="Buka tampilan web publik"
               >
                 <ExternalLink className="w-3.5 h-3.5" />
-                <span className="text-xs font-medium sm:hidden">Lihat Web</span>
+                <span className="text-[11px] sm:text-xs font-medium sm:hidden">Lihat Web</span>
               </Link>
             </Tooltip>
           )}
 
           {/* Delete Button */}
-          <Tooltip content="Hapus artikel" position="top" wrapperClassName="w-full sm:w-auto">
+          <Tooltip content="Hapus artikel" position="top" wrapperClassName="flex-1 min-[320px]:flex-initial sm:w-auto">
             <button
               onClick={() => onDelete(article)}
               type="button"
-              className="btn-interactive inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-[var(--color-paper-border)] hover:border-red-300 text-[var(--color-ink-muted)] hover:text-[var(--color-error)] hover:bg-[var(--color-error-soft)] text-xs transition-colors cursor-pointer w-full sm:w-auto"
+              className="btn-interactive inline-flex items-center justify-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg border border-[var(--color-paper-border)] hover:border-red-300 text-[var(--color-ink-muted)] hover:text-[var(--color-error)] hover:bg-[var(--color-error-soft)] text-[11px] sm:text-xs transition-colors cursor-pointer w-full sm:w-auto"
               aria-label="Hapus artikel ini"
             >
               <Trash2 className="w-3.5 h-3.5" />
-              <span className="text-xs font-medium sm:hidden">Hapus</span>
+              <span className="text-[11px] sm:text-xs font-medium sm:hidden">Hapus</span>
             </button>
           </Tooltip>
         </div>
       </div>
 
-      {/* Slug & Tags Footer */}
-      <div className="pt-2.5 border-t border-[var(--color-paper-border)] flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
-        <div className="flex items-center gap-1.5 text-[var(--color-ink-muted)] font-mono text-[11px] overflow-hidden text-ellipsis">
-          <span className="shrink-0">URL:</span>
-          <code className="px-1.5 py-0.5 rounded bg-[var(--color-paper)] border border-[var(--color-paper-border)] text-[var(--color-accent)] truncate max-w-[260px] sm:max-w-none">
-            /articles/{article.slug}
-          </code>
+      {/* Tags Footer */}
+      {article.tags && article.tags.length > 0 && (
+        <div className="pt-2.5 border-t border-[var(--color-paper-border)] flex flex-wrap gap-1 text-xs">
+          {article.tags.map((t) => (
+            <span
+              key={t}
+              className="px-2 py-0.5 rounded bg-[var(--color-paper)] border border-[var(--color-paper-border)] text-[10px] text-[var(--color-ink-muted)]"
+            >
+              #{t}
+            </span>
+          ))}
         </div>
+      )}
 
-        {article.tags && article.tags.length > 0 && (
-          <div className="flex flex-wrap gap-1">
-            {article.tags.map((t) => (
-              <span
-                key={t}
-                className="px-2 py-0.5 rounded bg-[var(--color-paper)] border border-[var(--color-paper-border)] text-[10px] text-[var(--color-ink-muted)]"
-              >
-                #{t}
-              </span>
-            ))}
-          </div>
-        )}
-      </div>
+      {/* Decision Modal for Article Visibility & Landing */}
+      {modalProps && (
+        <ConfirmDecisionModal
+          isOpen={confirmAction !== null}
+          onClose={() => setConfirmAction(null)}
+          onConfirm={modalProps.onConfirm}
+          title={modalProps.title}
+          description={modalProps.description}
+          confirmLabel={modalProps.confirmLabel}
+          variant={modalProps.variant}
+          icon={modalProps.icon}
+          loading={modalProps.loading}
+          itemDetail={
+            <div className="space-y-1">
+              <div className="font-semibold text-[var(--color-ink)] line-clamp-1">{article.title}</div>
+              <div className="text-[11px] text-[var(--color-ink-muted)]">
+                Kategori: {article.category} &bull; {article.readTime}
+              </div>
+            </div>
+          }
+        />
+      )}
     </div>
   );
 }

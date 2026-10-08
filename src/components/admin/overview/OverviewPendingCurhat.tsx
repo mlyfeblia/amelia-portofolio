@@ -19,7 +19,7 @@ export function OverviewPendingCurhat({
 
   return (
     <div className="lg:col-span-5 space-y-3.5">
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3">
         <div className="min-w-0">
           <h2
             className="text-base sm:text-lg font-medium text-[var(--color-ink)]"
@@ -56,14 +56,14 @@ export function OverviewPendingCurhat({
           {unansweredCurhat.slice(0, 3).map((c) => (
             <div
               key={c.id}
-              className="p-4 sm:p-5 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-paper-border)] shadow-xs space-y-2.5 transition-all"
+              className="p-3.5 sm:p-5 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-paper-border)] shadow-xs space-y-2.5 transition-all"
             >
               <p className="text-xs sm:text-sm text-[var(--color-ink-muted)] italic leading-relaxed line-clamp-3">
                 &ldquo;{c.message}&rdquo;
               </p>
 
-              <div className="pt-2 border-t border-[var(--color-paper-border)] flex items-center justify-between gap-2">
-                <div className="flex items-center gap-1.5 text-xs">
+              <div className="pt-2 border-t border-[var(--color-paper-border)] flex flex-wrap items-center justify-between gap-2">
+                <div className="flex flex-wrap items-center gap-1.5 text-xs">
                   <span className="font-semibold text-[var(--color-ink)]">{c.alias}</span>
                   <span className="text-[var(--color-paper-border)]">&bull;</span>
                   <span className="text-[11px] text-[var(--color-accent)] font-medium">
@@ -72,7 +72,7 @@ export function OverviewPendingCurhat({
                 </div>
                 <Link
                   href="/admin/counseling"
-                  className="btn-primary btn-interactive !text-xs !py-1.5 !px-3 inline-flex items-center gap-1 shadow-xs"
+                  className="btn-primary btn-interactive !text-xs !py-1.5 !px-2.5 sm:!px-3 inline-flex items-center gap-1 shadow-xs"
                 >
                   <Send className="w-3 h-3" />
                   <span>Beri Tanggapan</span>

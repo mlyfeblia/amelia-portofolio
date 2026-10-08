@@ -33,6 +33,25 @@ export default function ScrollRestorationProvider() {
       try {
         sessionStorage.setItem(currentKey, '0');
       } catch {}
+    } else if (prevPathRef.current === null) {
+      // Initial mount / refresh:
+      // Prevent dirty layout-shift offsets (e.g. from translateY entrance animations)
+      // from falsely displacing the user down the page when they are intended to be at top.
+      if (!window.location.hash) {
+        let savedScroll = 0;
+        try {
+          const raw = sessionStorage.getItem(currentKey);
+          if (raw) savedScroll = parseInt(raw, 10);
+        } catch {}
+
+        // If no saved position or saved position is a micro-shift (< 40px), ensure we reset cleanly to top
+        if (savedScroll < 40 && window.scrollY > 0 && window.scrollY < 50) {
+          window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
+          try {
+            sessionStorage.setItem(currentKey, '0');
+          } catch {}
+        }
+      }
     }
 
     prevPathRef.current = pathname;
@@ -44,7 +63,10 @@ export default function ScrollRestorationProvider() {
       rafId = requestAnimationFrame(() => {
         rafId = null;
         try {
-          sessionStorage.setItem(currentKey, window.scrollY.toString());
+          const y = window.scrollY;
+          // Discard micro layout shifts near the top (< 30px) so page refreshes at the top don't restore dirty offsets
+          const normalizedY = y < 30 ? 0 : y;
+          sessionStorage.setItem(currentKey, normalizedY.toString());
         } catch {}
       });
     };

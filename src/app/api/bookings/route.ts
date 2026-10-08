@@ -4,6 +4,7 @@ import { isAuthenticatedAdmin } from '@/lib/admin-auth';
 import { checkDistributedRateLimit, getClientIp } from '@/lib/rate-limiter';
 import { validateBookingInput } from '@/lib/validators';
 import { telemetry } from '@/lib/telemetry';
+import { sendBookingConfirmationEmail, sendAdminBookingAlertEmail } from '@/lib/resend';
 
 export async function GET(request: Request) {
   try {
@@ -83,6 +84,10 @@ export async function POST(request: Request) {
     }
 
     const newBooking = await createBooking(validation.data);
+
+    // Trigger async email notifications in background
+    sendBookingConfirmationEmail(newBooking).catch((e) => console.error('Booking confirmation email error:', e));
+    sendAdminBookingAlertEmail(newBooking).catch((e) => console.error('Admin booking alert email error:', e));
 
     return NextResponse.json({
       success: true,

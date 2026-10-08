@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import {
   Calendar,
@@ -13,6 +13,7 @@ import {
   Compass,
   Users,
 } from 'lucide-react';
+import { ConfirmDecisionModal } from '@/components/ui/ConfirmDecisionModal';
 import { AssessmentResultData, DimensionScoreResult, DimensionKey } from '@/data/assessment-data';
 import { getAssessmentWhatsAppUrl } from '@/lib/whatsapp';
 import { cn } from '@/lib/utils';
@@ -47,6 +48,7 @@ export function AssessmentResult({
   dimensionScores,
   onReset,
 }: AssessmentResultProps) {
+  const [showResetConfirmModal, setShowResetConfirmModal] = useState(false);
   const percentage = Math.round((totalScore / maxScore) * 100);
 
   // Format dimension breakdown for WhatsApp sharing
@@ -228,7 +230,7 @@ export function AssessmentResult({
           </div>
 
           <button
-            onClick={onReset}
+            onClick={() => setShowResetConfirmModal(true)}
             type="button"
             className="group btn-secondary btn-interactive text-xs sm:text-sm py-2.5 px-4 cursor-pointer inline-flex items-center justify-center gap-2 rounded-xl w-full sm:w-auto hover:-translate-y-0.5 hover:shadow-2xs transition-all duration-200 order-2 sm:order-1"
             aria-label="Ulangi asesmen dari awal"
@@ -238,6 +240,21 @@ export function AssessmentResult({
           </button>
         </div>
       </div>
+
+      {/* Confirmation Modal for Resetting Assessment */}
+      <ConfirmDecisionModal
+        isOpen={showResetConfirmModal}
+        onClose={() => setShowResetConfirmModal(false)}
+        onConfirm={() => {
+          setShowResetConfirmModal(false);
+          onReset();
+        }}
+        title="Ulangi Asesmen dari Awal?"
+        description="Jawaban saat ini akan dikosongkan untuk memulai evaluasi baru. Hasil evaluasi yang telah tuntas tetap tersimpan aman di tab Riwayat perangkat ini."
+        confirmLabel="Ya, Ulangi Asesmen"
+        variant="neutral"
+        icon={<RotateCcw className="w-5 h-5 text-[var(--color-ink-muted)]" />}
+      />
     </div>
   );
 }

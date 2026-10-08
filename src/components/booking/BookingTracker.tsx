@@ -104,7 +104,18 @@ export function BookingTracker({ initialCode, onCodeChange, onNavigateToNewBooki
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [onCodeChange]);
+
+  // Adjust state during render when initialCode prop changes
+  const [prevInitialCode, setPrevInitialCode] = useState(initialCode);
+  if (prevInitialCode !== initialCode) {
+    setPrevInitialCode(initialCode);
+    setSearchInput(initialCode || '');
+    if (!initialCode) {
+      setActiveBooking(null);
+      setError('');
+    }
+  }
 
   // Fetch live statuses for all stored device bookings
   useEffect(() => {
@@ -140,17 +151,12 @@ export function BookingTracker({ initialCode, onCodeChange, onNavigateToNewBooki
     };
   }, [deviceRecords]);
 
-  // If initialCode provided, automatically track it. When cleared, reset tracker state cleanly.
+  // If initialCode provided, automatically track it via async task
   useEffect(() => {
     if (initialCode) {
-      setSearchInput(initialCode);
       Promise.resolve().then(() => {
         handleTrackCode(initialCode);
       });
-    } else {
-      setSearchInput('');
-      setActiveBooking(null);
-      setError('');
     }
   }, [initialCode, handleTrackCode]);
 
@@ -217,12 +223,26 @@ export function BookingTracker({ initialCode, onCodeChange, onNavigateToNewBooki
     if (deleteModalState.mode === 'all') {
       clearAllDeviceBookings();
       setActiveBooking(null);
+      setSearchInput('');
+      setLiveBookings({});
+      onCodeChange?.('');
     } else if (deleteModalState.targetCode) {
-      removeDeviceBooking(deleteModalState.targetCode);
-      if (activeBooking?.code.toUpperCase() === deleteModalState.targetCode.toUpperCase()) {
+      const code = deleteModalState.targetCode.toUpperCase();
+      removeDeviceBooking(code);
+      if (activeBooking?.code.toUpperCase() === code) {
         setActiveBooking(null);
       }
+      if (searchInput.trim().toUpperCase() === code) {
+        setSearchInput('');
+      }
+      setLiveBookings((prev) => {
+        const next = { ...prev };
+        delete next[code];
+        return next;
+      });
+      onCodeChange?.('');
     }
+    setDeleteModalState((prev) => ({ ...prev, isOpen: false }));
   };
 
   const getStatusBadge = (status: BookingStatus) => {
@@ -317,6 +337,13 @@ export function BookingTracker({ initialCode, onCodeChange, onNavigateToNewBooki
                     onChange={(e) => {
                       setSearchInput(e.target.value.toUpperCase().replace(/\s+/g, ''));
                       if (error) setError('');
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Escape') {
+                        setSearchInput('');
+                        setError('');
+                        onCodeChange?.('');
+                      }
                     }}
                     placeholder="Contoh: BKI-2610-A7C12D"
                     className="w-full pl-10 pr-28 py-2.5 rounded-xl bg-[var(--color-surface)] border border-[var(--color-paper-border)] text-sm font-mono text-[var(--color-ink)] placeholder:font-sans placeholder:text-[var(--color-ink-soft)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/20 focus:border-[var(--color-accent)] shadow-2xs transition-all uppercase"
@@ -493,21 +520,21 @@ export function BookingTracker({ initialCode, onCodeChange, onNavigateToNewBooki
                 )}
 
                 {filteredDeviceRecords.length === 0 ? (
-                  <div className="p-6 text-center border border-[var(--color-paper-border)] rounded-2xl bg-[var(--color-surface)] space-y-3 tab-content-enter shadow-2xs">
-                    <div className="w-10 h-10 rounded-full bg-[var(--color-paper-muted)] text-[var(--color-ink-muted)] mx-auto flex items-center justify-center">
+                  <div className="p-6 sm:p-8 flex flex-col items-center justify-center text-center border border-[var(--color-paper-border)] rounded-2xl bg-[var(--color-surface)] space-y-3 tab-content-enter shadow-2xs w-full mx-auto">
+                    <div className="w-10 h-10 rounded-full bg-[var(--color-paper-muted)] text-[var(--color-ink-muted)] flex items-center justify-center shrink-0">
                       <Search className="w-5 h-5" />
                     </div>
-                    <div className="space-y-1">
-                      <p className="text-xs sm:text-sm font-semibold text-[var(--color-ink)]">
+                    <div className="space-y-1.5 max-w-md w-full flex flex-col items-center justify-center text-center">
+                      <p className="text-xs sm:text-sm font-semibold text-[var(--color-ink)] text-center w-full">
                         Tidak ada rekaman &ldquo;{searchInput}&rdquo; di histori perangkat ini
                       </p>
-                      <p className="text-xs text-[var(--color-ink-muted)] max-w-sm mx-auto leading-relaxed">
+                      <p className="text-xs text-[var(--color-ink-muted)] text-center leading-relaxed max-w-sm w-full">
                         {error
                           ? 'Tidak ditemukan janji temu dengan kode tersebut baik di perangkat ini maupun di sistem.'
                           : 'Kode ini mungkin didaftarkan melalui perangkat lain.'}
                       </p>
                     </div>
-                    <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
+                    <div className="flex flex-wrap items-center justify-center gap-2 pt-1 w-full">
                       {!error && (
                         <button
                           type="button"
@@ -578,6 +605,16 @@ export function BookingTracker({ initialCode, onCodeChange, onNavigateToNewBooki
                           </div>
                           {getStatusBadge(status)}
                         </div>
+
+                        <button
+                          type="button"
+                          onClick={(e) => handleOpenRemoveSingle(record.code, nameText, e)}
+                          className="p-1 rounded-md text-[var(--color-ink-muted)] hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/20 transition-colors cursor-pointer shrink-0"
+                          title="Hapus riwayat kode ini dari perangkat"
+                          aria-label={`Hapus riwayat ${record.code}`}
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
                       </div>
 
                       {/* Middle Row: Topic Title and Metadata */}

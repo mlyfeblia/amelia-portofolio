@@ -84,7 +84,7 @@ export default async function AssessmentPage({ searchParams }: AssessmentPagePro
       />
       <Navbar />
       <main id="main-content" className="min-h-screen pt-6 sm:pt-10 md:pt-12 pb-14 sm:pb-20 md:pb-24 page-enter">
-        <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-10 space-y-6 sm:space-y-8 animate-fade-in-up">
+        <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-10 space-y-6 sm:space-y-8">
           <div className="max-w-3xl space-y-2">
             <h1
               className="text-2xl sm:text-4xl lg:text-[2.65rem] font-medium text-[var(--color-ink)] leading-tight tracking-tight"

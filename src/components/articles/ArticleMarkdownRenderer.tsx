@@ -2,11 +2,26 @@ import React from 'react';
 import Link from 'next/link';
 
 function renderInlineMarkdown(text: string): React.ReactNode {
-  // Matches [link text](url), **bold**, *italic*, `code`
-  const regex = /(\[[^\]]+\]\([^)]+\)|\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`)/g;
+  if (!text) return null;
+  // Matches <u>underline</u>, [link text](url), **bold**, __bold__, ~~strikethrough~~, *italic*, _italic_, `code`
+  const regex = /(<u\b[^>]*>[\s\S]*?<\/u>|\[[^\]]+\]\([^)]+\)|\*\*[^*]+\*\*|__[^_]+__|~~[^~]+~~|\*[^*]+\*|_[^_]+_|`[^`]+`)/gi;
   const parts = text.split(regex);
   return parts.map((part, i) => {
     if (!part) return null;
+
+    // Underline: <u>text</u>
+    const uMatch = part.match(/^<u\b[^>]*>([\s\S]*?)<\/u>$/i);
+    if (uMatch) {
+      return (
+        <span
+          key={i}
+          className="underline underline-offset-4 decoration-[var(--color-accent)]"
+        >
+          {renderInlineMarkdown(uMatch[1])}
+        </span>
+      );
+    }
+
     // Link: [label](url)
     const linkMatch = part.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
     if (linkMatch) {
@@ -33,7 +48,7 @@ function renderInlineMarkdown(text: string): React.ReactNode {
           rel="noopener noreferrer"
           className="text-[var(--color-accent)] font-medium underline underline-offset-4 hover:opacity-80 transition-opacity"
         >
-          {label}
+          {renderInlineMarkdown(label)}
         </a>
       ) : (
         <Link
@@ -41,26 +56,46 @@ function renderInlineMarkdown(text: string): React.ReactNode {
           href={href}
           className="text-[var(--color-accent)] font-medium underline underline-offset-4 hover:opacity-80 transition-opacity"
         >
-          {label}
+          {renderInlineMarkdown(label)}
         </Link>
       );
     }
-    // Bold: **text**
-    if (part.startsWith('**') && part.endsWith('**') && part.length >= 4) {
+
+    // Bold: **text** or __text__
+    if (
+      ((part.startsWith('**') && part.endsWith('**')) ||
+        (part.startsWith('__') && part.endsWith('__'))) &&
+      part.length >= 4
+    ) {
       return (
         <strong key={i} className="font-semibold text-[var(--color-ink)]">
-          {part.slice(2, -2)}
+          {renderInlineMarkdown(part.slice(2, -2))}
         </strong>
       );
     }
-    // Italic: *text*
-    if (part.startsWith('*') && part.endsWith('*') && part.length >= 2) {
+
+    // Strikethrough: ~~text~~
+    if (part.startsWith('~~') && part.endsWith('~~') && part.length >= 4) {
+      return (
+        <del key={i} className="line-through text-[var(--color-ink-muted)]">
+          {renderInlineMarkdown(part.slice(2, -2))}
+        </del>
+      );
+    }
+
+    // Italic: *text* or _text_
+    if (
+      ((part.startsWith('*') && part.endsWith('*')) ||
+        (part.startsWith('_') && part.endsWith('_'))) &&
+      part.length >= 2
+    ) {
       return (
         <em key={i} className="italic text-[var(--color-ink)] font-serif">
-          {part.slice(1, -1)}
+          {renderInlineMarkdown(part.slice(1, -1))}
         </em>
       );
     }
+
     // Inline code: `code`
     if (part.startsWith('`') && part.endsWith('`') && part.length >= 2) {
       return (
@@ -72,6 +107,7 @@ function renderInlineMarkdown(text: string): React.ReactNode {
         </code>
       );
     }
+
     return part;
   });
 }
@@ -79,6 +115,7 @@ function renderInlineMarkdown(text: string): React.ReactNode {
 function slugifyHeading(text: string): string {
   return text
     .toLowerCase()
+    .replace(/<[^>]+>/g, '')
     .replace(/[^\w\s-]/g, '')
     .trim()
     .replace(/\s+/g, '-');
@@ -89,6 +126,7 @@ function slugifyHeading(text: string): string {
  * Handles headings (H2, H3), blockquotes, horizontal rules, lists, and prose paragraphs with comfortable reading line-height.
  */
 export function ArticleMarkdownRenderer({ content }: { content: string }) {
+  if (!content || !content.trim()) return null;
   const paragraphs = content.trim().split(/\n\s*\n/);
 
   return (
@@ -148,15 +186,19 @@ export function ArticleMarkdownRenderer({ content }: { content: string }) {
         if (trimmed.startsWith('> ') || trimmed === '>') {
           const quoteLines = trimmed
             .split('\n')
-            .map((line) => line.replace(/^>\s?/, ''))
-            .join(' ');
+            .map((line) => line.replace(/^>\s?/, ''));
           return (
             <blockquote
               key={idx}
               className="my-7 pl-5 border-l-3 border-[var(--color-accent)] italic text-[var(--color-ink)] bg-[var(--color-accent-soft)]/35 py-3.5 pr-5 rounded-r-xl"
             >
               <p className="leading-relaxed m-0 text-sm sm:text-base font-serif">
-                {renderInlineMarkdown(quoteLines)}
+                {quoteLines.map((line, lineIdx) => (
+                  <React.Fragment key={lineIdx}>
+                    {lineIdx > 0 && <br />}
+                    {renderInlineMarkdown(line)}
+                  </React.Fragment>
+                ))}
               </p>
             </blockquote>
           );
@@ -203,10 +245,16 @@ export function ArticleMarkdownRenderer({ content }: { content: string }) {
           );
         }
 
-        // Regular prose paragraph
+        // Regular prose paragraph with soft line break support (\n -> <br />)
+        const lines = trimmed.split('\n');
         return (
           <p key={idx} className="leading-[1.8] sm:leading-[1.85] text-[var(--color-ink)]/90">
-            {renderInlineMarkdown(trimmed)}
+            {lines.map((line, lineIdx) => (
+              <React.Fragment key={lineIdx}>
+                {lineIdx > 0 && <br />}
+                {renderInlineMarkdown(line)}
+              </React.Fragment>
+            ))}
           </p>
         );
       })}

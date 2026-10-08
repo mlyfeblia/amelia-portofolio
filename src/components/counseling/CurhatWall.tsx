@@ -4,14 +4,15 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { 
   MessageCircle, 
   Search, 
-  ChevronLeft, 
-  ChevronRight, 
   Clock, 
   HeartHandshake,
   X
 } from 'lucide-react';
 import { AnonymousMessage, CURHAT_CATEGORIES } from '@/types';
+import { parseIndonesianDate } from '@/lib/utils';
 import { SkeletonCurhatCard } from '@/components/ui/Skeleton';
+import { PaginationBar } from '@/components/ui/PaginationBar';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 
 const ITEMS_PER_PAGE = 5;
 
@@ -20,10 +21,11 @@ interface CurhatWallProps {
   loading?: boolean;
 }
 
-function formatDate(isoString?: string) {
-  if (!isoString) return '';
+function formatDate(dateInput?: string) {
+  if (!dateInput) return '';
   try {
-    const d = new Date(isoString);
+    const d = parseIndonesianDate(dateInput);
+    if (isNaN(d.getTime())) return dateInput;
     return new Intl.DateTimeFormat('id-ID', {
       day: 'numeric',
       month: 'short',
@@ -31,42 +33,75 @@ function formatDate(isoString?: string) {
       timeZone: 'Asia/Jakarta',
     }).format(d);
   } catch {
-    return '';
+    return dateInput;
   }
 }
 
 export function CurhatWall({ messages, loading = false }: CurhatWallProps) {
-  const [activeTab, setActiveTab] = useState<string>('Semua');
-  const [searchQuery, setSearchQuery] = useState<string>('');
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const wallTopRef = useRef<HTMLDivElement>(null);
-
-  // Sync category, query, and page from URL on mount
-  useEffect(() => {
+  const [activeTab, setActiveTab] = useState<string>(() => {
+    if (typeof window === 'undefined') return 'Semua';
     try {
       const params = new URLSearchParams(window.location.search);
-      const catParam = params.get('kategori');
-      const qParam = params.get('q');
+      return params.get('kategori') || 'Semua';
+    } catch {
+      return 'Semua';
+    }
+  });
+
+  const [searchQuery, setSearchQuery] = useState<string>(() => {
+    if (typeof window === 'undefined') return '';
+    try {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('q') || '';
+    } catch {
+      return '';
+    }
+  });
+
+  const [currentPage, setCurrentPage] = useState<number>(() => {
+    if (typeof window === 'undefined') return 1;
+    try {
+      const params = new URLSearchParams(window.location.search);
       const pageParam = params.get('page');
-
-      if (catParam) setActiveTab(catParam);
-      else setActiveTab('Semua');
-
-      if (qParam) setSearchQuery(qParam);
-      else setSearchQuery('');
-
       if (pageParam) {
         const p = parseInt(pageParam, 10);
-        if (!isNaN(p) && p > 0) setCurrentPage(p);
-      } else {
-        setCurrentPage(1);
+        if (!isNaN(p) && p > 0) return p;
       }
+    } catch {
+      // ignore
+    }
+    return 1;
+  });
+  const wallTopRef = useRef<HTMLDivElement>(null);
 
-      // Clear any legacy sticky sessionStorage
+  // Clean up legacy sticky sessionStorage on mount and listen to popstate
+  useEffect(() => {
+    try {
       sessionStorage.removeItem('curhat_kategori');
       sessionStorage.removeItem('curhat_q');
       sessionStorage.removeItem('curhat_page');
     } catch {}
+
+    const handlePopState = () => {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const cat = params.get('kategori');
+        const q = params.get('q');
+        const page = params.get('page');
+
+        setActiveTab(cat || 'Semua');
+        setSearchQuery(q || '');
+        if (page) {
+          const p = parseInt(page, 10);
+          if (!isNaN(p) && p > 0) setCurrentPage(p);
+        } else {
+          setCurrentPage(1);
+        }
+      } catch {}
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
   const syncParams = (cat: string, q: string, page: number) => {
@@ -143,9 +178,6 @@ export function CurhatWall({ messages, loading = false }: CurhatWallProps) {
     }
   };
 
-  const startItem = totalItems === 0 ? 0 : (safePage - 1) * ITEMS_PER_PAGE + 1;
-  const endItem = Math.min(safePage * ITEMS_PER_PAGE, totalItems);
-
   return (
     <div ref={wallTopRef} className="space-y-4 sm:space-y-5" id="curhat-wall-container">
       {/* Search & Filter Controls */}
@@ -164,6 +196,9 @@ export function CurhatWall({ messages, loading = false }: CurhatWallProps) {
               type="text"
               value={searchQuery}
               onChange={(e) => handleSearchChange(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Escape') handleSearchChange('');
+              }}
               placeholder="Cari unek-unek / topik..."
               className="search-input text-xs pl-8 pr-8 py-1.5"
               aria-label="Cari curhat anonim"
@@ -183,45 +218,37 @@ export function CurhatWall({ messages, loading = false }: CurhatWallProps) {
         </div>
 
         {/* Category Filter Tabs */}
-        <div
-          className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar"
-          role="tablist"
-          aria-label="Filter kategori curhat"
-        >
-          {categories.map((cat) => {
-            const isActive = activeTab === cat;
-            const count =
-              cat === 'Semua'
-                ? messages.length
-                : messages.filter((m) => m.category === cat).length;
+        <div className="relative -mx-1 px-1">
+          <Tabs value={activeTab} onValueChange={handleTabChange}>
+            <TabsList aria-label="Filter kategori curhat">
+              {categories.map((cat) => {
+                const count =
+                  cat === 'Semua'
+                    ? messages.length
+                    : messages.filter((m) => m.category === cat).length;
 
-            return (
-              <button
-                key={cat}
-                id={`tab-${cat}`}
-                role="tab"
-                aria-selected={isActive}
-                onClick={() => handleTabChange(cat)}
-                type="button"
-                className={`chip-interactive inline-flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg whitespace-nowrap cursor-pointer transition-all ${
-                  isActive
-                    ? 'bg-[var(--color-accent)] text-white font-semibold shadow-xs'
-                    : 'bg-[var(--color-surface)] border border-[var(--color-paper-border)] text-[var(--color-ink-muted)] hover:border-[var(--color-accent)] hover:text-[var(--color-ink)]'
-                }`}
-              >
-                <span>{cat}</span>
-                <span
-                  className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
-                    isActive
-                      ? 'bg-white/20 text-white'
-                      : 'bg-[var(--color-paper-border)]/60 text-[var(--color-ink-soft)]'
-                  }`}
-                >
-                  {count}
-                </span>
-              </button>
-            );
-          })}
+                return (
+                  <TabsTrigger
+                    key={cat}
+                    value={cat}
+                    badge={
+                      <span
+                        className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
+                          activeTab === cat
+                            ? 'bg-white/20 text-white font-bold'
+                            : 'bg-[var(--color-paper-border)]/60 text-[var(--color-ink-soft)]'
+                        }`}
+                      >
+                        {count}
+                      </span>
+                    }
+                  >
+                    {cat}
+                  </TabsTrigger>
+                );
+              })}
+            </TabsList>
+          </Tabs>
         </div>
       </div>
 
@@ -291,16 +318,16 @@ export function CurhatWall({ messages, loading = false }: CurhatWallProps) {
             </div>
           </div>
         ) : (
-          <div key={`${activeTab}-${safePage}`} className="space-y-4 tab-content-enter">
+          <div key={`${activeTab}-${safePage}`} className="space-y-4 pagination-slide-enter">
             {paginatedMessages.map((item) => (
               <article
                 key={item.id}
-                className="p-5 sm:p-6 bg-[var(--color-surface)] border border-[var(--color-paper-border)] rounded-2xl space-y-3.5 card-interactive shadow-xs transition-all flex flex-col justify-between"
+                className="p-3.5 min-[340px]:p-4 sm:p-6 bg-[var(--color-surface)] border border-[var(--color-paper-border)] rounded-2xl space-y-3.5 card-interactive shadow-xs transition-all flex flex-col justify-between"
               >
-                <div className="space-y-3.5">
+                <div className="space-y-3.5 min-w-0">
                   {/* Nama samaran tetap di paling atas */}
                   <div className="flex items-center justify-between text-xs">
-                    <span className="font-semibold text-[var(--color-ink)] text-sm sm:text-base">
+                    <span className="font-semibold text-[var(--color-ink)] text-sm sm:text-base truncate">
                       {item.alias}
                     </span>
                   </div>
@@ -312,7 +339,7 @@ export function CurhatWall({ messages, loading = false }: CurhatWallProps) {
 
                   {/* Response from Amel */}
                   {item.isAnswered && item.answer ? (
-                    <div className="p-4 bg-[var(--color-accent-soft)]/50 border border-[var(--color-accent-border)] rounded-xl space-y-1.5 mt-2">
+                    <div className="p-3 min-[340px]:p-4 bg-[var(--color-accent-soft)]/50 border border-[var(--color-accent-border)] rounded-xl space-y-1.5 mt-2">
                       <div className="flex items-center justify-between gap-2">
                         <span className="text-xs font-semibold text-[var(--color-accent)] flex items-center gap-1.5">
                           <HeartHandshake className="w-3.5 h-3.5 shrink-0" />
@@ -337,17 +364,17 @@ export function CurhatWall({ messages, loading = false }: CurhatWallProps) {
                 </div>
 
                 {/* Di paling bawahnya waktu terus baru deh kategori */}
-                <div className="pt-3 border-t border-[var(--color-paper-border)] flex items-center gap-2 text-xs">
+                <div className="pt-3 border-t border-[var(--color-paper-border)] flex flex-wrap items-center gap-1.5 min-[340px]:gap-2 text-xs text-[var(--color-ink-soft)]">
                   {item.createdAt && (
                     <>
-                      <span className="text-[11px] text-[var(--color-ink-soft)] flex items-center gap-1">
-                        <Clock className="w-3 h-3 text-[var(--color-ink-soft)]" />
+                      <span className="text-[11px] text-[var(--color-ink-soft)] flex items-center gap-1 shrink-0 whitespace-nowrap">
+                        <Clock className="w-3 h-3 text-[var(--color-ink-soft)] shrink-0" />
                         {formatDate(item.createdAt)}
                       </span>
-                      <span className="text-[var(--color-paper-border)]" aria-hidden="true">&bull;</span>
+                      <span className="text-[var(--color-paper-border)] shrink-0" aria-hidden="true">&bull;</span>
                     </>
                   )}
-                  <span className="text-xs font-medium text-[var(--color-accent)]">
+                  <span className="text-xs font-medium text-[var(--color-accent)] truncate max-w-[130px] min-[340px]:max-w-none">
                     {item.category}
                   </span>
                 </div>
@@ -359,59 +386,14 @@ export function CurhatWall({ messages, loading = false }: CurhatWallProps) {
 
       {/* Pagination Bar */}
       {!loading && totalPages > 1 && (
-        <nav
-          className="pt-4 border-t border-[var(--color-paper-border)] flex flex-col sm:flex-row items-center justify-between gap-3 text-xs"
-          aria-label="Navigasi halaman curhat"
-        >
-          <div className="text-[var(--color-ink-muted)]">
-            Menampilkan <span className="font-semibold text-[var(--color-ink)]">{startItem}</span> -{' '}
-            <span className="font-semibold text-[var(--color-ink)]">{endItem}</span> dari{' '}
-            <span className="font-semibold text-[var(--color-ink)]">{totalItems}</span> curhatan
-          </div>
-
-          <div className="flex items-center gap-1.5">
-            <button
-              type="button"
-              onClick={() => handlePageChange(safePage - 1)}
-              disabled={safePage <= 1}
-              className="btn-interactive p-2 rounded-lg border border-[var(--color-paper-border)] bg-[var(--color-surface)] text-[var(--color-ink)] disabled:opacity-40 disabled:cursor-not-allowed hover:border-[var(--color-accent)] hover:text-[var(--color-accent)] cursor-pointer"
-              aria-label="Halaman sebelumnya"
-            >
-              <ChevronLeft className="w-3.5 h-3.5" />
-            </button>
-
-            <div className="flex items-center gap-1">
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => {
-                const isActive = pageNum === safePage;
-                return (
-                  <button
-                    key={pageNum}
-                    type="button"
-                    onClick={() => handlePageChange(pageNum)}
-                    aria-current={isActive ? 'page' : undefined}
-                    className={`btn-interactive min-w-[32px] h-8 px-2 text-xs font-semibold rounded-lg border cursor-pointer transition-colors ${
-                      isActive
-                        ? 'bg-[var(--color-accent)] text-white border-[var(--color-accent)] shadow-xs'
-                        : 'bg-[var(--color-surface)] border-[var(--color-paper-border)] text-[var(--color-ink-muted)] hover:border-[var(--color-accent)] hover:text-[var(--color-ink)]'
-                    }`}
-                  >
-                    {pageNum}
-                  </button>
-                );
-              })}
-            </div>
-
-            <button
-              type="button"
-              onClick={() => handlePageChange(safePage + 1)}
-              disabled={safePage >= totalPages}
-              className="btn-interactive p-2 rounded-lg border border-[var(--color-paper-border)] bg-[var(--color-surface)] text-[var(--color-ink)] disabled:opacity-40 disabled:cursor-not-allowed hover:border-[var(--color-accent)] hover:text-[var(--color-accent)] cursor-pointer"
-              aria-label="Halaman selanjutnya"
-            >
-              <ChevronRight className="w-3.5 h-3.5" />
-            </button>
-          </div>
-        </nav>
+        <PaginationBar
+          currentPage={safePage}
+          totalPages={totalPages}
+          totalItems={totalItems}
+          itemsPerPage={ITEMS_PER_PAGE}
+          itemLabel="curhatan"
+          onPageChange={handlePageChange}
+        />
       )}
     </div>
   );

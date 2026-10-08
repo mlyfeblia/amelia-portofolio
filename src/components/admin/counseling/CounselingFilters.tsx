@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Search, X, Eye, EyeOff, Star, Filter, Calendar } from 'lucide-react';
+import { Search, X, Eye, Filter, Calendar } from 'lucide-react';
 
 interface CounselingFiltersProps {
   search: string;
@@ -54,6 +54,9 @@ export function CounselingFilters({
           type="text"
           value={search}
           onChange={(e) => onSearchChange(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') onSearchChange('');
+          }}
           placeholder="Cari nama/alias, kategori topik, isi curhat, atau tanggapan..."
           className="search-input w-full pl-9 pr-9 py-2 text-xs sm:text-sm text-[var(--color-ink)] placeholder:text-[var(--color-ink-muted)]/70"
         />

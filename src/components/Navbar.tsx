@@ -229,7 +229,7 @@ export default function Navbar() {
           <div
             id="mobile-nav"
             className={cn(
-              'md:hidden absolute top-full left-0 right-0 bg-[var(--color-paper)]/98 backdrop-blur-xl border-y border-[var(--color-paper-border)] shadow-xl px-5 sm:px-8 py-4 max-h-[calc(100dvh-4.5rem)] overflow-y-auto overscroll-contain origin-top',
+              'md:hidden absolute top-full left-0 right-0 bg-[var(--color-paper)]/98 backdrop-blur-xl border-b border-[var(--color-paper-border)] rounded-b-2xl sm:rounded-b-3xl shadow-xl px-5 sm:px-8 pt-3 pb-5 sm:pb-6 max-h-[calc(100dvh-4.5rem)] overflow-y-auto overscroll-contain origin-top',
               isExiting ? 'nav-dropdown-exit' : 'nav-dropdown-enter'
             )}
             role="dialog"

@@ -18,6 +18,8 @@ export interface PwaState {
   bannerReason: PwaBannerReason;
   showIosModal: boolean;
   showChangelogModal: boolean;
+  showBrowserGuideModal: boolean;
+  showInstalledInfoModal: boolean;
   visitCount: number;
 }
 
@@ -30,6 +32,8 @@ const SERVER_SNAPSHOT: PwaState = {
   bannerReason: 'none',
   showIosModal: false,
   showChangelogModal: false,
+  showBrowserGuideModal: false,
+  showInstalledInfoModal: false,
   visitCount: 1,
 };
 
@@ -56,11 +60,29 @@ if (typeof window !== 'undefined') {
       canInstall: false,
       showBanner: false,
       showIosModal: false,
+      showBrowserGuideModal: false,
+      showInstalledInfoModal: false,
     });
     try {
+      localStorage.setItem('amelia_pwa_installed', 'true');
       localStorage.removeItem('amelia_pwa_dismissed_at');
     } catch {
       // Ignore
+    }
+  });
+
+  // Cross-tab synchronization via storage event
+  window.addEventListener('storage', (e) => {
+    if (e.key === 'amelia_pwa_installed' && e.newValue === 'true') {
+      deferredPrompt = null;
+      updateState({
+        isInstalled: true,
+        canInstall: false,
+        showBanner: false,
+        showIosModal: false,
+        showBrowserGuideModal: false,
+        showInstalledInfoModal: false,
+      });
     }
   });
 }
@@ -129,25 +151,27 @@ export function initPwa() {
       visitCount = Math.max(previousVisits, 1);
     }
 
-    // Cooldown check: 30 days if dismissed >= 2 times, otherwise 14 days
-    // If dismissed >= 3 times, never prompt automatically
-    if (dismissCount >= 3) {
+    // Clean dismissal handling: 2 days cooldown on dismissal, 7 days if dismissed >= 3 times
+    const cooldownDuration = (dismissCount >= 3 ? 7 : 2) * 24 * 60 * 60 * 1000;
+    if (dismissedAt > 0 && now - dismissedAt < cooldownDuration) {
       isCooldown = true;
-    } else {
-      const cooldownDuration = (dismissCount >= 2 ? 30 : 14) * 24 * 60 * 60 * 1000;
-      if (dismissedAt > 0 && now - dismissedAt < cooldownDuration) {
-        isCooldown = true;
-      }
     }
   } catch {
     // Fallback for private mode
   }
 
+  let isInstalledEffective = isStandalone;
+  try {
+    if (localStorage.getItem('amelia_pwa_installed') === 'true') {
+      isInstalledEffective = true;
+    }
+  } catch {}
+
   updateState({
-    isInstalled: isStandalone,
+    isInstalled: isInstalledEffective,
     isStandalone,
     isIOS,
-    canInstall: isIOS && !isStandalone,
+    canInstall: isIOS && !isInstalledEffective,
     visitCount,
   });
 
@@ -170,8 +194,8 @@ export function initPwa() {
       return;
     }
 
-    // Gentle, non-intrusive delays - never trigger on scroll!
-    const delay = isHiatus ? 12000 : visitCount >= 2 ? 18000 : 35000;
+    // Gentle, non-intrusive delays - 6s initial visit, 5s returning, 4s hiatus
+    const delay = isHiatus ? 4000 : visitCount >= 2 ? 5000 : 6000;
     const reason: PwaBannerReason = isHiatus ? 'hiatus' : visitCount >= 2 ? 'returning' : 'first-visit';
 
     if (bannerTimer) clearTimeout(bannerTimer);
@@ -207,6 +231,8 @@ export function initPwa() {
       canInstall: false,
       showBanner: false,
       showIosModal: false,
+      showBrowserGuideModal: false,
+      showInstalledInfoModal: false,
     });
     try {
       localStorage.removeItem('amelia_pwa_dismissed_at');
@@ -228,8 +254,9 @@ export function initPwa() {
 /**
  * Trigger PWA installation or show iOS guide
  */
-export async function triggerPwaInstall(): Promise<'accepted' | 'dismissed' | 'ios' | 'installed' | 'unsupported'> {
+export async function triggerPwaInstall(): Promise<'accepted' | 'dismissed' | 'ios' | 'installed' | 'guide'> {
   if (currentState.isInstalled) {
+    updateState({ showInstalledInfoModal: true });
     return 'installed';
   }
 
@@ -245,6 +272,9 @@ export async function triggerPwaInstall(): Promise<'accepted' | 'dismissed' | 'i
         canInstall: false,
         showBanner: false,
       });
+      try {
+        localStorage.setItem('amelia_pwa_installed', 'true');
+      } catch {}
       return 'accepted';
     } else {
       dismissPwaBanner();
@@ -257,15 +287,10 @@ export async function triggerPwaInstall(): Promise<'accepted' | 'dismissed' | 'i
     return 'ios';
   }
 
-  // If on desktop without beforeinstallprompt, smooth scroll to showcase section or redirect
-  if (typeof window !== 'undefined') {
-    const showcaseSection = document.getElementById('app-showcase');
-    if (showcaseSection) {
-      showcaseSection.scrollIntoView({ behavior: 'smooth' });
-    }
-  }
-
-  return 'unsupported';
+  // If on Android / Desktop / other browsers where native prompt is unavailable or already dismissed,
+  // open the universal browser guide modal so user gets clear 3-step visual instructions!
+  updateState({ showBanner: false, showBrowserGuideModal: true });
+  return 'guide';
 }
 
 /**
@@ -294,6 +319,22 @@ export function openIosModal() {
 
 export function closeIosModal() {
   updateState({ showIosModal: false });
+}
+
+export function openBrowserGuideModal() {
+  updateState({ showBrowserGuideModal: true });
+}
+
+export function closeBrowserGuideModal() {
+  updateState({ showBrowserGuideModal: false });
+}
+
+export function openInstalledInfoModal() {
+  updateState({ showInstalledInfoModal: true });
+}
+
+export function closeInstalledInfoModal() {
+  updateState({ showInstalledInfoModal: false });
 }
 
 export function openChangelogModal() {

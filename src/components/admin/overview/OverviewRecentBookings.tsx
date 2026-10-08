@@ -23,7 +23,7 @@ export function OverviewRecentBookings({
 
   return (
     <div className="lg:col-span-7 space-y-3.5">
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3">
         <div className="min-w-0">
           <h2
             className="text-base sm:text-lg font-medium text-[var(--color-ink)]"
@@ -60,7 +60,7 @@ export function OverviewRecentBookings({
           {waitingBookings.slice(0, 3).map((item) => (
             <div
               key={item.id}
-              className="p-4 sm:p-5 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-paper-border)] shadow-xs space-y-3 transition-all"
+              className="p-3.5 sm:p-5 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-paper-border)] shadow-xs space-y-3 transition-all"
             >
               <div className="flex items-center justify-between text-xs">
                 <span className="font-mono font-semibold px-2 py-0.5 rounded bg-[var(--color-paper)] border border-[var(--color-paper-border)] text-[var(--color-accent)] text-[11px]">
@@ -86,7 +86,7 @@ export function OverviewRecentBookings({
                 </p>
               )}
 
-              <div className="pt-2 border-t border-[var(--color-paper-border)] flex items-center justify-between gap-2">
+              <div className="pt-2 border-t border-[var(--color-paper-border)] flex flex-wrap items-center justify-between gap-2">
                 <a
                   href={getAdminContactWhatsAppUrl({
                     clientPhone: item.phone,
@@ -106,7 +106,7 @@ export function OverviewRecentBookings({
                 <button
                   onClick={() => onConfirm(item.id)}
                   type="button"
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--color-accent)] text-white text-xs font-semibold hover:bg-[var(--color-accent-hover)] transition-all cursor-pointer shadow-xs"
+                  className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-[var(--color-accent)] text-white text-xs font-semibold hover:bg-[var(--color-accent-hover)] transition-all cursor-pointer shadow-xs"
                 >
                   <Check className="w-3.5 h-3.5" />
                   <span>Konfirmasi</span>

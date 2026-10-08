@@ -10,6 +10,7 @@ import {
   getTodayDateString,
   getMaxBookingDateString,
 } from '@/data/booking-data';
+import { formatSentenceCase } from '@/lib/text-formatter';
 
 interface BookingSessionDetailsStepProps {
   form: BookingFormState;
@@ -135,6 +136,11 @@ export function BookingSessionDetailsStep({
           maxLength={500}
           value={form.notes}
           onChange={(e) => onChange('notes', e.target.value)}
+          onBlur={() => {
+            if (form.notes.trim()) {
+              onChange('notes', formatSentenceCase(form.notes));
+            }
+          }}
           placeholder="Ceritakan harapan atau hal yang ingin diurai dalam sesi ini..."
           className="form-input text-sm py-2 resize-y min-h-[72px] max-h-[220px] overflow-y-auto"
         />

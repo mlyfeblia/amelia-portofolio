@@ -27,7 +27,7 @@ export function AdminSessionModal({
   onRefresh,
   refreshing,
 }: AdminSessionModalProps) {
-  const { isRendered, isExiting, backdropClass, windowClass } = useModalAnimation({ isOpen });
+  const { isRendered, backdropClass, windowClass } = useModalAnimation({ isOpen });
 
   // Escape key handler
   useEffect(() => {
@@ -144,7 +144,7 @@ export function AdminSessionModal({
               {m.toString().padStart(2, '0')}:{s.toString().padStart(2, '0')}
             </div>
             <p className="text-xs text-[var(--color-ink-soft)]">
-              {m > 0 ? `${m} menit ` : ''}{s} detik hingga sesi terkunci otomatis
+              Hingga sesi terkunci otomatis
             </p>
 
             {/* Time progress bar */}

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Send, Eye, EyeOff, Star, Check } from 'lucide-react';
+import { ConfirmDecisionModal } from '@/components/ui/ConfirmDecisionModal';
 
 interface CounselingReplyBoxProps {
   initialText: string;
@@ -41,6 +42,7 @@ export function CounselingReplyBox({
   const [replyPublic, setReplyPublic] = useState(initialPublic);
   const [replyLanding, setReplyLanding] = useState(initialLanding);
   const [saving, setSaving] = useState(false);
+  const [showSendConfirm, setShowSendConfirm] = useState(false);
   const [lastSavedTime, setLastSavedTime] = useState<string | null>(() => {
     if (typeof window !== 'undefined' && storageKey) {
       try {
@@ -98,20 +100,18 @@ export function CounselingReplyBox({
 
   return (
     <div className="p-4 sm:p-5 rounded-2xl bg-[var(--color-paper)] border border-[var(--color-paper-border)] space-y-3.5 animate-fade-in-up">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <label className="block text-xs font-semibold text-[var(--color-ink)]">
-          Tulis Tanggapan Konseling untuk {itemAlias ? <span className="text-[var(--color-accent)]">{itemAlias}</span> : 'Konseli'}:
+      <div className="space-y-1.5">
+        <label className="block text-xs font-semibold text-[var(--color-ink)] break-words">
+          Tulis Tanggapan untuk {itemAlias ? <span className="text-[var(--color-accent)]">{itemAlias}</span> : 'Konseli'}:
         </label>
-        
-        {/* Autosave Status Indicator */}
-        <div className="flex items-center gap-2 text-[11px] text-[var(--color-ink-muted)]">
+        <div className="flex flex-wrap items-center justify-between gap-1.5 text-[10px] min-[340px]:text-[11px] text-[var(--color-ink-muted)]">
           {lastSavedTime && (
             <span className="inline-flex items-center gap-1 text-emerald-700 font-medium">
-              <Check className="w-3 h-3 text-emerald-600" />
-              <span>{lastSavedTime}</span>
+              <Check className="w-3 h-3 text-emerald-600 shrink-0" />
+              <span className="truncate max-w-[170px] min-[340px]:max-w-none">{lastSavedTime}</span>
             </span>
           )}
-          <span>{replyText.length} karakter</span>
+          <span className="shrink-0">{replyText.length} karakter</span>
         </div>
       </div>
 
@@ -197,25 +197,65 @@ export function CounselingReplyBox({
         )}
 
         {/* Action Buttons */}
-        <div className="flex items-center gap-2.5 justify-end w-full pt-1">
+        <div className="flex flex-col min-[320px]:flex-row items-center gap-2 justify-end w-full pt-1">
           <button
             onClick={onCancel}
             type="button"
-            className="btn-secondary btn-interactive !h-9 !px-4 text-xs font-semibold whitespace-nowrap flex-1 sm:flex-initial"
+            className="btn-secondary btn-interactive h-9 px-3.5 sm:px-4 text-xs font-semibold rounded-xl inline-flex items-center justify-center whitespace-nowrap w-full min-[320px]:w-auto cursor-pointer"
           >
             Batal
           </button>
           <button
-            onClick={handleSave}
+            onClick={() => setShowSendConfirm(true)}
             disabled={saving || !replyText.trim()}
             type="button"
-            className="btn-primary btn-interactive !h-9 !px-5 text-xs font-semibold whitespace-nowrap inline-flex items-center gap-1.5 cursor-pointer disabled:opacity-50 flex-1 sm:flex-initial"
+            className="btn-primary btn-interactive h-9 px-3.5 sm:px-4 text-xs font-semibold rounded-xl inline-flex items-center justify-center gap-1.5 whitespace-nowrap w-full min-[320px]:w-auto cursor-pointer disabled:opacity-50"
           >
-            <Send className="w-3.5 h-3.5" />
+            <Send className="w-3.5 h-3.5 shrink-0" />
             <span>{saving ? 'Menyimpan...' : 'Kirim Tanggapan'}</span>
           </button>
         </div>
       </div>
+
+      {/* Decision Modal for Submitting Counseling Reply */}
+      <ConfirmDecisionModal
+        isOpen={showSendConfirm}
+        onClose={() => setShowSendConfirm(false)}
+        onConfirm={async () => {
+          setShowSendConfirm(false);
+          await handleSave();
+        }}
+        title={initialText ? 'Simpan Pembaruan Tanggapan?' : 'Kirim Tanggapan Penguatan?'}
+        description={
+          initialText
+            ? 'Pembaruan tanggapan konselor akan disimpan dan disinkronkan ke ruang curhat konseli.'
+            : 'Tanggapan penguatan ini akan dikirimkan kepada konseli sesuai pengaturan visibilitas yang dipilih.'
+        }
+        confirmLabel={initialText ? 'Ya, Simpan Pembaruan' : 'Ya, Kirim Tanggapan'}
+        variant="primary"
+        icon={<Send className="w-5 h-5 text-[var(--color-accent)]" />}
+        loading={saving}
+        itemDetail={
+          <div className="space-y-1">
+            {itemAlias && (
+              <div>
+                <span className="font-semibold text-[var(--color-ink)]">Konseli:</span> {itemAlias}
+              </div>
+            )}
+            <div>
+              <span className="font-semibold text-[var(--color-ink)]">Visibilitas:</span>{' '}
+              {replyPublic ? 'Publik (Dinding Curhat)' : 'Privat'}
+              {replyLanding && replyPublic && ' • Sorotan Beranda Utama'}
+            </div>
+            <div className="line-clamp-2 italic text-[11px] pt-0.5">
+              &ldquo;{replyText.trim()}&rdquo;
+            </div>
+            <div className="text-[10px] text-[var(--color-ink-muted)]">
+              Panjang: {replyText.trim().length} karakter
+            </div>
+          </div>
+        }
+      />
     </div>
   );
 }

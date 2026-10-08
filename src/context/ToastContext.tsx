@@ -64,25 +64,25 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
       <aside
         aria-label="Pemberitahuan Sistem"
         aria-live="polite"
-        className="fixed bottom-5 right-5 sm:bottom-6 sm:right-6 z-[99999] flex flex-col gap-2.5 max-w-sm w-full pointer-events-none select-none px-4 sm:px-0"
+        className="fixed bottom-5 inset-x-4 sm:inset-x-auto sm:right-6 sm:bottom-6 sm:max-w-sm z-[99999] flex flex-col items-center sm:items-end gap-2.5 pointer-events-none select-none"
       >
         {toasts.map((t) => (
           <div
             key={t.id}
             role="status"
             className={cn(
-              'pointer-events-auto flex items-center justify-between gap-3 p-3.5 rounded-xl border shadow-lg text-xs font-medium transition-all backdrop-blur-md',
+              'pointer-events-auto w-full max-w-sm flex items-center justify-between gap-3 p-3.5 rounded-xl border shadow-lg text-xs font-medium transition-all backdrop-blur-md',
               t.isExiting ? 'toast-exit' : 'toast-enter',
               t.type === 'success' && 'bg-[var(--color-surface)]/95 border-[var(--color-accent-border)] text-[var(--color-ink)] shadow-[var(--color-accent)]/5',
               t.type === 'error' && 'bg-[var(--color-surface)]/95 border-[var(--color-error-border)] text-[var(--color-error)] shadow-red-900/5',
               t.type === 'info' && 'bg-[var(--color-surface)]/95 border-[var(--color-accent-border)] text-[var(--color-ink)] shadow-slate-900/5'
             )}
           >
-            <div className="flex items-center gap-2.5 min-w-0">
+            <div className="flex items-center gap-2.5 min-w-0 flex-1">
               {t.type === 'success' && <CheckCircle2 className="w-4 h-4 text-[var(--color-accent)] shrink-0" />}
               {t.type === 'error' && <AlertCircle className="w-4 h-4 text-[var(--color-error)] shrink-0" />}
               {t.type === 'info' && <Info className="w-4 h-4 text-[var(--color-accent)] shrink-0" />}
-              <span className="truncate">{t.message}</span>
+              <span className="leading-snug text-xs sm:text-sm break-words flex-1 text-left">{t.message}</span>
             </div>
             <button
               type="button"

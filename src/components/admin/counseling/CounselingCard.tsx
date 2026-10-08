@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   Calendar, 
   Eye, 
@@ -15,6 +15,7 @@ import { CounselingReplyBox } from './CounselingReplyBox';
 import { Badge } from '@/components/ui/Badge';
 import { Spinner } from '@/components/ui/Spinner';
 import { Tooltip } from '@/components/ui/Tooltip';
+import { ConfirmDecisionModal } from '@/components/ui/ConfirmDecisionModal';
 
 function formatDate(isoString?: string) {
   if (!isoString) return '';
@@ -58,11 +59,14 @@ export function CounselingCard({
   onToggleLanding,
   onDelete,
 }: CounselingCardProps) {
+  const [showPrivacyConfirm, setShowPrivacyConfirm] = useState(false);
+  const [showLandingConfirm, setShowLandingConfirm] = useState(false);
+
   return (
-    <div className="card-interactive p-4 sm:p-6 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-paper-border)] shadow-xs space-y-3.5">
+    <div className="card-interactive p-3.5 sm:p-6 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-paper-border)] shadow-xs space-y-3.5">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3 pb-3 border-b border-[var(--color-paper-border)]">
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
           <span className="font-semibold text-[var(--color-ink)] text-sm sm:text-base">
             {item.alias}
           </span>
@@ -81,7 +85,7 @@ export function CounselingCard({
           )}
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 text-xs self-start sm:self-auto shrink-0">
+        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 text-xs self-start sm:self-auto shrink-0 w-full sm:w-auto">
           {item.isAnswered ? (
             <Badge variant="accent" size="xs" dot>Dijawab</Badge>
           ) : (
@@ -90,11 +94,11 @@ export function CounselingCard({
 
           {/* Landing Page Toggle Button with Star icon */}
           <button
-            onClick={onToggleLanding}
+            onClick={() => setShowLandingConfirm(true)}
             disabled={isTogglingLanding}
             type="button"
             title={item.showOnLandingPage ? 'Hapus curhat ini dari halaman beranda (landing page)' : 'Tampilkan curhat ini di halaman beranda (landing page)'}
-            className={`btn-interactive inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-lg border cursor-pointer whitespace-nowrap disabled:opacity-60 transition-colors ${
+            className={`btn-interactive inline-flex items-center gap-1 text-[11px] sm:text-xs font-semibold px-2 sm:px-2.5 py-1 rounded-lg border cursor-pointer whitespace-nowrap disabled:opacity-60 transition-colors ${
               item.showOnLandingPage
                 ? 'bg-amber-100 text-amber-900 border-amber-300 hover:bg-amber-200'
                 : 'bg-[var(--color-paper-muted)] text-[var(--color-ink-muted)] border-[var(--color-paper-border)] hover:bg-[var(--color-paper-border)] hover:text-[var(--color-ink)]'
@@ -110,11 +114,11 @@ export function CounselingCard({
 
           {/* Privacy Toggle Button with clear badge */}
           <button
-            onClick={onTogglePrivacy}
+            onClick={() => setShowPrivacyConfirm(true)}
             disabled={isToggling}
             type="button"
             title={`Klik untuk ubah visibilitas ke ${item.isPublic ? 'Privat' : 'Publik'}`}
-            className={`btn-interactive inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-lg border cursor-pointer whitespace-nowrap disabled:opacity-60 ${
+            className={`btn-interactive inline-flex items-center gap-1 sm:gap-1.5 text-[11px] sm:text-xs font-semibold px-2 sm:px-2.5 py-1 rounded-lg border cursor-pointer whitespace-nowrap disabled:opacity-60 ${
               item.isPublic
                 ? 'bg-[var(--color-accent-soft)] text-[var(--color-accent)] border-[var(--color-accent-border)] hover:bg-[var(--color-accent-border)]/50'
                 : 'bg-[var(--color-paper-muted)] text-[var(--color-ink-muted)] border-[var(--color-paper-border)] hover:bg-[var(--color-paper-border)]'
@@ -145,13 +149,13 @@ export function CounselingCard({
       </div>
 
       {/* Message */}
-      <blockquote className="text-xs sm:text-sm text-[var(--color-ink)] leading-relaxed italic bg-[var(--color-paper)] p-3 sm:p-4 rounded-xl border border-[var(--color-paper-border)]">
+      <blockquote className="text-xs sm:text-sm text-[var(--color-ink)] leading-relaxed italic bg-[var(--color-paper)] p-2.5 sm:p-4 rounded-xl border border-[var(--color-paper-border)]">
         &ldquo;{item.message}&rdquo;
       </blockquote>
 
       {/* Existing Answer */}
       {item.answer && (
-        <div className="p-3 sm:p-4 rounded-xl bg-[var(--color-accent-soft)]/50 border border-[var(--color-accent-border)] space-y-1.5">
+        <div className="p-2.5 sm:p-4 rounded-xl bg-[var(--color-accent-soft)]/50 border border-[var(--color-accent-border)] space-y-1.5">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-1.5 text-[11px] sm:text-xs font-semibold text-[var(--color-accent)] uppercase tracking-wider">
               <HeartHandshake className="w-3.5 h-3.5 shrink-0" />
@@ -187,13 +191,79 @@ export function CounselingCard({
           <button
             onClick={onStartReply}
             type="button"
-            className="btn-interactive px-3 py-1.5 text-xs font-medium rounded-lg bg-[var(--color-surface)] border border-[var(--color-paper-border)] hover:border-[var(--color-accent-border)] text-[var(--color-ink)] hover:text-[var(--color-accent)] cursor-pointer inline-flex items-center gap-1.5 shadow-xs"
+            className="btn-secondary btn-interactive inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-[var(--color-ink)] hover:text-[var(--color-accent)] bg-[var(--color-surface)] border border-[var(--color-paper-border)] hover:border-[var(--color-accent-border)] hover:bg-[var(--color-accent-soft)]/50 shadow-2xs transition-all cursor-pointer"
           >
-            <Send className="w-3 h-3 text-[var(--color-accent)]" />
+            <Send className="w-3.5 h-3.5 text-[var(--color-accent)] shrink-0" />
             <span>{item.answer ? 'Ubah Tanggapan' : 'Beri Tanggapan'}</span>
           </button>
         </div>
       )}
+
+      {/* Decision Modal for Privacy Toggle */}
+      <ConfirmDecisionModal
+        isOpen={showPrivacyConfirm}
+        onClose={() => setShowPrivacyConfirm(false)}
+        onConfirm={() => {
+          onTogglePrivacy();
+          setShowPrivacyConfirm(false);
+        }}
+        title={item.isPublic ? 'Sembunyikan Cerita dari Publik?' : 'Publikasikan Cerita ke Dinding Curhat?'}
+        description={
+          item.isPublic
+            ? 'Pesan curhat ini akan dialihkan ke mode privat dan tidak akan ditampilkan pada Dinding Curhat publik.'
+            : 'Pesan curhat dan tanggapan konselor akan ditampilkan di Dinding Curhat (nama samaran tetap terlindungi aman).'
+        }
+        variant={item.isPublic ? 'warning' : 'primary'}
+        confirmLabel={item.isPublic ? 'Jadikan Privat' : 'Publikasikan'}
+        icon={item.isPublic ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+        loading={isToggling}
+        itemDetail={
+          <div className="space-y-1">
+            <div>
+              <span className="font-semibold text-[var(--color-ink)]">Konseli Samaran:</span> {item.alias}
+            </div>
+            <div>
+              <span className="font-semibold text-[var(--color-ink)]">Topik:</span> {item.category}
+            </div>
+            <div className="line-clamp-2 italic text-[11px] pt-0.5">
+              &ldquo;{item.message}&rdquo;
+            </div>
+          </div>
+        }
+      />
+
+      {/* Decision Modal for Landing Page Spotlight Toggle */}
+      <ConfirmDecisionModal
+        isOpen={showLandingConfirm}
+        onClose={() => setShowLandingConfirm(false)}
+        onConfirm={() => {
+          onToggleLanding();
+          setShowLandingConfirm(false);
+        }}
+        title={item.showOnLandingPage ? 'Hapus Curhat dari Beranda Utama?' : 'Tampilkan Curhat di Beranda Utama?'}
+        description={
+          item.showOnLandingPage
+            ? 'Pesan curhat ini tidak akan lagi ditampilkan di etalase sorotan cerita beranda utama.'
+            : 'Pesan curhat dan tanggapan konselor akan ditampilkan sebagai sorotan pilihan di etalase beranda utama (nama samaran tetap terlindungi aman).'
+        }
+        variant={item.showOnLandingPage ? 'warning' : 'primary'}
+        confirmLabel={item.showOnLandingPage ? 'Hapus dari Beranda' : 'Tampilkan di Beranda'}
+        icon={<Star className="w-5 h-5" />}
+        loading={isTogglingLanding}
+        itemDetail={
+          <div className="space-y-1">
+            <div>
+              <span className="font-semibold text-[var(--color-ink)]">Konseli Samaran:</span> {item.alias}
+            </div>
+            <div>
+              <span className="font-semibold text-[var(--color-ink)]">Topik:</span> {item.category}
+            </div>
+            <div className="line-clamp-2 italic text-[11px] pt-0.5">
+              &ldquo;{item.message}&rdquo;
+            </div>
+          </div>
+        }
+      />
     </div>
   );
 }

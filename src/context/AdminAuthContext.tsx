@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, KeyRound, Eye, EyeOff, ShieldAlert } from 'lucide-react';
 import { Spinner } from '@/components/ui/Spinner';
@@ -28,6 +28,9 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
   const [submitting, setSubmitting] = useState(false);
   const [remainingSeconds, setRemainingSeconds] = useState<number>(DEFAULT_SESSION_SECONDS);
   const [sessionNotice, setSessionNotice] = useState<string | null>(null);
+
+  const submittingRef = useRef(false);
+  const pinInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     let active = true;
@@ -68,6 +71,9 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
     setIsAuthenticated(false);
     setRemainingSeconds(0);
     setPin('');
+    if (pinInputRef.current) {
+      pinInputRef.current.value = '';
+    }
     setShowPin(false);
   }, []);
 
@@ -79,6 +85,10 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
       setRemainingSeconds((prev) => {
         if (prev <= 1) {
           clearInterval(interval);
+          setPin('');
+          if (pinInputRef.current) {
+            pinInputRef.current.value = '';
+          }
           logout();
           setSessionNotice(
             'Sesi login telah berakhir setelah 30 menit demi keamanan. Draf tulisanmu tetap tersimpan aman di browser.'
@@ -107,6 +117,8 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const login = async (inputPin: string): Promise<boolean> => {
+    if (submittingRef.current) return false;
+    submittingRef.current = true;
     setSubmitting(true);
     setPinError(false);
     try {
@@ -118,6 +130,10 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
       const data = await res.json();
       if (res.ok && data.success) {
         setIsAuthenticated(true);
+        setPin('');
+        if (pinInputRef.current) {
+          pinInputRef.current.value = '';
+        }
         setPinError(false);
         setRemainingSeconds(DEFAULT_SESSION_SECONDS);
         setSessionNotice(null);
@@ -126,17 +142,26 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
     } catch {
       // network/fetch error
     } finally {
+      submittingRef.current = false;
       setSubmitting(false);
     }
     setPinError(true);
+    setPin('');
+    if (pinInputRef.current) {
+      pinInputRef.current.value = '';
+    }
+    setTimeout(() => {
+      pinInputRef.current?.focus();
+    }, 50);
     return false;
   };
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!pin.trim()) return;
+    if (submitting || !pin.trim()) return;
     await login(pin);
   };
+
 
   const clearSessionNotice = () => setSessionNotice(null);
 
@@ -153,27 +178,27 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-[var(--color-paper)] flex items-center justify-center p-5">
-        <div className="w-full max-w-md bg-[var(--color-surface)] border border-[var(--color-paper-border)] rounded-2xl p-7 sm:p-9 shadow-sm text-center space-y-6 animate-fade-in-up">
+      <div className="min-h-screen bg-[var(--color-paper)] flex items-center justify-center p-2.5 min-[340px]:p-5">
+        <div className="w-full max-w-md bg-[var(--color-surface)] border border-[var(--color-paper-border)] rounded-2xl p-4 min-[340px]:p-6 sm:p-9 shadow-sm text-center space-y-4 min-[340px]:space-y-6 animate-fade-in-up">
           
-          <div className="w-14 h-14 rounded-2xl bg-[var(--color-accent-soft)] text-[var(--color-accent)] mx-auto flex items-center justify-center border border-[var(--color-accent-border)]">
-            <KeyRound className="w-6 h-6" />
+          <div className="w-12 h-12 min-[340px]:w-14 min-[340px]:h-14 rounded-2xl bg-[var(--color-accent-soft)] text-[var(--color-accent)] mx-auto flex items-center justify-center border border-[var(--color-accent-border)] shadow-2xs">
+            <KeyRound className="w-5 h-5 min-[340px]:w-6 min-[340px]:h-6" />
           </div>
 
-          <div className="space-y-1.5">
+          <div className="space-y-1.5 min-w-0">
             <h1
-              className="text-2xl font-medium text-[var(--color-ink)]"
+              className="text-xl sm:text-2xl font-medium text-[var(--color-ink)] leading-snug break-words"
               style={{ fontFamily: 'var(--font-display)' }}
             >
               Portal Konselor Amelia
             </h1>
-            <p className="text-xs sm:text-sm text-[var(--color-ink-muted)] leading-relaxed">
+            <p className="text-xs sm:text-sm text-[var(--color-ink-muted)] leading-relaxed break-words">
               Masukkan PIN pengelola untuk mengelola janji temu konseling, ruang curhat, dan artikel refleksi.
             </p>
           </div>
 
           {sessionNotice && (
-            <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-xl text-left flex items-start gap-2.5 text-xs text-amber-900 animate-fade-in-up">
+            <div className="p-3 min-[340px]:p-3.5 bg-amber-50 border border-amber-200 rounded-xl text-left flex items-start gap-2.5 text-xs text-amber-900 animate-fade-in-up">
               <ShieldAlert className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
               <div>
                 <p className="font-semibold text-amber-950 mb-0.5">Sesi Berakhir (30 Menit)</p>
@@ -182,7 +207,7 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
             </div>
           )}
 
-          <form onSubmit={handleFormSubmit} className="space-y-4 text-left">
+          <form onSubmit={handleFormSubmit} autoComplete="off" className="space-y-3.5 min-[340px]:space-y-4 text-left">
             <div>
               <label htmlFor="admin-pin" className="block text-xs font-semibold text-[var(--color-ink)] mb-1.5">
                 PIN Akses Pengelola
@@ -190,20 +215,31 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
               
               <div className={`relative flex items-center ${pinError ? 'animate-shake' : ''}`}>
                 <input
+                  ref={pinInputRef}
                   id="admin-pin"
+                  name="counselor_auth_pin"
                   type={showPin ? 'text' : 'password'}
                   inputMode="numeric"
                   pattern="[0-9]*"
                   maxLength={6}
-                  autoComplete="current-password"
+                  autoComplete="off"
+                  data-lpignore="true"
+                  data-form-type="other"
+                  disabled={submitting}
+                  readOnly={submitting}
                   value={pin}
                   onChange={(e) => {
                     const onlyNums = e.target.value.replace(/[^0-9]/g, '');
                     setPin(onlyNums);
                     if (pinError) setPinError(false);
+                    if (onlyNums.length === 6 && !submitting && !submittingRef.current) {
+                      login(onlyNums);
+                    }
                   }}
                   placeholder="••••••"
-                  className={`w-full pl-4 pr-11 py-2.5 rounded-xl bg-[var(--color-paper)] border text-center font-mono tracking-widest text-base font-semibold text-[var(--color-ink)] focus:outline-none focus:ring-2 transition-all ${
+                  className={`w-full pl-3 min-[340px]:pl-4 pr-10 min-[340px]:pr-11 py-2 min-[340px]:py-2.5 rounded-xl bg-[var(--color-paper)] border text-center font-mono tracking-widest text-base font-semibold text-[var(--color-ink)] focus:outline-none focus:ring-2 transition-all ${
+                    submitting ? 'opacity-60 cursor-not-allowed' : ''
+                  } ${
                     pinError
                       ? 'border-red-400 focus:border-red-500 focus:ring-red-100'
                       : 'border-[var(--color-paper-border)] focus:border-[var(--color-accent)] focus:ring-[var(--color-accent-soft)]'
@@ -213,8 +249,9 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
 
                 <button
                   type="button"
+                  disabled={submitting}
                   onClick={() => setShowPin(!showPin)}
-                  className="absolute right-2.5 p-1.5 rounded-lg text-[var(--color-ink-muted)] hover:text-[var(--color-accent)] hover:bg-[var(--color-surface)] transition-all cursor-pointer"
+                  className="absolute right-2.5 p-1.5 rounded-lg text-[var(--color-ink-muted)] hover:text-[var(--color-accent)] hover:bg-[var(--color-surface)] transition-all cursor-pointer disabled:opacity-50"
                   aria-label={showPin ? 'Sembunyikan PIN' : 'Tampilkan PIN'}
                   tabIndex={-1}
                 >
@@ -243,7 +280,7 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
             <button
               type="submit"
               disabled={submitting}
-              className="btn-primary btn-interactive w-full py-2.5 text-sm justify-center cursor-pointer shadow-xs disabled:opacity-60 flex items-center gap-2"
+              className="btn-primary btn-interactive w-full py-2.5 text-xs min-[340px]:text-sm justify-center cursor-pointer shadow-xs disabled:opacity-60 flex items-center gap-1.5 min-[340px]:gap-2 whitespace-nowrap"
             >
               {submitting ? (
                 <>
@@ -252,8 +289,8 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
                 </>
               ) : (
                 <>
-                  <KeyRound className="w-4 h-4" />
-                  <span>Masuk Dashboard Konselor</span>
+                  <KeyRound className="w-4 h-4 shrink-0" />
+                  <span>Masuk Dashboard<span className="hidden min-[340px]:inline"> Konselor</span></span>
                 </>
               )}
             </button>
@@ -264,8 +301,8 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
               href="/"
               className="text-xs text-[var(--color-ink-muted)] hover:text-[var(--color-accent)] inline-flex items-center gap-1.5 transition-colors"
             >
-              <ArrowLeft className="w-3.5 h-3.5" />
-              Kembali ke Halaman Web Utama
+              <ArrowLeft className="w-3.5 h-3.5 shrink-0" />
+              <span>Kembali ke Halaman Web<span className="hidden min-[340px]:inline"> Utama</span></span>
             </Link>
           </div>
 

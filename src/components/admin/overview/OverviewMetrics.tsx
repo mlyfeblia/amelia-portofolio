@@ -28,7 +28,7 @@ export function OverviewMetrics({
 }: OverviewMetricsProps) {
   if (loading) {
     return (
-      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
+      <div className="grid grid-cols-1 min-[340px]:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
         <SkeletonMetricCard />
         <SkeletonMetricCard />
         <SkeletonMetricCard />
@@ -38,11 +38,11 @@ export function OverviewMetrics({
   }
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
+    <div className="grid grid-cols-1 min-[340px]:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
       {/* Card 1: Perlu Konfirmasi */}
       <Link
         href="/admin/bookings"
-        className="card-interactive p-3.5 sm:p-5 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-paper-border)] hover:border-[var(--color-accent-border)] transition-all shadow-xs group flex flex-col justify-between"
+        className="card-interactive p-3 sm:p-5 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-paper-border)] hover:border-[var(--color-accent-border)] transition-all shadow-xs group flex flex-col justify-between"
       >
         <div className="flex items-center justify-between text-xs text-[var(--color-ink-muted)] mb-2 sm:mb-3">
           <span className="text-[11px] sm:text-xs">Perlu Konfirmasi</span>
@@ -64,7 +64,7 @@ export function OverviewMetrics({
       {/* Card 2: Sesi Terkonfirmasi */}
       <Link
         href="/admin/bookings"
-        className="card-interactive p-3.5 sm:p-5 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-paper-border)] hover:border-[var(--color-accent-border)] transition-all shadow-xs group flex flex-col justify-between"
+        className="card-interactive p-3 sm:p-5 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-paper-border)] hover:border-[var(--color-accent-border)] transition-all shadow-xs group flex flex-col justify-between"
       >
         <div className="flex items-center justify-between text-xs text-[var(--color-ink-muted)] mb-2 sm:mb-3">
           <span className="text-[11px] sm:text-xs">Terkonfirmasi</span>
@@ -86,7 +86,7 @@ export function OverviewMetrics({
       {/* Card 3: Curhat Menunggu */}
       <Link
         href="/admin/counseling"
-        className="card-interactive p-3.5 sm:p-5 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-paper-border)] hover:border-[var(--color-accent-border)] transition-all shadow-xs group flex flex-col justify-between"
+        className="card-interactive p-3 sm:p-5 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-paper-border)] hover:border-[var(--color-accent-border)] transition-all shadow-xs group flex flex-col justify-between"
       >
         <div className="flex items-center justify-between text-xs text-[var(--color-ink-muted)] mb-2 sm:mb-3">
           <span className="text-[11px] sm:text-xs">Curhat Menanti</span>
@@ -108,7 +108,7 @@ export function OverviewMetrics({
       {/* Card 4: Artikel Terpublikasi */}
       <Link
         href="/admin/articles"
-        className="card-interactive p-3.5 sm:p-5 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-paper-border)] hover:border-[var(--color-accent-border)] transition-all shadow-xs group flex flex-col justify-between"
+        className="card-interactive p-3 sm:p-5 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-paper-border)] hover:border-[var(--color-accent-border)] transition-all shadow-xs group flex flex-col justify-between"
       >
         <div className="flex items-center justify-between text-xs text-[var(--color-ink-muted)] mb-2 sm:mb-3">
           <span className="text-[11px] sm:text-xs">Artikel Terbit</span>

@@ -44,7 +44,21 @@ const serwist = new Serwist({
         networkTimeoutSeconds: 3,
       }),
     },
-    // 3. Static images & favicons (CacheFirst with 30-day eviction)
+    // 3. Article cover images & curated assets (CacheFirst with 30-day eviction)
+    {
+      matcher: ({ url }) => url.pathname.startsWith('/images/articles/'),
+      handler: new CacheFirst({
+        cacheName: 'amelia-article-images',
+        plugins: [
+          new ExpirationPlugin({
+            maxEntries: 48,
+            maxAgeSeconds: 30 * 24 * 60 * 60, // 30 days
+            maxAgeFrom: 'last-used',
+          }),
+        ],
+      }),
+    },
+    // 4. Static images & favicons (CacheFirst with 30-day eviction)
     {
       matcher: ({ url }) =>
         /\.(?:png|jpg|jpeg|svg|webp|avif|ico)$/i.test(url.pathname) &&
@@ -60,7 +74,7 @@ const serwist = new Serwist({
         ],
       }),
     },
-    // 4. Serwist default Next.js App Router caching strategies (RSC, chunks, Google fonts)
+    // 5. Serwist default Next.js App Router caching strategies (RSC, chunks, Google fonts)
     ...defaultCache,
   ],
   fallbacks: {
@@ -82,4 +96,56 @@ self.addEventListener('message', (event) => {
   }
 });
 
+// Web Push event listener
+self.addEventListener('push', (event) => {
+  if (!event.data) return;
+
+  try {
+    const payload = event.data.json();
+    const title = payload.title || 'Amelia Konseling';
+    const options: NotificationOptions = {
+      body: payload.body || 'Ada kabar terbaru dari Kak Amel.',
+      icon: payload.icon || '/icons/icon-192x192.png',
+      badge: payload.badge || '/icons/icon-192x192.png',
+      data: {
+        url: payload.url || '/',
+        timestamp: Date.now(),
+      },
+      tag: payload.tag || 'amelia-counseling-alert',
+    };
+
+    event.waitUntil(self.registration.showNotification(title, options));
+  } catch {
+    const rawText = event.data.text();
+    event.waitUntil(
+      self.registration.showNotification('Amelia Konseling', {
+        body: rawText,
+        icon: '/icons/icon-192x192.png',
+        badge: '/icons/icon-192x192.png',
+      })
+    );
+  }
+});
+
+// Notification click listener: navigates to target URL
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const targetUrl = (event.notification.data && event.notification.data.url) || '/';
+
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      for (const client of clientList) {
+        if ('focus' in client && client.url.includes(self.location.origin)) {
+          client.navigate(targetUrl);
+          return client.focus();
+        }
+      }
+      if (self.clients.openWindow) {
+        return self.clients.openWindow(targetUrl);
+      }
+    })
+  );
+});
+
 serwist.addEventListeners();
+

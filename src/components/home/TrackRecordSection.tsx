@@ -20,10 +20,10 @@ export function TrackRecordSection() {
           </div>
           <Link
             href="/about"
-            className="text-sm font-semibold text-[var(--color-accent)] hover:underline shrink-0 inline-flex items-center gap-1"
+            className="btn-secondary btn-interactive inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-[var(--color-ink)] hover:text-[var(--color-accent)] bg-[var(--color-surface)] border border-[var(--color-paper-border)] hover:border-[var(--color-accent-border)] hover:bg-[var(--color-accent-soft)]/50 shadow-2xs shrink-0 self-start sm:self-auto transition-all"
           >
-            Lihat profil lengkap di Tentang
-            <ArrowRight className="w-4 h-4" />
+            <span>Lihat Profil Lengkap di Tentang</span>
+            <ArrowRight className="w-3.5 h-3.5 text-[var(--color-ink-muted)] shrink-0" aria-hidden="true" />
           </Link>
         </div>
 

@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Booking, BookingStatus, BOOKING_CATEGORIES } from '@/types';
 import dynamic from 'next/dynamic';
+import { useToast } from '@/context/ToastContext';
 import { BookingHeader } from '@/components/admin/bookings/BookingHeader';
 import { BookingFilters } from '@/components/admin/bookings/BookingFilters';
 import { BookingList } from '@/components/admin/bookings/BookingList';
@@ -12,36 +13,61 @@ const BookingDeleteModal = dynamic(
   { ssr: false }
 );
 
+const ITEMS_PER_PAGE = 6;
+
 const CATEGORIES = [
   'Semua Topik',
   ...BOOKING_CATEGORIES,
 ];
 
 export function AdminBookingsClient() {
+  const { toast } = useToast();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Filters
-  const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState<BookingStatus | 'semua'>('semua');
-  const [categoryFilter, setCategoryFilter] = useState('Semua Topik');
-  const [dateFilter, setDateFilter] = useState('');
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
 
-  // Sync filters from URL and sessionStorage on mount
-  useEffect(() => {
+  // Filters
+  const [search, setSearch] = useState(() => {
+    if (typeof window === 'undefined') return '';
+    try {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('q') || sessionStorage.getItem('admin_bookings_q') || '';
+    } catch {
+      return '';
+    }
+  });
+
+  const [statusFilter, setStatusFilter] = useState<BookingStatus | 'semua'>(() => {
+    if (typeof window === 'undefined') return 'semua';
     try {
       const params = new URLSearchParams(window.location.search);
       const s = params.get('status') || sessionStorage.getItem('admin_bookings_status');
-      const c = params.get('topik') || sessionStorage.getItem('admin_bookings_topik');
-      const d = params.get('tgl') || sessionStorage.getItem('admin_bookings_tgl');
-      const q = params.get('q') || sessionStorage.getItem('admin_bookings_q');
-
-      if (s) setStatusFilter(s as BookingStatus | 'semua');
-      if (c) setCategoryFilter(c);
-      if (d) setDateFilter(d);
-      if (q) setSearch(q);
+      if (s) return s as BookingStatus | 'semua';
     } catch {}
-  }, []);
+    return 'semua';
+  });
+
+  const [categoryFilter, setCategoryFilter] = useState(() => {
+    if (typeof window === 'undefined') return 'Semua Topik';
+    try {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('topik') || sessionStorage.getItem('admin_bookings_topik') || 'Semua Topik';
+    } catch {
+      return 'Semua Topik';
+    }
+  });
+
+  const [dateFilter, setDateFilter] = useState(() => {
+    if (typeof window === 'undefined') return '';
+    try {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('tgl') || sessionStorage.getItem('admin_bookings_tgl') || '';
+    } catch {
+      return '';
+    }
+  });
 
   const syncFilterParams = (
     s: BookingStatus | 'semua',
@@ -81,18 +107,22 @@ export function AdminBookingsClient() {
 
   const handleSearchChange = (val: string) => {
     setSearch(val);
+    setCurrentPage(1);
     syncFilterParams(statusFilter, categoryFilter, dateFilter, val);
   };
   const handleStatusChange = (val: BookingStatus | 'semua') => {
     setStatusFilter(val);
+    setCurrentPage(1);
     syncFilterParams(val, categoryFilter, dateFilter, search);
   };
   const handleCategoryChange = (val: string) => {
     setCategoryFilter(val);
+    setCurrentPage(1);
     syncFilterParams(statusFilter, val, dateFilter, search);
   };
   const handleDateChange = (val: string) => {
     setDateFilter(val);
+    setCurrentPage(1);
     syncFilterParams(statusFilter, categoryFilter, val, search);
   };
 
@@ -140,6 +170,7 @@ export function AdminBookingsClient() {
   }, []);
 
   const handleUpdateStatus = async (id: string, newStatus: BookingStatus) => {
+    const target = bookings.find((b) => b.id === id);
     setUpdatingId(id);
     try {
       const res = await fetch(`/api/bookings/${id}`, {
@@ -152,9 +183,19 @@ export function AdminBookingsClient() {
         setBookings((prev) =>
           prev.map((b) => (b.id === id ? { ...b, status: newStatus } : b))
         );
+        if (newStatus === 'terkonfirmasi') {
+          toast.success(`Janji temu konseli ${target?.name || ''} berhasil dikonfirmasi.`);
+        } else if (newStatus === 'selesai') {
+          toast.success(`Sesi konseling ${target?.name || ''} telah ditandai selesai.`);
+        } else if (newStatus === 'dibatalkan') {
+          toast.info(`Janji temu konseli ${target?.name || ''} telah dibatalkan.`);
+        }
+      } else {
+        toast.error('Gagal memperbarui status janji temu. Silakan coba lagi.');
       }
     } catch (e) {
       console.error('Failed to update booking status:', e);
+      toast.error('Gagal memperbarui status janji temu. Silakan coba lagi.');
     } finally {
       setUpdatingId(null);
     }
@@ -168,9 +209,13 @@ export function AdminBookingsClient() {
         setBookings((prev) => prev.filter((b) => b.id !== booking.id));
         setDeleteModalOpen(false);
         setDeleteTarget(null);
+        toast.info(`Janji temu ${booking.name} berhasil dihapus.`);
+      } else {
+        toast.error('Gagal menghapus janji temu.');
       }
     } catch (e) {
       console.error('Failed to delete booking:', e);
+      toast.error('Gagal menghapus janji temu.');
     }
   };
 
@@ -251,6 +296,7 @@ export function AdminBookingsClient() {
     setStatusFilter('semua');
     setCategoryFilter('Semua Topik');
     setDateFilter('');
+    setCurrentPage(1);
     syncFilterParams('semua', 'Semua Topik', '', '');
   };
 
@@ -260,6 +306,17 @@ export function AdminBookingsClient() {
     categoryFilter !== 'Semua Topik' ||
     dateFilter.trim()
   );
+
+  const totalPages = Math.max(1, Math.ceil(filteredBookings.length / ITEMS_PER_PAGE));
+  const safePage = Math.min(currentPage, totalPages);
+  const paginatedBookings = useMemo(() => {
+    const start = (safePage - 1) * ITEMS_PER_PAGE;
+    return filteredBookings.slice(start, start + ITEMS_PER_PAGE);
+  }, [filteredBookings, safePage]);
+
+  if (currentPage > totalPages && totalPages > 0) {
+    setCurrentPage(totalPages);
+  }
 
   return (
     <div className="space-y-5 sm:space-y-6">
@@ -285,7 +342,7 @@ export function AdminBookingsClient() {
       />
 
       <BookingList
-        bookings={filteredBookings}
+        bookings={paginatedBookings}
         loading={loading}
         updatingId={updatingId}
         search={search}
@@ -299,6 +356,11 @@ export function AdminBookingsClient() {
           setDeleteTarget(booking);
           setDeleteModalOpen(true);
         }}
+        currentPage={safePage}
+        totalPages={totalPages}
+        totalItems={filteredBookings.length}
+        itemsPerPage={ITEMS_PER_PAGE}
+        onPageChange={setCurrentPage}
       />
 
       <BookingDeleteModal

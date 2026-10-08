@@ -12,37 +12,73 @@ const CounselingDeleteModal = dynamic(
   { ssr: false }
 );
 
+const ITEMS_PER_PAGE = 6;
+
 export function AdminCounselingClient() {
   const [curhatList, setCurhatList] = useState<AnonymousMessage[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Filters
-  const [search, setSearch] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState('Semua');
-  const [statusFilter, setStatusFilter] = useState<'semua' | 'unanswered' | 'answered'>('semua');
-  const [visibilityFilter, setVisibilityFilter] = useState<'semua' | 'public' | 'private'>('semua');
-  const [landingFilter, setLandingFilter] = useState<'semua' | 'landing'>('semua');
-  const [dateFilter, setDateFilter] = useState('');
+  const [search, setSearch] = useState(() => {
+    if (typeof window === 'undefined') return '';
+    try {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('q') || sessionStorage.getItem('admin_counseling_q') || '';
+    } catch {
+      return '';
+    }
+  });
 
-  // Sync filters from URL and sessionStorage on mount
-  useEffect(() => {
+  const [categoryFilter, setCategoryFilter] = useState(() => {
+    if (typeof window === 'undefined') return 'Semua';
+    try {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('kategori') || sessionStorage.getItem('admin_counseling_kategori') || 'Semua';
+    } catch {
+      return 'Semua';
+    }
+  });
+
+  const [statusFilter, setStatusFilter] = useState<'semua' | 'unanswered' | 'answered'>(() => {
+    if (typeof window === 'undefined') return 'semua';
     try {
       const params = new URLSearchParams(window.location.search);
       const s = params.get('status') || sessionStorage.getItem('admin_counseling_status');
-      const k = params.get('kategori') || sessionStorage.getItem('admin_counseling_kategori');
-      const v = params.get('vis') || sessionStorage.getItem('admin_counseling_vis');
-      const l = params.get('landing') || sessionStorage.getItem('admin_counseling_landing');
-      const d = params.get('tgl') || sessionStorage.getItem('admin_counseling_tgl');
-      const q = params.get('q') || sessionStorage.getItem('admin_counseling_q');
-
-      if (s) setStatusFilter(s as 'semua' | 'unanswered' | 'answered');
-      if (k) setCategoryFilter(k);
-      if (v) setVisibilityFilter(v as 'semua' | 'public' | 'private');
-      if (l) setLandingFilter(l as 'semua' | 'landing');
-      if (d) setDateFilter(d);
-      if (q) setSearch(q);
+      if (s === 'unanswered' || s === 'answered') return s;
     } catch {}
-  }, []);
+    return 'semua';
+  });
+
+  const [visibilityFilter, setVisibilityFilter] = useState<'semua' | 'public' | 'private'>(() => {
+    if (typeof window === 'undefined') return 'semua';
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const v = params.get('vis') || sessionStorage.getItem('admin_counseling_vis');
+      if (v === 'public' || v === 'private') return v;
+    } catch {}
+    return 'semua';
+  });
+
+  const [landingFilter, setLandingFilter] = useState<'semua' | 'landing'>(() => {
+    if (typeof window === 'undefined') return 'semua';
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const l = params.get('landing') || sessionStorage.getItem('admin_counseling_landing');
+      if (l === 'landing') return 'landing';
+    } catch {}
+    return 'semua';
+  });
+
+  const [dateFilter, setDateFilter] = useState(() => {
+    if (typeof window === 'undefined') return '';
+    try {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('tgl') || sessionStorage.getItem('admin_counseling_tgl') || '';
+    } catch {
+      return '';
+    }
+  });
 
   const syncFilterParams = (
     s: 'semua' | 'unanswered' | 'answered',
@@ -96,26 +132,32 @@ export function AdminCounselingClient() {
 
   const handleSearchChange = (val: string) => {
     setSearch(val);
+    setCurrentPage(1);
     syncFilterParams(statusFilter, categoryFilter, visibilityFilter, landingFilter, dateFilter, val);
   };
   const handleStatusChange = (val: 'semua' | 'unanswered' | 'answered') => {
     setStatusFilter(val);
+    setCurrentPage(1);
     syncFilterParams(val, categoryFilter, visibilityFilter, landingFilter, dateFilter, search);
   };
   const handleCategoryChange = (val: string) => {
     setCategoryFilter(val);
+    setCurrentPage(1);
     syncFilterParams(statusFilter, val, visibilityFilter, landingFilter, dateFilter, search);
   };
   const handleVisibilityChange = (val: 'semua' | 'public' | 'private') => {
     setVisibilityFilter(val);
+    setCurrentPage(1);
     syncFilterParams(statusFilter, categoryFilter, val, landingFilter, dateFilter, search);
   };
   const handleLandingChange = (val: 'semua' | 'landing') => {
     setLandingFilter(val);
+    setCurrentPage(1);
     syncFilterParams(statusFilter, categoryFilter, visibilityFilter, val, dateFilter, search);
   };
   const handleDateChange = (val: string) => {
     setDateFilter(val);
+    setCurrentPage(1);
     syncFilterParams(statusFilter, categoryFilter, visibilityFilter, landingFilter, val, search);
   };
 
@@ -325,7 +367,7 @@ export function AdminCounselingClient() {
       });
   }, [curhatList]);
 
-  const filtered = useMemo(() => {
+  const filteredMessages = useMemo(() => {
     return curhatList.filter((c) => {
       const matchesCategory = categoryFilter === 'Semua' || c.category === categoryFilter;
       const matchesStatus =
@@ -367,6 +409,7 @@ export function AdminCounselingClient() {
     setLandingFilter('semua');
     setCategoryFilter('Semua');
     setDateFilter('');
+    setCurrentPage(1);
     syncFilterParams('semua', 'Semua', 'semua', 'semua', '', '');
   };
 
@@ -378,6 +421,17 @@ export function AdminCounselingClient() {
     categoryFilter !== 'Semua' ||
     dateFilter.trim()
   );
+
+  const totalPages = Math.max(1, Math.ceil(filteredMessages.length / ITEMS_PER_PAGE));
+  const safePage = Math.min(currentPage, totalPages);
+  const paginatedMessages = useMemo(() => {
+    const start = (safePage - 1) * ITEMS_PER_PAGE;
+    return filteredMessages.slice(start, start + ITEMS_PER_PAGE);
+  }, [filteredMessages, safePage]);
+
+  if (currentPage > totalPages && totalPages > 0) {
+    setCurrentPage(totalPages);
+  }
 
   return (
     <div className="space-y-5 sm:space-y-6">
@@ -415,7 +469,7 @@ export function AdminCounselingClient() {
       />
 
       <CounselingList
-        curhatList={filtered}
+        curhatList={paginatedMessages}
         loading={loading}
         replyingId={replyingId}
         togglingId={togglingId}
@@ -437,6 +491,11 @@ export function AdminCounselingClient() {
           setDeleteItem(item);
           setDeleteModalOpen(true);
         }}
+        currentPage={safePage}
+        totalPages={totalPages}
+        totalItems={filteredMessages.length}
+        itemsPerPage={ITEMS_PER_PAGE}
+        onPageChange={setCurrentPage}
       />
 
       <CounselingDeleteModal

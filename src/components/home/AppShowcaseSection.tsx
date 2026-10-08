@@ -11,7 +11,7 @@ import {
   Feather,
   Lock,
 } from 'lucide-react';
-import { usePwa, triggerPwaInstall, openIosModal } from '@/lib/pwa-store';
+import { usePwa, triggerPwaInstall, openIosModal, openInstalledInfoModal } from '@/lib/pwa-store';
 import { useMounted } from '@/lib/use-mounted';
 
 export function AppShowcaseSection() {
@@ -103,16 +103,23 @@ export function AppShowcaseSection() {
             {/* Action Bar */}
             <div className="pt-2" suppressHydrationWarning>
               {showInstalled ? (
-                <div className="inline-flex items-center gap-2.5 px-5 py-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm font-medium">
+                <button
+                  type="button"
+                  onClick={() => openInstalledInfoModal()}
+                  className="btn-interactive inline-flex items-center gap-2.5 px-5 py-3 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 text-sm font-medium transition-colors cursor-pointer group shadow-2xs"
+                >
                   <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
                   <span>Aplikasi Telah Terpasang di Perangkat Ini</span>
-                </div>
+                  <span className="text-xs bg-emerald-200/80 group-hover:bg-emerald-200 text-emerald-900 font-semibold px-2 py-0.5 rounded-md transition-colors ml-1">
+                    Lihat Info &rarr;
+                  </span>
+                </button>
               ) : (
                 <div className="flex flex-wrap items-center gap-3">
                   <button
                     type="button"
                     onClick={() => triggerPwaInstall()}
-                    className="btn-primary btn-interactive min-h-[46px] px-6 text-sm inline-flex items-center gap-2 shadow-xs cursor-pointer"
+                    className="btn-primary btn-interactive min-h-[44px] px-5 sm:px-6 text-sm inline-flex items-center justify-center gap-2 shadow-xs cursor-pointer w-full min-[360px]:w-auto"
                   >
                     <Download className="w-4 h-4" aria-hidden="true" />
                     <span>Pasang Aplikasi Sekarang</span>
@@ -121,7 +128,7 @@ export function AppShowcaseSection() {
                   <button
                     type="button"
                     onClick={openIosModal}
-                    className="btn-secondary btn-interactive min-h-[46px] px-5 text-sm inline-flex items-center gap-2 cursor-pointer"
+                    className="btn-secondary btn-interactive min-h-[44px] px-5 text-sm inline-flex items-center justify-center gap-2 cursor-pointer w-full min-[360px]:w-auto"
                   >
                     <Share2 className="w-4 h-4 text-[var(--color-ink-soft)]" aria-hidden="true" />
                     <span suppressHydrationWarning>{isIosDevice ? 'Cara Pasang di iOS (Safari)' : 'Panduan Pasang iPhone'}</span>

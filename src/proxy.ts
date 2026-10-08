@@ -1,10 +1,43 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { checkDistributedRateLimit, getClientIp } from '@/lib/rate-limiter';
+import { isValidAdminSessionTokenEdge, COOKIE_NAME } from '@/lib/edge-admin-auth';
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const requestId = crypto.randomUUID();
+
+  // Extract admin session token from cookie or Authorization header
+  const token =
+    request.cookies.get(COOKIE_NAME)?.value ||
+    request.headers.get('authorization')?.replace(/^Bearer\s+/i, '').trim();
+
+  // 1. Admin API route protection: /api/admin/*
+  if (pathname.startsWith('/api/admin')) {
+    // Exempt login and verify endpoints
+    if (pathname !== '/api/admin/login' && pathname !== '/api/admin/verify') {
+      const isValid = await isValidAdminSessionTokenEdge(token);
+      if (!isValid) {
+        return NextResponse.json(
+          { success: false, message: 'Sesi pengelola tidak valid atau telah berakhir.' },
+          { status: 401 }
+        );
+      }
+    }
+  }
+
+  // 2. Admin UI route protection: /admin/*
+  if (pathname.startsWith('/admin')) {
+    // Exempt /admin root so login screen / dialog can be displayed
+    if (pathname !== '/admin' && pathname !== '/admin/') {
+      const isValid = await isValidAdminSessionTokenEdge(token);
+      if (!isValid) {
+        const loginUrl = new URL('/admin', request.url);
+        loginUrl.searchParams.set('unauthenticated', 'true');
+        return NextResponse.redirect(loginUrl);
+      }
+    }
+  }
 
   // Create response with tracing requestId
   const response = NextResponse.next();
@@ -80,7 +113,8 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/api/admin/login',
+    '/admin/:path*',
+    '/api/admin/:path*',
     '/api/bookings',
     '/api/curhat',
   ],

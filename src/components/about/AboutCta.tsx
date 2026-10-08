@@ -20,19 +20,19 @@ export function AboutCta() {
           Pintu selalu terbuka untuk sesi konseling sebaya, kolaborasi kegiatan kepemudaan, maupun komunikasi profesional.
         </p>
       </div>
-      <div className="flex flex-wrap gap-3 shrink-0">
+      <div className="flex flex-wrap gap-3 shrink-0 w-full sm:w-auto">
         <a
           href={getGeneralWhatsAppUrl()}
           target="_blank"
           rel="noopener noreferrer"
-          className="btn-primary btn-interactive text-sm min-h-[42px] px-5 inline-flex items-center gap-2"
+          className="btn-primary btn-interactive text-sm min-h-[42px] px-5 inline-flex items-center justify-center gap-2 w-full min-[360px]:w-auto"
         >
           <MessageCircle className="w-4 h-4" />
           <span>WhatsApp Langsung</span>
         </a>
         <Link
           href="/schedule"
-          className="btn-secondary btn-interactive text-sm min-h-[42px] px-5 inline-flex items-center gap-2"
+          className="btn-secondary btn-interactive text-sm min-h-[42px] px-5 inline-flex items-center justify-center gap-2 w-full min-[360px]:w-auto"
         >
           <Calendar className="w-4 h-4 text-[var(--color-ink-soft)]" />
           <span>Janji Temu Konseling</span>

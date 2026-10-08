@@ -27,27 +27,32 @@ export default function ScrollRevealProvider() {
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
+            entry.target.classList.remove('reveal-pending');
             entry.target.classList.add('revealed');
             observer.unobserve(entry.target);
           }
         });
       },
       {
-        rootMargin: '0px 0px -40px 0px',
+        rootMargin: '50px 0px 50px 0px',
         threshold: 0.05,
       }
     );
 
     const elements = document.querySelectorAll('[data-reveal], .reveal-init');
-    // Generous viewport buffer (110% of window height) so any content even slightly visible or near the fold
-    // is immediately marked revealed and NEVER vanishes or flashes on initial render / refresh.
-    const initialThreshold = window.innerHeight * 1.1;
+    // Generous safe viewport buffer (250% of window height) so any content within the initial mobile reading experience
+    // is immediately marked revealed and NEVER hidden or tagged with .reveal-pending on mount / refresh.
+    const initialThreshold = window.innerHeight * 2.5;
 
     let savedScroll = 0;
     try {
       const fullPath = window.location.pathname + window.location.search;
       const savedRaw = sessionStorage.getItem('scroll_pos_' + fullPath) || sessionStorage.getItem('scroll_pos_' + window.location.pathname);
-      if (savedRaw) savedScroll = parseInt(savedRaw, 10);
+      if (savedRaw) {
+        const parsed = parseInt(savedRaw, 10);
+        // Discard micro-offsets (< 30px) as top
+        savedScroll = parsed < 30 ? 0 : parsed;
+      }
     } catch {
       // Ignore sessionStorage issues
     }
@@ -55,14 +60,22 @@ export default function ScrollRevealProvider() {
     const currentScrollY = Math.max(window.scrollY, savedScroll);
 
     elements.forEach((el) => {
+      // If already revealed, ensure reveal-pending is stripped and skip
+      if (el.classList.contains('revealed')) {
+        el.classList.remove('reveal-pending');
+        return;
+      }
+
       const rect = el.getBoundingClientRect();
       const absoluteTop = rect.top + window.scrollY;
 
-      // Reveal immediately if within viewport or above/near the refreshed scroll position
-      if (
-        rect.top <= initialThreshold ||
-        (currentScrollY > 0 && absoluteTop <= currentScrollY + initialThreshold)
-      ) {
+      // Reveal immediately if within safe threshold or near current/saved scroll position.
+      // Elements within initial buffer are never hidden.
+      const isWithinInitialBuffer = rect.top <= initialThreshold;
+      const isWithinScrollBuffer = currentScrollY > 0 && absoluteTop <= (currentScrollY + initialThreshold);
+
+      if (isWithinInitialBuffer || isWithinScrollBuffer) {
+        el.classList.remove('reveal-pending');
         el.classList.add('revealed');
       } else {
         el.classList.add('reveal-pending');

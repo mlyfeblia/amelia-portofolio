@@ -27,14 +27,14 @@ export function HeroSection() {
             <div className="flex flex-wrap items-center gap-3.5 pt-1">
               <Link
                 href="/schedule"
-                className="btn-primary btn-interactive min-h-[46px] px-6 text-[15px] inline-flex items-center gap-2"
+                className="btn-primary btn-interactive min-h-[44px] px-5 sm:px-6 text-sm sm:text-[15px] inline-flex items-center justify-center gap-2 w-full min-[360px]:w-auto"
               >
                 <Calendar className="w-4 h-4" />
                 <span>Jadwalkan Konsultasi</span>
               </Link>
               <Link
                 href="/about"
-                className="btn-secondary btn-interactive min-h-[46px] px-6 text-[15px] inline-flex items-center gap-2"
+                className="btn-secondary btn-interactive min-h-[44px] px-5 sm:px-6 text-sm sm:text-[15px] inline-flex items-center justify-center gap-2 w-full min-[360px]:w-auto"
               >
                 <User className="w-4 h-4 text-[var(--color-ink-soft)]" />
                 <span>Kenali Profil Amel</span>
@@ -66,7 +66,6 @@ export function HeroSection() {
                 alt="Foto Profil Amelia, Mahasiswi Bimbingan Konseling UIN Siber Syekh Nurjati Cirebon"
                 fill
                 priority
-                unoptimized
                 decoding="sync"
                 placeholder="blur"
                 blurDataURL="data:image/webp;base64,UklGRmwAAABXRUJQVlA4IGAAAAAwBACdASoQABQAPzmGuVOvKSWisAgB4CcJZwDImCLY9Ls72ZrEJEF4/ewA/owBQOkyjLLc5jRc6xVnRV8Ih0nQBejrOHiefbZyHM/aYbkUsYDKEbJfV2RdDH7EoOfAAAA="

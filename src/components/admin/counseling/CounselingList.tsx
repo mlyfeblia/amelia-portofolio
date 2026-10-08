@@ -5,6 +5,7 @@ import { MessageSquareText, SearchX, RotateCcw } from 'lucide-react';
 import { AnonymousMessage } from '@/types';
 import { CounselingCard } from './CounselingCard';
 import { SkeletonCurhatCard } from '@/components/ui/Skeleton';
+import { PaginationBar } from '@/components/ui/PaginationBar';
 
 interface CounselingListProps {
   curhatList: AnonymousMessage[];
@@ -26,6 +27,11 @@ interface CounselingListProps {
   onTogglePrivacy: (item: AnonymousMessage) => void;
   onToggleLanding: (item: AnonymousMessage) => void;
   onDelete: (item: AnonymousMessage) => void;
+  currentPage?: number;
+  totalPages?: number;
+  totalItems?: number;
+  itemsPerPage?: number;
+  onPageChange?: (page: number) => void;
 }
 
 export function CounselingList({
@@ -48,6 +54,11 @@ export function CounselingList({
   onTogglePrivacy,
   onToggleLanding,
   onDelete,
+  currentPage,
+  totalPages,
+  totalItems,
+  itemsPerPage,
+  onPageChange,
 }: CounselingListProps) {
   if (loading) {
     return (
@@ -131,22 +142,35 @@ export function CounselingList({
   }
 
   return (
-    <div className="space-y-3.5 sm:space-y-4 tab-content-enter">
-      {curhatList.map((item) => (
-        <CounselingCard
-          key={item.id}
-          item={item}
-          isReplying={replyingId === item.id}
-          isToggling={togglingId === item.id}
-          isTogglingLanding={togglingLandingId === item.id}
-          onStartReply={() => onStartReply(item)}
-          onCancelReply={onCancelReply}
-          onSaveReply={(text, isPublic, showOnLandingPage) => onSaveReply(item.id, text, isPublic, showOnLandingPage)}
-          onTogglePrivacy={() => onTogglePrivacy(item)}
-          onToggleLanding={() => onToggleLanding(item)}
-          onDelete={() => onDelete(item)}
+    <div className="space-y-4">
+      <div key={currentPage} className="space-y-3.5 sm:space-y-4 pagination-slide-enter">
+        {curhatList.map((item) => (
+          <CounselingCard
+            key={item.id}
+            item={item}
+            isReplying={replyingId === item.id}
+            isToggling={togglingId === item.id}
+            isTogglingLanding={togglingLandingId === item.id}
+            onStartReply={() => onStartReply(item)}
+            onCancelReply={onCancelReply}
+            onSaveReply={(text, isPublic, showOnLandingPage) => onSaveReply(item.id, text, isPublic, showOnLandingPage)}
+            onTogglePrivacy={() => onTogglePrivacy(item)}
+            onToggleLanding={() => onToggleLanding(item)}
+            onDelete={() => onDelete(item)}
+          />
+        ))}
+      </div>
+
+      {totalPages && totalPages > 1 && onPageChange && (
+        <PaginationBar
+          currentPage={currentPage || 1}
+          totalPages={totalPages}
+          totalItems={totalItems || curhatList.length}
+          itemsPerPage={itemsPerPage || 6}
+          itemLabel="curhatan"
+          onPageChange={onPageChange}
         />
-      ))}
+      )}
     </div>
   );
 }

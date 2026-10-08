@@ -1,7 +1,7 @@
 import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Calendar, Compass, MessageCircleHeart } from 'lucide-react';
+import { Calendar, Compass, MessageCircleHeart, ArrowRight } from 'lucide-react';
 
 interface ArticleSidebarProps {
   currentCategory: string;
@@ -13,13 +13,14 @@ export function ArticleSidebar({ currentCategory }: ArticleSidebarProps) {
       {/* Profile Card */}
       <div className="p-5 sm:p-6 rounded-2xl bg-[var(--color-surface)] border-2 border-[var(--color-paper-border)] hover:border-[var(--color-accent)] hover:shadow-md transition-all duration-300 space-y-4 shadow-2xs group">
         <div className="flex items-center gap-3.5">
-          <div className="relative w-12 h-12 rounded-full overflow-hidden border border-[var(--color-accent-border)] bg-[var(--color-accent-soft)] shrink-0 shadow-2xs group-hover:scale-105 transition-transform duration-200">
+          <div className="relative w-12 h-12 rounded-full overflow-hidden border border-[var(--color-accent-border)] bg-[var(--color-surface)] shrink-0 shadow-2xs group-hover:scale-105 transition-transform duration-200">
             <Image
               src="/amelia.webp"
               alt="Amelia"
               fill
               className="object-cover object-top"
               sizes="48px"
+              unoptimized
             />
           </div>
           <div>
@@ -66,10 +67,10 @@ export function ArticleSidebar({ currentCategory }: ArticleSidebarProps) {
         <div className="pt-1">
           <Link
             href="/articles"
-            className="text-xs font-semibold text-[var(--color-accent)] hover:underline inline-flex items-center gap-1"
+            className="btn-secondary btn-interactive inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-[var(--color-ink)] hover:text-[var(--color-accent)] bg-[var(--color-surface)] border border-[var(--color-paper-border)] hover:border-[var(--color-accent-border)] hover:bg-[var(--color-accent-soft)]/50 shadow-2xs transition-all"
           >
-            <span>Jelajahi kategori lain</span>
-            <span>&rarr;</span>
+            <span>Jelajahi Kategori Lain</span>
+            <ArrowRight className="w-3.5 h-3.5 text-[var(--color-ink-muted)] shrink-0" aria-hidden="true" />
           </Link>
         </div>
       </div>

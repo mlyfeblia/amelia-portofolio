@@ -17,34 +17,70 @@ const ArticleDeleteModal = dynamic(
   { ssr: false }
 );
 
+const ArticleDraftsModal = dynamic(
+  () => import('@/components/admin/articles/ArticleDraftsModal').then((m) => m.ArticleDraftsModal),
+  { ssr: false }
+);
+
+import { ArticleDraftItem, useArticleDrafts } from '@/lib/draft-store';
+
+const ITEMS_PER_PAGE = 6;
+
 export function AdminArticlesClient() {
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Filter States
-  const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'semua' | 'published' | 'draft'>('semua');
-  const [landingFilter, setLandingFilter] = useState<'semua' | 'landing'>('semua');
-  const [selectedCategory, setSelectedCategory] = useState('Semua');
-  const [dateFilter, setDateFilter] = useState('');
+  const [search, setSearch] = useState(() => {
+    if (typeof window === 'undefined') return '';
+    try {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('q') || sessionStorage.getItem('admin_articles_q') || '';
+    } catch {
+      return '';
+    }
+  });
 
-  // Sync filters from URL and sessionStorage on mount
-  useEffect(() => {
+  const [statusFilter, setStatusFilter] = useState<'semua' | 'published' | 'draft'>(() => {
+    if (typeof window === 'undefined') return 'semua';
     try {
       const params = new URLSearchParams(window.location.search);
       const s = params.get('status') || sessionStorage.getItem('admin_articles_status');
-      const l = params.get('landing') || sessionStorage.getItem('admin_articles_landing');
-      const k = params.get('kategori') || sessionStorage.getItem('admin_articles_kategori');
-      const d = params.get('tgl') || sessionStorage.getItem('admin_articles_tgl');
-      const q = params.get('q') || sessionStorage.getItem('admin_articles_q');
-
-      if (s) setStatusFilter(s as 'semua' | 'published' | 'draft');
-      if (l) setLandingFilter(l as 'semua' | 'landing');
-      if (k) setSelectedCategory(k);
-      if (d) setDateFilter(d);
-      if (q) setSearch(q);
+      if (s === 'published' || s === 'draft') return s;
     } catch {}
-  }, []);
+    return 'semua';
+  });
+
+  const [landingFilter, setLandingFilter] = useState<'semua' | 'landing'>(() => {
+    if (typeof window === 'undefined') return 'semua';
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const l = params.get('landing') || sessionStorage.getItem('admin_articles_landing');
+      if (l === 'landing') return 'landing';
+    } catch {}
+    return 'semua';
+  });
+
+  const [selectedCategory, setSelectedCategory] = useState(() => {
+    if (typeof window === 'undefined') return 'Semua';
+    try {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('kategori') || sessionStorage.getItem('admin_articles_kategori') || 'Semua';
+    } catch {
+      return 'Semua';
+    }
+  });
+
+  const [dateFilter, setDateFilter] = useState(() => {
+    if (typeof window === 'undefined') return '';
+    try {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('tgl') || sessionStorage.getItem('admin_articles_tgl') || '';
+    } catch {
+      return '';
+    }
+  });
 
   const syncFilterParams = (
     s: 'semua' | 'published' | 'draft',
@@ -91,22 +127,27 @@ export function AdminArticlesClient() {
 
   const handleSearchChange = (val: string) => {
     setSearch(val);
+    setCurrentPage(1);
     syncFilterParams(statusFilter, landingFilter, selectedCategory, dateFilter, val);
   };
   const handleStatusChange = (val: 'semua' | 'published' | 'draft') => {
     setStatusFilter(val);
+    setCurrentPage(1);
     syncFilterParams(val, landingFilter, selectedCategory, dateFilter, search);
   };
   const handleLandingChange = (val: 'semua' | 'landing') => {
     setLandingFilter(val);
+    setCurrentPage(1);
     syncFilterParams(statusFilter, val, selectedCategory, dateFilter, search);
   };
   const handleCategoryChange = (val: string) => {
     setSelectedCategory(val);
+    setCurrentPage(1);
     syncFilterParams(statusFilter, landingFilter, val, dateFilter, search);
   };
   const handleDateChange = (val: string) => {
     setDateFilter(val);
+    setCurrentPage(1);
     syncFilterParams(statusFilter, landingFilter, selectedCategory, val, search);
   };
 
@@ -114,6 +155,10 @@ export function AdminArticlesClient() {
   const [formModalOpen, setFormModalOpen] = useState(false);
   const [formMode, setFormMode] = useState<'create' | 'edit'>('create');
   const [editingArticle, setEditingArticle] = useState<Article | null>(null);
+  const [draftsModalOpen, setDraftsModalOpen] = useState(false);
+  const [selectedDraftForForm, setSelectedDraftForForm] = useState<ArticleDraftItem | null>(null);
+
+  const savedDrafts = useArticleDrafts();
 
   // Action States
   const [togglingId, setTogglingId] = useState<string | null>(null);
@@ -160,12 +205,30 @@ export function AdminArticlesClient() {
   const handleOpenCreate = () => {
     setFormMode('create');
     setEditingArticle(null);
+    setSelectedDraftForForm(null);
     setFormModalOpen(true);
   };
 
   const handleOpenEdit = (art: Article) => {
     setFormMode('edit');
     setEditingArticle(art);
+    setSelectedDraftForForm(null);
+    setFormModalOpen(true);
+  };
+
+  const handleSelectDraftFromModal = (draft: ArticleDraftItem) => {
+    setSelectedDraftForForm(draft);
+    setFormMode('create');
+    setEditingArticle(null);
+    setDraftsModalOpen(false);
+    setFormModalOpen(true);
+  };
+
+  const handleNewDraftFromModal = () => {
+    setSelectedDraftForForm(null);
+    setFormMode('create');
+    setEditingArticle(null);
+    setDraftsModalOpen(false);
     setFormModalOpen(true);
   };
 
@@ -327,6 +390,7 @@ export function AdminArticlesClient() {
     setLandingFilter('semua');
     setSelectedCategory('Semua');
     setDateFilter('');
+    setCurrentPage(1);
     syncFilterParams('semua', 'semua', 'Semua', '', '');
   };
 
@@ -338,6 +402,17 @@ export function AdminArticlesClient() {
     dateFilter.trim()
   );
 
+  const totalPages = Math.max(1, Math.ceil(filteredArticles.length / ITEMS_PER_PAGE));
+  const safePage = Math.min(currentPage, totalPages);
+  const paginatedArticles = useMemo(() => {
+    const start = (safePage - 1) * ITEMS_PER_PAGE;
+    return filteredArticles.slice(start, start + ITEMS_PER_PAGE);
+  }, [filteredArticles, safePage]);
+
+  if (currentPage > totalPages && totalPages > 0) {
+    setCurrentPage(totalPages);
+  }
+
   return (
     <div className="space-y-5 sm:space-y-6">
       <ArticleHeader
@@ -345,6 +420,8 @@ export function AdminArticlesClient() {
         loading={loading}
         onRefresh={loadArticles}
         onCreateNew={handleOpenCreate}
+        onOpenDrafts={() => setDraftsModalOpen(true)}
+        draftCount={savedDrafts.length}
       />
 
       <ArticleFilters
@@ -364,7 +441,7 @@ export function AdminArticlesClient() {
       />
 
       <ArticleList
-        articles={filteredArticles}
+        articles={paginatedArticles}
         loading={loading}
         togglingId={togglingId}
         togglingLandingId={togglingLandingId}
@@ -380,13 +457,22 @@ export function AdminArticlesClient() {
         onTogglePublish={handleTogglePublish}
         onToggleLanding={handleToggleLanding}
         onCreateNew={handleOpenCreate}
+        currentPage={safePage}
+        totalPages={totalPages}
+        totalItems={filteredArticles.length}
+        itemsPerPage={ITEMS_PER_PAGE}
+        onPageChange={setCurrentPage}
       />
 
       <ArticleFormModal
         isOpen={formModalOpen}
         mode={formMode}
         initialArticle={editingArticle}
-        onClose={() => setFormModalOpen(false)}
+        initialDraft={selectedDraftForForm}
+        onClose={() => {
+          setFormModalOpen(false);
+          setSelectedDraftForForm(null);
+        }}
         onSuccess={handleFormSuccess}
       />
 
@@ -398,6 +484,14 @@ export function AdminArticlesClient() {
           setDeletingArticle(null);
         }}
         onConfirm={handleConfirmDelete}
+      />
+
+      <ArticleDraftsModal
+        isOpen={draftsModalOpen}
+        onClose={() => setDraftsModalOpen(false)}
+        onSelectDraft={handleSelectDraftFromModal}
+        onNewDraft={handleNewDraftFromModal}
+        currentDraftId={selectedDraftForForm?.id}
       />
     </div>
   );

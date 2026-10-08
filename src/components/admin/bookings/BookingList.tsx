@@ -5,6 +5,7 @@ import { Calendar, SearchX, RotateCcw } from 'lucide-react';
 import { Booking, BookingStatus } from '@/types';
 import { BookingCard } from './BookingCard';
 import { SkeletonBookingCard } from '@/components/ui/Skeleton';
+import { PaginationBar } from '@/components/ui/PaginationBar';
 
 interface BookingListProps {
   bookings: Booking[];
@@ -18,6 +19,11 @@ interface BookingListProps {
   onResetFilters?: () => void;
   onUpdateStatus: (id: string, status: BookingStatus) => void;
   onDelete: (booking: Booking) => void;
+  currentPage?: number;
+  totalPages?: number;
+  totalItems?: number;
+  itemsPerPage?: number;
+  onPageChange?: (page: number) => void;
 }
 
 export function BookingList({
@@ -32,6 +38,11 @@ export function BookingList({
   onResetFilters,
   onUpdateStatus,
   onDelete,
+  currentPage = 1,
+  totalPages,
+  totalItems,
+  itemsPerPage = 6,
+  onPageChange,
 }: BookingListProps) {
   if (loading) {
     return (
@@ -105,16 +116,29 @@ export function BookingList({
   }
 
   return (
-    <div className="space-y-3.5 sm:space-y-4 tab-content-enter">
-      {bookings.map((item) => (
-        <BookingCard
-          key={item.id}
-          item={item}
-          isUpdating={updatingId === item.id}
-          onUpdateStatus={onUpdateStatus}
-          onDelete={onDelete}
+    <div className="space-y-4">
+      <div key={currentPage} className="space-y-3.5 sm:space-y-4 pagination-slide-enter">
+        {bookings.map((item) => (
+          <BookingCard
+            key={item.id}
+            item={item}
+            isUpdating={updatingId === item.id}
+            onUpdateStatus={onUpdateStatus}
+            onDelete={onDelete}
+          />
+        ))}
+      </div>
+
+      {totalPages && totalPages > 1 && onPageChange && (
+        <PaginationBar
+          currentPage={currentPage || 1}
+          totalPages={totalPages}
+          totalItems={totalItems || bookings.length}
+          itemsPerPage={itemsPerPage || 6}
+          itemLabel="janji temu"
+          onPageChange={onPageChange}
         />
-      ))}
+      )}
     </div>
   );
 }

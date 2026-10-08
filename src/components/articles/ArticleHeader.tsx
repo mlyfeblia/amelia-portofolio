@@ -2,7 +2,8 @@ import React from 'react';
 import Image from 'next/image';
 import { Clock } from 'lucide-react';
 import { Article } from '@/types';
-import { getIsoDateString } from '@/lib/utils';
+import { getIsoDateString, formatIndonesianDate } from '@/lib/utils';
+import { ArticleViewTracker } from './ArticleViewTracker';
 
 export function ArticleHeader({ article }: { article: Article }) {
   return (
@@ -19,7 +20,7 @@ export function ArticleHeader({ article }: { article: Article }) {
       {/* 2. Unified Author & Meta Row */}
       <div className="flex flex-wrap items-center justify-between gap-4 pt-1">
         <div className="flex items-center gap-3">
-          <div className="relative w-10 h-10 rounded-full overflow-hidden border border-[var(--color-accent-border)] bg-[var(--color-accent-soft)] shrink-0 shadow-2xs">
+          <div className="relative w-10 h-10 rounded-full overflow-hidden border border-[var(--color-accent-border)] bg-[var(--color-surface)] shrink-0 shadow-2xs">
             <Image
               src="/amelia.webp"
               alt="Amelia"
@@ -27,6 +28,7 @@ export function ArticleHeader({ article }: { article: Article }) {
               className="object-cover object-top"
               sizes="40px"
               priority
+              unoptimized
             />
           </div>
           <div className="leading-tight">
@@ -39,20 +41,18 @@ export function ArticleHeader({ article }: { article: Article }) {
           </div>
         </div>
 
-        {/* Date and Read Time */}
-        <div className="flex items-center gap-2 text-xs sm:text-sm text-[var(--color-ink-muted)]">
+        {/* Article Metadata Pills Container */}
+        <div className="flex flex-wrap items-center gap-1.5 min-[340px]:gap-2 text-xs">
           {article.publishedAt && (
-            <>
-              <time dateTime={getIsoDateString(article.publishedAt)}>
-                {article.publishedAt}
-              </time>
-              <span className="text-[var(--color-paper-border)]" aria-hidden="true">•</span>
-            </>
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[var(--color-surface)] border border-[var(--color-paper-border)] text-[var(--color-ink-muted)] shadow-2xs shrink-0">
+              <time dateTime={getIsoDateString(article.publishedAt)}>{formatIndonesianDate(article.publishedAt) || article.publishedAt}</time>
+            </span>
           )}
-          <span className="inline-flex items-center gap-1 text-[var(--color-ink-soft)]">
-            <Clock className="w-3.5 h-3.5" aria-hidden="true" />
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[var(--color-surface)] border border-[var(--color-paper-border)] text-[var(--color-ink-soft)] shadow-2xs shrink-0">
+            <Clock className="w-3.5 h-3.5 text-[var(--color-accent)]" aria-hidden="true" />
             <span>{article.readTime}</span>
           </span>
+          <ArticleViewTracker slug={article.slug} initialViews={article.views ?? 0} />
         </div>
       </div>
 

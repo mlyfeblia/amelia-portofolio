@@ -1,11 +1,14 @@
 'use client';
 
-import React, { useState, useId } from 'react';
+import React, { useState, useEffect, useId } from 'react';
 import Image from 'next/image';
-import { Send, AlertCircle, CheckCircle2, Lock, Download, PenLine } from 'lucide-react';
+import { Send, AlertCircle, CheckCircle2, Lock, Download, PenLine, Check } from 'lucide-react';
 import { Spinner } from '@/components/ui/Spinner';
+import { ConfirmDecisionModal } from '@/components/ui/ConfirmDecisionModal';
 import { usePwa, triggerPwaInstall } from '@/lib/pwa-store';
 import { CURHAT_CATEGORIES } from '@/types';
+import { formatPersonName, formatSentenceCase } from '@/lib/text-formatter';
+import { enqueueOfflineMutation } from '@/lib/offline-queue';
 
 const CATEGORIES = CURHAT_CATEGORIES;
 
@@ -20,12 +23,67 @@ export function CurhatForm({ onSuccess }: CurhatFormProps) {
   const [sendError, setSendError] = useState('');
   const { isInstalled } = usePwa();
 
-  const [alias, setAlias] = useState('');
-  const [category, setCategory] = useState<string>(CATEGORIES[0]);
-  const [message, setMessage] = useState('');
-  const [botTrap, setBotTrap] = useState('');
+  const [alias, setAlias] = useState(() => {
+    if (typeof window === 'undefined') return '';
+    try {
+      const saved = sessionStorage.getItem('curhat_draft_v1');
+      return saved ? JSON.parse(saved).alias || '' : '';
+    } catch {
+      return '';
+    }
+  });
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const [category, setCategory] = useState<string>(() => {
+    if (typeof window === 'undefined') return CATEGORIES[0];
+    try {
+      const saved = sessionStorage.getItem('curhat_draft_v1');
+      return saved ? JSON.parse(saved).category || CATEGORIES[0] : CATEGORIES[0];
+    } catch {
+      return CATEGORIES[0];
+    }
+  });
+
+  const [message, setMessage] = useState(() => {
+    if (typeof window === 'undefined') return '';
+    try {
+      const saved = sessionStorage.getItem('curhat_draft_v1');
+      return saved ? JSON.parse(saved).message || '' : '';
+    } catch {
+      return '';
+    }
+  });
+
+  const [botTrap, setBotTrap] = useState('');
+  const [isDraftSaved, setIsDraftSaved] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    try {
+      const saved = sessionStorage.getItem('curhat_draft_v1');
+      return Boolean(saved);
+    } catch {
+      return false;
+    }
+  });
+  const [showCurhatConfirmModal, setShowCurhatConfirmModal] = useState(false);
+
+  // Autosave draft to sessionStorage (debounced)
+  useEffect(() => {
+    if (sent) return;
+    if (!message && !alias) return;
+
+    const timer = setTimeout(() => {
+      try {
+        sessionStorage.setItem(
+          'curhat_draft_v1',
+          JSON.stringify({ message, alias, category })
+        );
+        setIsDraftSaved(true);
+      } catch {}
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [message, alias, category, sent]);
+
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
     // Silently trap bot submissions
@@ -36,6 +94,10 @@ export function CurhatForm({ onSuccess }: CurhatFormProps) {
         setSent(true);
         setMessage('');
         setAlias('');
+        setIsDraftSaved(false);
+        try {
+          sessionStorage.removeItem('curhat_draft_v1');
+        } catch {}
       }, 400);
       return;
     }
@@ -45,32 +107,75 @@ export function CurhatForm({ onSuccess }: CurhatFormProps) {
       setSendError('Pesan minimal 10 karakter agar Amel dapat memahami situasimu.');
       return;
     }
+
+    setSendError('');
+    setShowCurhatConfirmModal(true);
+  };
+
+  const executeCurhatSubmit = async () => {
+    const trimmed = message.trim();
     setSubmitting(true);
     setSendError('');
+    const payload = {
+      alias: alias.trim() || 'Hamba Allah',
+      category,
+      message: trimmed,
+      isPublic: true,
+      botTrap,
+    };
+
+    if (typeof window !== 'undefined' && !navigator.onLine) {
+      enqueueOfflineMutation('curhat', '/api/curhat', payload);
+      setSent(true);
+      setMessage('');
+      setAlias('');
+      setIsDraftSaved(false);
+      try {
+        sessionStorage.removeItem('curhat_draft_v1');
+      } catch {}
+      setShowCurhatConfirmModal(false);
+      setSubmitting(false);
+      return;
+    }
+
     try {
       const res = await fetch('/api/curhat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          alias: alias.trim() || 'Hamba Allah',
-          category,
-          message: trimmed,
-          isPublic: true,
-          botTrap,
-        }),
+        body: JSON.stringify(payload),
       });
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error(data.message);
       setSent(true);
       setMessage('');
       setAlias('');
+      setIsDraftSaved(false);
+      try {
+        sessionStorage.removeItem('curhat_draft_v1');
+      } catch {}
+      setShowCurhatConfirmModal(false);
       onSuccess();
     } catch (err: unknown) {
-      setSendError(err instanceof Error ? err.message : 'Gagal mengirim pesan. Silakan coba kembali.');
+      // Jika error karena jaringan terputus tiba-tiba, simpan ke antrean offline
+      if (typeof window !== 'undefined' && !navigator.onLine) {
+        enqueueOfflineMutation('curhat', '/api/curhat', payload);
+        setSent(true);
+        setMessage('');
+        setAlias('');
+        setIsDraftSaved(false);
+        try {
+          sessionStorage.removeItem('curhat_draft_v1');
+        } catch {}
+        setShowCurhatConfirmModal(false);
+      } else {
+        setSendError(err instanceof Error ? err.message : 'Gagal mengirim pesan. Silakan coba kembali.');
+        setShowCurhatConfirmModal(false);
+      }
     } finally {
       setSubmitting(false);
     }
   };
+
 
   return (
     <div className="bg-[var(--color-surface)] border border-[var(--color-paper-border)] rounded-xl p-6 shadow-xs space-y-4">
@@ -185,7 +290,7 @@ export function CurhatForm({ onSuccess }: CurhatFormProps) {
               type="text"
               maxLength={50}
               value={alias}
-              onChange={(e) => setAlias(e.target.value)}
+              onChange={(e) => setAlias(formatPersonName(e.target.value))}
               placeholder="Misal: Jiwa yang Lelah, Pejuang Skripsi"
               className="form-input text-sm py-2"
             />
@@ -233,9 +338,20 @@ export function CurhatForm({ onSuccess }: CurhatFormProps) {
               maxLength={1000}
               value={message}
               onChange={(e) => setMessage(e.target.value)}
+              onBlur={() => {
+                if (message.trim()) {
+                  setMessage(formatSentenceCase(message));
+                }
+              }}
               placeholder="Tuliskan apa pun yang mengganjal di pikiran dan hatimu secara jujur..."
               className="form-input text-sm py-2 resize-y min-h-[108px] max-h-[320px] overflow-y-auto"
             />
+            {isDraftSaved && (
+              <div className="pt-1.5 flex items-center gap-1 text-[11px] text-emerald-700 font-medium">
+                <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" aria-hidden="true" />
+                <span>Draf tersimpan otomatis</span>
+              </div>
+            )}
           </div>
 
           <button
@@ -257,6 +373,35 @@ export function CurhatForm({ onSuccess }: CurhatFormProps) {
           </button>
         </form>
       )}
+
+      {/* Confirmation Modal for Curhat Submission */}
+      <ConfirmDecisionModal
+        isOpen={showCurhatConfirmModal}
+        onClose={() => setShowCurhatConfirmModal(false)}
+        onConfirm={executeCurhatSubmit}
+        title="Kirim Cerita ke Ruang Curhat?"
+        description="Pesanmu akan dikirimkan secara aman dan anonim tanpa menampilkan identitas asli. Kak Amel akan membaca dan memberikan tanggapan penguatan di Dinding Cerita."
+        confirmLabel="Ya, Kirim Cerita"
+        variant="primary"
+        loading={submitting}
+        icon={<Send className="w-5 h-5 text-[var(--color-accent)]" />}
+        itemDetail={
+          <div className="space-y-1.5 text-xs text-[var(--color-ink)]">
+            <div className="flex justify-between gap-2">
+              <span className="text-[var(--color-ink-muted)]">Nama Samaran:</span>
+              <span className="font-semibold text-right break-words">{alias.trim() || 'Hamba Allah'}</span>
+            </div>
+            <div className="flex justify-between gap-2">
+              <span className="text-[var(--color-ink-muted)]">Kategori:</span>
+              <span className="font-semibold text-right">{category}</span>
+            </div>
+            <div className="flex justify-between gap-2">
+              <span className="text-[var(--color-ink-muted)]">Panjang Cerita:</span>
+              <span className="font-medium text-right">{message.trim().length} karakter</span>
+            </div>
+          </div>
+        }
+      />
     </div>
   );
 }

@@ -21,12 +21,13 @@ const INDO_MONTHS: Record<string, string> = {
 };
 
 /**
- * Safely parse Indonesian textual date ("24 September 2026") into a valid Date object.
+ * Safely parse Indonesian textual date ("24 September 2026") or ISO string into a valid Date object.
  */
-export function parseIndonesianDate(dateStr?: string): Date {
+export function parseIndonesianDate(dateStr?: string | null): Date {
   if (!dateStr) return new Date();
 
-  const parts = dateStr.trim().split(/\s+/);
+  const trimmed = dateStr.trim();
+  const parts = trimmed.split(/\s+/);
   if (parts.length === 3) {
     const day = parts[0].padStart(2, '0');
     const month = INDO_MONTHS[parts[1].toLowerCase()];
@@ -39,8 +40,42 @@ export function parseIndonesianDate(dateStr?: string): Date {
     }
   }
 
-  const direct = new Date(dateStr);
+  const direct = new Date(trimmed);
   return isNaN(direct.getTime()) ? new Date() : direct;
+}
+
+/**
+ * Safely converts any date input (Indonesian textual date, ISO string, or Date)
+ * into a valid ISO timestamp string. Never throws.
+ */
+export function ensureValidIsoTimestamp(dateStr?: string | Date | null): string {
+  if (!dateStr) return new Date().toISOString();
+  if (dateStr instanceof Date) {
+    return isNaN(dateStr.getTime()) ? new Date().toISOString() : dateStr.toISOString();
+  }
+  const parsed = parseIndonesianDate(dateStr);
+  return isNaN(parsed.getTime()) ? new Date().toISOString() : parsed.toISOString();
+}
+
+/**
+ * Safely formats any date (Indonesian textual date, ISO string, or Date) into standard Indonesian format:
+ * e.g. "24 September 2026". Never throws.
+ */
+export function formatIndonesianDate(dateInput?: string | Date | null): string {
+  if (!dateInput) return '';
+  const date = typeof dateInput === 'string' ? parseIndonesianDate(dateInput) : dateInput;
+  if (isNaN(date.getTime())) return typeof dateInput === 'string' ? dateInput : '';
+
+  try {
+    return new Intl.DateTimeFormat('id-ID', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+      timeZone: 'Asia/Jakarta',
+    }).format(date);
+  } catch {
+    return typeof dateInput === 'string' ? dateInput : '';
+  }
 }
 
 /**
@@ -57,4 +92,3 @@ export function getIsoDateString(dateStr?: string): string {
 export function safeJsonLd(data: unknown): string {
   return JSON.stringify(data).replace(/</g, '\\u003c');
 }
-

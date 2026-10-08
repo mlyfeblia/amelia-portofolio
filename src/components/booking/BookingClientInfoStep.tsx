@@ -71,11 +71,16 @@ export function BookingClientInfoStep({
           id={`${formId}-phone`}
           type="tel"
           required
-          maxLength={25}
+          maxLength={20}
           autoComplete="tel"
           value={form.phone}
-          onChange={(e) => onChange('phone', e.target.value)}
-          placeholder="08xxxxxxxxxx"
+          onChange={(e) => {
+            const raw = e.target.value;
+            // Allow digits, hyphens, spaces, and leading plus sign
+            const sanitized = raw.replace(/[^\d+\s-]/g, '');
+            onChange('phone', sanitized);
+          }}
+          placeholder="0812-3456-7890"
           className="form-input text-sm py-2"
         />
       </div>
