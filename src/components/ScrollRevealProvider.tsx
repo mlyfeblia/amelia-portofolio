@@ -83,7 +83,23 @@ export default function ScrollRevealProvider() {
       }
     });
 
+    const mutationObserver = new MutationObserver(() => {
+      const dynamicElements = document.querySelectorAll('[data-reveal]:not(.revealed):not(.reveal-pending)');
+      dynamicElements.forEach((el) => {
+        const rect = el.getBoundingClientRect();
+        if (rect.top <= window.innerHeight * 1.25) {
+          el.classList.add('revealed');
+        } else {
+          el.classList.add('reveal-pending');
+          observer.observe(el);
+        }
+      });
+    });
+
+    mutationObserver.observe(document.body, { childList: true, subtree: true });
+
     return () => {
+      mutationObserver.disconnect();
       observer.disconnect();
     };
   }, [pathname]);

@@ -151,7 +151,6 @@
   button,
   [role="button"],
   nav,
-  header,
   label,
   summary,
   [role="tab"],
@@ -254,7 +253,7 @@
 
 .btn-secondary:hover {
   border-color: var(--color-accent);
-  color: var(--color-accent) !important;
+  color: var(--color-accent);
   background-color: var(--color-accent-soft);
   transform: translateY(-1px);
 }
@@ -456,6 +455,35 @@
   opacity: 0.8;
 }
 
+/* Rock-solid, absolute alignment for search icon & clear button across all screen sizes */
+.search-icon {
+  position: absolute !important;
+  left: 0.875rem !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  pointer-events: none !important;
+  flex-shrink: 0 !important;
+  z-index: 10 !important;
+}
+
+.search-clear-btn {
+  position: absolute !important;
+  right: 0.625rem !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  width: 1.5rem !important;
+  height: 1.5rem !important;
+  min-width: 1.5rem !important;
+  min-height: 1.5rem !important;
+  max-width: 1.5rem !important;
+  max-height: 1.5rem !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+  z-index: 10 !important;
+}
+
 .form-input:disabled {
   background-color: var(--color-paper-muted);
   border-color: var(--color-paper-border);
@@ -541,6 +569,25 @@ select.form-input {
   scrollbar-width: none;
 }
 
+/* Custom scrollbar utility for spacious multiline textareas */
+.textarea-custom-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(26, 86, 60, 0.28) transparent;
+}
+.textarea-custom-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+.textarea-custom-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.textarea-custom-scroll::-webkit-scrollbar-thumb {
+  background: rgba(26, 86, 60, 0.25);
+  border-radius: 9999px;
+}
+.textarea-custom-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(26, 86, 60, 0.45);
+}
+
 /* ══════════════════════════════════════════════════════════════ */
 /* Micro-Interactions, Smooth Transitions & Motion System         */
 /* ══════════════════════════════════════════════════════════════ */
@@ -576,8 +623,8 @@ select.form-input {
 /* Page Entrance - Silky smooth, eliminates vertical layout shift & blink */
 @keyframes pageEnter {
   from {
-    opacity: 0;
-    transform: translateY(6px);
+    opacity: 0.85;
+    transform: translateY(2px);
   }
   to {
     opacity: 1;
@@ -586,7 +633,7 @@ select.form-input {
 }
 
 .page-enter {
-  animation: pageEnter var(--dur-base) var(--ease-smooth) both;
+  animation: pageEnter var(--dur-fast) var(--ease-smooth) both;
   will-change: opacity, transform;
   backface-visibility: hidden;
 }
@@ -928,12 +975,23 @@ select.form-input {
 
 /* Tactile Micro-Interactions */
 .btn-interactive {
-  transition: transform var(--dur-instant) var(--ease-smooth), box-shadow var(--dur-fast) var(--ease-smooth), background-color var(--dur-fast) var(--ease-smooth), border-color var(--dur-fast) var(--ease-smooth);
-  will-change: transform;
+  transition: transform var(--dur-instant) var(--ease-smooth),
+              translate var(--dur-instant) var(--ease-smooth),
+              scale var(--dur-instant) var(--ease-smooth),
+              color var(--dur-fast) var(--ease-smooth),
+              box-shadow var(--dur-fast) var(--ease-smooth),
+              background-color var(--dur-fast) var(--ease-smooth),
+              border-color var(--dur-fast) var(--ease-smooth);
+  will-change: transform, translate, scale;
+}
+
+.btn-interactive:hover {
+  /* Memberikan baseline tactile lift yang aman tanpa jitter loop */
+  transform: translateY(-1px);
 }
 
 .btn-interactive:active {
-  transform: scale(0.97);
+  transform: translateY(0) scale(0.97);
 }
 
 /* Tactile Icon Buttons */
@@ -941,18 +999,10 @@ select.form-input {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  position: relative;
   transition: transform var(--dur-fast) var(--ease-smooth), color var(--dur-fast) var(--ease-smooth), background-color var(--dur-fast) var(--ease-smooth);
   will-change: transform;
 }
 
-@media (pointer: coarse) {
-  /* WCAG 2.5.5 / 2.5.8: Minimum 44x44px touch target on mobile/touchscreens */
-  .btn-icon-interactive {
-    min-width: 44px;
-    min-height: 44px;
-  }
-}
 
 @media (hover: hover) {
   .btn-icon-interactive:hover {
@@ -1127,8 +1177,12 @@ select.form-input {
 
 /* Interactive Card Elevation & Micro-transitions */
 .card-interactive {
-  transition: transform var(--dur-base) var(--ease-smooth), box-shadow var(--dur-base) var(--ease-smooth), border-color var(--dur-base) var(--ease-smooth), background-color var(--dur-base) var(--ease-smooth);
-  will-change: transform, box-shadow;
+  transition: transform var(--dur-base) var(--ease-smooth),
+              translate var(--dur-base) var(--ease-smooth),
+              box-shadow var(--dur-base) var(--ease-smooth),
+              border-color var(--dur-base) var(--ease-smooth),
+              background-color var(--dur-base) var(--ease-smooth);
+  will-change: transform, translate, box-shadow;
 }
 
 @media (hover: hover) {
@@ -1140,7 +1194,7 @@ select.form-input {
 }
 
 .card-interactive:active {
-  transform: scale(0.99);
+  transform: translateY(0) scale(0.99);
 }
 
 /* Stagger animation utilities */
