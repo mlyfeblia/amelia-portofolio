@@ -5,6 +5,7 @@ import { checkDistributedRateLimit, getClientIp } from '@/lib/rate-limiter';
 import { validateBookingInput } from '@/lib/validators';
 import { telemetry } from '@/lib/telemetry';
 import { sendBookingConfirmationEmail, sendAdminBookingAlertEmail } from '@/lib/resend';
+import { sendPushNotificationToRole } from '@/lib/web-push-server';
 
 export async function GET(request: Request) {
   try {
@@ -88,6 +89,14 @@ export async function POST(request: Request) {
     // Trigger async email notifications in background
     sendBookingConfirmationEmail(newBooking).catch((e) => console.error('Booking confirmation email error:', e));
     sendAdminBookingAlertEmail(newBooking).catch((e) => console.error('Admin booking alert email error:', e));
+
+    // Trigger non-blocking push notification to admin devices
+    sendPushNotificationToRole('admin', {
+      title: 'Janji Temu Baru Diajukan!',
+      body: `${newBooking.name} (${newBooking.category}) untuk jadwal ${newBooking.date}`,
+      url: '/admin/bookings',
+      tag: `booking-${newBooking.code}`,
+    }).catch(() => {});
 
     return NextResponse.json({
       success: true,

@@ -153,6 +153,49 @@ async function run() {
     if (res.status !== 401) throw new Error(`Expected 401, got ${res.status}`);
   });
 
+  await test('POST /api/translate without auth -> 401 Unauthorized', async () => {
+    const res = await fetch(`${BASE}/api/translate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: 'Kesehatan Mental' }),
+    });
+    if (res.status !== 401) throw new Error(`Expected 401, got ${res.status}`);
+  });
+
+  // 8d. PUSH NOTIFICATION SUBSCRIPTION: Unauthenticated sanitized to client
+  const mockEndpoint = `https://fcm.googleapis.com/fcm/send/test-sub-${Date.now()}`;
+  await test('POST /api/notifications/subscribe -> Validates payload and sanitizes role', async () => {
+    const res = await fetch(`${BASE}/api/notifications/subscribe`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        subscription: {
+          endpoint: mockEndpoint,
+          keys: {
+            p256dh: 'BNcRdreALRFXTkOOUHK1EtK2wtaz5Ry4YfYCA_0QT9ScVUpg',
+            auth: 'tBHItJI5svbpez7KI4CCXg',
+          },
+        },
+        bookingCode: testBookingCode,
+        role: 'admin',
+      }),
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = await res.json();
+    if (!json.success) throw new Error('Subscribe failed');
+  });
+
+  await test('DELETE /api/notifications/subscribe -> Unregisters endpoint', async () => {
+    const res = await fetch(`${BASE}/api/notifications/subscribe`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ endpoint: mockEndpoint }),
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = await res.json();
+    if (!json.success) throw new Error('Unsubscribe failed');
+  });
+
   // 9. ADMIN AUTH: LOGIN WITH WRONG PIN -> REJECTED
   await test('POST /api/admin/login with wrong PIN -> Rejected', async () => {
     const res = await fetch(`${BASE}/api/admin/login`, {
@@ -204,6 +247,21 @@ async function run() {
     if (!json.success || typeof json.remainingSeconds !== 'number') {
       throw new Error('Refresh session failed');
     }
+  });
+
+  // 12b. ADMIN API: TRANSLATE SLUG
+  await test('POST /api/translate with auth -> Success & valid slug', async () => {
+    const res = await fetch(`${BASE}/api/translate`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Cookie: sessionCookie,
+      },
+      body: JSON.stringify({ text: 'Kesehatan Mental Islami' }),
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = await res.json();
+    if (!json.success || !json.slug) throw new Error('Translate with auth failed');
   });
 
   // 13. ADMIN API: GET BOOKINGS (FULL DATA INCLUDING PHONE & EMAIL)
@@ -350,7 +408,7 @@ async function run() {
   });
 
   console.log('\n=================================================');
-  console.log('🎉 ALL 21 INTEGRATION & SECURITY TESTS PASSED! 🎉');
+  console.log('🎉 ALL INTEGRATION & SECURITY TESTS PASSED! 🎉');
   console.log('Frontend, Backend, Database, and Admin Auth are 100% synchronized and production ready!');
   console.log('=================================================\n');
 }

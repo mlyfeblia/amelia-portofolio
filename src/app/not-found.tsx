@@ -14,7 +14,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 
 export const metadata: Metadata = {
-  title: '404 - Halaman Tidak Ditemukan | Amelia',
+  title: '404 - Halaman Tidak Ditemukan',
   description: 'Halaman yang kamu cari tidak ditemukan atau telah berpindah. Kembali ke beranda ruang konseling Amelia.',
   robots: {
     index: false,

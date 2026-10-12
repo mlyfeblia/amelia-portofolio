@@ -25,7 +25,7 @@ export type BookingCategory = ConsultationCategory;
 export type BookingMode = CounselingMode;
 
 const EMAIL_REGEX = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/;
-const PHONE_REGEX = /^(\+62|62|0)8[1-9][0-9]{6,11}$/;
+const PHONE_REGEX = /^(\+62|62|0)8[1-9][0-9]{6,10}$/;
 const DATE_FORMAT_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 
 /**
@@ -81,7 +81,7 @@ export function validateBookingInput(body: unknown): ValidationResult<ValidatedB
   if (!rawPhone || !PHONE_REGEX.test(rawPhone)) {
     return {
       success: false,
-      error: 'Nomor WhatsApp tidak valid. Gunakan format Indonesia yang benar (contoh: 08123456789 atau +628123456789).',
+      error: 'Nomor WhatsApp tidak valid. Gunakan format Indonesia yang benar antara 9-13 digit (contoh: 0812-3456-7890).',
     };
   }
 

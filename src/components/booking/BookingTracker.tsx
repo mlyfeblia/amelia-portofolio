@@ -44,10 +44,24 @@ interface BookingTrackerProps {
 }
 
 export function BookingTracker({ initialCode, onCodeChange, onNavigateToNewBooking }: BookingTrackerProps) {
+  const trackerContainerRef = React.useRef<HTMLDivElement>(null);
   const [searchInput, setSearchInput] = useState(initialCode || '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [activeBooking, setActiveBooking] = useState<BookingDetailData | null>(null);
+
+  const scrollToTrackerTop = useCallback(() => {
+    if (typeof window !== 'undefined' && trackerContainerRef.current) {
+      const yOffset = -90;
+      const y = trackerContainerRef.current.getBoundingClientRect().top + window.pageYOffset + yOffset;
+      window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+    }
+  }, []);
+
+  const handleSelectBooking = useCallback((booking: BookingDetailData) => {
+    setActiveBooking(booking);
+    scrollToTrackerTop();
+  }, [scrollToTrackerTop]);
 
   // Device-detected bookings state from external store
   const deviceRecords = useDeviceBookings();
@@ -90,6 +104,7 @@ export function BookingTracker({ initialCode, onCodeChange, onNavigateToNewBooki
       const booking: BookingDetailData = data.data;
       setActiveBooking(booking);
       onCodeChange?.(cleanCode);
+      scrollToTrackerTop();
 
       // Save to device storage for easy access later
       saveDeviceBooking({
@@ -104,7 +119,7 @@ export function BookingTracker({ initialCode, onCodeChange, onNavigateToNewBooki
     } finally {
       setLoading(false);
     }
-  }, [onCodeChange]);
+  }, [onCodeChange, scrollToTrackerTop]);
 
   // Adjust state during render when initialCode prop changes
   const [prevInitialCode, setPrevInitialCode] = useState(initialCode);
@@ -212,13 +227,6 @@ export function BookingTracker({ initialCode, onCodeChange, onNavigateToNewBooki
     });
   };
 
-  const handleOpenClearAll = () => {
-    setDeleteModalState({
-      isOpen: true,
-      mode: 'all',
-    });
-  };
-
   const handleConfirmModalDelete = () => {
     if (deleteModalState.mode === 'all') {
       clearAllDeviceBookings();
@@ -249,35 +257,35 @@ export function BookingTracker({ initialCode, onCodeChange, onNavigateToNewBooki
     switch (status) {
       case 'menunggu':
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-500/10 text-amber-800 dark:text-amber-300 border border-amber-500/20">
-            <Clock className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-[var(--color-warning-soft)] text-[var(--color-warning)] border border-[var(--color-warning-border)]">
+            <Clock className="w-3.5 h-3.5 text-[var(--color-warning)]" />
             <span>Menunggu</span>
           </span>
         );
       case 'terkonfirmasi':
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-500/10 text-blue-800 dark:text-blue-300 border border-blue-500/20">
-            <CheckCircle className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-[var(--color-info-soft)] text-[var(--color-info)] border border-[var(--color-info-border)]">
+            <CheckCircle className="w-3.5 h-3.5 text-[var(--color-info)]" />
             <span>Terkonfirmasi</span>
           </span>
         );
       case 'selesai':
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border border-emerald-500/20">
-            <CalendarCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-[var(--color-accent-soft)] text-[var(--color-accent)] border border-[var(--color-accent-border)]">
+            <CalendarCheck className="w-3.5 h-3.5 text-[var(--color-accent)]" />
             <span>Selesai</span>
           </span>
         );
       case 'dibatalkan':
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-rose-500/10 text-rose-800 dark:text-rose-300 border border-rose-500/20">
-            <AlertCircle className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-[var(--color-error-soft)] text-[var(--color-error)] border border-[var(--color-error-border)]">
+            <AlertCircle className="w-3.5 h-3.5 text-[var(--color-error)]" />
             <span>Dibatalkan</span>
           </span>
         );
       default:
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium bg-zinc-500/10 text-zinc-700 dark:text-zinc-300 border border-zinc-500/20">
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium bg-[var(--color-paper-muted)] text-[var(--color-ink-muted)] border border-[var(--color-paper-border)]">
             {status}
           </span>
         );
@@ -298,7 +306,7 @@ export function BookingTracker({ initialCode, onCodeChange, onNavigateToNewBooki
   };
 
   return (
-    <div key={activeBooking ? `detail-${activeBooking.code}` : 'history-list'} className="space-y-8 tab-content-enter">
+    <div ref={trackerContainerRef} key={activeBooking ? `detail-${activeBooking.code}` : 'history-list'} className="space-y-8 tab-content-enter">
       {/* If active booking is viewed, display the detail card */}
       {activeBooking ? (
         <BookingDetailCard
@@ -309,6 +317,7 @@ export function BookingTracker({ initialCode, onCodeChange, onNavigateToNewBooki
             setSearchInput('');
             setError('');
             onCodeChange?.('');
+            scrollToTrackerTop();
           }}
         />
       ) : (
@@ -346,7 +355,9 @@ export function BookingTracker({ initialCode, onCodeChange, onNavigateToNewBooki
                       }
                     }}
                     placeholder="Contoh: BKI-2610-A7C12D"
-                    className="w-full pl-10 pr-28 py-2.5 rounded-xl bg-[var(--color-surface)] border border-[var(--color-paper-border)] text-sm font-mono text-[var(--color-ink)] placeholder:font-sans placeholder:text-[var(--color-ink-soft)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/20 focus:border-[var(--color-accent)] shadow-2xs transition-all uppercase"
+                    className={`form-input pl-10 pr-28 font-mono text-xs sm:text-sm tracking-wider uppercase placeholder:font-sans placeholder:normal-case shadow-2xs ${
+                      error ? 'form-input-error' : ''
+                    }`}
                   />
                   <div className="absolute inset-y-0 right-0 pr-2 flex items-center gap-1.5">
                     {searchInput ? (
@@ -443,19 +454,6 @@ export function BookingTracker({ initialCode, onCodeChange, onNavigateToNewBooki
                   </span>
                 )}
               </div>
-
-              {deviceRecords.length > 0 && (
-                <button
-                  onClick={handleOpenClearAll}
-                  type="button"
-                  className="btn-interactive text-[11px] font-medium text-[var(--color-ink-muted)] hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/20 px-2.5 py-1 rounded-lg border border-transparent hover:border-rose-200/60 transition-all inline-flex items-center gap-1.5 cursor-pointer shrink-0"
-                  title="Hapus seluruh riwayat perangkat ini"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">Bersihkan Histori</span>
-                  <span className="sm:hidden">Bersihkan</span>
-                </button>
-              )}
             </div>
 
             {loadingHistory ? (
@@ -578,7 +576,7 @@ export function BookingTracker({ initialCode, onCodeChange, onNavigateToNewBooki
                       key={record.code}
                       onClick={() => {
                         if (live) {
-                          setActiveBooking(live);
+                          handleSelectBooking(live);
                         } else {
                           handleTrackCode(record.code);
                         }
@@ -586,15 +584,16 @@ export function BookingTracker({ initialCode, onCodeChange, onNavigateToNewBooki
                       className="group p-4 sm:p-5 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-paper-border)] hover:border-[var(--color-accent-border)] transition-all shadow-2xs hover:shadow-xs cursor-pointer space-y-3 card-interactive"
                     >
                       {/* Top Row: Code Pill + Status Badge + Actions */}
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-[var(--color-paper)] border border-[var(--color-paper-border)] font-mono font-bold text-xs text-[var(--color-accent)]">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-[var(--color-paper)] border border-[var(--color-paper-border)] font-mono font-semibold text-[11px] sm:text-xs text-[var(--color-accent)] select-text shrink-0">
                             <span>{record.code}</span>
                             <button
                               onClick={(e) => handleCopyCode(e, record.code)}
                               type="button"
-                              className="btn-icon-interactive text-[var(--color-ink-muted)] hover:text-[var(--color-accent)] p-0.5 cursor-pointer rounded"
+                              className="p-0.5 rounded text-[var(--color-ink-muted)] hover:text-[var(--color-accent)] cursor-pointer inline-flex items-center justify-center transition-colors shrink-0"
                               title="Salin kode referensi"
+                              aria-label="Salin kode referensi"
                             >
                               {isCopied ? (
                                 <Check className="w-3 h-3 text-emerald-600 animate-pop-success" />
@@ -603,17 +602,18 @@ export function BookingTracker({ initialCode, onCodeChange, onNavigateToNewBooki
                               )}
                             </button>
                           </div>
-                          {getStatusBadge(status)}
+                          <div className="shrink-0">{getStatusBadge(status)}</div>
                         </div>
 
                         <button
                           type="button"
                           onClick={(e) => handleOpenRemoveSingle(record.code, nameText, e)}
-                          className="p-1 rounded-md text-[var(--color-ink-muted)] hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/20 transition-colors cursor-pointer shrink-0"
+                          className="btn-interactive inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium text-[var(--color-ink-muted)] hover:text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-200 transition-colors cursor-pointer shrink-0"
                           title="Hapus riwayat kode ini dari perangkat"
                           aria-label={`Hapus riwayat ${record.code}`}
                         >
                           <Trash2 className="w-3.5 h-3.5" />
+                          <span>Hapus</span>
                         </button>
                       </div>
 
@@ -651,9 +651,10 @@ export function BookingTracker({ initialCode, onCodeChange, onNavigateToNewBooki
                         <span className="text-[11px] text-[var(--color-ink-soft)] truncate">
                           Rincian &amp; jadwal sesi
                         </span>
-                        <span className="text-xs font-semibold text-[var(--color-accent)] group-hover:translate-x-0.5 transition-transform inline-flex items-center gap-1 shrink-0">
-                          <span>Pantau Perkembangan</span>
-                          <ArrowRight className="w-3.5 h-3.5" />
+                        <span className="btn-secondary btn-interactive px-2 sm:px-2.5 py-1 text-xs font-semibold rounded-lg inline-flex items-center gap-1 sm:gap-1.5 shrink-0 shadow-2xs group-hover:border-[var(--color-accent-border)] group-hover:text-[var(--color-accent)] transition-all">
+                          <span className="sm:hidden">Pantau</span>
+                          <span className="hidden sm:inline">Pantau Perkembangan</span>
+                          <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
                         </span>
                       </div>
                     </div>

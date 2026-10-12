@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import slugify from '@sindresorhus/slugify';
 import { translateWithLocalDictionary } from '@/lib/slug-generator';
 import { checkDistributedRateLimit, getClientIp } from '@/lib/rate-limiter';
+import { isAuthenticatedAdmin } from '@/lib/admin-auth';
 
 export const runtime = 'nodejs';
 
@@ -30,6 +31,15 @@ export async function POST(req: NextRequest) {
           status: 429,
           headers: { 'Retry-After': rateCheck.retryAfterSeconds.toString() },
         }
+      );
+    }
+
+    // Require authenticated admin session for translation utility
+    const isAuth = await isAuthenticatedAdmin(req);
+    if (!isAuth) {
+      return NextResponse.json(
+        { success: false, message: 'Akses ditolak. Silakan masuk sebagai pengelola.' },
+        { status: 401 }
       );
     }
 

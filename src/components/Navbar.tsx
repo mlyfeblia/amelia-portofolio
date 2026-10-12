@@ -115,7 +115,7 @@ export default function Navbar() {
     <>
       <header
         className={cn(
-          'z-50 bg-[var(--color-paper)]/95 backdrop-blur-md border-b border-[var(--color-paper-border)] overflow-visible transform-gpu [backface-visibility:hidden] [perspective:1000px] will-change-transform',
+          'z-50 bg-[var(--color-paper)]/95 backdrop-blur-md border-b border-[var(--color-paper-border)] overflow-visible',
           open ? 'fixed top-0 inset-x-0' : 'sticky top-0'
         )}
         style={{
@@ -141,7 +141,7 @@ export default function Navbar() {
             onClick={() => setOpen(false)}
           >
             <span
-              className="text-xl sm:text-2xl font-medium tracking-tight text-[var(--color-ink)] group-hover:text-[var(--color-accent)] group-hover:-translate-y-0.5 group-active:translate-y-0 group-active:scale-95 transition-all duration-200 ease-out inline-block"
+              className="text-xl sm:text-2xl font-medium tracking-tight text-[var(--color-ink)] group-hover:text-[var(--color-accent)] group-hover:-translate-y-1 group-active:translate-y-0 group-active:scale-95 transition-all duration-200 ease-out inline-block"
               style={{ fontFamily: 'var(--font-display)' }}
             >
               Amelia
@@ -158,17 +158,21 @@ export default function Navbar() {
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    'group px-3.5 py-1.5 text-sm font-medium rounded-full transition-all duration-200 ease-out inline-flex items-center gap-1.5 hover:-translate-y-0.5 active:translate-y-0 active:scale-95',
-                    isActive
-                      ? 'text-[var(--color-accent)] bg-[var(--color-accent-soft)] font-semibold border border-[var(--color-accent-border)] shadow-xs hover:border-[var(--color-accent)] hover:shadow-sm'
-                      : 'text-[var(--color-ink-muted)] hover:text-[var(--color-accent)] hover:bg-[var(--color-paper-muted)] hover:shadow-2xs'
+                    'nav-link-interactive group cursor-pointer',
+                    isActive && 'is-active'
                   )}
                   aria-current={isActive ? 'page' : undefined}
                 >
-                  {isActive && (
-                    <Icon className="w-3.5 h-3.5 text-[var(--color-accent)] animate-fade-in shrink-0 transition-transform duration-200 group-hover:scale-110" aria-hidden="true" />
-                  )}
-                  <span className="transition-colors duration-200">{item.label}</span>
+                  <Icon
+                    className={cn(
+                      'nav-link-icon w-3.5 h-3.5 shrink-0',
+                      isActive
+                        ? 'text-[var(--color-accent)]'
+                        : 'text-[var(--color-ink-soft)]'
+                    )}
+                    aria-hidden="true"
+                  />
+                  <span>{item.label}</span>
                 </Link>
               );
             })}
@@ -189,10 +193,10 @@ export default function Navbar() {
                   href="/schedule"
                   onClick={() => setOpen(false)}
                   tabIndex={open ? -1 : 0}
-                  className="inline-flex items-center justify-center gap-1.5 h-8 md:h-9 px-3 md:px-4 text-xs md:text-sm font-semibold rounded-lg text-white bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] shadow-[0_1px_2px_rgba(25,40,32,0.1)] hover:-translate-y-[1px] hover:shadow-[0_4px_12px_rgba(26,86,60,0.22)] active:scale-[0.98] active:shadow-[0_1px_3px_rgba(26,86,60,0.15)] whitespace-nowrap select-none cursor-pointer transform-gpu [backface-visibility:hidden] [contain:paint] transition-[background-color,border-color,box-shadow,transform] duration-200 ease-out"
+                  className="inline-flex items-center justify-center gap-1.5 h-8 md:h-9 px-3.5 md:px-4 text-xs md:text-sm font-semibold rounded-lg text-white bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] shadow-[0_1px_2px_rgba(25,40,32,0.1)] hover:-translate-y-1 hover:shadow-[0_4px_14px_rgba(26,86,60,0.28)] active:translate-y-0 active:scale-[0.98] active:shadow-[0_1px_3px_rgba(26,86,60,0.15)] whitespace-nowrap select-none cursor-pointer transition-all duration-200 ease-out"
                 >
                   <Calendar className="w-3.5 h-3.5 shrink-0" />
-                  <span className="transform-gpu [backface-visibility:hidden]">Janji Temu</span>
+                  <span>Janji Temu</span>
                 </Link>
               </div>
 
@@ -200,7 +204,7 @@ export default function Navbar() {
               <button
                 type="button"
                 onClick={() => setOpen(!open)}
-                className="flex md:!hidden relative z-10 w-8 h-8 rounded-lg border border-[var(--color-paper-border)] bg-[var(--color-surface)] text-[var(--color-ink)] hover:border-[var(--color-accent-border)] hover:text-[var(--color-accent)] hover:bg-[var(--color-accent-soft)]/50 active:scale-95 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] items-center justify-center cursor-pointer shrink-0 select-none shadow-2xs"
+                className="group flex md:!hidden relative z-10 w-8 h-8 rounded-lg border border-[var(--color-paper-border)] bg-[var(--color-surface)] text-[var(--color-ink)] hover:border-[var(--color-accent-border)] hover:text-[var(--color-accent)] hover:bg-[var(--color-accent-soft)]/50 active:scale-95 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] items-center justify-center cursor-pointer shrink-0 select-none shadow-2xs"
                 aria-expanded={open}
                 aria-controls="mobile-nav"
                 aria-label={open ? 'Tutup menu navigasi' : 'Buka menu navigasi'}

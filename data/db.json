@@ -112,7 +112,7 @@
         "Arah Hidup"
       ],
       "showOnLandingPage": false,
-      "views": 89,
+      "views": 90,
       "coverImage": "/images/articles/self-growth.webp"
     },
     {
@@ -131,7 +131,7 @@
         "Komunikasi"
       ],
       "showOnLandingPage": false,
-      "views": 53,
+      "views": 54,
       "coverImage": "/images/articles/relationships.webp"
     },
     {
@@ -150,7 +150,7 @@
         "Istirahat Berkualitas"
       ],
       "showOnLandingPage": false,
-      "views": 91,
+      "views": 92,
       "coverImage": "/images/articles/mindfulness-islamic.webp"
     },
     {
@@ -170,9 +170,9 @@
         "Ketenangan Batin"
       ],
       "showOnLandingPage": false,
-      "views": 126,
+      "views": 128,
       "coverImage": "/images/articles/mental-health.webp",
-      "isPublished": false
+      "isPublished": true
     },
     {
       "id": "art-10",
@@ -210,7 +210,7 @@
         "Sabar & Solat"
       ],
       "showOnLandingPage": false,
-      "views": 82,
+      "views": 83,
       "coverImage": "/images/articles/overthinking.webp"
     }
   ],

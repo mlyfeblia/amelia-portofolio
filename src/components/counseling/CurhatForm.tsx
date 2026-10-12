@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState, useEffect, useId } from 'react';
+import React, { useState, useEffect, useId, useRef } from 'react';
 import Image from 'next/image';
-import { Send, AlertCircle, CheckCircle2, Lock, Download, PenLine, Check } from 'lucide-react';
+import { Send, AlertCircle, CheckCircle2, Lock, Download, PenLine, Check, X } from 'lucide-react';
 import { Spinner } from '@/components/ui/Spinner';
 import { ConfirmDecisionModal } from '@/components/ui/ConfirmDecisionModal';
 import { usePwa, triggerPwaInstall } from '@/lib/pwa-store';
@@ -23,52 +23,48 @@ export function CurhatForm({ onSuccess }: CurhatFormProps) {
   const [sendError, setSendError] = useState('');
   const { isInstalled } = usePwa();
 
-  const [alias, setAlias] = useState(() => {
-    if (typeof window === 'undefined') return '';
-    try {
-      const saved = sessionStorage.getItem('curhat_draft_v1');
-      return saved ? JSON.parse(saved).alias || '' : '';
-    } catch {
-      return '';
-    }
-  });
-
-  const [category, setCategory] = useState<string>(() => {
-    if (typeof window === 'undefined') return CATEGORIES[0];
-    try {
-      const saved = sessionStorage.getItem('curhat_draft_v1');
-      return saved ? JSON.parse(saved).category || CATEGORIES[0] : CATEGORIES[0];
-    } catch {
-      return CATEGORIES[0];
-    }
-  });
-
-  const [message, setMessage] = useState(() => {
-    if (typeof window === 'undefined') return '';
-    try {
-      const saved = sessionStorage.getItem('curhat_draft_v1');
-      return saved ? JSON.parse(saved).message || '' : '';
-    } catch {
-      return '';
-    }
-  });
-
+  // Always initialize with SSR-safe defaults to avoid hydration mismatch
+  const [alias, setAlias] = useState('');
+  const [category, setCategory] = useState<string>(CATEGORIES[0]);
+  const [message, setMessage] = useState('');
   const [botTrap, setBotTrap] = useState('');
-  const [isDraftSaved, setIsDraftSaved] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    try {
-      const saved = sessionStorage.getItem('curhat_draft_v1');
-      return Boolean(saved);
-    } catch {
-      return false;
-    }
-  });
+  const [isDraftSaved, setIsDraftSaved] = useState(false);
   const [showCurhatConfirmModal, setShowCurhatConfirmModal] = useState(false);
+  const isRestoredRef = useRef(false);
+
+  // Restore draft from sessionStorage on client mount after hydration
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      try {
+        const saved = sessionStorage.getItem('curhat_draft_v1');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed.alias) setAlias(parsed.alias);
+          if (parsed.category && CATEGORIES.includes(parsed.category)) setCategory(parsed.category);
+          if (parsed.message) setMessage(parsed.message);
+          setIsDraftSaved(true);
+        }
+      } catch {}
+      isRestoredRef.current = true;
+    }, 0);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   // Autosave draft to sessionStorage (debounced)
   useEffect(() => {
+    if (!isRestoredRef.current) return;
     if (sent) return;
-    if (!message && !alias) return;
+
+    if (!message && !alias) {
+      const clearTimer = setTimeout(() => {
+        try {
+          sessionStorage.removeItem('curhat_draft_v1');
+        } catch {}
+        setIsDraftSaved(false);
+      }, 0);
+      return () => clearTimeout(clearTimer);
+    }
 
     const timer = setTimeout(() => {
       try {
@@ -105,6 +101,11 @@ export function CurhatForm({ onSuccess }: CurhatFormProps) {
     const trimmed = message.trim();
     if (trimmed.length < 10) {
       setSendError('Pesan minimal 10 karakter agar Amel dapat memahami situasimu.');
+      const msgElem = document.getElementById(`${formId}-msg`);
+      if (msgElem) {
+        msgElem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        msgElem.focus();
+      }
       return;
     }
 
@@ -285,15 +286,27 @@ export function CurhatForm({ onSuccess }: CurhatFormProps) {
             >
               Nama Samaran <span className="text-[var(--color-ink-soft)] font-normal">(opsional)</span>
             </label>
-            <input
-              id={`${formId}-alias`}
-              type="text"
-              maxLength={50}
-              value={alias}
-              onChange={(e) => setAlias(formatPersonName(e.target.value))}
-              placeholder="Misal: Jiwa yang Lelah, Pejuang Skripsi"
-              className="form-input text-sm py-2"
-            />
+            <div className="relative flex items-center">
+              <input
+                id={`${formId}-alias`}
+                type="text"
+                maxLength={50}
+                value={alias}
+                onChange={(e) => setAlias(formatPersonName(e.target.value))}
+                placeholder="Misal: Jiwa yang Lelah, Pejuang Skripsi"
+                className="form-input text-sm py-2 pr-8 w-full"
+              />
+              {alias && (
+                <button
+                  type="button"
+                  onClick={() => setAlias('')}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[var(--color-ink-soft)] hover:text-[var(--color-ink)] p-1 rounded-md transition-colors"
+                  aria-label="Hapus nama samaran"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
           </div>
 
           <div>
@@ -344,7 +357,7 @@ export function CurhatForm({ onSuccess }: CurhatFormProps) {
                 }
               }}
               placeholder="Tuliskan apa pun yang mengganjal di pikiran dan hatimu secara jujur..."
-              className="form-input text-sm py-2 resize-y min-h-[108px] max-h-[320px] overflow-y-auto"
+              className="form-input text-sm py-2 resize-y min-h-[108px] max-h-[320px] overflow-y-auto textarea-custom-scroll"
             />
             {isDraftSaved && (
               <div className="pt-1.5 flex items-center gap-1 text-[11px] text-emerald-700 font-medium">

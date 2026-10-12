@@ -3,7 +3,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
-import { ArrowLeft, ArrowUpRight, ChevronRight } from 'lucide-react';
+import { ArrowLeft, ChevronRight, Clock, Eye, BookOpen } from 'lucide-react';
 import { getArticleBySlug, getArticles } from '@/lib/data-store';
 import { getIsoDateString } from '@/lib/utils';
 import Navbar from '@/components/Navbar';
@@ -38,7 +38,7 @@ export async function generateMetadata(props: {
 
   if (!article) {
     return {
-      title: 'Artikel Tidak Ditemukan | Amelia',
+      title: 'Artikel Tidak Ditemukan',
       description: 'Artikel yang kamu cari tidak tersedia atau belum dipublikasikan.',
       robots: { index: false, follow: false },
     };
@@ -62,7 +62,7 @@ export async function generateMetadata(props: {
     : `${BASE_URL}/articles/${slug}/opengraph-image`;
 
   return {
-    title: `${article.title} | Amelia`,
+    title: article.title,
     description: article.excerpt,
     keywords: keywordsList,
     authors: [{ name: 'Amelia', url: `${BASE_URL}/about` }],
@@ -159,14 +159,15 @@ export default async function ArticleDetailPage(props: {
           { name: article.title, url: articleFullUrl },
         ]}
       />
-      <Navbar />
-      <main
-        id="main-content"
-        className="min-h-screen page-enter"
-        tabIndex={-1}
-        style={{ backgroundColor: 'var(--color-paper)' }}
-      >
-        <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-10 pt-6 sm:pt-8 md:pt-10 pb-16 sm:pb-20 md:pb-24">
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <main
+          id="main-content"
+          className="flex-1 page-enter"
+          tabIndex={-1}
+          style={{ backgroundColor: 'var(--color-paper)' }}
+        >
+          <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-10 pt-6 sm:pt-8 md:pt-10 pb-12 sm:pb-16">
           
           {/* Top Clean Navigation Breadcrumb */}
           <nav aria-label="Navigasi rekam jejak artikel" className="mb-6 sm:mb-8">
@@ -271,18 +272,26 @@ export default async function ArticleDetailPage(props: {
                         </p>
                       </div>
 
-                      <div className="pt-2 flex flex-col min-[340px]:flex-row min-[340px]:items-center justify-between gap-2 text-xs text-[var(--color-ink-soft)] border-t border-[var(--color-paper-border)]">
-                        <div className="flex items-center gap-1.5 flex-wrap min-w-0">
-                          <span className="font-medium text-[var(--color-accent)] truncate max-w-[170px] min-[340px]:max-w-none">{rel.category}</span>
-                          <span className="text-[var(--color-paper-border)] shrink-0">•</span>
-                          <span className="shrink-0">{rel.readTime}</span>
+                      <div className="pt-2.5 flex items-end justify-between gap-3 text-xs text-[var(--color-ink-soft)] border-t border-[var(--color-paper-border)]">
+                        <div className="flex flex-col gap-1 min-w-0">
+                          <span className="font-semibold text-[var(--color-accent)] truncate">
+                            {rel.category}
+                          </span>
+                          <span className="inline-flex items-center gap-1.5 text-[var(--color-ink-muted)]">
+                            <Clock className="w-3.5 h-3.5 text-[var(--color-accent)] shrink-0" aria-hidden="true" />
+                            <span>{rel.readTime}</span>
+                          </span>
+                          <span className="inline-flex items-center gap-1.5 text-[var(--color-ink-muted)]">
+                            <Eye className="w-3.5 h-3.5 text-[var(--color-accent)] shrink-0" aria-hidden="true" />
+                            <span>{typeof rel.views === 'number' ? rel.views : 0} pembaca</span>
+                          </span>
                         </div>
                         <Link
                           href={`/articles/${rel.slug}`}
-                          className="font-semibold text-[var(--color-accent)] group-hover:translate-x-0.5 hover:underline inline-flex items-center gap-1 transition-transform duration-200 shrink-0 self-start min-[340px]:self-auto"
+                          className="btn-secondary btn-interactive inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-[var(--color-ink)] hover:text-[var(--color-accent)] bg-[var(--color-surface)] border border-[var(--color-paper-border)] hover:border-[var(--color-accent-border)] hover:bg-[var(--color-accent-soft)]/50 shadow-2xs shrink-0 self-end transition-all"
                         >
-                          <span>Baca</span>
-                          <ArrowUpRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform duration-200" />
+                          <BookOpen className="w-3.5 h-3.5 text-[var(--color-accent)] shrink-0" aria-hidden="true" />
+                          <span>Baca Tulisan</span>
                         </Link>
                       </div>
                     </div>
@@ -297,6 +306,7 @@ export default async function ArticleDetailPage(props: {
         </div>
       </main>
       <Footer />
+    </div>
     </>
   );
 }

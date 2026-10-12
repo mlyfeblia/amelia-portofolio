@@ -28,46 +28,31 @@ export function AdminBookingsClient() {
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Filters
-  const [search, setSearch] = useState(() => {
-    if (typeof window === 'undefined') return '';
-    try {
-      const params = new URLSearchParams(window.location.search);
-      return params.get('q') || sessionStorage.getItem('admin_bookings_q') || '';
-    } catch {
-      return '';
-    }
-  });
+  // Filters - Always initialize with SSR-safe defaults to avoid hydration mismatch
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<BookingStatus | 'semua'>('semua');
+  const [categoryFilter, setCategoryFilter] = useState('Semua Topik');
+  const [dateFilter, setDateFilter] = useState('');
 
-  const [statusFilter, setStatusFilter] = useState<BookingStatus | 'semua'>(() => {
-    if (typeof window === 'undefined') return 'semua';
-    try {
-      const params = new URLSearchParams(window.location.search);
-      const s = params.get('status') || sessionStorage.getItem('admin_bookings_status');
-      if (s) return s as BookingStatus | 'semua';
-    } catch {}
-    return 'semua';
-  });
+  // Synchronize query parameters and session storage safely post-hydration
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const q = params.get('q') || sessionStorage.getItem('admin_bookings_q');
+        const s = params.get('status') || sessionStorage.getItem('admin_bookings_status');
+        const c = params.get('topik') || sessionStorage.getItem('admin_bookings_topik');
+        const d = params.get('tgl') || sessionStorage.getItem('admin_bookings_tgl');
 
-  const [categoryFilter, setCategoryFilter] = useState(() => {
-    if (typeof window === 'undefined') return 'Semua Topik';
-    try {
-      const params = new URLSearchParams(window.location.search);
-      return params.get('topik') || sessionStorage.getItem('admin_bookings_topik') || 'Semua Topik';
-    } catch {
-      return 'Semua Topik';
-    }
-  });
+        if (q) setSearch(q);
+        if (s) setStatusFilter(s as BookingStatus | 'semua');
+        if (c) setCategoryFilter(c);
+        if (d) setDateFilter(d);
+      } catch {}
+    }, 0);
 
-  const [dateFilter, setDateFilter] = useState(() => {
-    if (typeof window === 'undefined') return '';
-    try {
-      const params = new URLSearchParams(window.location.search);
-      return params.get('tgl') || sessionStorage.getItem('admin_bookings_tgl') || '';
-    } catch {
-      return '';
-    }
-  });
+    return () => clearTimeout(timer);
+  }, []);
 
   const syncFilterParams = (
     s: BookingStatus | 'semua',

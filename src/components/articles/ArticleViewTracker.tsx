@@ -114,12 +114,12 @@ export function ArticleViewTracker({
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[var(--color-surface)] border border-[var(--color-paper-border)] text-xs text-[var(--color-accent)] font-medium shadow-2xs shrink-0',
+        'inline-flex items-center gap-1 px-2 sm:px-2.5 py-1 rounded-lg bg-[var(--color-surface)] border border-[var(--color-paper-border)] text-[11px] sm:text-xs text-[var(--color-accent)] font-medium shadow-2xs shrink-0',
         className
       )}
       title={`${views} kali dibaca`}
     >
-      <Eye className="w-3.5 h-3.5 text-[var(--color-accent)] shrink-0" aria-hidden="true" />
+      <Eye className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[var(--color-accent)] shrink-0" aria-hidden="true" />
       <span>{views} pembaca</span>
     </span>
   );

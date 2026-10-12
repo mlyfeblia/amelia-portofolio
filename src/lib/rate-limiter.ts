@@ -149,20 +149,29 @@ export async function checkDistributedRateLimit(
  * Extracts client IP address safely from Request headers.
  */
 export function getClientIp(request: Request): string {
-  const forwarded = request.headers.get('x-forwarded-for');
-  if (forwarded) {
-    const firstIp = forwarded.split(',')[0].trim();
-    if (firstIp) return firstIp;
+  // 1. Cloudflare connecting IP (trusted edge)
+  const cfConnectingIp = request.headers.get('cf-connecting-ip');
+  if (cfConnectingIp && cfConnectingIp.trim()) {
+    return cfConnectingIp.trim();
   }
 
+  // 2. Real IP from reverse proxy (Vercel / Nginx trusted header)
   const realIp = request.headers.get('x-real-ip');
   if (realIp && realIp.trim()) {
     return realIp.trim();
   }
 
-  const cfConnectingIp = request.headers.get('cf-connecting-ip');
-  if (cfConnectingIp && cfConnectingIp.trim()) {
-    return cfConnectingIp.trim();
+  // 3. Vercel client IP header
+  const vercelIp = request.headers.get('x-vercel-ip');
+  if (vercelIp && vercelIp.trim()) {
+    return vercelIp.trim();
+  }
+
+  // 4. Fallback to X-Forwarded-For
+  const forwarded = request.headers.get('x-forwarded-for');
+  if (forwarded) {
+    const firstIp = forwarded.split(',')[0].trim();
+    if (firstIp) return firstIp;
   }
 
   return '127.0.0.1';

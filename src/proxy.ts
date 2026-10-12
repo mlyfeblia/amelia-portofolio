@@ -106,6 +106,26 @@ export async function proxy(request: NextRequest) {
         );
       }
     }
+
+    // 4. Translate slug requests: 20 requests / 1 minute
+    if (pathname === '/api/translate') {
+      const rateCheck = await checkDistributedRateLimit(`translate:${ip}`, 20, 60);
+      if (!rateCheck.success) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: `Terlalu banyak permintaan translasi otomatis. Coba kembali dalam ${rateCheck.retryAfterSeconds} detik.`,
+          },
+          {
+            status: 429,
+            headers: {
+              'Retry-After': rateCheck.retryAfterSeconds.toString(),
+              'X-Request-Id': requestId,
+            },
+          }
+        );
+      }
+    }
   }
 
   return response;
@@ -114,8 +134,6 @@ export async function proxy(request: NextRequest) {
 export const config = {
   matcher: [
     '/admin/:path*',
-    '/api/admin/:path*',
-    '/api/bookings',
-    '/api/curhat',
+    '/api/:path*',
   ],
 };

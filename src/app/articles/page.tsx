@@ -12,7 +12,7 @@ const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://mlyfeblia.vercel.a
 export const revalidate = 60;
 
 export const metadata: Metadata = {
-  title: 'Artikel & Catatan Refleksi | Amelia - Bimbingan Konseling Islam',
+  title: 'Artikel & Catatan Refleksi - Bimbingan Konseling Islam',
   description:
     'Kumpulan tulisan ilmiah populer, panduan kesehatan mental islami, tips mengatasi burnout, overthinking, quarter-life crisis, dan etika konseling oleh Amelia.',
   keywords: [
@@ -104,25 +104,27 @@ export default async function ArticlesIndexPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: safeJsonLd(collectionJsonLd) }}
       />
-      <Navbar />
-      <main id="main-content" className="min-h-screen pt-8 sm:pt-10 md:pt-12 pb-16 sm:pb-20 md:pb-24 page-enter">
-        <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-10 space-y-10 sm:space-y-12">
-          <div className="max-w-3xl space-y-3">
-            <h1
-              className="text-3xl sm:text-4xl lg:text-[2.65rem] font-medium text-[var(--color-ink)] leading-tight"
-              style={{ fontFamily: 'var(--font-display)' }}
-            >
-              Artikel &amp; Catatan Refleksi
-            </h1>
-            <p className="text-base sm:text-lg text-[var(--color-ink-muted)] leading-relaxed">
-              Kumpulan tulisan santai seputar kesehatan mental, cara mengatasi overthinking, dan tips menjaga ketenangan batin berlandaskan nilai-nilai yang meneduhkan.
-            </p>
-          </div>
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <main id="main-content" className="flex-1 pt-8 sm:pt-10 md:pt-12 pb-12 sm:pb-16 page-enter">
+          <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-10 space-y-10 sm:space-y-12">
+            <div className="max-w-3xl space-y-3">
+              <h1
+                className="text-3xl sm:text-4xl lg:text-[2.65rem] font-medium text-[var(--color-ink)] leading-tight"
+                style={{ fontFamily: 'var(--font-display)' }}
+              >
+                Artikel &amp; Catatan Refleksi
+              </h1>
+              <p className="text-base sm:text-lg text-[var(--color-ink-muted)] leading-relaxed">
+                Kumpulan tulisan santai seputar kesehatan mental, cara mengatasi overthinking, dan tips menjaga ketenangan batin berlandaskan nilai-nilai yang meneduhkan.
+              </p>
+            </div>
 
-          <ArticlesDirectory initialArticles={articles} />
-        </div>
-      </main>
-      <Footer />
+            <ArticlesDirectory initialArticles={articles} />
+          </div>
+        </main>
+        <Footer />
+      </div>
     </>
   );
 }

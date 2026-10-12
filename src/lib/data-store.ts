@@ -788,56 +788,18 @@ function revalidateDataPaths(types: ('bookings' | 'curhat' | 'articles')[]) {
   }
 }
 
-let hasAutoSeededBookings = false;
-let hasAutoSeededCurhat = false;
-let hasAutoSeededArticles = false;
-
 // Bookings
 export async function getBookings(limit: number = 100, offset: number = 0): Promise<Booking[]> {
   if (isDatabaseConfigured && db) {
     try {
       const safeLimit = Math.min(Math.max(1, limit), 200);
       const safeOffset = Math.max(0, offset);
-      let rows = await db
+      const rows = await db
         .select()
         .from(bookings)
         .orderBy(desc(bookings.createdAt))
         .limit(safeLimit)
         .offset(safeOffset);
-
-      if (rows.length === 0 && offset === 0 && !hasAutoSeededBookings) {
-        hasAutoSeededBookings = true;
-        try {
-          for (const bk of fallbackBookings) {
-            await db
-              .insert(bookings)
-              .values({
-                id: bk.id,
-                code: bk.code,
-                name: bk.name,
-                alias: bk.alias || null,
-                phone: bk.phone,
-                email: bk.email,
-                category: bk.category,
-                mode: bk.mode,
-                date: bk.date,
-                timeSlot: bk.timeSlot,
-                notes: bk.notes || '',
-                status: bk.status,
-                createdAt: ensureValidIsoTimestamp(bk.createdAt),
-              })
-              .onConflictDoNothing();
-          }
-          rows = await db
-            .select()
-            .from(bookings)
-            .orderBy(desc(bookings.createdAt))
-            .limit(safeLimit)
-            .offset(safeOffset);
-        } catch (seedErr) {
-          console.error('Auto-seed bookings failed:', seedErr);
-        }
-      }
 
       return rows.map((r) => ({
         ...r,
@@ -988,21 +950,11 @@ export async function getBookingById(id: string): Promise<Booking | null> {
 
   if (isDatabaseConfigured && db) {
     try {
-      let [row] = await db
+      const [row] = await db
         .select()
         .from(bookings)
         .where(eq(bookings.id, id))
         .limit(1);
-
-      if (!row && !hasAutoSeededBookings) {
-        await getBookings(1, 0);
-        const [recheck] = await db
-          .select()
-          .from(bookings)
-          .where(eq(bookings.id, id))
-          .limit(1);
-        row = recheck;
-      }
 
       if (row) {
         return {
@@ -1028,21 +980,11 @@ export async function getBookingByCode(code: string): Promise<Booking | null> {
 
   if (isDatabaseConfigured && db) {
     try {
-      let [row] = await db
+      const [row] = await db
         .select()
         .from(bookings)
         .where(eq(bookings.code, cleanCode))
         .limit(1);
-
-      if (!row && !hasAutoSeededBookings) {
-        await getBookings(1, 0);
-        const [recheck] = await db
-          .select()
-          .from(bookings)
-          .where(eq(bookings.code, cleanCode))
-          .limit(1);
-        row = recheck;
-      }
 
       if (row) {
         return {
@@ -1075,20 +1017,11 @@ export async function getBookingsByCodes(codes: string[]): Promise<Booking[]> {
 
   if (isDatabaseConfigured && db) {
     try {
-      let rows = await db
+      const rows = await db
         .select()
         .from(bookings)
         .where(inArray(bookings.code, cleanCodes))
         .orderBy(desc(bookings.createdAt));
-
-      if (rows.length === 0 && !hasAutoSeededBookings) {
-        await getBookings(1, 0);
-        rows = await db
-          .select()
-          .from(bookings)
-          .where(inArray(bookings.code, cleanCodes))
-          .orderBy(desc(bookings.createdAt));
-      }
 
       return rows.map((r) => ({
         ...r,
@@ -1114,7 +1047,7 @@ export async function getCurhatList(
       const safeLimit = Math.min(Math.max(1, limit), 200);
       const safeOffset = Math.max(0, offset);
 
-      let rows = onlyPublic
+      const rows = onlyPublic
         ? await db
             .select()
             .from(curhat)
@@ -1128,45 +1061,6 @@ export async function getCurhatList(
             .orderBy(desc(curhat.createdAt))
             .limit(safeLimit)
             .offset(safeOffset);
-
-      if (rows.length === 0 && offset === 0 && !hasAutoSeededCurhat) {
-        hasAutoSeededCurhat = true;
-        try {
-          for (const c of fallbackCurhat) {
-            await db
-              .insert(curhat)
-              .values({
-                id: c.id,
-                alias: c.alias,
-                category: c.category,
-                message: c.message,
-                answer: c.answer || null,
-                isAnswered: c.isAnswered,
-                isPublic: c.isPublic,
-                showOnLandingPage: c.showOnLandingPage ?? false,
-                createdAt: ensureValidIsoTimestamp(c.createdAt),
-                answeredAt: c.answeredAt ? ensureValidIsoTimestamp(c.answeredAt) : null,
-              })
-              .onConflictDoNothing();
-          }
-          rows = onlyPublic
-            ? await db
-                .select()
-                .from(curhat)
-                .where(eq(curhat.isPublic, true))
-                .orderBy(desc(curhat.createdAt))
-                .limit(safeLimit)
-                .offset(safeOffset)
-            : await db
-                .select()
-                .from(curhat)
-                .orderBy(desc(curhat.createdAt))
-                .limit(safeLimit)
-                .offset(safeOffset);
-        } catch (seedErr) {
-          console.error('Auto-seed curhat failed:', seedErr);
-        }
-      }
 
       return rows.map((r) => ({
         ...r,
@@ -1352,40 +1246,9 @@ export async function deleteCurhat(id: string): Promise<boolean> {
 export async function getArticles(onlyPublished = false): Promise<Article[]> {
   if (isDatabaseConfigured && db) {
     try {
-      let rows = onlyPublished
+      const rows = onlyPublished
         ? await db.select().from(articles).where(eq(articles.isPublished, true)).orderBy(desc(articles.id))
         : await db.select().from(articles).orderBy(desc(articles.id));
-
-      if (rows.length === 0 && !hasAutoSeededArticles) {
-        hasAutoSeededArticles = true;
-        try {
-          for (const a of fallbackArticles) {
-            await db
-              .insert(articles)
-              .values({
-                id: a.id,
-                slug: a.slug,
-                title: a.title,
-                excerpt: a.excerpt,
-                content: a.content,
-                category: a.category,
-                readTime: a.readTime,
-                publishedAt: ensureValidIsoTimestamp(a.publishedAt),
-                tags: a.tags,
-                isPublished: a.isPublished ?? true,
-                showOnLandingPage: a.showOnLandingPage ?? false,
-                views: a.views ?? 0,
-                coverImage: a.coverImage || null,
-              })
-              .onConflictDoNothing();
-          }
-          rows = onlyPublished
-            ? await db.select().from(articles).where(eq(articles.isPublished, true)).orderBy(desc(articles.id))
-            : await db.select().from(articles).orderBy(desc(articles.id));
-        } catch (seedErr) {
-          console.error('Auto-seed articles failed:', seedErr);
-        }
-      }
 
       return rows.map((r) => ({
         ...r,
@@ -1410,17 +1273,9 @@ export async function getArticles(onlyPublished = false): Promise<Article[]> {
 export async function getArticleBySlug(slug: string, onlyPublished = false): Promise<Article | null> {
   if (isDatabaseConfigured && db) {
     try {
-      let [row] = await (onlyPublished
+      const [row] = await (onlyPublished
         ? db.select().from(articles).where(and(eq(articles.slug, slug), eq(articles.isPublished, true))).limit(1)
         : db.select().from(articles).where(eq(articles.slug, slug)).limit(1));
-
-      if (!row && !hasAutoSeededArticles) {
-        await getArticles(false);
-        const [recheck] = await (onlyPublished
-          ? db.select().from(articles).where(and(eq(articles.slug, slug), eq(articles.isPublished, true))).limit(1)
-          : db.select().from(articles).where(eq(articles.slug, slug)).limit(1));
-        row = recheck;
-      }
 
       if (row) {
         return {
@@ -1717,6 +1572,25 @@ export async function getPushSubscriptions(role?: string): Promise<PushSubscript
   return role
     ? fallbackPushSubscriptions.filter((s) => s.role === role)
     : fallbackPushSubscriptions;
+}
+
+export async function getPushSubscriptionsByBookingCode(
+  bookingCode: string
+): Promise<PushSubscriptionItem[]> {
+  const cleanCode = bookingCode.trim().toUpperCase();
+  if (isDatabaseConfigured && db) {
+    try {
+      return await db
+        .select()
+        .from(pushSubscriptions)
+        .where(eq(pushSubscriptions.bookingCode, cleanCode));
+    } catch (err) {
+      console.error('Failed to get push subscriptions by booking code from db:', err);
+    }
+  }
+  return fallbackPushSubscriptions.filter(
+    (s) => s.bookingCode && s.bookingCode.trim().toUpperCase() === cleanCode
+  );
 }
 
 export async function deletePushSubscription(endpoint: string): Promise<boolean> {

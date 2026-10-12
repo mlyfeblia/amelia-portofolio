@@ -3,7 +3,7 @@ import { HeartHandshake, PhoneCall } from 'lucide-react';
 import OfflineActions from '@/components/pwa/OfflineActions';
 
 export const metadata: Metadata = {
-  title: 'Sedang Offline | Amelia',
+  title: 'Sedang Offline',
   description: 'Kamu sedang berada dalam mode offline. Konten yang telah tersimpan tetap bisa dibaca secara mandiri.',
   robots: {
     index: false,

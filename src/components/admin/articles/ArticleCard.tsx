@@ -1,13 +1,10 @@
 'use client';
 
 import React, { useState } from 'react';
-import Link from 'next/link';
-import { Clock, Edit3, ExternalLink, Trash2, Eye, EyeOff, Star, Image as ImageIcon } from 'lucide-react';
+import { Clock, Edit3, Trash2, Eye, EyeOff, Star } from 'lucide-react';
 import { Article } from '@/types';
 import { formatIndonesianDate } from '@/lib/utils';
-import { Badge } from '@/components/ui/Badge';
 import { Spinner } from '@/components/ui/Spinner';
-import { Tooltip } from '@/components/ui/Tooltip';
 import { ConfirmDecisionModal } from '@/components/ui/ConfirmDecisionModal';
 
 interface ArticleCardProps {
@@ -92,52 +89,35 @@ export function ArticleCard({
             {article.publishedAt ? `${formatIndonesianDate(article.publishedAt) || article.publishedAt} — ` : ''}{article.excerpt}
           </p>
 
-          <div className="flex flex-wrap items-center gap-2 pt-1 text-xs">
-            {/* Status Badge */}
-            {isPublic ? (
-              <Badge variant="accent" size="xs" dot>Tayang</Badge>
-            ) : (
-              <Badge variant="neutral" size="xs">Draf</Badge>
-            )}
-
-            <span className="font-semibold text-[var(--color-accent)] text-xs">
+          <div className="flex items-center gap-2 pt-1 text-xs text-[var(--color-ink-muted)] flex-nowrap overflow-hidden">
+            <span className="font-semibold text-[var(--color-accent)] text-xs truncate shrink-0 max-w-[140px] sm:max-w-none">
               {article.category}
             </span>
-            <span className="text-[var(--color-paper-border)]">&bull;</span>
-            <span className="text-[var(--color-ink-muted)] text-[11px] flex items-center gap-1">
-              <Clock className="w-3 h-3" />
-              {article.readTime}
+            <span className="text-[var(--color-paper-border)] shrink-0" aria-hidden="true">&bull;</span>
+            <span className="text-[11px] flex items-center gap-1 shrink-0">
+              <Clock className="w-3 h-3 text-[var(--color-ink-soft)]" />
+              <span>{article.readTime ? article.readTime.replace(/\s*baca\s*/i, '').trim() : ''}</span>
             </span>
-            <span className="text-[var(--color-paper-border)]">&bull;</span>
-            <span className="inline-flex items-center gap-1 text-[11px] font-mono text-[var(--color-ink-soft)] bg-[var(--color-surface)] border border-[var(--color-paper-border)] px-2 py-0.5 rounded-lg">
+            <span className="text-[var(--color-paper-border)] shrink-0" aria-hidden="true">&bull;</span>
+            <span className="inline-flex items-center gap-1 text-[11px] font-mono text-[var(--color-ink-soft)] bg-[var(--color-surface)] border border-[var(--color-paper-border)] px-2 py-0.5 rounded-lg shrink-0">
               <Eye className="w-3 h-3" />
-              <span>{article.views || 0} views</span>
+              <span>{article.views || 0}</span>
             </span>
-            {article.coverImage && (
-              <>
-                <span className="text-[var(--color-paper-border)]">&bull;</span>
-                <span className="inline-flex items-center gap-1 text-[11px] text-[var(--color-accent)] bg-[var(--color-accent-soft)]/60 border border-[var(--color-accent-border)]/50 px-2 py-0.5 rounded-lg font-medium">
-                  <ImageIcon className="w-3 h-3" />
-                  <span>Ada Foto</span>
-                </span>
-              </>
-            )}
           </div>
         </div>
       </div>
 
-      {/* Action Buttons Toolbar: Desktop = Single Row, Mobile = Flex Wrap Rows */}
-      <div className="pt-2.5 sm:pt-3 border-t border-[var(--color-paper-border)] flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-2.5">
-        {/* Left Actions / Primary toggles */}
-        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 w-full sm:w-auto">
-          {/* Landing Page Showcase Toggle */}
+      {/* Action Buttons Toolbar: Single Row on Both Mobile & Desktop */}
+      <div className="pt-2.5 sm:pt-3 border-t border-[var(--color-paper-border)]">
+        <div className="flex items-center gap-1.5 sm:gap-2 w-full sm:w-auto overflow-x-auto no-scrollbar">
+          {/* 1. Landing Page Showcase Toggle */}
           {onToggleLanding && (
             <button
               onClick={() => setConfirmAction('landing')}
               disabled={isTogglingLanding}
               type="button"
               title={article.showOnLandingPage ? 'Hapus artikel ini dari halaman beranda (landing page)' : 'Tampilkan artikel ini di halaman beranda (landing page)'}
-              className={`btn-interactive inline-flex items-center justify-center gap-1 px-2 sm:px-2.5 py-1.5 rounded-lg text-[11px] sm:text-xs font-semibold border cursor-pointer whitespace-nowrap disabled:opacity-60 transition-colors flex-1 min-[320px]:flex-initial sm:w-auto ${
+              className={`btn-interactive inline-flex items-center justify-center gap-1 px-2 sm:px-2.5 py-1.5 rounded-lg text-[11px] sm:text-xs font-semibold border cursor-pointer whitespace-nowrap disabled:opacity-60 transition-colors flex-1 sm:flex-initial shrink-0 ${
                 article.showOnLandingPage
                   ? 'bg-amber-100 text-amber-900 border-amber-300 hover:bg-amber-200'
                   : 'bg-[var(--color-paper-muted)] text-[var(--color-ink-muted)] border-[var(--color-paper-border)] hover:bg-[var(--color-paper-border)] hover:text-[var(--color-ink)]'
@@ -152,14 +132,14 @@ export function ArticleCard({
             </button>
           )}
 
-          {/* 1-Click Visibility Toggle Button */}
+          {/* 2. 1-Click Visibility Toggle Button */}
           {onTogglePublish && (
             <button
               onClick={() => setConfirmAction('publish')}
               disabled={isToggling}
               type="button"
               title={isPublic ? 'Sembunyikan dari publik (jadikan draf)' : 'Terbitkan ke website publik'}
-              className={`btn-interactive inline-flex items-center justify-center gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-lg text-[11px] sm:text-xs font-semibold border cursor-pointer whitespace-nowrap disabled:opacity-60 flex-1 min-[320px]:flex-initial sm:w-auto ${
+              className={`btn-interactive inline-flex items-center justify-center gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-lg text-[11px] sm:text-xs font-semibold border cursor-pointer whitespace-nowrap disabled:opacity-60 flex-1 sm:flex-initial shrink-0 ${
                 isPublic
                   ? 'bg-[var(--color-accent-soft)] text-[var(--color-accent)] border-[var(--color-accent-border)] hover:bg-[var(--color-accent-border)]/50'
                   : 'bg-[var(--color-paper-muted)] text-[var(--color-ink-muted)] border-[var(--color-paper-border)] hover:bg-[var(--color-paper-border)]'
@@ -176,46 +156,26 @@ export function ArticleCard({
             </button>
           )}
 
-          {/* Edit Button */}
+          {/* 3. Edit Button */}
           <button
             onClick={() => onEdit(article)}
             type="button"
-            className="btn-interactive inline-flex items-center justify-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-[var(--color-accent-soft)] text-[var(--color-accent)] hover:bg-[var(--color-accent)] hover:text-white text-[11px] sm:text-xs font-semibold cursor-pointer flex-1 min-[320px]:flex-initial sm:w-auto"
+            className="btn-interactive inline-flex items-center justify-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-[var(--color-accent-soft)] text-[var(--color-accent)] hover:bg-[var(--color-accent)] hover:text-white text-[11px] sm:text-xs font-semibold cursor-pointer whitespace-nowrap flex-1 sm:flex-initial shrink-0"
           >
             <Edit3 className="w-3.5 h-3.5" />
             <span>Ubah</span>
           </button>
-        </div>
 
-        {/* Right Actions / Secondary tools */}
-        <div className="flex flex-wrap sm:flex-nowrap items-center gap-1.5 sm:gap-2 w-full sm:w-auto shrink-0 justify-start sm:justify-end">
-          {/* Public Preview Link */}
-          {isPublic && (
-            <Tooltip content="Buka di web publik" position="top" wrapperClassName="flex-1 min-[320px]:flex-initial sm:w-auto">
-              <Link
-                href={`/articles/${article.slug}`}
-                target="_blank"
-                className="btn-interactive inline-flex items-center justify-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-[var(--color-surface)] border border-[var(--color-paper-border)] hover:bg-[var(--color-paper-muted)] text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] text-[11px] sm:text-xs cursor-pointer w-full sm:w-auto"
-                aria-label="Buka tampilan web publik"
-              >
-                <ExternalLink className="w-3.5 h-3.5" />
-                <span className="text-[11px] sm:text-xs font-medium sm:hidden">Lihat Web</span>
-              </Link>
-            </Tooltip>
-          )}
-
-          {/* Delete Button */}
-          <Tooltip content="Hapus artikel" position="top" wrapperClassName="flex-1 min-[320px]:flex-initial sm:w-auto">
-            <button
-              onClick={() => onDelete(article)}
-              type="button"
-              className="btn-interactive inline-flex items-center justify-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg border border-[var(--color-paper-border)] hover:border-red-300 text-[var(--color-ink-muted)] hover:text-[var(--color-error)] hover:bg-[var(--color-error-soft)] text-[11px] sm:text-xs transition-colors cursor-pointer w-full sm:w-auto"
-              aria-label="Hapus artikel ini"
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-              <span className="text-[11px] sm:text-xs font-medium sm:hidden">Hapus</span>
-            </button>
-          </Tooltip>
+          {/* 4. Delete Button */}
+          <button
+            onClick={() => onDelete(article)}
+            type="button"
+            className="btn-interactive inline-flex items-center justify-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg border border-[var(--color-paper-border)] hover:border-red-300 text-[var(--color-ink-muted)] hover:text-[var(--color-error)] hover:bg-[var(--color-error-soft)] text-[11px] sm:text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap flex-1 sm:flex-initial shrink-0"
+            aria-label="Hapus artikel ini"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            <span>Hapus</span>
+          </button>
         </div>
       </div>
 

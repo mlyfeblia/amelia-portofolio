@@ -5,6 +5,7 @@ import { generateBookingAdminAlertHtml } from './email-templates/booking-admin-a
 import { generateCurhatAdminAlertHtml } from './email-templates/curhat-admin-alert-template';
 import { generateBookingStatusUpdatedHtml } from './email-templates/booking-status-updated-template';
 import { telemetry } from './telemetry';
+import { env } from './env';
 
 const apiKey = process.env.RESEND_API_KEY;
 const resend = apiKey ? new Resend(apiKey) : null;
@@ -40,7 +41,7 @@ export async function sendBookingConfirmationEmail(booking: Booking): Promise<bo
         to: booking.email,
         subject: `Konfirmasi Permohonan Sesi Konseling [${booking.code}] - Amelia BKI`,
         html,
-        text: `Assalamu'alaikum Warahmatullahi Wabarakatuh, Kak ${booking.name}.\n\nPermohonan sesi konseling kamu telah berhasil diterima.\nKode Reservasi: ${booking.code}\nTanggal: ${booking.date}\nSesi Waktu: ${booking.timeSlot}\nFormat: ${booking.mode}\nTopik: ${booking.category}\n\nLacak status: ${process.env.NEXT_PUBLIC_SITE_URL || 'https://amelia.portofolio.id'}/schedule?code=${booking.code}\nWhatsApp Konselor: +62 822-1044-5785\n\nSalam hangat,\nAmelia (Amel) - BKI UIN Siber Cirebon`,
+        text: `Assalamu'alaikum Warahmatullahi Wabarakatuh, Kak ${booking.name}.\n\nPermohonan sesi konseling kamu telah berhasil diterima.\nKode Reservasi: ${booking.code}\nTanggal: ${booking.date}\nSesi Waktu: ${booking.timeSlot}\nFormat: ${booking.mode}\nTopik: ${booking.category}\n\nLacak status: ${env.SITE_URL}/schedule?code=${booking.code}\nWhatsApp Konselor: +62 822-1044-5785\n\nSalam hangat,\nAmelia (Amel) - BKI UIN Siber Cirebon`,
         tags: [
           { name: 'category', value: 'booking-confirmation' },
           { name: 'booking_code', value: booking.code },
@@ -87,7 +88,7 @@ export async function sendAdminBookingAlertEmail(booking: Booking): Promise<bool
 
   try {
     const html = generateBookingAdminAlertHtml(booking);
-    const text = `Permohonan Jadwal Konseling Baru Masuk\n\nDetail Konseli:\n- Nama: ${booking.name}${booking.alias ? ` (${booking.alias})` : ''}\n- Kontak WhatsApp: ${booking.phone}\n- Email: ${booking.email}\n- Topik: ${booking.category}\n- Format: ${booking.mode}\n- Tanggal: ${booking.date}\n- Sesi: ${booking.timeSlot}\n- Catatan: ${booking.notes || 'Tidak ada catatan tambahan'}\n- Kode Reservasi: ${booking.code}\n\nBuka Panel Admin: ${process.env.NEXT_PUBLIC_SITE_URL || 'https://amelia.portofolio.id'}/admin/bookings`;
+    const text = `Permohonan Jadwal Konseling Baru Masuk\n\nDetail Konseli:\n- Nama: ${booking.name}${booking.alias ? ` (${booking.alias})` : ''}\n- Kontak WhatsApp: ${booking.phone}\n- Email: ${booking.email}\n- Topik: ${booking.category}\n- Format: ${booking.mode}\n- Tanggal: ${booking.date}\n- Sesi: ${booking.timeSlot}\n- Catatan: ${booking.notes || 'Tidak ada catatan tambahan'}\n- Kode Reservasi: ${booking.code}\n\nBuka Panel Admin: ${env.SITE_URL}/admin/bookings`;
 
     const { data, error } = await resend.emails.send(
       {
@@ -142,7 +143,7 @@ export async function sendAdminCurhatAlertEmail(curhat: AnonymousMessage): Promi
 
   try {
     const html = generateCurhatAdminAlertHtml(curhat);
-    const text = `Pesan Curhat Anonim Baru Masuk\n\nDetail Curhat:\n- Nama Samaran: ${curhat.alias || 'Teman Anonim'}\n- Kategori: ${curhat.category || 'Curhat Umum'}\n- Waktu: ${curhat.createdAt}\n\nIsi Pesan:\n"${curhat.message}"\n\nTanggapi di Panel Admin: ${process.env.NEXT_PUBLIC_SITE_URL || 'https://amelia.portofolio.id'}/admin/counseling`;
+    const text = `Pesan Curhat Anonim Baru Masuk\n\nDetail Curhat:\n- Nama Samaran: ${curhat.alias || 'Teman Anonim'}\n- Kategori: ${curhat.category || 'Curhat Umum'}\n- Waktu: ${curhat.createdAt}\n\nIsi Pesan:\n"${curhat.message}"\n\nTanggapi di Panel Admin: ${env.SITE_URL}/admin/counseling`;
 
     const { data, error } = await resend.emails.send(
       {
@@ -224,7 +225,7 @@ export async function sendBookingStatusUpdateEmail(
         to: booking.email,
         subject,
         html,
-        text: `Assalamu'alaikum Warahmatullahi Wabarakatuh, Kak ${booking.name}.\n\nStatus jadwal sesi konseling kamu (${booking.code}) telah diperbarui menjadi: ${newStatus}.\nTanggal: ${booking.date}\nWaktu: ${booking.timeSlot}\n\nLacak status selengkapnya: ${process.env.NEXT_PUBLIC_SITE_URL || 'https://amelia.portofolio.id'}/schedule?code=${booking.code}\nWhatsApp Konselor: +62 822-1044-5785\n\nSalam hangat,\nAmelia (Amel) - BKI UIN Siber Cirebon`,
+        text: `Assalamu'alaikum Warahmatullahi Wabarakatuh, Kak ${booking.name}.\n\nStatus jadwal sesi konseling kamu (${booking.code}) telah diperbarui menjadi: ${newStatus}.\nTanggal: ${booking.date}\nWaktu: ${booking.timeSlot}\n\nLacak status selengkapnya: ${env.SITE_URL}/schedule?code=${booking.code}\nWhatsApp Konselor: +62 822-1044-5785\n\nSalam hangat,\nAmelia (Amel) - BKI UIN Siber Cirebon`,
         tags: [
           { name: 'category', value: 'booking-status-update' },
           { name: 'booking_code', value: booking.code },

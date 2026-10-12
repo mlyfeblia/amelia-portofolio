@@ -165,7 +165,7 @@ export function ArticleList({
         ))}
       </div>
 
-      {totalPages && totalPages > 1 && onPageChange && (
+      {totalPages && totalPages >= 1 && onPageChange && (
         <PaginationBar
           currentPage={currentPage || 1}
           totalPages={totalPages}

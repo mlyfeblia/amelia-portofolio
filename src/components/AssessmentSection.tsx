@@ -39,23 +39,8 @@ interface AssessmentSectionProps {
 export default function AssessmentSection({ initialTab }: AssessmentSectionProps = {}) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [questions, setQuestions] = useState<AssessmentQuestion[]>(assessmentQuestions);
-  const [activeTab, setActiveTab] = useState<'quiz' | 'history'>(() => {
-    if (initialTab) return initialTab;
-    if (typeof window === 'undefined') return 'quiz';
-    try {
-      const searchParams = new URLSearchParams(window.location.search);
-      const tabParam = searchParams.get('tab');
-      const hash = window.location.hash;
-
-      if (tabParam === 'history' || hash === '#history' || hash === '#riwayat') {
-        return 'history';
-      }
-      if (tabParam === 'quiz') {
-        return 'quiz';
-      }
-    } catch {}
-    return 'quiz';
-  });
+  // Always initialize with SSR-safe defaults based on props
+  const [activeTab, setActiveTab] = useState<'quiz' | 'history'>(initialTab || 'quiz');
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState<'next' | 'prev'>('next');
   const [answers, setAnswers] = useState<number[]>([]);
@@ -69,7 +54,7 @@ export default function AssessmentSection({ initialTab }: AssessmentSectionProps
     if (initialTab) setActiveTab(initialTab);
   }
 
-  // Listen to browser navigation events
+  // Listen to browser navigation events & sync post-hydration on mount
   useEffect(() => {
     const handlePopState = () => {
       try {
@@ -84,6 +69,8 @@ export default function AssessmentSection({ initialTab }: AssessmentSectionProps
         }
       } catch {}
     };
+
+    handlePopState();
 
     window.addEventListener('popstate', handlePopState);
     window.addEventListener('hashchange', handlePopState);

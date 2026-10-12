@@ -19,66 +19,37 @@ export function AdminCounselingClient() {
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Filters
-  const [search, setSearch] = useState(() => {
-    if (typeof window === 'undefined') return '';
-    try {
-      const params = new URLSearchParams(window.location.search);
-      return params.get('q') || sessionStorage.getItem('admin_counseling_q') || '';
-    } catch {
-      return '';
-    }
-  });
+  // Filters - Always initialize with SSR-safe defaults to avoid hydration mismatch
+  const [search, setSearch] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('Semua');
+  const [statusFilter, setStatusFilter] = useState<'semua' | 'unanswered' | 'answered'>('semua');
+  const [visibilityFilter, setVisibilityFilter] = useState<'semua' | 'public' | 'private'>('semua');
+  const [landingFilter, setLandingFilter] = useState<'semua' | 'landing'>('semua');
+  const [dateFilter, setDateFilter] = useState('');
 
-  const [categoryFilter, setCategoryFilter] = useState(() => {
-    if (typeof window === 'undefined') return 'Semua';
-    try {
-      const params = new URLSearchParams(window.location.search);
-      return params.get('kategori') || sessionStorage.getItem('admin_counseling_kategori') || 'Semua';
-    } catch {
-      return 'Semua';
-    }
-  });
+  // Synchronize query parameters and session storage safely post-hydration
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const q = params.get('q') || sessionStorage.getItem('admin_counseling_q');
+        const k = params.get('kategori') || sessionStorage.getItem('admin_counseling_kategori');
+        const s = params.get('status') || sessionStorage.getItem('admin_counseling_status');
+        const v = params.get('vis') || sessionStorage.getItem('admin_counseling_vis');
+        const l = params.get('landing') || sessionStorage.getItem('admin_counseling_landing');
+        const d = params.get('tgl') || sessionStorage.getItem('admin_counseling_tgl');
 
-  const [statusFilter, setStatusFilter] = useState<'semua' | 'unanswered' | 'answered'>(() => {
-    if (typeof window === 'undefined') return 'semua';
-    try {
-      const params = new URLSearchParams(window.location.search);
-      const s = params.get('status') || sessionStorage.getItem('admin_counseling_status');
-      if (s === 'unanswered' || s === 'answered') return s;
-    } catch {}
-    return 'semua';
-  });
+        if (q) setSearch(q);
+        if (k) setCategoryFilter(k);
+        if (s === 'unanswered' || s === 'answered') setStatusFilter(s);
+        if (v === 'public' || v === 'private') setVisibilityFilter(v);
+        if (l === 'landing') setLandingFilter('landing');
+        if (d) setDateFilter(d);
+      } catch {}
+    }, 0);
 
-  const [visibilityFilter, setVisibilityFilter] = useState<'semua' | 'public' | 'private'>(() => {
-    if (typeof window === 'undefined') return 'semua';
-    try {
-      const params = new URLSearchParams(window.location.search);
-      const v = params.get('vis') || sessionStorage.getItem('admin_counseling_vis');
-      if (v === 'public' || v === 'private') return v;
-    } catch {}
-    return 'semua';
-  });
-
-  const [landingFilter, setLandingFilter] = useState<'semua' | 'landing'>(() => {
-    if (typeof window === 'undefined') return 'semua';
-    try {
-      const params = new URLSearchParams(window.location.search);
-      const l = params.get('landing') || sessionStorage.getItem('admin_counseling_landing');
-      if (l === 'landing') return 'landing';
-    } catch {}
-    return 'semua';
-  });
-
-  const [dateFilter, setDateFilter] = useState(() => {
-    if (typeof window === 'undefined') return '';
-    try {
-      const params = new URLSearchParams(window.location.search);
-      return params.get('tgl') || sessionStorage.getItem('admin_counseling_tgl') || '';
-    } catch {
-      return '';
-    }
-  });
+    return () => clearTimeout(timer);
+  }, []);
 
   const syncFilterParams = (
     s: 'semua' | 'unanswered' | 'answered',

@@ -1,12 +1,29 @@
 import { NextResponse } from 'next/server';
-import { db, isDatabaseConfigured } from '@/db';
-import { pushSubscriptions } from '@/db/schema';
-import { eq } from 'drizzle-orm';
-import crypto from 'crypto';
+import { checkDistributedRateLimit, getClientIp } from '@/lib/rate-limiter';
+import { isAuthenticatedAdmin } from '@/lib/admin-auth';
+import { savePushSubscription, deletePushSubscription } from '@/lib/data-store';
 import { telemetry } from '@/lib/telemetry';
 
 export async function POST(request: Request) {
+  const ip = getClientIp(request);
   try {
+    // 1. Distributed rate limiting: max 10 subscriptions per minute per IP
+    const rateCheck = await checkDistributedRateLimit(`push_sub:${ip}`, 10, 60);
+    if (!rateCheck.success) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: `Terlalu banyak permintaan langganan notifikasi. Silakan coba kembali dalam ${rateCheck.retryAfterSeconds} detik.`,
+        },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': String(rateCheck.retryAfterSeconds),
+          },
+        }
+      );
+    }
+
     const body = await request.json();
     const { subscription, bookingCode, role } = body;
 
@@ -28,34 +45,17 @@ export async function POST(request: Request) {
       );
     }
 
-    if (isDatabaseConfigured && db) {
-      const existing = await db
-        .select()
-        .from(pushSubscriptions)
-        .where(eq(pushSubscriptions.endpoint, endpoint))
-        .limit(1);
+    // 2. Authorization guard: Only verified admin session can claim admin subscription role
+    const isAdmin = await isAuthenticatedAdmin(request);
+    const assignedRole = role === 'admin' && isAdmin ? 'admin' : 'client';
 
-      if (existing.length > 0) {
-        await db
-          .update(pushSubscriptions)
-          .set({
-            p256dh,
-            auth,
-            bookingCode: bookingCode ? String(bookingCode).trim().toUpperCase() : existing[0].bookingCode,
-            role: role === 'admin' ? 'admin' : 'client',
-          })
-          .where(eq(pushSubscriptions.endpoint, endpoint));
-      } else {
-        await db.insert(pushSubscriptions).values({
-          id: `sub_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`,
-          endpoint,
-          p256dh,
-          auth,
-          role: role === 'admin' ? 'admin' : 'client',
-          bookingCode: bookingCode ? String(bookingCode).trim().toUpperCase() : null,
-        });
-      }
-    }
+    await savePushSubscription({
+      endpoint,
+      p256dh,
+      auth,
+      role: assignedRole,
+      bookingCode: bookingCode ? String(bookingCode).trim().toUpperCase() : undefined,
+    });
 
     return NextResponse.json({
       success: true,
@@ -81,9 +81,7 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ success: false, message: 'Endpoint diperlukan.' }, { status: 400 });
     }
 
-    if (isDatabaseConfigured && db) {
-      await db.delete(pushSubscriptions).where(eq(pushSubscriptions.endpoint, endpoint));
-    }
+    await deletePushSubscription(endpoint);
 
     return NextResponse.json({ success: true, message: 'Langganan notifikasi berhasil dihapus.' });
   } catch (error) {

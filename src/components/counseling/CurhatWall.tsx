@@ -38,43 +38,13 @@ function formatDate(dateInput?: string) {
 }
 
 export function CurhatWall({ messages, loading = false }: CurhatWallProps) {
-  const [activeTab, setActiveTab] = useState<string>(() => {
-    if (typeof window === 'undefined') return 'Semua';
-    try {
-      const params = new URLSearchParams(window.location.search);
-      return params.get('kategori') || 'Semua';
-    } catch {
-      return 'Semua';
-    }
-  });
-
-  const [searchQuery, setSearchQuery] = useState<string>(() => {
-    if (typeof window === 'undefined') return '';
-    try {
-      const params = new URLSearchParams(window.location.search);
-      return params.get('q') || '';
-    } catch {
-      return '';
-    }
-  });
-
-  const [currentPage, setCurrentPage] = useState<number>(() => {
-    if (typeof window === 'undefined') return 1;
-    try {
-      const params = new URLSearchParams(window.location.search);
-      const pageParam = params.get('page');
-      if (pageParam) {
-        const p = parseInt(pageParam, 10);
-        if (!isNaN(p) && p > 0) return p;
-      }
-    } catch {
-      // ignore
-    }
-    return 1;
-  });
+  // Always initialize with SSR-safe defaults to ensure zero hydration mismatch
+  const [activeTab, setActiveTab] = useState<string>('Semua');
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [currentPage, setCurrentPage] = useState<number>(1);
   const wallTopRef = useRef<HTMLDivElement>(null);
 
-  // Clean up legacy sticky sessionStorage on mount and listen to popstate
+  // Clean up legacy sticky sessionStorage on mount and synchronize URL params safely
   useEffect(() => {
     try {
       sessionStorage.removeItem('curhat_kategori');
@@ -82,26 +52,25 @@ export function CurhatWall({ messages, loading = false }: CurhatWallProps) {
       sessionStorage.removeItem('curhat_page');
     } catch {}
 
-    const handlePopState = () => {
+    const syncFromLocation = () => {
       try {
         const params = new URLSearchParams(window.location.search);
         const cat = params.get('kategori');
         const q = params.get('q');
         const page = params.get('page');
 
-        setActiveTab(cat || 'Semua');
-        setSearchQuery(q || '');
+        if (cat) setActiveTab(cat);
+        if (q) setSearchQuery(q);
         if (page) {
           const p = parseInt(page, 10);
           if (!isNaN(p) && p > 0) setCurrentPage(p);
-        } else {
-          setCurrentPage(1);
         }
       } catch {}
     };
 
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
+    syncFromLocation();
+    window.addEventListener('popstate', syncFromLocation);
+    return () => window.removeEventListener('popstate', syncFromLocation);
   }, []);
 
   const syncParams = (cat: string, q: string, page: number) => {
@@ -191,7 +160,7 @@ export function CurhatWall({ messages, loading = false }: CurhatWallProps) {
 
           {/* Quick Search */}
           <div className="relative w-full sm:w-72">
-            <Search className="w-3.5 h-3.5 text-[var(--color-ink-muted)] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <Search className="w-3.5 h-3.5 text-[var(--color-ink-muted)] search-icon" />
             <input
               type="text"
               value={searchQuery}
@@ -200,18 +169,18 @@ export function CurhatWall({ messages, loading = false }: CurhatWallProps) {
                 if (e.key === 'Escape') handleSearchChange('');
               }}
               placeholder="Cari unek-unek / topik..."
-              className="search-input text-xs pl-8 pr-8 py-1.5"
+              className="search-input w-full text-xs pl-8.5 pr-8.5 py-2 text-[var(--color-ink)] placeholder:text-[var(--color-ink-soft)]"
               aria-label="Cari curhat anonim"
             />
             {searchQuery && (
               <button
                 onClick={() => handleSearchChange('')}
                 type="button"
-                className="btn-icon-interactive absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 rounded text-[var(--color-ink-soft)] hover:text-[var(--color-ink)] hover:bg-[var(--color-paper-muted)] cursor-pointer"
+                className="search-clear-btn rounded-md text-[var(--color-ink-soft)] hover:text-[var(--color-ink)] hover:bg-[var(--color-paper-muted)] cursor-pointer"
                 title="Bersihkan kata kunci pencarian"
                 aria-label="Bersihkan pencarian"
               >
-                <X className="w-3 h-3" />
+                <X className="w-3.5 h-3.5" />
               </button>
             )}
           </div>

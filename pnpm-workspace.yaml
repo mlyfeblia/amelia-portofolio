@@ -2,3 +2,8 @@ allowBuilds:
   esbuild: true
   sharp: false
   unrs-resolver: false
+
+overrides:
+  source-map-js: '>=1.2.2'
+  esbuild: '>=0.25.0'
+  browserslist: '>=4.28.7'

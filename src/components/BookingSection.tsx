@@ -24,6 +24,7 @@ import {
 } from '@/lib/notifications';
 import { CounselingMode } from '@/types';
 import { formatPersonName } from '@/lib/text-formatter';
+import { focusAndScrollToField } from '@/lib/dom-utils';
 
 interface BookingSectionProps {
   initialTab?: 'new' | 'tracker';
@@ -33,18 +34,11 @@ interface BookingSectionProps {
 
 export default function BookingSection({ initialTab, initialCode, initialMode }: BookingSectionProps = {}) {
   const formId = useId();
+  // Always initialize with SSR-safe defaults based on props
   const [form, setForm] = useState<BookingFormState>(() => {
     let mode = DEFAULT_BOOKING_FORM.mode;
     if (initialMode && ['online_meet', 'online_chat', 'tatap_muka_cirebon'].includes(initialMode)) {
       mode = initialMode;
-    } else if (typeof window !== 'undefined') {
-      try {
-        const searchParams = new URLSearchParams(window.location.search);
-        const modeParam = searchParams.get('format') || searchParams.get('mode');
-        if (modeParam && ['online_meet', 'online_chat', 'tatap_muka_cirebon'].includes(modeParam)) {
-          mode = modeParam as CounselingMode;
-        }
-      } catch {}
     }
     return {
       ...DEFAULT_BOOKING_FORM,
@@ -52,35 +46,11 @@ export default function BookingSection({ initialTab, initialCode, initialMode }:
     };
   });
 
-  const [activeTab, setActiveTab] = useState<'new' | 'tracker'>(() => {
-    if (initialTab) return initialTab;
-    if (typeof window === 'undefined') return 'new';
-    try {
-      const searchParams = new URLSearchParams(window.location.search);
-      const tabParam = searchParams.get('tab');
-      const hash = window.location.hash;
-      if (tabParam === 'tracker' || hash === '#tracker' || hash === '#lacak') {
-        return 'tracker';
-      }
-      if (tabParam === 'new') {
-        return 'new';
-      }
-    } catch {}
-    return 'new';
-  });
+  const [activeTab, setActiveTab] = useState<'new' | 'tracker'>(initialTab || 'new');
 
   const deviceBookings = useDeviceBookings();
   const deviceBookingCount = deviceBookings.length;
-  const [trackCode, setTrackCode] = useState<string>(() => {
-    if (initialCode) return initialCode;
-    if (typeof window === 'undefined') return '';
-    try {
-      const searchParams = new URLSearchParams(window.location.search);
-      return searchParams.get('code') || '';
-    } catch {
-      return '';
-    }
-  });
+  const [trackCode, setTrackCode] = useState<string>(initialCode || '');
 
   // Sync prop changes during render
   const [prevInitialTab, setPrevInitialTab] = useState(initialTab);
@@ -95,7 +65,7 @@ export default function BookingSection({ initialTab, initialCode, initialMode }:
     if (initialCode) setTrackCode(initialCode);
   }
 
-  // Listen to browser back/forward and hash changes
+  // Listen to browser back/forward and hash changes, sync on mount post-hydration
   React.useEffect(() => {
     const handlePopState = () => {
       try {
@@ -126,6 +96,8 @@ export default function BookingSection({ initialTab, initialCode, initialMode }:
         }
       } catch {}
     };
+
+    handlePopState();
 
     window.addEventListener('popstate', handlePopState);
     window.addEventListener('hashchange', handlePopState);
@@ -203,33 +175,44 @@ export default function BookingSection({ initialTab, initialCode, initialMode }:
 
     if (!form.name.trim()) {
       setError('Mohon masukkan nama lengkapmu ya.');
+      focusAndScrollToField(`${formId}-name`);
       return;
     }
 
     const cleanPhone = form.phone.replace(/[\s-]/g, '');
-    if (!/^\+?[0-9]{9,15}$/.test(cleanPhone)) {
-      setError('Nomor WhatsApp harus terdiri dari 9-15 digit angka yang valid.');
+    const phoneDigits = cleanPhone.replace(/\D/g, '');
+    if (
+      !/^(\+62|62|0)8[0-9]{7,11}$/.test(cleanPhone) ||
+      phoneDigits.length < 9 ||
+      phoneDigits.length > 13
+    ) {
+      setError('Nomor WhatsApp harus diawali 08 dan terdiri dari 9-13 digit angka yang valid (contoh: 0812-3456-7890).');
+      focusAndScrollToField(`${formId}-phone`);
       return;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!form.email.trim() || !emailRegex.test(form.email.trim())) {
       setError('Mohon masukkan alamat email yang valid (contoh: nama@email.com).');
+      focusAndScrollToField(`${formId}-email`);
       return;
     }
 
     if (!form.date) {
       setError('Mohon tentukan tanggal sesi konseling.');
+      focusAndScrollToField(`${formId}-date`);
       return;
     }
     const today = getTodayDateString();
     if (form.date < today) {
       setError('Tanggal sesi tidak boleh memilih hari yang sudah lewat.');
+      focusAndScrollToField(`${formId}-date`);
       return;
     }
     const maxDate = getMaxBookingDateString(60);
     if (form.date > maxDate) {
       setError('Jadwal konsultasi dapat diajukan maksimal 60 hari ke depan.');
+      focusAndScrollToField(`${formId}-date`);
       return;
     }
 

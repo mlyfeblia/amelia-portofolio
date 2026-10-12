@@ -54,7 +54,7 @@ export function BookingTimelineStepper({ status, date, timeSlot }: BookingTimeli
 
   return (
     <div className="space-y-3 py-2">
-      <div className="flex items-center justify-between text-xs text-[var(--color-ink-muted)] px-1">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-2 text-xs text-[var(--color-ink-muted)] px-1">
         <span className="font-semibold text-[var(--color-ink)]">Perjalanan Sesi Konseling:</span>
         <span className="font-medium text-[var(--color-accent)]">
           {status === 'menunggu' && 'Fase 1 dari 3: Menunggu Verifikasi'}
@@ -71,11 +71,11 @@ export function BookingTimelineStepper({ status, date, timeSlot }: BookingTimeli
           let iconClasses = 'bg-[var(--color-paper-muted)] text-[var(--color-ink-muted)]';
 
           if (step.isCurrent) {
-            containerClasses = 'bg-[var(--color-accent-soft)] border-[var(--color-accent-border)] text-[var(--color-accent)] ring-1 ring-[var(--color-accent-soft)] shadow-xs';
+            containerClasses = 'bg-[var(--color-surface)] border-[var(--color-accent)] text-[var(--color-accent)] ring-1 ring-[var(--color-accent)] shadow-xs';
             iconClasses = 'bg-[var(--color-accent)] text-white';
           } else if (step.isCompleted) {
-            containerClasses = 'bg-emerald-50/70 border-emerald-200 text-emerald-900';
-            iconClasses = 'bg-emerald-600 text-white';
+            containerClasses = 'bg-[var(--color-accent-soft)]/60 border-[var(--color-accent-border)] text-[var(--color-ink)]';
+            iconClasses = 'bg-[var(--color-accent)] text-white shadow-2xs';
           }
 
           return (

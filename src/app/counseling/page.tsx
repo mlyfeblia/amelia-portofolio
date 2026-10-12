@@ -83,16 +83,18 @@ export default async function CounselingPage() {
           dangerouslySetInnerHTML={{ __html: safeJsonLd(faqJsonLd) }}
         />
       )}
-      <Navbar />
-      <main id="main-content" className="min-h-screen pt-8 sm:pt-10 md:pt-12 pb-16 sm:pb-20 md:pb-24 page-enter">
-        <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-10 space-y-8">
-          <CurhatHeader />
-          <div className="pt-4">
-            <CurhatSection initialMessages={initialCurhat} />
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <main id="main-content" className="flex-1 pt-8 sm:pt-10 md:pt-12 pb-12 sm:pb-16 page-enter">
+          <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-10 space-y-8">
+            <CurhatHeader />
+            <div className="pt-4">
+              <CurhatSection initialMessages={initialCurhat} />
+            </div>
           </div>
-        </div>
-      </main>
-      <Footer />
+        </main>
+        <Footer />
+      </div>
     </>
   );
 }

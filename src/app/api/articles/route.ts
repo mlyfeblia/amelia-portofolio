@@ -4,9 +4,10 @@ import { isAuthenticatedAdmin } from '@/lib/admin-auth';
 import { validateArticleCreateInput } from '@/lib/validators';
 import { telemetry } from '@/lib/telemetry';
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const articles = await getArticles();
+    const isAuth = await isAuthenticatedAdmin(request);
+    const articles = await getArticles(!isAuth);
     return NextResponse.json({ success: true, data: articles });
   } catch (error) {
     telemetry.error('Error fetching articles', error, { route: '/api/articles', method: 'GET' });

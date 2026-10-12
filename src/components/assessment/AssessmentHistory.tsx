@@ -226,23 +226,7 @@ export function AssessmentHistory({ onStartNew }: AssessmentHistoryProps) {
                 </div>
 
                 {/* Expand / Collapse toggle & WhatsApp action */}
-                <div className="pt-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-t border-[var(--color-paper-border)]/60">
-                  <button
-                    type="button"
-                    onClick={() => toggleExpand(record.id)}
-                    aria-expanded={isExpanded}
-                    className="btn-secondary btn-interactive px-2.5 py-1 text-[11px] min-[340px]:text-xs font-medium rounded-lg border border-[var(--color-paper-border)] bg-[var(--color-surface)] hover:border-[var(--color-accent-border)] hover:bg-[var(--color-accent-soft)]/50 text-[var(--color-ink)] hover:text-[var(--color-accent)] inline-flex items-center justify-between sm:justify-start gap-1.5 cursor-pointer shadow-2xs transition-all duration-200"
-                  >
-                    <span className="leading-snug transition-colors duration-200">
-                      {isExpanded ? 'Sembunyikan Rincian' : 'Lihat Rekomendasi & Catatan Lengkap'}
-                    </span>
-                    <ChevronDown
-                      className={`w-3.5 h-3.5 shrink-0 transition-transform duration-300 ease-in-out ${
-                        isExpanded ? 'rotate-180 text-[var(--color-accent)]' : 'rotate-0 text-[var(--color-ink-muted)]'
-                      }`}
-                    />
-                  </button>
-
+                <div className="pt-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-t border-[var(--color-paper-border)]/60">
                   <a
                     href={getAssessmentWhatsAppUrl({
                       level: record.level,
@@ -252,11 +236,27 @@ export function AssessmentHistory({ onStartNew }: AssessmentHistoryProps) {
                     })}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="btn-interactive px-2.5 py-1 text-[11px] min-[340px]:text-xs font-semibold rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-800 hover:bg-emerald-100/80 inline-flex items-center gap-1.5 shrink-0 self-start sm:self-auto shadow-2xs transition-all duration-200"
+                    className="btn-primary btn-interactive order-1 sm:order-2 w-full sm:w-auto px-3.5 py-1.5 text-xs font-semibold rounded-xl inline-flex items-center justify-center gap-1.5 shrink-0 shadow-2xs transition-all duration-200 whitespace-nowrap"
                   >
-                    <MessageCircle className="w-3.5 h-3.5 shrink-0 text-emerald-600" />
-                    <span>Konsultasikan</span>
+                    <MessageCircle className="w-3.5 h-3.5 shrink-0" />
+                    <span>Konsultasikan via WhatsApp</span>
                   </a>
+
+                  <button
+                    type="button"
+                    onClick={() => toggleExpand(record.id)}
+                    aria-expanded={isExpanded}
+                    className="btn-secondary btn-interactive order-2 sm:order-1 w-full sm:w-auto px-3 py-1.5 text-xs font-medium rounded-xl border border-[var(--color-paper-border)] bg-[var(--color-surface)] hover:border-[var(--color-accent-border)] hover:bg-[var(--color-accent-soft)]/50 text-[var(--color-ink)] hover:text-[var(--color-accent)] inline-flex items-center justify-between sm:justify-start gap-1.5 cursor-pointer shadow-2xs transition-all duration-200"
+                  >
+                    <span className="truncate leading-normal transition-colors duration-200">
+                      {isExpanded ? 'Sembunyikan Rincian' : 'Lihat Catatan & Rincian'}
+                    </span>
+                    <ChevronDown
+                      className={`w-3.5 h-3.5 shrink-0 transition-transform duration-300 ease-in-out ${
+                        isExpanded ? 'rotate-180 text-[var(--color-accent)]' : 'rotate-0 text-[var(--color-ink-muted)]'
+                      }`}
+                    />
+                  </button>
                 </div>
               </div>
 

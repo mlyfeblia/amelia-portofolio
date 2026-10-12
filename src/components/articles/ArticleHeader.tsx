@@ -18,7 +18,7 @@ export function ArticleHeader({ article }: { article: Article }) {
       </h1>
 
       {/* 2. Unified Author & Meta Row */}
-      <div className="flex flex-wrap items-center justify-between gap-4 pt-1">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 pt-1">
         <div className="flex items-center gap-3">
           <div className="relative w-10 h-10 rounded-full overflow-hidden border border-[var(--color-accent-border)] bg-[var(--color-surface)] shrink-0 shadow-2xs">
             <Image
@@ -41,16 +41,18 @@ export function ArticleHeader({ article }: { article: Article }) {
           </div>
         </div>
 
-        {/* Article Metadata Pills Container */}
-        <div className="flex flex-wrap items-center gap-1.5 min-[340px]:gap-2 text-xs">
+        {/* Article Metadata Pills Container - Clean 1 row without horizontal slider */}
+        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 text-[11px] sm:text-xs py-0.5">
           {article.publishedAt && (
-            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[var(--color-surface)] border border-[var(--color-paper-border)] text-[var(--color-ink-muted)] shadow-2xs shrink-0">
-              <time dateTime={getIsoDateString(article.publishedAt)}>{formatIndonesianDate(article.publishedAt) || article.publishedAt}</time>
+            <span className="inline-flex items-center gap-1 px-2 sm:px-2.5 py-1 rounded-lg bg-[var(--color-surface)] border border-[var(--color-paper-border)] text-[var(--color-ink-muted)] shadow-2xs max-w-[130px] min-[360px]:max-w-none">
+              <time dateTime={getIsoDateString(article.publishedAt)} className="truncate">
+                {formatIndonesianDate(article.publishedAt) || article.publishedAt}
+              </time>
             </span>
           )}
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[var(--color-surface)] border border-[var(--color-paper-border)] text-[var(--color-ink-soft)] shadow-2xs shrink-0">
-            <Clock className="w-3.5 h-3.5 text-[var(--color-accent)]" aria-hidden="true" />
-            <span>{article.readTime}</span>
+          <span className="inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 rounded-lg bg-[var(--color-surface)] border border-[var(--color-paper-border)] text-[var(--color-ink-soft)] shadow-2xs shrink-0">
+            <Clock className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[var(--color-accent)] shrink-0" aria-hidden="true" />
+            <span>{article.readTime ? article.readTime.replace(/\s*baca\s*/i, '').trim() : ''}</span>
           </span>
           <ArticleViewTracker slug={article.slug} initialViews={article.views ?? 0} />
         </div>

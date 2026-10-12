@@ -436,9 +436,9 @@ export default function PwaLifecycle() {
                   Pembaruan Baru Tersedia
                 </span>
               </div>
-              <h3 className="text-xs sm:text-sm font-semibold text-[var(--color-ink)] mt-1 leading-snug line-clamp-2">
+              <p className="text-xs sm:text-sm font-semibold text-[var(--color-ink)] mt-1 leading-snug line-clamp-2">
                 {latestRelease.title}
-              </h3>
+              </p>
             </div>
             <button
               type="button"
@@ -511,9 +511,9 @@ export default function PwaLifecycle() {
                 />
               </div>
               <div className="min-w-0 flex-1">
-                <h3 className="font-display text-xs sm:text-sm font-semibold text-[var(--color-ink)] leading-snug truncate">
+                <p className="font-display text-xs sm:text-sm font-semibold text-[var(--color-ink)] leading-snug truncate">
                   {bannerContent.title}
-                </h3>
+                </p>
                 <p className="text-[11px] text-[var(--color-ink-muted)] leading-tight truncate mt-0.5">
                   Akses instan &amp; offline di layar utama
                 </p>
@@ -591,9 +591,9 @@ export default function PwaLifecycle() {
                   />
                 </div>
                 <div>
-                  <h3 id="ios-modal-title" className="font-display font-semibold text-base text-[var(--color-ink)]">
+                  <h2 id="ios-modal-title" className="font-display font-semibold text-base text-[var(--color-ink)]">
                     Pasang di iPhone / iPad
-                  </h3>
+                  </h2>
                   <p className="text-xs text-[var(--color-ink-muted)]">Akses cepat via Safari</p>
                 </div>
               </div>

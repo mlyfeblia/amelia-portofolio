@@ -215,9 +215,9 @@ export function AssessmentResult({
               })}
               target="_blank"
               rel="noopener noreferrer"
-              className="group btn-secondary btn-interactive text-xs sm:text-sm py-2.5 px-4 inline-flex items-center justify-center gap-2 rounded-xl hover:-translate-y-0.5 hover:shadow-xs hover:border-[#25D366]/40 hover:bg-[#25D366]/10 transition-all duration-200"
+              className="group btn-secondary btn-interactive text-xs sm:text-sm py-2.5 px-4 inline-flex items-center justify-center gap-2 rounded-xl hover:-translate-y-0.5 hover:shadow-xs hover:border-[var(--color-accent-border)] hover:bg-[var(--color-accent-soft)] transition-all duration-200"
             >
-              <MessageCircle className="w-4 h-4 text-[#25D366] transition-transform duration-200 group-hover:scale-110 shrink-0" />
+              <MessageCircle className="w-4 h-4 text-[var(--color-accent)] transition-transform duration-200 group-hover:scale-110 shrink-0" />
               <span>Konsultasi WhatsApp</span>
             </a>
             <Link

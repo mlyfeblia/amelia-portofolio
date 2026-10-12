@@ -77,7 +77,7 @@ export async function POST(req: NextRequest) {
 
     // 1. Primary: InsForge Cloud Object Storage
     const baseUrl = process.env.NEXT_PUBLIC_INSFORGE_URL || 'https://y8ug7mrt.ap-southeast.insforge.app';
-    const apiKey = process.env.INSFORGE_API_KEY || 'ik_e3b61cf6ab3a67f8ad99071bfd628605';
+    const apiKey = process.env.INSFORGE_API_KEY;
 
     if (baseUrl && apiKey) {
       try {

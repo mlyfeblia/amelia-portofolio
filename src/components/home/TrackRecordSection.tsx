@@ -29,12 +29,12 @@ export function TrackRecordSection() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
           {/* Card 1: Pengalaman Kerja Operasional */}
-          <div className="p-6 lg:p-7 bg-[var(--color-paper)] border border-[var(--color-paper-border)] rounded-xl space-y-4 flex flex-col justify-between card-interactive">
+          <div className="p-6 lg:p-7 bg-[var(--color-paper)] border border-[var(--color-paper-border)] hover:border-[var(--color-accent)] rounded-xl space-y-4 flex flex-col justify-between card-interactive group cursor-pointer hover:shadow-xl hover:-translate-y-2 transition-all duration-300 ease-out">
             <div className="space-y-3">
-              <div className="w-10 h-10 rounded-lg bg-[var(--color-accent-soft)] text-[var(--color-accent)] flex items-center justify-center">
-                <Briefcase className="w-5 h-5" />
+              <div className="card-icon-pop w-10 h-10 rounded-lg bg-[var(--color-accent-soft)] text-[var(--color-accent)] flex items-center justify-center transition-all duration-300 group-hover:scale-125 group-hover:bg-[var(--color-accent)] group-hover:text-white shrink-0">
+                <Briefcase className="w-5 h-5 transition-transform duration-200" />
               </div>
-              <h3 className="text-base sm:text-lg font-semibold text-[var(--color-ink)] leading-snug">
+              <h3 className="text-base sm:text-lg font-semibold text-[var(--color-ink)] group-hover:text-[var(--color-accent)] transition-colors leading-snug">
                 Operasional Kasir &amp; Layanan Pelanggan
               </h3>
               <p className="text-sm text-[var(--color-ink-muted)] leading-relaxed">
@@ -47,12 +47,12 @@ export function TrackRecordSection() {
           </div>
 
           {/* Card 2: Organisasi & Konten Digital */}
-          <div className="p-6 lg:p-7 bg-[var(--color-paper)] border border-[var(--color-paper-border)] rounded-xl space-y-4 flex flex-col justify-between card-interactive">
+          <div className="p-6 lg:p-7 bg-[var(--color-paper)] border border-[var(--color-paper-border)] hover:border-[var(--color-accent)] rounded-xl space-y-4 flex flex-col justify-between card-interactive group cursor-pointer hover:shadow-xl hover:-translate-y-2 transition-all duration-300 ease-out">
             <div className="space-y-3">
-              <div className="w-10 h-10 rounded-lg bg-[var(--color-accent-soft)] text-[var(--color-accent)] flex items-center justify-center">
-                <Users className="w-5 h-5" />
+              <div className="card-icon-pop w-10 h-10 rounded-lg bg-[var(--color-accent-soft)] text-[var(--color-accent)] flex items-center justify-center transition-all duration-300 group-hover:scale-125 group-hover:bg-[var(--color-accent)] group-hover:text-white shrink-0">
+                <Users className="w-5 h-5 transition-transform duration-200" />
               </div>
-              <h3 className="text-base sm:text-lg font-semibold text-[var(--color-ink)] leading-snug">
+              <h3 className="text-base sm:text-lg font-semibold text-[var(--color-ink)] group-hover:text-[var(--color-accent)] transition-colors leading-snug">
                 Duta Inspirasi &amp; Fasilitator Parlemen
               </h3>
               <p className="text-sm text-[var(--color-ink-muted)] leading-relaxed">
@@ -65,12 +65,12 @@ export function TrackRecordSection() {
           </div>
 
           {/* Card 3: Pendidikan & Bimbingan Konseling */}
-          <div className="p-6 lg:p-7 bg-[var(--color-paper)] border border-[var(--color-paper-border)] rounded-xl space-y-4 flex flex-col justify-between card-interactive">
+          <div className="p-6 lg:p-7 bg-[var(--color-paper)] border border-[var(--color-paper-border)] hover:border-[var(--color-accent)] rounded-xl space-y-4 flex flex-col justify-between card-interactive group cursor-pointer hover:shadow-xl hover:-translate-y-2 transition-all duration-300 ease-out">
             <div className="space-y-3">
-              <div className="w-10 h-10 rounded-lg bg-[var(--color-accent-soft)] text-[var(--color-accent)] flex items-center justify-center">
-                <GraduationCap className="w-5 h-5" />
+              <div className="card-icon-pop w-10 h-10 rounded-lg bg-[var(--color-accent-soft)] text-[var(--color-accent)] flex items-center justify-center transition-all duration-300 group-hover:scale-125 group-hover:bg-[var(--color-accent)] group-hover:text-white shrink-0">
+                <GraduationCap className="w-5 h-5 transition-transform duration-200" />
               </div>
-              <h3 className="text-base sm:text-lg font-semibold text-[var(--color-ink)] leading-snug">
+              <h3 className="text-base sm:text-lg font-semibold text-[var(--color-ink)] group-hover:text-[var(--color-accent)] transition-colors leading-snug">
                 S1 Bimbingan Konseling UIN Siber
               </h3>
               <p className="text-sm text-[var(--color-ink-muted)] leading-relaxed">

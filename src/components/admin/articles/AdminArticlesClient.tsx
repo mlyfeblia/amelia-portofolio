@@ -31,56 +31,34 @@ export function AdminArticlesClient() {
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Filter States
-  const [search, setSearch] = useState(() => {
-    if (typeof window === 'undefined') return '';
-    try {
-      const params = new URLSearchParams(window.location.search);
-      return params.get('q') || sessionStorage.getItem('admin_articles_q') || '';
-    } catch {
-      return '';
-    }
-  });
+  // Filter States - Always initialize with SSR-safe defaults to avoid hydration mismatch
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'semua' | 'published' | 'draft'>('semua');
+  const [landingFilter, setLandingFilter] = useState<'semua' | 'landing'>('semua');
+  const [selectedCategory, setSelectedCategory] = useState('Semua');
+  const [dateFilter, setDateFilter] = useState('');
 
-  const [statusFilter, setStatusFilter] = useState<'semua' | 'published' | 'draft'>(() => {
-    if (typeof window === 'undefined') return 'semua';
-    try {
-      const params = new URLSearchParams(window.location.search);
-      const s = params.get('status') || sessionStorage.getItem('admin_articles_status');
-      if (s === 'published' || s === 'draft') return s;
-    } catch {}
-    return 'semua';
-  });
+  // Synchronize query parameters and session storage safely post-hydration
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const q = params.get('q') || sessionStorage.getItem('admin_articles_q');
+        const s = params.get('status') || sessionStorage.getItem('admin_articles_status');
+        const l = params.get('landing') || sessionStorage.getItem('admin_articles_landing');
+        const k = params.get('kategori') || sessionStorage.getItem('admin_articles_kategori');
+        const d = params.get('tgl') || sessionStorage.getItem('admin_articles_tgl');
 
-  const [landingFilter, setLandingFilter] = useState<'semua' | 'landing'>(() => {
-    if (typeof window === 'undefined') return 'semua';
-    try {
-      const params = new URLSearchParams(window.location.search);
-      const l = params.get('landing') || sessionStorage.getItem('admin_articles_landing');
-      if (l === 'landing') return 'landing';
-    } catch {}
-    return 'semua';
-  });
+        if (q) setSearch(q);
+        if (s === 'published' || s === 'draft') setStatusFilter(s);
+        if (l === 'landing') setLandingFilter('landing');
+        if (k) setSelectedCategory(k);
+        if (d) setDateFilter(d);
+      } catch {}
+    }, 0);
 
-  const [selectedCategory, setSelectedCategory] = useState(() => {
-    if (typeof window === 'undefined') return 'Semua';
-    try {
-      const params = new URLSearchParams(window.location.search);
-      return params.get('kategori') || sessionStorage.getItem('admin_articles_kategori') || 'Semua';
-    } catch {
-      return 'Semua';
-    }
-  });
-
-  const [dateFilter, setDateFilter] = useState(() => {
-    if (typeof window === 'undefined') return '';
-    try {
-      const params = new URLSearchParams(window.location.search);
-      return params.get('tgl') || sessionStorage.getItem('admin_articles_tgl') || '';
-    } catch {
-      return '';
-    }
-  });
+    return () => clearTimeout(timer);
+  }, []);
 
   const syncFilterParams = (
     s: 'semua' | 'published' | 'draft',

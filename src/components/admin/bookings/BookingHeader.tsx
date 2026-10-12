@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { RefreshCw } from 'lucide-react';
+import { Spinner } from '@/components/ui/Spinner';
 
 interface BookingHeaderProps {
   totalCount: number;
@@ -15,7 +16,7 @@ export function BookingHeader({
   onRefresh,
 }: BookingHeaderProps) {
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
       <div className="min-w-0">
         <h1
           className="text-xl sm:text-2xl lg:text-3xl font-medium text-[var(--color-ink)] leading-tight"
@@ -30,11 +31,15 @@ export function BookingHeader({
 
       <button
         onClick={onRefresh}
-        disabled={loading}
         type="button"
-        className="btn-interactive inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[var(--color-surface)] border border-[var(--color-paper-border)] hover:border-[var(--color-accent-border)] hover:bg-[var(--color-accent-soft)]/50 text-xs font-semibold text-[var(--color-ink)] hover:text-[var(--color-accent)] shadow-2xs cursor-pointer shrink-0 self-start sm:self-auto transition-all disabled:opacity-60"
+        disabled={loading}
+        className="btn-interactive inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[var(--color-surface)] border border-[var(--color-paper-border)] hover:border-[var(--color-accent-border)] hover:bg-[var(--color-accent-soft)]/50 text-xs font-semibold text-[var(--color-ink)] hover:text-[var(--color-accent)] shadow-2xs cursor-pointer shrink-0 transition-all disabled:opacity-60"
       >
-        <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+        {loading ? (
+          <Spinner size="xs" variant="accent" label="Menyegarkan data..." />
+        ) : (
+          <RefreshCw className="w-3.5 h-3.5 text-[var(--color-ink-soft)]" />
+        )}
         <span>Segarkan</span>
       </button>
     </div>

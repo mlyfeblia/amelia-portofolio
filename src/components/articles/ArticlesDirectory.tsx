@@ -15,43 +15,13 @@ interface ArticlesDirectoryProps {
 }
 
 export function ArticlesDirectory({ initialArticles }: ArticlesDirectoryProps) {
-  const [activeCategory, setActiveCategory] = useState<string>(() => {
-    if (typeof window === 'undefined') return 'Semua';
-    try {
-      const params = new URLSearchParams(window.location.search);
-      return params.get('kategori') || params.get('category') || 'Semua';
-    } catch {
-      return 'Semua';
-    }
-  });
-
-  const [searchQuery, setSearchQuery] = useState<string>(() => {
-    if (typeof window === 'undefined') return '';
-    try {
-      const params = new URLSearchParams(window.location.search);
-      return params.get('q') || '';
-    } catch {
-      return '';
-    }
-  });
-
-  const [currentPage, setCurrentPage] = useState<number>(() => {
-    if (typeof window === 'undefined') return 1;
-    try {
-      const params = new URLSearchParams(window.location.search);
-      const pageParam = params.get('page');
-      if (pageParam) {
-        const p = parseInt(pageParam, 10);
-        if (!isNaN(p) && p > 0) return p;
-      }
-    } catch {
-      // ignore
-    }
-    return 1;
-  });
+  // Always initialize with SSR-safe defaults to ensure zero hydration mismatch
+  const [activeCategory, setActiveCategory] = useState<string>('Semua');
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [currentPage, setCurrentPage] = useState<number>(1);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Listen to popstate and clean legacy storage
+  // Synchronize URL query parameters safely on client after hydration & on popstate
   useEffect(() => {
     try {
       sessionStorage.removeItem('articles_category');
@@ -59,26 +29,26 @@ export function ArticlesDirectory({ initialArticles }: ArticlesDirectoryProps) {
       sessionStorage.removeItem('articles_page');
     } catch {}
 
-    const handlePopState = () => {
+    const syncFromLocation = () => {
       try {
         const params = new URLSearchParams(window.location.search);
         const cat = params.get('kategori') || params.get('category');
         const q = params.get('q');
         const page = params.get('page');
 
-        setActiveCategory(cat || 'Semua');
-        setSearchQuery(q || '');
+        if (cat) setActiveCategory(cat);
+        if (q) setSearchQuery(q);
         if (page) {
           const p = parseInt(page, 10);
           if (!isNaN(p) && p > 0) setCurrentPage(p);
-        } else {
-          setCurrentPage(1);
         }
       } catch {}
     };
 
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
+    syncFromLocation();
+
+    window.addEventListener('popstate', syncFromLocation);
+    return () => window.removeEventListener('popstate', syncFromLocation);
   }, []);
 
   const syncParams = useCallback((cat: string, q: string, page: number) => {
@@ -180,7 +150,7 @@ export function ArticlesDirectory({ initialArticles }: ArticlesDirectoryProps) {
 
           {/* Search input */}
           <div className="relative w-full sm:w-80">
-            <Search className="w-4 h-4 text-[var(--color-ink-muted)] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <Search className="w-4 h-4 text-[var(--color-ink-muted)] search-icon" />
             <input
               type="text"
               value={searchQuery}
@@ -196,7 +166,7 @@ export function ArticlesDirectory({ initialArticles }: ArticlesDirectoryProps) {
               <button
                 onClick={() => handleSearchChange('')}
                 type="button"
-                className="btn-icon-interactive absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded-md text-[var(--color-ink-soft)] hover:text-[var(--color-ink)] hover:bg-[var(--color-paper-muted)] cursor-pointer"
+                className="search-clear-btn rounded-md text-[var(--color-ink-soft)] hover:text-[var(--color-ink)] hover:bg-[var(--color-paper-muted)] cursor-pointer"
                 title="Bersihkan kata kunci pencarian"
                 aria-label="Bersihkan pencarian"
               >
@@ -307,7 +277,7 @@ export function ArticlesDirectory({ initialArticles }: ArticlesDirectoryProps) {
       ) : (
         <div
           key={`${activeCategory}-${safePage}`}
-          className="divide-y divide-[var(--color-paper-border)] border-y border-[var(--color-paper-border)] pagination-slide-enter"
+          className={`divide-y divide-[var(--color-paper-border)] border-t ${totalPages <= 1 ? 'border-b' : ''} border-[var(--color-paper-border)] pagination-slide-enter`}
           data-reveal
         >
           {paginatedArticles.map((art) => (

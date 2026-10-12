@@ -86,12 +86,6 @@ export function CounselingCard({
         </div>
 
         <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 text-xs self-start sm:self-auto shrink-0 w-full sm:w-auto">
-          {item.isAnswered ? (
-            <Badge variant="accent" size="xs" dot>Dijawab</Badge>
-          ) : (
-            <Badge variant="warning" size="xs" dot>Menunggu</Badge>
-          )}
-
           {/* Landing Page Toggle Button with Star icon */}
           <button
             onClick={() => setShowLandingConfirm(true)}
@@ -135,16 +129,15 @@ export function CounselingCard({
           </button>
 
           {/* Delete Button */}
-          <Tooltip content="Hapus pesan curhat" position="top">
-            <button
-              onClick={onDelete}
-              type="button"
-              className="btn-interactive p-1.5 rounded-lg text-[var(--color-ink-muted)] hover:text-[var(--color-error)] hover:bg-[var(--color-error-soft)] transition-colors cursor-pointer shrink-0"
-              aria-label="Hapus pesan curhat ini"
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-            </button>
-          </Tooltip>
+          <button
+            onClick={onDelete}
+            type="button"
+            className="btn-interactive inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg text-[var(--color-ink-muted)] hover:text-[var(--color-error)] hover:bg-[var(--color-error-soft)] border border-[var(--color-paper-border)] hover:border-red-200 transition-colors cursor-pointer shrink-0"
+            aria-label="Hapus pesan curhat ini"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            <span>Hapus</span>
+          </button>
         </div>
       </div>
 
@@ -173,30 +166,30 @@ export function CounselingCard({
         </div>
       )}
 
-      {/* Reply Box or Trigger Button */}
-      {isReplying ? (
-        <div className="tab-content-enter">
-          <CounselingReplyBox
-            initialText={item.answer || ''}
-            initialPublic={item.isPublic}
-            initialLanding={item.showOnLandingPage ?? false}
-            itemId={item.id}
-            itemAlias={item.alias}
-            onCancel={onCancelReply}
-            onSave={onSaveReply}
-          />
-        </div>
-      ) : (
-        <div className="flex items-center justify-end gap-2 pt-1">
-          <button
-            onClick={onStartReply}
-            type="button"
-            className="btn-secondary btn-interactive inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-[var(--color-ink)] hover:text-[var(--color-accent)] bg-[var(--color-surface)] border border-[var(--color-paper-border)] hover:border-[var(--color-accent-border)] hover:bg-[var(--color-accent-soft)]/50 shadow-2xs transition-all cursor-pointer"
-          >
-            <Send className="w-3.5 h-3.5 text-[var(--color-accent)] shrink-0" />
-            <span>{item.answer ? 'Ubah Tanggapan' : 'Beri Tanggapan'}</span>
-          </button>
-        </div>
+      {/* Reply Trigger Button */}
+      <div className="flex items-center justify-end gap-2 pt-1">
+        <button
+          onClick={onStartReply}
+          type="button"
+          className="btn-secondary btn-interactive inline-flex items-center gap-1.5 h-8 px-2.5 sm:px-3 rounded-lg text-xs font-semibold text-[var(--color-ink)] hover:text-[var(--color-accent)] bg-[var(--color-surface)] border border-[var(--color-paper-border)] hover:border-[var(--color-accent-border)] hover:bg-[var(--color-accent-soft)]/50 shadow-2xs transition-all cursor-pointer"
+        >
+          <Send className="w-3.5 h-3.5 text-[var(--color-accent)] shrink-0" />
+          <span>{item.answer ? 'Ubah Tanggapan' : 'Beri Tanggapan'}</span>
+        </button>
+      </div>
+
+      {/* Reply Modal Dialog */}
+      {isReplying && (
+        <CounselingReplyBox
+          initialText={item.answer || ''}
+          initialPublic={item.isPublic}
+          initialLanding={item.showOnLandingPage ?? false}
+          itemId={item.id}
+          itemAlias={item.alias}
+          originalMessage={item.message}
+          onCancel={onCancelReply}
+          onSave={onSaveReply}
+        />
       )}
 
       {/* Decision Modal for Privacy Toggle */}

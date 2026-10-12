@@ -24,13 +24,29 @@ export const env = {
   },
 
   get ADMIN_PIN(): string {
-    return (process.env.ADMIN_PIN || '160523').trim();
+    const pin = (process.env.ADMIN_PIN || '').trim();
+    if (process.env.NODE_ENV === 'production') {
+      if (!pin) {
+        throw new Error('[FATAL SECURITY ERROR] ADMIN_PIN environment variable must be configured in production.');
+      }
+      if (pin === '160523') {
+        console.warn('[SECURITY WARNING] Default development ADMIN_PIN is being used in production. Please set a custom ADMIN_PIN in deployment settings.');
+      }
+      return pin;
+    }
+    return pin || '160523';
   },
 
   get ADMIN_AUTH_SECRET(): string {
-    const secret = process.env.ADMIN_AUTH_SECRET;
-    if (!secret && process.env.NODE_ENV === 'production') {
-      console.warn('[SECURITY WARNING] ADMIN_AUTH_SECRET is not set in production. Set ADMIN_AUTH_SECRET in your Vercel project settings.');
+    const secret = (process.env.ADMIN_AUTH_SECRET || '').trim();
+    if (process.env.NODE_ENV === 'production') {
+      if (!secret) {
+        throw new Error('[FATAL SECURITY ERROR] ADMIN_AUTH_SECRET environment variable must be configured in production.');
+      }
+      if (secret.length < 32) {
+        throw new Error('[FATAL SECURITY ERROR] ADMIN_AUTH_SECRET must be at least 32 characters long in production.');
+      }
+      return secret;
     }
     return secret || 'amel-admin-counseling-secret-key-2026';
   },
@@ -70,5 +86,28 @@ export const env = {
 
   get AXIOM_TOKEN(): string | undefined {
     return process.env.AXIOM_TOKEN;
+  },
+
+  get VAPID_PUBLIC_KEY(): string {
+    return (
+      process.env.VAPID_PUBLIC_KEY ||
+      process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ||
+      ''
+    ).trim();
+  },
+
+  get VAPID_PRIVATE_KEY(): string {
+    return (process.env.VAPID_PRIVATE_KEY || '').trim();
+  },
+
+  get VAPID_SUBJECT(): string {
+    return (
+      process.env.VAPID_SUBJECT ||
+      'mailto:counselor@amelia.portofolio.id'
+    ).trim();
+  },
+
+  get isWebPushConfigured(): boolean {
+    return Boolean(this.VAPID_PUBLIC_KEY && this.VAPID_PRIVATE_KEY);
   },
 };

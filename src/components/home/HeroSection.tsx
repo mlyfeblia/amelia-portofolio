@@ -60,7 +60,7 @@ export function HeroSection() {
 
           {/* Right Column: Clean Portrait Photo */}
           <div className="md:col-span-5 flex justify-center md:justify-end">
-            <div className="relative w-full max-w-[340px] aspect-[4/5] rounded-2xl overflow-hidden bg-[#1E2E25] border border-[var(--color-paper-border)] shadow-sm group card-interactive">
+            <div className="hero-photo-interactive relative w-full max-w-[340px] aspect-[4/5] rounded-2xl overflow-hidden bg-[#1E2E25] border border-[var(--color-paper-border)] hover:border-[var(--color-accent)] shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 ease-out group card-interactive cursor-pointer">
               <Image
                 src="/amelia.webp"
                 alt="Foto Profil Amelia, Mahasiswi Bimbingan Konseling UIN Siber Syekh Nurjati Cirebon"
@@ -70,9 +70,9 @@ export function HeroSection() {
                 placeholder="blur"
                 blurDataURL="data:image/webp;base64,UklGRmwAAABXRUJQVlA4IGAAAAAwBACdASoQABQAPzmGuVOvKSWisAgB4CcJZwDImCLY9Ls72ZrEJEF4/ewA/owBQOkyjLLc5jRc6xVnRV8Ih0nQBejrOHiefbZyHM/aYbkUsYDKEbJfV2RdDH7EoOfAAAA="
                 sizes="(max-width: 768px) 100vw, 340px"
-                className="object-cover object-top transition-transform duration-500 group-hover:scale-[1.02]"
+                className="object-cover object-top transition-transform duration-500 ease-out group-hover:scale-110"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-[var(--color-ink)]/70 via-transparent to-transparent opacity-80 pointer-events-none" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[var(--color-ink)]/75 via-transparent to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-300 pointer-events-none" />
               
               <div className="absolute bottom-4 left-4 right-4 text-white pointer-events-none select-none">
                 <p

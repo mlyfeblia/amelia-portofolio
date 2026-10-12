@@ -124,53 +124,57 @@ export function BookingCard({
     <div className="card-interactive p-3 min-[340px]:p-3.5 sm:p-6 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-paper-border)] shadow-xs space-y-3.5">
       {/* Header row */}
       <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-[var(--color-paper-border)]">
-        <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
-          <Tooltip content="Salin kode booking" position="top">
-            <button
-              type="button"
-              onClick={handleCopyCode}
-              className="btn-interactive font-mono text-[10px] sm:text-xs font-semibold px-1.5 sm:px-2 py-0.5 rounded-md bg-[var(--color-paper)] border border-[var(--color-paper-border)] text-[var(--color-accent)] hover:bg-[var(--color-paper-muted)] cursor-pointer inline-flex items-center gap-1 sm:gap-1.5 transition-colors select-text shrink-0"
-              aria-label={`Salin kode booking ${item.code}`}
-            >
-              <span>{item.code}</span>
-              {copied ? (
-                <Check className="w-3 h-3 text-emerald-600 animate-pop-success shrink-0" />
-              ) : (
-                <Copy className="w-3 h-3 text-[var(--color-ink-muted)] shrink-0" />
-              )}
-            </button>
-          </Tooltip>
-          <div className="min-w-0">
-            <h3 className="font-semibold text-[var(--color-ink)] text-xs sm:text-base leading-tight truncate sm:whitespace-normal">
-              {item.name}
-            </h3>
-            {item.alias && item.alias !== item.name && (
-              <p className="text-[10px] sm:text-[11px] text-[var(--color-ink-muted)] truncate">Panggilan: {item.alias}</p>
-            )}
-          </div>
+        <div className="min-w-0">
+          <h3 className="font-semibold text-[var(--color-ink)] text-xs sm:text-base leading-tight truncate sm:whitespace-normal">
+            {item.name}
+          </h3>
+          {item.alias && item.alias !== item.name && (
+            <p className="text-[10px] sm:text-[11px] text-[var(--color-ink-muted)] truncate">Panggilan: {item.alias}</p>
+          )}
         </div>
 
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           {getStatusBadgeElement()}
 
-          <Tooltip content="Hapus janji temu" position="top">
-            <button
-              onClick={() => onDelete(item)}
-              type="button"
-              className="btn-interactive p-1.5 rounded-lg text-[var(--color-ink-muted)] hover:text-[var(--color-error)] hover:bg-[var(--color-error-soft)] transition-colors cursor-pointer"
-              aria-label="Hapus janji temu ini"
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-            </button>
-          </Tooltip>
+          <button
+            onClick={() => onDelete(item)}
+            type="button"
+            className="btn-interactive inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg text-[var(--color-ink-muted)] hover:text-[var(--color-error)] hover:bg-[var(--color-error-soft)] border border-[var(--color-paper-border)] hover:border-red-200 transition-colors cursor-pointer shrink-0"
+            aria-label="Hapus janji temu ini"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            <span>Hapus</span>
+          </button>
         </div>
       </div>
 
       {/* Details grid: 1 col on mobile, 3 cols on desktop */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3 text-xs">
-        <div>
-          <span className="text-[var(--color-ink-muted)] block mb-0.5 text-[11px]">Topik Konseling</span>
-          <span className="font-semibold text-[var(--color-ink)]">{item.category}</span>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+        <div className="space-y-2">
+          <div>
+            <span className="text-[var(--color-ink-muted)] block mb-1 text-[11px]">Kode Referensi:</span>
+            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-[var(--color-paper)] border border-[var(--color-paper-border)] font-mono font-semibold text-xs text-[var(--color-accent)] select-text">
+              <span>{item.code}</span>
+              <button
+                type="button"
+                onClick={handleCopyCode}
+                className="p-0.5 rounded text-[var(--color-ink-muted)] hover:text-[var(--color-accent)] cursor-pointer inline-flex items-center justify-center transition-colors shrink-0"
+                title="Salin kode booking"
+                aria-label={`Salin kode booking ${item.code}`}
+              >
+                {copied ? (
+                  <Check className="w-3 h-3 text-emerald-600 animate-pop-success shrink-0" />
+                ) : (
+                  <Copy className="w-3 h-3 text-[var(--color-ink-muted)] shrink-0" />
+                )}
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <span className="text-[var(--color-ink-muted)] block mb-0.5 text-[11px]">Topik Konseling</span>
+            <span className="font-semibold text-[var(--color-ink)]">{item.category}</span>
+          </div>
         </div>
 
         <div>
@@ -217,7 +221,7 @@ export function BookingCard({
             })}
             target="_blank"
             rel="noopener noreferrer"
-            className="btn-interactive inline-flex items-center justify-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-[#25D366] text-white font-semibold text-xs shadow-2xs hover:bg-[#20ba5a] transition-all shrink-0 cursor-pointer whitespace-nowrap w-full min-[340px]:w-auto"
+            className="btn-primary btn-interactive inline-flex items-center justify-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold shadow-2xs transition-all shrink-0 cursor-pointer whitespace-nowrap w-full min-[340px]:w-auto"
           >
             <Phone className="w-3.5 h-3.5" />
             <span>Kirim Kabar WhatsApp</span>
@@ -240,7 +244,7 @@ export function BookingCard({
             })}
             target="_blank"
             rel="noopener noreferrer"
-            className="btn-interactive h-8 px-2.5 sm:px-3 rounded-lg bg-[#25D366] hover:bg-[#20ba5a] text-white text-xs font-semibold inline-flex items-center justify-center gap-1.5 shadow-xs whitespace-nowrap flex-1 sm:flex-initial"
+            className="btn-primary btn-interactive h-8 px-2.5 sm:px-3 rounded-lg text-xs font-semibold inline-flex items-center justify-center gap-1.5 shadow-xs whitespace-nowrap flex-1 sm:flex-initial"
           >
             <Phone className="w-3.5 h-3.5" />
             <span>WhatsApp</span>

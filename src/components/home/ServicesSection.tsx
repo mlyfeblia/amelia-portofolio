@@ -28,9 +28,9 @@ export function ServicesSection() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 lg:gap-8">
-          <div className="p-6 lg:p-7 bg-[var(--color-paper)] border border-[var(--color-paper-border)] rounded-xl space-y-3 card-interactive flex flex-col justify-between">
+          <div className="p-6 lg:p-7 bg-[var(--color-paper)] border border-[var(--color-paper-border)] hover:border-[var(--color-accent)] rounded-xl space-y-3 card-interactive group cursor-pointer hover:shadow-xl hover:-translate-y-2 transition-all duration-300 ease-out flex flex-col justify-between">
             <div className="space-y-2">
-              <h3 className="text-base font-semibold text-[var(--color-ink)]">
+              <h3 className="text-base font-semibold text-[var(--color-ink)] group-hover:text-[var(--color-accent)] transition-colors">
                 Google Meet Virtual
               </h3>
               <p className="text-sm text-[var(--color-ink-muted)] leading-relaxed">
@@ -42,9 +42,9 @@ export function ServicesSection() {
             </div>
           </div>
 
-          <div className="p-6 lg:p-7 bg-[var(--color-paper)] border border-[var(--color-paper-border)] rounded-xl space-y-3 card-interactive flex flex-col justify-between">
+          <div className="p-6 lg:p-7 bg-[var(--color-paper)] border border-[var(--color-paper-border)] hover:border-[var(--color-accent)] rounded-xl space-y-3 card-interactive group cursor-pointer hover:shadow-xl hover:-translate-y-2 transition-all duration-300 ease-out flex flex-col justify-between">
             <div className="space-y-2">
-              <h3 className="text-base font-semibold text-[var(--color-ink)]">
+              <h3 className="text-base font-semibold text-[var(--color-ink)] group-hover:text-[var(--color-accent)] transition-colors">
                 Chat Terjadwal
               </h3>
               <p className="text-sm text-[var(--color-ink-muted)] leading-relaxed">
@@ -56,9 +56,9 @@ export function ServicesSection() {
             </div>
           </div>
 
-          <div className="p-6 lg:p-7 bg-[var(--color-paper)] border border-[var(--color-paper-border)] rounded-xl space-y-3 card-interactive flex flex-col justify-between">
+          <div className="p-6 lg:p-7 bg-[var(--color-paper)] border border-[var(--color-paper-border)] hover:border-[var(--color-accent)] rounded-xl space-y-3 card-interactive group cursor-pointer hover:shadow-xl hover:-translate-y-2 transition-all duration-300 ease-out flex flex-col justify-between">
             <div className="space-y-2">
-              <h3 className="text-base font-semibold text-[var(--color-ink)]">
+              <h3 className="text-base font-semibold text-[var(--color-ink)] group-hover:text-[var(--color-accent)] transition-colors">
                 Tatap Muka Cirebon
               </h3>
               <p className="text-sm text-[var(--color-ink-muted)] leading-relaxed">

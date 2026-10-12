@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import { BookOpen, Eye } from 'lucide-react';
+import { BookOpen, Eye, Clock } from 'lucide-react';
 import { Article } from '@/types';
 import { formatIndonesianDate } from '@/lib/utils';
 
@@ -24,27 +24,24 @@ export function ArticleListItem({ article }: { article: Article }) {
           {article.publishedAt ? `${formatIndonesianDate(article.publishedAt) || article.publishedAt} — ` : ''}{article.excerpt}
         </p>
 
-        <div className="pt-1 flex flex-col min-[340px]:flex-row min-[340px]:items-center justify-between gap-2.5 text-xs text-[var(--color-ink-soft)]">
-          <div className="flex items-center gap-1.5 flex-wrap min-w-0">
-            <span className="font-semibold text-[var(--color-accent)] truncate max-w-[130px] min-[340px]:max-w-none">
+        <div className="pt-2 flex items-end justify-between gap-3 text-xs text-[var(--color-ink-soft)]">
+          <div className="flex flex-col gap-1 min-w-0">
+            <span className="font-semibold text-[var(--color-accent)] truncate">
               {article.category}
             </span>
-            <span className="text-[var(--color-paper-border)] shrink-0" aria-hidden="true">&bull;</span>
-            <span className="shrink-0">{article.readTime}</span>
-            {typeof article.views === 'number' && article.views > 0 && (
-              <>
-                <span className="text-[var(--color-paper-border)] shrink-0" aria-hidden="true">&bull;</span>
-                <span className="inline-flex items-center gap-1 text-[var(--color-ink-muted)] shrink-0">
-                  <Eye className="w-3 h-3 text-[var(--color-accent)]" />
-                  <span>{article.views} pembaca</span>
-                </span>
-              </>
-            )}
+            <span className="inline-flex items-center gap-1.5 text-[var(--color-ink-muted)]">
+              <Clock className="w-3.5 h-3.5 text-[var(--color-accent)] shrink-0" aria-hidden="true" />
+              <span>{article.readTime}</span>
+            </span>
+            <span className="inline-flex items-center gap-1.5 text-[var(--color-ink-muted)]">
+              <Eye className="w-3.5 h-3.5 text-[var(--color-accent)] shrink-0" aria-hidden="true" />
+              <span>{typeof article.views === 'number' ? article.views : 0} pembaca</span>
+            </span>
           </div>
 
           <Link
             href={`/articles/${article.slug}`}
-            className="btn-secondary btn-interactive inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-[var(--color-ink)] hover:text-[var(--color-accent)] bg-[var(--color-surface)] border border-[var(--color-paper-border)] hover:border-[var(--color-accent-border)] hover:bg-[var(--color-accent-soft)]/50 shadow-2xs shrink-0 self-start min-[340px]:self-auto transition-all"
+            className="btn-secondary btn-interactive inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-[var(--color-ink)] hover:text-[var(--color-accent)] bg-[var(--color-surface)] border border-[var(--color-paper-border)] hover:border-[var(--color-accent-border)] hover:bg-[var(--color-accent-soft)]/50 shadow-2xs shrink-0 self-end transition-all"
           >
             <BookOpen className="w-3.5 h-3.5 text-[var(--color-accent)] shrink-0" aria-hidden="true" />
             <span>Baca Tulisan</span>

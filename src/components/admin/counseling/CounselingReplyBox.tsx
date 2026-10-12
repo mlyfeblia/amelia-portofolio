@@ -1,8 +1,11 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { Send, Eye, EyeOff, Star, Check } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
+import { Send, Eye, EyeOff, Star, Check, X } from 'lucide-react';
+import { useMounted } from '@/lib/use-mounted';
 import { ConfirmDecisionModal } from '@/components/ui/ConfirmDecisionModal';
+import { Spinner } from '@/components/ui/Spinner';
 
 interface CounselingReplyBoxProps {
   initialText: string;
@@ -10,6 +13,7 @@ interface CounselingReplyBoxProps {
   initialLanding?: boolean;
   itemId?: string;
   itemAlias?: string;
+  originalMessage?: string;
   onCancel: () => void;
   onSave: (text: string, isPublic: boolean, showOnLandingPage: boolean) => Promise<void>;
 }
@@ -20,45 +24,65 @@ export function CounselingReplyBox({
   initialLanding = false,
   itemId,
   itemAlias,
+  originalMessage,
   onCancel,
   onSave,
 }: CounselingReplyBoxProps) {
   const storageKey = itemId ? `amel_curhat_draft_${itemId}` : null;
+  const mounted = useMounted();
 
-  const [replyText, setReplyText] = useState(() => {
-    if (typeof window !== 'undefined' && storageKey) {
-      try {
-        const saved = localStorage.getItem(storageKey);
-        if (saved && saved.trim() && saved !== initialText) {
-          return saved;
-        }
-      } catch {
-        // ignore
-      }
-    }
-    return initialText;
-  });
-
+  // SSR-safe initial state
+  const [replyText, setReplyText] = useState(initialText);
   const [replyPublic, setReplyPublic] = useState(initialPublic);
   const [replyLanding, setReplyLanding] = useState(initialLanding);
   const [saving, setSaving] = useState(false);
   const [showSendConfirm, setShowSendConfirm] = useState(false);
-  const [lastSavedTime, setLastSavedTime] = useState<string | null>(() => {
-    if (typeof window !== 'undefined' && storageKey) {
+  const [lastSavedTime, setLastSavedTime] = useState<string | null>(null);
+  const isRestoredRef = useRef(false);
+
+  // Strict Body & HTML scroll locking for entire modal lifecycle
+  useEffect(() => {
+    if (!mounted) return;
+
+    const originalBodyOverflow = document.body.style.overflow;
+    const originalHtmlOverflow = document.documentElement.style.overflow;
+    document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !saving) {
+        onCancel();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = originalBodyOverflow;
+      document.documentElement.style.overflow = originalHtmlOverflow;
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [mounted, saving, onCancel]);
+
+  // Restore saved draft safely on mount post-hydration
+  useEffect(() => {
+    if (!storageKey) return;
+    const timer = setTimeout(() => {
       try {
         const saved = localStorage.getItem(storageKey);
         if (saved && saved.trim() && saved !== initialText) {
-          return 'Draf tersimpan dimuat';
+          setReplyText(saved);
+          setLastSavedTime('Draf tersimpan dimuat');
         }
-      } catch {
-        // ignore
-      }
-    }
-    return null;
-  });
+      } catch {}
+      isRestoredRef.current = true;
+    }, 0);
+
+    return () => clearTimeout(timer);
+  }, [storageKey, initialText]);
 
   // Autosave to localStorage debounced
   useEffect(() => {
+    if (!isRestoredRef.current) return;
     if (!storageKey) return;
     const timer = setTimeout(() => {
       try {
@@ -98,124 +122,200 @@ export function CounselingReplyBox({
     }
   };
 
-  return (
-    <div className="p-4 sm:p-5 rounded-2xl bg-[var(--color-paper)] border border-[var(--color-paper-border)] space-y-3.5 animate-fade-in-up">
-      <div className="space-y-1.5">
-        <label className="block text-xs font-semibold text-[var(--color-ink)] break-words">
-          Tulis Tanggapan untuk {itemAlias ? <span className="text-[var(--color-accent)]">{itemAlias}</span> : 'Konseli'}:
-        </label>
-        <div className="flex flex-wrap items-center justify-between gap-1.5 text-[10px] min-[340px]:text-[11px] text-[var(--color-ink-muted)]">
-          {lastSavedTime && (
-            <span className="inline-flex items-center gap-1 text-emerald-700 font-medium">
-              <Check className="w-3 h-3 text-emerald-600 shrink-0" />
-              <span className="truncate max-w-[170px] min-[340px]:max-w-none">{lastSavedTime}</span>
-            </span>
-          )}
-          <span className="shrink-0">{replyText.length} karakter</span>
-        </div>
-      </div>
+  if (!mounted || typeof document === 'undefined') {
+    return null;
+  }
 
-      <textarea
-        rows={4}
-        value={replyText}
-        onChange={(e) => setReplyText(e.target.value)}
-        placeholder="Tuliskan penerimaan, validasi empati, perspektif konseling Islam / CBT, dan kata-kata penenteram jiwa..."
-        className="form-input text-xs sm:text-sm py-2.5 resize-y min-h-[110px]"
-        autoFocus
+  const modalDialog = (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="counseling-reply-modal-title"
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-0 sm:p-4 overflow-hidden"
+    >
+      {/* Blurred Backdrop with scroll protection */}
+      <div
+        className="fixed inset-0 bg-black/40 backdrop-blur-md touch-none select-none pointer-events-auto transition-opacity duration-200"
+        aria-hidden="true"
+        onWheel={(e) => e.preventDefault()}
+        onTouchMove={(e) => e.preventDefault()}
+        onClick={onCancel}
       />
 
-      <div className="space-y-2.5 pt-1">
-        {/* Visibility Card */}
-        <label
-          onClick={() => {
-            const next = !replyPublic;
-            setReplyPublic(next);
-            if (!next) setReplyLanding(false);
-          }}
-          className={`flex items-center justify-between p-2.5 rounded-xl border cursor-pointer select-none transition-all ${
-            replyPublic
-              ? 'bg-[var(--color-accent-soft)] border-[var(--color-accent-border)] text-[var(--color-ink)]'
-              : 'bg-[var(--color-surface)] border border-[var(--color-paper-border)] text-[var(--color-ink-muted)]'
-          }`}
-        >
-          <div className="flex items-center gap-2.5 text-xs">
-            {replyPublic ? (
-              <Eye className="w-4 h-4 text-[var(--color-accent)] shrink-0" />
-            ) : (
-              <EyeOff className="w-4 h-4 text-[var(--color-ink-muted)] shrink-0" />
+      {/* Unified Modal Dialog Container */}
+      <div className="relative z-10 w-full sm:max-w-xl h-full sm:h-auto sm:max-h-[90vh] flex flex-col pointer-events-auto my-auto animate-fade-in-up">
+        <div className="w-full h-full bg-[var(--color-surface)] sm:border sm:border-[var(--color-paper-border)] sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden">
+          
+          {/* Modal Header */}
+          <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 border-b border-[var(--color-paper-border)] bg-[var(--color-surface)] shrink-0">
+            <div className="min-w-0 pr-3">
+              <h3
+                id="counseling-reply-modal-title"
+                className="text-base sm:text-lg font-semibold text-[var(--color-ink)] truncate"
+              >
+                {initialText ? 'Ubah Tanggapan' : 'Beri Tanggapan'} untuk {itemAlias ? <span className="text-[var(--color-accent)]">{itemAlias}</span> : 'Konseli'}
+              </h3>
+              {lastSavedTime && (
+                <div className="flex items-center gap-1 text-[11px] text-emerald-700 font-medium mt-0.5">
+                  <Check className="w-3 h-3 text-emerald-600 shrink-0" />
+                  <span className="truncate">{lastSavedTime}</span>
+                </div>
+              )}
+            </div>
+
+            <button
+              type="button"
+              onClick={onCancel}
+              className="btn-interactive inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] hover:bg-[var(--color-paper-muted)] cursor-pointer shrink-0 transition-colors"
+              aria-label="Tutup modal tanggapan"
+            >
+              <X className="w-4 h-4 shrink-0" />
+              <span>Tutup</span>
+            </button>
+          </div>
+
+          {/* Modal Scrollable Body */}
+          <div className="flex-1 overflow-y-auto textarea-custom-scroll p-4 sm:p-6 space-y-4">
+            {/* Conseli message quote preview */}
+            {originalMessage && (
+              <div className="bg-[var(--color-paper)] p-3.5 sm:p-4 rounded-xl border border-[var(--color-paper-border)] space-y-1.5">
+                <span className="text-[11px] font-semibold text-[var(--color-ink-soft)] uppercase tracking-wider block">
+                  Cerita dari Konseli:
+                </span>
+                <p className="text-xs sm:text-sm text-[var(--color-ink)] italic line-clamp-4 leading-relaxed">
+                  &ldquo;{originalMessage}&rdquo;
+                </p>
+              </div>
             )}
-            <div>
-              <span className="font-semibold block text-[var(--color-ink)]">
-                {replyPublic ? 'Tampilkan di Dinding Curhat Publik' : 'Simpan Sebagai Catatan Privat'}
-              </span>
-              <span className="text-[11px] text-[var(--color-ink-muted)]">
-                {replyPublic
-                  ? 'Pengunjung website dapat membaca cerita dan tanggapan ini di dinding curhat'
-                  : 'Hanya dapat dilihat oleh pengelola di portal admin'}
-              </span>
+
+            {/* Reply textarea */}
+            <div className="space-y-1.5">
+              <div className="flex justify-between items-center text-xs text-[var(--color-ink-soft)]">
+                <label htmlFor="reply-textarea-input" className="font-semibold text-[var(--color-ink)]">
+                  Isi Tanggapan Penguatan
+                </label>
+                <span>{replyText.length} karakter</span>
+              </div>
+              <textarea
+                id="reply-textarea-input"
+                rows={6}
+                value={replyText}
+                onChange={(e) => setReplyText(e.target.value)}
+                placeholder="Tuliskan penerimaan, validasi empati, perspektif konseling Islam / CBT, dan kata-kata penenteram jiwa..."
+                className="form-input text-xs sm:text-sm p-3 resize-y w-full min-h-[140px] sm:min-h-[160px] textarea-custom-scroll leading-relaxed"
+                autoFocus
+              />
+            </div>
+
+            {/* Visibility Options */}
+            <div className="space-y-2.5 pt-1">
+              <label
+                onClick={() => {
+                  const next = !replyPublic;
+                  setReplyPublic(next);
+                  if (!next) setReplyLanding(false);
+                }}
+                className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer select-none transition-all ${
+                  replyPublic
+                    ? 'bg-[var(--color-accent-soft)] border-[var(--color-accent-border)] text-[var(--color-ink)]'
+                    : 'bg-[var(--color-surface)] border border-[var(--color-paper-border)] text-[var(--color-ink-muted)]'
+                }`}
+              >
+                <div className="flex items-center gap-2.5 text-xs min-w-0 pr-2">
+                  {replyPublic ? (
+                    <Eye className="w-4 h-4 text-[var(--color-accent)] shrink-0" />
+                  ) : (
+                    <EyeOff className="w-4 h-4 text-[var(--color-ink-muted)] shrink-0" />
+                  )}
+                  <div className="min-w-0">
+                    <span className="font-semibold text-xs text-[var(--color-ink)] block truncate">
+                      {replyPublic ? 'Tampilkan di Dinding Curhat Publik' : 'Simpan Sebagai Catatan Privat'}
+                    </span>
+                    <span className="text-[11px] text-[var(--color-ink-muted)] block truncate">
+                      {replyPublic ? 'Dapat dibaca pengunjung umum' : 'Hanya tampak di dashboard admin'}
+                    </span>
+                  </div>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={replyPublic}
+                  onChange={(e) => {
+                    setReplyPublic(e.target.checked);
+                    if (!e.target.checked) setReplyLanding(false);
+                  }}
+                  className="w-4 h-4 rounded text-[var(--color-accent)] shrink-0"
+                />
+              </label>
+
+              {replyPublic && (
+                <label
+                  onClick={() => setReplyLanding(!replyLanding)}
+                  className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer select-none transition-all ${
+                    replyLanding
+                      ? 'bg-amber-50 border-amber-300 text-amber-900'
+                      : 'bg-[var(--color-surface)] border border-[var(--color-paper-border)] text-[var(--color-ink-muted)]'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5 text-xs min-w-0 pr-2">
+                    <Star className={`w-4 h-4 shrink-0 ${replyLanding ? 'fill-amber-500 text-amber-600' : 'text-[var(--color-ink-muted)]'}`} />
+                    <div className="min-w-0">
+                      <span className="font-semibold text-xs text-[var(--color-ink)] block truncate">
+                        {replyLanding ? '★ Di Beranda Utama' : 'Tampilkan di Beranda Utama'}
+                      </span>
+                      <span className="text-[11px] text-[var(--color-ink-muted)] block truncate">
+                        Sorotan pilihan di etalase beranda depan
+                      </span>
+                    </div>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={replyLanding}
+                    onChange={(e) => setReplyLanding(e.target.checked)}
+                    className="w-4 h-4 rounded text-amber-600 shrink-0"
+                  />
+                </label>
+              )}
             </div>
           </div>
-          <input
-            type="checkbox"
-            checked={replyPublic}
-            onChange={(e) => {
-              setReplyPublic(e.target.checked);
-              if (!e.target.checked) setReplyLanding(false);
-            }}
-            className="w-4 h-4 rounded border-[var(--color-paper-border)] text-[var(--color-accent)] focus:ring-[var(--color-accent)] shrink-0"
-          />
-        </label>
 
-        {/* Landing Page Toggle Card */}
-        {replyPublic && (
-          <label
-            onClick={() => setReplyLanding(!replyLanding)}
-            className={`flex items-center justify-between p-2.5 rounded-xl border cursor-pointer select-none transition-all ${
-              replyLanding
-                ? 'bg-amber-50 border-amber-300 text-amber-900'
-                : 'bg-[var(--color-surface)] border border-[var(--color-paper-border)] text-[var(--color-ink-muted)]'
-            }`}
-          >
-            <div className="flex items-center gap-2.5 text-xs">
-              <Star className={`w-4 h-4 shrink-0 ${replyLanding ? 'fill-amber-500 text-amber-600' : 'text-[var(--color-ink-muted)]'}`} />
-              <div>
-                <span className="font-semibold block text-[var(--color-ink)]">
-                  {replyLanding ? '★ Ditampilkan di Beranda (Landing Page)' : 'Tampilkan di Beranda (Landing Page)'}
-                </span>
-                <span className="text-[11px] text-[var(--color-ink-muted)]">
-                  Sorotan 2 curhat pilihan yang langsung muncul di halaman muka website utama.
-                </span>
-              </div>
-            </div>
-            <input
-              type="checkbox"
-              checked={replyLanding}
-              onChange={(e) => setReplyLanding(e.target.checked)}
-              className="w-4 h-4 rounded border-[var(--color-paper-border)] text-amber-600 focus:ring-amber-500 shrink-0"
-            />
-          </label>
-        )}
+          {/* Modal Footer Buttons */}
+          <div className="flex items-center justify-end gap-2.5 px-4 sm:px-6 py-3.5 border-t border-[var(--color-paper-border)] bg-[var(--color-surface)] shrink-0">
+            <button
+              onClick={onCancel}
+              type="button"
+              className="btn-secondary btn-interactive inline-flex items-center justify-center gap-1.5 h-10 px-4 text-xs font-semibold rounded-xl cursor-pointer"
+            >
+              <X className="w-3.5 h-3.5" />
+              <span>Batal</span>
+            </button>
+            <button
+              onClick={() => setShowSendConfirm(true)}
+              disabled={saving || !replyText.trim()}
+              type="button"
+              className="btn-primary btn-interactive inline-flex items-center justify-center gap-2 h-10 px-5 text-xs font-semibold rounded-xl cursor-pointer shadow-xs disabled:opacity-50"
+            >
+              {saving ? (
+                <>
+                  <Spinner size="xs" variant="white" />
+                  <span>Menyimpan...</span>
+                </>
+              ) : (
+                <>
+                  <Send className="w-3.5 h-3.5 shrink-0" />
+                  <span>{initialText ? 'Simpan Tanggapan' : 'Kirim Tanggapan'}</span>
+                </>
+              )}
+            </button>
+          </div>
 
-        {/* Action Buttons */}
-        <div className="flex flex-col min-[320px]:flex-row items-center gap-2 justify-end w-full pt-1">
-          <button
-            onClick={onCancel}
-            type="button"
-            className="btn-secondary btn-interactive h-9 px-3.5 sm:px-4 text-xs font-semibold rounded-xl inline-flex items-center justify-center whitespace-nowrap w-full min-[320px]:w-auto cursor-pointer"
-          >
-            Batal
-          </button>
-          <button
-            onClick={() => setShowSendConfirm(true)}
-            disabled={saving || !replyText.trim()}
-            type="button"
-            className="btn-primary btn-interactive h-9 px-3.5 sm:px-4 text-xs font-semibold rounded-xl inline-flex items-center justify-center gap-1.5 whitespace-nowrap w-full min-[320px]:w-auto cursor-pointer disabled:opacity-50"
-          >
-            <Send className="w-3.5 h-3.5 shrink-0" />
-            <span>{saving ? 'Menyimpan...' : 'Kirim Tanggapan'}</span>
-          </button>
         </div>
       </div>
+    </div>
+  );
+
+  return (
+    <>
+      {createPortal(modalDialog, document.body)}
 
       {/* Decision Modal for Submitting Counseling Reply */}
       <ConfirmDecisionModal
@@ -256,6 +356,6 @@ export function CounselingReplyBox({
           </div>
         }
       />
-    </div>
+    </>
   );
 }

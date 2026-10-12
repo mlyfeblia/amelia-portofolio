@@ -43,7 +43,7 @@ export function ArticleFilters({
     <div className="bg-[var(--color-surface)] border border-[var(--color-paper-border)] rounded-2xl p-3.5 sm:p-5 space-y-3.5 shadow-xs">
       {/* Search Bar */}
       <div className="relative">
-        <Search className="w-4 h-4 text-[var(--color-ink-muted)] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+        <Search className="w-4 h-4 text-[var(--color-ink-muted)] search-icon" />
         <input
           type="text"
           value={search}
@@ -57,7 +57,7 @@ export function ArticleFilters({
         {search && (
           <button
             onClick={() => onSearchChange('')}
-            className="chip-interactive absolute right-2.5 top-1/2 -translate-y-1/2 text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] p-1 rounded-lg cursor-pointer"
+            className="search-clear-btn text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] rounded-lg cursor-pointer"
             aria-label="Bersihkan pencarian"
           >
             <X className="w-3.5 h-3.5" />

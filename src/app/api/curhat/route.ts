@@ -5,6 +5,7 @@ import { checkDistributedRateLimit, getClientIp } from '@/lib/rate-limiter';
 import { validateCurhatInput } from '@/lib/validators';
 import { telemetry } from '@/lib/telemetry';
 import { sendAdminCurhatAlertEmail } from '@/lib/resend';
+import { sendPushNotificationToRole } from '@/lib/web-push-server';
 
 export async function GET(request: Request) {
   try {
@@ -82,6 +83,14 @@ export async function POST(request: Request) {
 
     // Trigger async email notification to admin in background
     sendAdminCurhatAlertEmail(newCurhat).catch((e) => console.error('Admin curhat alert email error:', e));
+
+    // Trigger non-blocking push notification to admin devices
+    sendPushNotificationToRole('admin', {
+      title: 'Pesan Teman Curhat Baru!',
+      body: `Dari "${newCurhat.alias}" (Kategori: ${newCurhat.category})`,
+      url: '/admin/curhat',
+      tag: `curhat-${newCurhat.id}`,
+    }).catch(() => {});
 
     return NextResponse.json({
       success: true,

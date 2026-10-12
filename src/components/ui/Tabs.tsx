@@ -363,7 +363,7 @@ export const TabsTrigger = forwardRef<HTMLButtonElement | HTMLAnchorElement, Tab
 
     const variantStyles = {
       pills: cn(
-        'chip-interactive inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium rounded-full shrink-0 min-h-[44px] sm:min-h-[38px] transition-all duration-150',
+        'chip-interactive inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-3.5 py-1.5 text-xs sm:text-sm font-medium rounded-xl shrink-0 min-h-[34px] sm:min-h-[36px] transition-all duration-150',
         isActive
           ? 'bg-[var(--color-accent)] text-white shadow-xs font-semibold'
           : 'bg-[var(--color-surface)] text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] hover:bg-[var(--color-paper-muted)] border border-[var(--color-paper-border)]'
