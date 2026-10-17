@@ -29,18 +29,17 @@ export function AboutHero() {
       <div className="grid grid-cols-1 md:grid-cols-12 gap-8 lg:gap-12 items-center">
         {/* Photo Column */}
         <div className="md:col-span-4 flex justify-center">
-          <div className="hero-photo-interactive relative w-48 sm:w-56 md:w-full max-w-[280px] aspect-[3/4] rounded-2xl overflow-hidden shadow-md hover:shadow-2xl hover:-translate-y-2 border-2 border-[var(--color-paper-border)] hover:border-[var(--color-accent)] bg-[#1E2E25] group card-interactive cursor-pointer transition-all duration-300 ease-out">
+          <div className="relative w-48 sm:w-56 md:w-full max-w-[280px] aspect-[3/4] rounded-2xl overflow-hidden shadow-md border-2 border-[var(--color-paper-border)] bg-[#1E2E25] group">
             <Image
               src="/amelia.webp"
               alt="Foto Profil Amelia, Mahasiswi Bimbingan Konseling UIN Siber Syekh Nurjati Cirebon"
               fill
               priority
-              unoptimized
               decoding="sync"
               placeholder="blur"
               blurDataURL="data:image/webp;base64,UklGRmwAAABXRUJQVlA4IGAAAAAwBACdASoQABQAPzmGuVOvKSWisAgB4CcJZwDImCLY9Ls72ZrEJEF4/ewA/owBQOkyjLLc5jRc6xVnRV8Ih0nQBejrOHiefbZyHM/aYbkUsYDKEbJfV2RdDH7EoOfAAAA="
               sizes="(max-width: 768px) 240px, 320px"
-              className="object-cover object-top transition-transform duration-500 ease-out group-hover:scale-110"
+              className="object-cover object-top"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-[var(--color-ink)]/75 via-transparent to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-300 pointer-events-none" />
             <div className="absolute bottom-3 left-3 right-3 text-white pointer-events-none select-none">

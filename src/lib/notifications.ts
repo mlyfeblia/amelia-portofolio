@@ -40,7 +40,10 @@ export async function dispatchLocalNotification(
 
   try {
     if ('serviceWorker' in navigator) {
-      const reg = await navigator.serviceWorker.ready;
+      const reg = await Promise.race([
+        navigator.serviceWorker.ready,
+        new Promise<null>((resolve) => setTimeout(() => resolve(null), 1000)),
+      ]);
       if (reg && reg.showNotification) {
         await reg.showNotification(title, defaultOptions);
         return true;
@@ -66,7 +69,10 @@ export async function registerWebPushSubscription(
   }
 
   try {
-    const reg = await navigator.serviceWorker.ready;
+    const reg = await Promise.race([
+      navigator.serviceWorker.ready,
+      new Promise<null>((resolve) => setTimeout(() => resolve(null), 1500)),
+    ]);
     if (!reg || !reg.pushManager) return false;
 
     let sub = await reg.pushManager.getSubscription();

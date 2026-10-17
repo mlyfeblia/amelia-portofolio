@@ -104,7 +104,7 @@ export default function NotFound() {
                   <Link
                     key={item.href}
                     href={item.href}
-                    className="p-4 sm:p-5 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-paper-border)] hover:border-[var(--color-accent-border)] transition-all hover:-translate-y-0.5 group shadow-xs card-interactive flex flex-col justify-between"
+                    className="p-4 sm:p-5 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-paper-border)] hover:border-[var(--color-accent-border)] group shadow-xs card-interactive flex flex-col justify-between"
                   >
                     <div className="space-y-2">
                       <div className="w-8 h-8 rounded-xl bg-[var(--color-accent-soft)] text-[var(--color-accent)] flex items-center justify-center group-hover:bg-[var(--color-accent)] group-hover:text-white transition-colors">
@@ -120,7 +120,7 @@ export default function NotFound() {
 
                     <div className="pt-3 mt-2 border-t border-[var(--color-paper-border)] flex items-center text-xs font-medium text-[var(--color-accent)]">
                       <span>Buka Halaman</span>
-                      <ArrowRight className="w-3 h-3 ml-1 group-hover:translate-x-1 transition-transform" />
+                      <ArrowRight className="w-3 h-3 ml-1 group-hover:translate-x-0.5 transition-transform" />
                     </div>
                   </Link>
                 );

@@ -54,36 +54,20 @@ export function PaginationBar({
       aria-label={`Navigasi halaman ${itemLabel}`}
     >
       <div className="text-[var(--color-ink-muted)] text-center sm:text-left">
-        Menampilkan <strong className="font-semibold text-[var(--color-ink)]">{startItem}</strong> &ndash;{' '}
+        Menampilkan <strong className="font-semibold text-[var(--color-ink)]">{startItem}</strong> -{' '}
         <strong className="font-semibold text-[var(--color-ink)]">{endItem}</strong> dari{' '}
         <strong className="font-semibold text-[var(--color-ink)]">{totalItems}</strong> {itemLabel}
       </div>
 
-      <div className="flex flex-wrap items-center justify-center gap-1.5">
-        <button
-          type="button"
-          onClick={() => onPageChange(safeCurrentPage - 1)}
-          disabled={safeCurrentPage <= 1}
-          className="btn-interactive inline-flex items-center gap-1.5 h-8 px-2.5 sm:px-3 rounded-lg border border-[var(--color-paper-border)] bg-[var(--color-surface)] text-[var(--color-ink)] text-xs font-semibold disabled:opacity-40 disabled:cursor-not-allowed hover:border-[var(--color-accent-border)] hover:text-[var(--color-accent)] hover:bg-[var(--color-accent-soft)]/40 cursor-pointer transition-colors shadow-2xs"
-          aria-label="Halaman sebelumnya"
-        >
-          <ChevronLeft className="w-3.5 h-3.5 shrink-0" />
-          <span>Sebelumnya</span>
-        </button>
-
-        {/* Mobile compact indicator (< 380px) */}
-        <span className="inline-flex min-[380px]:hidden px-2.5 py-1 text-xs font-semibold rounded-lg bg-[var(--color-surface)] border border-[var(--color-paper-border)] text-[var(--color-ink)] select-none">
-          {safeCurrentPage} / {totalPages}
-        </span>
-
-        {/* Desktop & wider mobile numbered buttons (>= 380px) */}
-        <div className="hidden min-[380px]:flex items-center gap-1">
+      <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-1.5 w-full sm:w-auto">
+        {/* On mobile: row 1 is the numbered pages */}
+        <div className="order-1 sm:order-2 flex items-center justify-center gap-1 sm:gap-1.5">
           {visiblePages.map((pageNum, index) => {
             if (pageNum === null) {
               return (
                 <span
                   key={`ellipsis-${index}`}
-                  className="text-[var(--color-ink-soft)] px-1 select-none"
+                  className="text-[var(--color-ink-soft)] px-0.5 sm:px-1 select-none"
                   aria-hidden="true"
                 >
                   &hellip;
@@ -99,7 +83,7 @@ export function PaginationBar({
                 onClick={() => onPageChange(pageNum)}
                 aria-current={isActive ? 'page' : undefined}
                 aria-label={`Halaman ${pageNum}`}
-                className={`btn-interactive min-w-[32px] h-8 px-2 text-xs font-semibold rounded-lg border cursor-pointer transition-colors ${
+                className={`btn-interactive min-w-[28px] sm:min-w-[32px] h-8 px-1.5 sm:px-2 text-xs font-semibold rounded-lg border cursor-pointer transition-colors ${
                   isActive
                     ? 'bg-[var(--color-accent)] text-white border-[var(--color-accent)] shadow-xs'
                     : 'bg-[var(--color-surface)] border-[var(--color-paper-border)] text-[var(--color-ink-muted)] hover:border-[var(--color-accent-border)] hover:text-[var(--color-accent)] hover:bg-[var(--color-accent-soft)]/40'
@@ -111,16 +95,30 @@ export function PaginationBar({
           })}
         </div>
 
-        <button
-          type="button"
-          onClick={() => onPageChange(safeCurrentPage + 1)}
-          disabled={safeCurrentPage >= totalPages}
-          className="btn-interactive inline-flex items-center gap-1.5 h-8 px-2.5 sm:px-3 rounded-lg border border-[var(--color-paper-border)] bg-[var(--color-surface)] text-[var(--color-ink)] text-xs font-semibold disabled:opacity-40 disabled:cursor-not-allowed hover:border-[var(--color-accent-border)] hover:text-[var(--color-accent)] hover:bg-[var(--color-accent-soft)]/40 cursor-pointer transition-colors shadow-2xs"
-          aria-label="Halaman selanjutnya"
-        >
-          <span>Selanjutnya</span>
-          <ChevronRight className="w-3.5 h-3.5 shrink-0" />
-        </button>
+        {/* On mobile: row 2 contains both Sebelumnya & Selanjutnya side by side */}
+        <div className="order-2 sm:order-none flex items-center justify-center gap-2 w-full sm:w-auto sm:contents">
+          <button
+            type="button"
+            onClick={() => onPageChange(safeCurrentPage - 1)}
+            disabled={safeCurrentPage <= 1}
+            className="btn-interactive order-1 inline-flex items-center justify-center gap-1.5 h-8 px-3 rounded-lg border border-[var(--color-paper-border)] bg-[var(--color-surface)] text-[var(--color-ink)] text-xs font-semibold disabled:opacity-40 disabled:cursor-not-allowed hover:border-[var(--color-accent-border)] hover:text-[var(--color-accent)] hover:bg-[var(--color-accent-soft)]/40 cursor-pointer transition-colors shadow-2xs flex-1 sm:flex-initial max-w-[130px] sm:max-w-none"
+            aria-label="Halaman sebelumnya"
+          >
+            <ChevronLeft className="w-3.5 h-3.5 shrink-0" />
+            <span>Sebelumnya</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => onPageChange(safeCurrentPage + 1)}
+            disabled={safeCurrentPage >= totalPages}
+            className="btn-interactive order-2 sm:order-3 inline-flex items-center justify-center gap-1.5 h-8 px-3 rounded-lg border border-[var(--color-paper-border)] bg-[var(--color-surface)] text-[var(--color-ink)] text-xs font-semibold disabled:opacity-40 disabled:cursor-not-allowed hover:border-[var(--color-accent-border)] hover:text-[var(--color-accent)] hover:bg-[var(--color-accent-soft)]/40 cursor-pointer transition-colors shadow-2xs flex-1 sm:flex-initial max-w-[130px] sm:max-w-none"
+            aria-label="Halaman selanjutnya"
+          >
+            <span>Selanjutnya</span>
+            <ChevronRight className="w-3.5 h-3.5 shrink-0" />
+          </button>
+        </div>
       </div>
     </nav>
   );

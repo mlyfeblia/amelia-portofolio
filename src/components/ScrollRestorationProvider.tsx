@@ -79,5 +79,49 @@ export default function ScrollRestorationProvider() {
     };
   }, [pathname]);
 
+  // Scroll Isolation: Prevents dual-scroll and scroll chaining on textareas and scroll-isolated containers
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const handleGlobalWheel = (e: WheelEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (!target) return;
+
+      // 1. Textarea scroll isolation
+      const textarea = target.closest('textarea');
+      if (textarea) {
+        const maxScroll = textarea.scrollHeight - textarea.clientHeight;
+        if (maxScroll > 1) {
+          const delta = e.deltaY;
+          if (delta !== 0) {
+            e.preventDefault();
+            textarea.scrollTop += delta;
+          }
+        }
+        return;
+      }
+
+      // 2. Explicitly isolated scrollable containers (e.g. modal body, code blocks)
+      const isolated = target.closest<HTMLElement>(
+        '.scroll-isolated, [data-scroll-isolated="true"], .modal-scroll-body'
+      );
+      if (isolated) {
+        const maxScroll = isolated.scrollHeight - isolated.clientHeight;
+        if (maxScroll > 1) {
+          const delta = e.deltaY;
+          if (delta !== 0) {
+            e.preventDefault();
+            isolated.scrollTop += delta;
+          }
+        }
+      }
+    };
+
+    window.addEventListener('wheel', handleGlobalWheel, { passive: false });
+    return () => {
+      window.removeEventListener('wheel', handleGlobalWheel);
+    };
+  }, []);
+
   return null;
 }

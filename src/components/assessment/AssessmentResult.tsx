@@ -14,7 +14,12 @@ import {
   Users,
 } from 'lucide-react';
 import { ConfirmDecisionModal } from '@/components/ui/ConfirmDecisionModal';
-import { AssessmentResultData, DimensionScoreResult, DimensionKey } from '@/data/assessment-data';
+import {
+  AssessmentResultData,
+  DimensionScoreResult,
+  DimensionKey,
+  getAssessmentSuggestions,
+} from '@/data/assessment-data';
 import { getAssessmentWhatsAppUrl } from '@/lib/whatsapp';
 import { cn } from '@/lib/utils';
 
@@ -50,6 +55,8 @@ export function AssessmentResult({
 }: AssessmentResultProps) {
   const [showResetConfirmModal, setShowResetConfirmModal] = useState(false);
   const percentage = Math.round((totalScore / maxScore) * 100);
+
+  const suggestions = getAssessmentSuggestions(dimensionScores);
 
   // Format dimension breakdown for WhatsApp sharing
   const dimensionSummaryText = dimensionScores
@@ -121,18 +128,13 @@ export function AssessmentResult({
 
       {/* ── 4 Dimensions Breakdown Visual Grid ────────────────────── */}
       <div className="space-y-3.5 sm:space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-[var(--color-accent-soft)] text-[var(--color-accent)] flex items-center justify-center shrink-0">
-              <BarChart2 className="w-4 h-4" />
-            </div>
-            <h3 className="text-sm sm:text-lg font-semibold text-[var(--color-ink)]">
-              Evaluasi 4 Dimensi Kesejahteraan Jiwa
-            </h3>
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-lg bg-[var(--color-accent-soft)] text-[var(--color-accent)] flex items-center justify-center shrink-0">
+            <BarChart2 className="w-4 h-4" />
           </div>
-          <span className="text-[11px] sm:text-xs text-[var(--color-ink-muted)]">
-            Maks. 6 Poin Per Dimensi
-          </span>
+          <h3 className="text-sm sm:text-lg font-semibold text-[var(--color-ink)]">
+            Evaluasi 4 Dimensi Kesejahteraan Jiwa
+          </h3>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
@@ -141,11 +143,11 @@ export function AssessmentResult({
             return (
               <div
                 key={dim.key}
-                className="card-interactive group p-4 sm:p-5 rounded-xl sm:rounded-2xl bg-white border border-[var(--color-paper-border)] space-y-3 sm:space-y-3.5 shadow-2xs hover:border-[var(--color-accent)] hover:shadow-md transition-all duration-200 cursor-default"
+                className="p-4 sm:p-5 rounded-xl sm:rounded-2xl bg-white border border-[var(--color-paper-border)] space-y-3 sm:space-y-3.5 shadow-2xs hover:border-[var(--color-accent-border)] transition-colors"
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex items-start gap-2.5 min-w-0">
-                    <div className="w-8 h-8 rounded-xl bg-[var(--color-paper)] text-[var(--color-accent)] flex items-center justify-center shrink-0 mt-0.5 border border-[var(--color-paper-border)] group-hover:bg-[var(--color-accent-soft)] group-hover:scale-105 transition-all duration-200">
+                    <div className="w-8 h-8 rounded-xl bg-[var(--color-paper)] text-[var(--color-accent)] flex items-center justify-center shrink-0 mt-0.5 border border-[var(--color-paper-border)]">
                       {getDimensionIcon(dim.key)}
                     </div>
                     <div className="min-w-0">
@@ -186,7 +188,7 @@ export function AssessmentResult({
         </div>
       </div>
 
-      {/* ── Recommendations ────────────────────────────────────────── */}
+      {/* ── Recommendations Checklist ───────────────────────────────── */}
       <div className="p-4 sm:p-7 bg-[var(--color-paper)] border border-[var(--color-paper-border)] rounded-2xl sm:rounded-3xl space-y-3 sm:space-y-3.5 shadow-2xs hover:border-[var(--color-accent)]/40 transition-colors">
         <p className="text-xs font-semibold text-[var(--color-accent)] uppercase tracking-wider">
           Saran Pendampingan &amp; Langkah Terarah:
@@ -215,16 +217,16 @@ export function AssessmentResult({
               })}
               target="_blank"
               rel="noopener noreferrer"
-              className="group btn-secondary btn-interactive text-xs sm:text-sm py-2.5 px-4 inline-flex items-center justify-center gap-2 rounded-xl hover:-translate-y-0.5 hover:shadow-xs hover:border-[var(--color-accent-border)] hover:bg-[var(--color-accent-soft)] transition-all duration-200"
+              className="btn-secondary btn-interactive text-xs sm:text-sm py-2.5 px-4 inline-flex items-center justify-center gap-2 rounded-xl"
             >
-              <MessageCircle className="w-4 h-4 text-[var(--color-accent)] transition-transform duration-200 group-hover:scale-110 shrink-0" />
+              <MessageCircle className="w-4 h-4 text-[var(--color-accent)] shrink-0" />
               <span>Konsultasi WhatsApp</span>
             </a>
             <Link
-              href="/schedule"
-              className="group btn-primary btn-interactive text-xs sm:text-sm py-2.5 px-4 inline-flex items-center justify-center gap-2 rounded-xl hover:-translate-y-0.5 hover:shadow-md transition-all duration-200"
+              href={`/schedule?kategori=${encodeURIComponent(suggestions.recommendedTopic)}`}
+              className="btn-primary btn-interactive text-xs sm:text-sm py-2.5 px-4 inline-flex items-center justify-center gap-2 rounded-xl"
             >
-              <Calendar className="w-4 h-4 transition-transform duration-200 group-hover:scale-110 group-hover:-rotate-3 shrink-0" />
+              <Calendar className="w-4 h-4 shrink-0" />
               <span>Jadwalkan Konseling</span>
             </Link>
           </div>
@@ -232,11 +234,11 @@ export function AssessmentResult({
           <button
             onClick={() => setShowResetConfirmModal(true)}
             type="button"
-            className="group btn-secondary btn-interactive text-xs sm:text-sm py-2.5 px-4 cursor-pointer inline-flex items-center justify-center gap-2 rounded-xl w-full sm:w-auto hover:-translate-y-0.5 hover:shadow-2xs transition-all duration-200 order-2 sm:order-1"
-            aria-label="Ulangi asesmen dari awal"
+            className="btn-secondary btn-interactive text-xs sm:text-sm py-2.5 px-4 cursor-pointer inline-flex items-center justify-center gap-2 rounded-xl w-full sm:w-auto order-2 sm:order-1"
+            aria-label="Ulangi asesmen dengan soal acak lain"
           >
-            <RotateCcw className="w-4 h-4 text-[var(--color-ink-soft)] transition-transform duration-300 group-hover:-rotate-90 shrink-0" aria-hidden="true" />
-            <span>Ulangi Asesmen</span>
+            <RotateCcw className="w-4 h-4 text-[var(--color-ink-soft)] shrink-0" aria-hidden="true" />
+            <span>Uji Asesmen Lain</span>
           </button>
         </div>
       </div>

@@ -25,8 +25,6 @@ interface PwaInstalledInfoModalProps {
 }
 
 export function PwaInstalledInfoModal({ isOpen, onClose }: PwaInstalledInfoModalProps) {
-  const { isRendered, backdropClass, windowClass } = useModalAnimation({ isOpen });
-
   const [isChecking, setIsChecking] = useState(false);
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
 
@@ -36,29 +34,12 @@ export function PwaInstalledInfoModal({ isOpen, onClose }: PwaInstalledInfoModal
     onClose();
   }, [onClose]);
 
-  // Escape key handler
-  useEffect(() => {
-    if (!isOpen) return;
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') handleClose();
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, handleClose]);
-
-  // Lock body & document scroll while modal is active
-  useEffect(() => {
-    if (!isOpen) return;
-    const originalBodyOverflow = document.body.style.overflow;
-    const originalHtmlOverflow = document.documentElement.style.overflow;
-    document.body.style.overflow = 'hidden';
-    document.documentElement.style.overflow = 'hidden';
-
-    return () => {
-      document.body.style.overflow = originalBodyOverflow;
-      document.documentElement.style.overflow = originalHtmlOverflow;
-    };
-  }, [isOpen]);
+  const { isRendered, isExiting, backdropClass, windowClass } = useModalAnimation({
+    isOpen,
+    onClose: handleClose,
+    closeOnEscape: true,
+    lockScroll: true,
+  });
 
   const handleCheckUpdate = async () => {
     setIsChecking(true);
@@ -97,15 +78,16 @@ export function PwaInstalledInfoModal({ isOpen, onClose }: PwaInstalledInfoModal
       role="dialog"
       aria-modal="true"
       aria-labelledby="installed-info-title"
-      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 overflow-y-auto"
+      className={cn(
+        'fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 overflow-hidden select-none',
+        isExiting && 'pointer-events-none'
+      )}
     >
       {/* Full-viewport transparent frosted blur backdrop */}
       <div
-        className={cn(
-          'fixed inset-0 bg-transparent backdrop-blur-md touch-none select-none pointer-events-auto',
-          backdropClass
-        )}
+        className={cn(backdropClass)}
         aria-hidden="true"
+        onClick={handleClose}
         onWheel={(e) => e.preventDefault()}
         onTouchMove={(e) => e.preventDefault()}
       />

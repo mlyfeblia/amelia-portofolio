@@ -28,14 +28,33 @@ export function ArticleEditorToolbar({
   onSelectAll,
   onOpenCheatsheet,
 }: ArticleEditorToolbarProps) {
+  const toolbarRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    const el = toolbarRef.current;
+    if (!el) return;
+
+    const onNativeWheel = (e: WheelEvent) => {
+      const maxScroll = el.scrollWidth - el.clientWidth;
+      if (maxScroll <= 1) return;
+
+      const delta = Math.abs(e.deltaX) >= Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+      if (delta === 0) return;
+
+      e.preventDefault();
+      el.scrollBy({ left: delta, behavior: 'auto' });
+    };
+
+    el.addEventListener('wheel', onNativeWheel, { passive: false });
+    return () => {
+      el.removeEventListener('wheel', onNativeWheel);
+    };
+  }, []);
+
   return (
     <div
-      onWheel={(e) => {
-        if (Math.abs(e.deltaX) < Math.abs(e.deltaY)) {
-          e.currentTarget.scrollLeft += e.deltaY;
-        }
-      }}
-      className="flex items-center gap-0.5 sm:gap-1 p-1 sm:p-1.5 bg-[var(--color-paper)] border border-[var(--color-paper-border)] rounded-t-xl border-b-0 select-none overflow-x-auto no-scrollbar scroll-smooth"
+      ref={toolbarRef}
+      className="flex items-center gap-0.5 sm:gap-1 p-1 sm:p-1.5 bg-[var(--color-paper)] border border-[var(--color-paper-border)] rounded-t-xl border-b-0 select-none overflow-x-auto no-scrollbar scroll-smooth overscroll-x-contain"
       role="toolbar"
       aria-label="Format Markdown Toolbar"
     >

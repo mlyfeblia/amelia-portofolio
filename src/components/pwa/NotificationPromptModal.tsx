@@ -16,7 +16,6 @@ interface NotificationPromptModalProps {
 }
 
 export function NotificationPromptModal({ isOpen, onClose }: NotificationPromptModalProps) {
-  const { isRendered, backdropClass, windowClass } = useModalAnimation({ isOpen });
   const [isRequesting, setIsRequesting] = useState(false);
 
   const handleDismiss = useCallback(() => {
@@ -28,14 +27,23 @@ export function NotificationPromptModal({ isOpen, onClose }: NotificationPromptM
     onClose();
   }, [onClose]);
 
+  const { isRendered, isExiting, backdropClass, windowClass } = useModalAnimation({
+    isOpen,
+    onClose: handleDismiss,
+    closeOnEscape: true,
+    lockScroll: true,
+  });
+
   const handleEnable = async () => {
     setIsRequesting(true);
+    // Langsung tutup modal agar tidak menggantung di layar saat prompt notifikasi browser muncul
+    onClose();
     try {
       const permission = await requestNotificationPermission();
       if (permission === 'granted') {
-        await dispatchLocalNotification('Ruang Aman Amelia Aktif', {
+        dispatchLocalNotification('Ruang Aman Amelia Aktif', {
           body: 'Terima kasih telah mengaktifkan notifikasi konseling.',
-        });
+        }).catch(() => {});
       } else {
         try {
           localStorage.setItem('amelia_notif_prompt_dismissed', Date.now().toString());
@@ -43,35 +51,12 @@ export function NotificationPromptModal({ isOpen, onClose }: NotificationPromptM
           // Ignore
         }
       }
+    } catch {
+      // Ignore
     } finally {
       setIsRequesting(false);
-      onClose();
     }
   };
-
-  // Close on Escape key
-  useEffect(() => {
-    if (!isOpen) return;
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') handleDismiss();
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, handleDismiss]);
-
-  // Lock scroll while modal is mounted
-  useEffect(() => {
-    if (!isOpen) return;
-    const originalBodyOverflow = document.body.style.overflow;
-    const originalHtmlOverflow = document.documentElement.style.overflow;
-    document.body.style.overflow = 'hidden';
-    document.documentElement.style.overflow = 'hidden';
-
-    return () => {
-      document.body.style.overflow = originalBodyOverflow;
-      document.documentElement.style.overflow = originalHtmlOverflow;
-    };
-  }, [isOpen]);
 
   if (!isRendered || typeof document === 'undefined') return null;
 
@@ -81,15 +66,16 @@ export function NotificationPromptModal({ isOpen, onClose }: NotificationPromptM
       aria-modal="true"
       aria-labelledby="notification-modal-title"
       aria-describedby="notification-modal-desc"
-      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 overflow-y-auto"
+      className={cn(
+        'fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 overflow-hidden select-none',
+        isExiting && 'pointer-events-none'
+      )}
     >
       {/* Backdrop with frosted glass effect */}
       <div
-        className={cn(
-          'fixed inset-0 bg-transparent backdrop-blur-md touch-none select-none pointer-events-auto',
-          backdropClass
-        )}
+        className={cn(backdropClass)}
         aria-hidden="true"
+        onClick={handleDismiss}
         onWheel={(e) => e.preventDefault()}
         onTouchMove={(e) => e.preventDefault()}
       />

@@ -20,6 +20,13 @@ const CATEGORIES = [
   ...BOOKING_CATEGORIES,
 ];
 
+const STATUS_PRIORITY: Record<string, number> = {
+  menunggu: 1,
+  terkonfirmasi: 2,
+  selesai: 3,
+  dibatalkan: 4,
+};
+
 export function AdminBookingsClient() {
   const { toast } = useToast();
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -193,7 +200,7 @@ export function AdminBookingsClient() {
       if (data.success) {
         setBookings((prev) => prev.filter((b) => b.id !== booking.id));
         setDeleteModalOpen(false);
-        setDeleteTarget(null);
+        setTimeout(() => setDeleteTarget(null), 300);
         toast.info(`Janji temu ${booking.name} berhasil dihapus.`);
       } else {
         toast.error('Gagal menghapus janji temu.');
@@ -255,7 +262,7 @@ export function AdminBookingsClient() {
 
   // Filtered Bookings
   const filteredBookings = useMemo(() => {
-    return bookings.filter((b) => {
+    const list = bookings.filter((b) => {
       const matchesStatus = statusFilter === 'semua' || b.status === statusFilter;
       const matchesCategory =
         categoryFilter === 'Semua Topik' || b.category === categoryFilter;
@@ -273,6 +280,21 @@ export function AdminBookingsClient() {
         (b.notes && b.notes.toLowerCase().includes(q));
 
       return matchesStatus && matchesCategory && matchesDate && matchesSearch;
+    });
+
+    // Action-First Priority Triage:
+    // 1. Pending bookings first (needs Amel's action / confirmation)
+    // 2. Confirmed bookings next
+    // 3. Completed bookings
+    // 4. Cancelled bookings last
+    return [...list].sort((a, b) => {
+      const rankA = STATUS_PRIORITY[a.status] ?? 99;
+      const rankB = STATUS_PRIORITY[b.status] ?? 99;
+      if (rankA !== rankB) return rankA - rankB;
+
+      const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return dateB - dateA;
     });
   }, [bookings, statusFilter, categoryFilter, dateFilter, search]);
 
@@ -353,7 +375,7 @@ export function AdminBookingsClient() {
         isOpen={deleteModalOpen}
         onClose={() => {
           setDeleteModalOpen(false);
-          setDeleteTarget(null);
+          setTimeout(() => setDeleteTarget(null), 300);
         }}
         onConfirm={handleConfirmDelete}
       />

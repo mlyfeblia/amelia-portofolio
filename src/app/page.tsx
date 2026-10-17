@@ -10,6 +10,7 @@ import { AssessmentCallout } from '@/components/home/AssessmentCallout';
 import { CurhatPreviewSection } from '@/components/home/CurhatPreviewSection';
 import { ArticlesPreviewSection } from '@/components/home/ArticlesPreviewSection';
 import { AppShowcaseSection } from '@/components/home/AppShowcaseSection';
+import { seededShuffle } from '@/lib/prng';
 
 import type { Metadata } from 'next';
 
@@ -58,21 +59,24 @@ export default async function Home() {
     getCurhatList(true),
   ]);
 
-  // Landing page curhat: tampilkan semua yang disematkan admin (showOnLandingPage), default fallback 2 item terbaru
+  // Calendar day key for automatic daily fallback showcase rotation (Asia/Jakarta timezone)
+  const dayKey = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jakarta' }).format(new Date());
+
+  // Landing page curhat: prioritaskan kurasi admin (showOnLandingPage), fallback rotasi harian otomatis
   const publicAnswered = curhatMessages.filter((c) => c.isPublic && c.isAnswered);
   const landingCurhatPinned = publicAnswered.filter((c) => c.showOnLandingPage);
   const remainingCurhat = publicAnswered.filter((c) => !c.showOnLandingPage);
   const answeredCurhat = landingCurhatPinned.length > 0
     ? landingCurhatPinned
-    : remainingCurhat.slice(0, 2);
+    : seededShuffle(remainingCurhat, `homepage_curhat_${dayKey}`).slice(0, 2);
 
-  // Landing page articles: tampilkan semua yang disematkan admin (showOnLandingPage), default fallback 2 item terbaru
+  // Landing page articles: prioritaskan kurasi admin (showOnLandingPage), fallback rotasi harian otomatis
   const publishedArticles = articles.filter((a) => a.isPublished !== false);
   const landingArticlesPinned = publishedArticles.filter((a) => a.showOnLandingPage);
   const remainingArticles = publishedArticles.filter((a) => !a.showOnLandingPage);
   const featuredArticles = landingArticlesPinned.length > 0
     ? landingArticlesPinned
-    : remainingArticles.slice(0, 2);
+    : seededShuffle(remainingArticles, `homepage_articles_${dayKey}`).slice(0, 2);
 
   return (
     <div className="min-h-screen flex flex-col bg-[var(--color-paper)]">

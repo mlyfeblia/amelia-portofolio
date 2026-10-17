@@ -25,10 +25,10 @@ import { ConfirmDecisionModal } from '@/components/ui/ConfirmDecisionModal';
 
 function getModeInfo(mode: CounselingMode) {
   switch (mode) {
-    case 'online_meet':
-      return { label: 'Google Meet', icon: Video };
     case 'online_chat':
       return { label: 'Chat Terjadwal', icon: MessageSquare };
+    case 'online_meet':
+      return { label: 'Video Call WhatsApp', icon: Video };
     case 'tatap_muka_cirebon':
       return { label: 'Tatap Muka Cirebon', icon: Users };
     default:
@@ -70,6 +70,13 @@ export function BookingCard({
   const { toast } = useToast();
   const [copied, setCopied] = useState(false);
   const [pendingStatus, setPendingStatus] = useState<BookingStatus | null>(null);
+  const [cachedStatus, setCachedStatus] = useState<BookingStatus | null>(null);
+
+  if (pendingStatus && pendingStatus !== cachedStatus) {
+    setCachedStatus(pendingStatus);
+  }
+
+  const activeStatus = pendingStatus ?? cachedStatus;
 
   const handleCopyCode = async () => {
     try {
@@ -82,8 +89,8 @@ export function BookingCard({
     }
   };
 
-  const getModalConfig = () => {
-    switch (pendingStatus) {
+  const getModalConfig = (status: BookingStatus | null) => {
+    switch (status) {
       case 'terkonfirmasi':
         return {
           title: 'Konfirmasi Jadwal Konseling?',
@@ -118,10 +125,10 @@ export function BookingCard({
     }
   };
 
-  const modalConfig = getModalConfig();
+  const modalConfig = getModalConfig(activeStatus);
 
   return (
-    <div className="card-interactive p-3 min-[340px]:p-3.5 sm:p-6 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-paper-border)] shadow-xs space-y-3.5">
+    <div className="p-3 min-[340px]:p-3.5 sm:p-6 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-paper-border)] shadow-xs space-y-3.5 transition-colors duration-200 hover:border-[var(--color-accent)]/30">
       {/* Header row */}
       <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-[var(--color-paper-border)]">
         <div className="min-w-0">
@@ -208,7 +215,7 @@ export function BookingCard({
           <div className="flex items-center gap-2 min-w-0 flex-1">
             <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
             <span className="font-medium text-[11px] sm:text-xs leading-snug">
-              Sesi ini terkonfirmasi. Kirim kabar atau tautan Google Meet ke konseli:
+              Sesi ini terkonfirmasi. Hubungi atau kirim kabar WhatsApp ke konseli:
             </span>
           </div>
           <a
@@ -218,6 +225,7 @@ export function BookingCard({
               code: item.code,
               date: item.date,
               slot: item.timeSlot,
+              mode: item.mode,
             })}
             target="_blank"
             rel="noopener noreferrer"
@@ -241,6 +249,7 @@ export function BookingCard({
               code: item.code,
               date: item.date,
               slot: item.timeSlot,
+              mode: item.mode,
             })}
             target="_blank"
             rel="noopener noreferrer"
@@ -324,10 +333,11 @@ export function BookingCard({
       <ConfirmDecisionModal
         isOpen={pendingStatus !== null}
         onClose={() => setPendingStatus(null)}
-        onConfirm={() => {
-          if (pendingStatus) {
-            onUpdateStatus(item.id, pendingStatus);
+        onConfirm={async () => {
+          if (activeStatus) {
+            const target = activeStatus;
             setPendingStatus(null);
+            await onUpdateStatus(item.id, target);
           }
         }}
         title={modalConfig.title}
@@ -356,7 +366,7 @@ export function BookingCard({
               <span className="font-semibold text-[var(--color-ink)] shrink-0">Format:</span>
               <span>{mode.label}</span>
             </div>
-            {pendingStatus && (
+            {activeStatus && (
               <div className="flex flex-wrap items-center gap-1.5 pt-1.5 border-t border-[var(--color-paper-border)]">
                 <span className="font-semibold text-[var(--color-ink)] shrink-0">Perubahan Status:</span>
                 <span className="capitalize px-1.5 py-0.5 rounded bg-[var(--color-surface)] border border-[var(--color-paper-border)] text-[11px] font-medium">
@@ -364,7 +374,7 @@ export function BookingCard({
                 </span>
                 <span className="text-[var(--color-ink-muted)]">&rarr;</span>
                 <span className="capitalize font-semibold text-[var(--color-accent)] px-1.5 py-0.5 rounded bg-[var(--color-accent-soft)] text-[11px]">
-                  {pendingStatus}
+                  {activeStatus}
                 </span>
               </div>
             )}

@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useRef } from 'react';
 import { MessageSquareText, SearchX, RotateCcw } from 'lucide-react';
 import { AnonymousMessage } from '@/types';
 import { CounselingCard } from './CounselingCard';
@@ -141,8 +141,17 @@ export function CounselingList({
     );
   }
 
+  const listTopRef = useRef<HTMLDivElement>(null);
+
+  const handlePageChange = (newPage: number) => {
+    onPageChange?.(newPage);
+    if (listTopRef.current) {
+      listTopRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
   return (
-    <div className="space-y-4">
+    <div ref={listTopRef} className="space-y-4 scroll-mt-24">
       <div key={currentPage} className="space-y-3.5 sm:space-y-4 pagination-slide-enter">
         {curhatList.map((item) => (
           <CounselingCard
@@ -168,7 +177,7 @@ export function CounselingList({
           totalItems={totalItems || curhatList.length}
           itemsPerPage={itemsPerPage || 6}
           itemLabel="curhatan"
-          onPageChange={onPageChange}
+          onPageChange={handlePageChange}
         />
       )}
     </div>

@@ -6,7 +6,8 @@ import {
   AssessmentQuestion,
   assessmentQuestions,
   assessmentResults,
-  computeDimensionScores,
+  computeDimensionScoresById,
+  sampleAssessmentQuestions,
   DimensionScoreResult,
 } from '@/data/assessment-data';
 import { AssessmentQuiz } from './assessment/AssessmentQuiz';
@@ -14,23 +15,6 @@ import { AssessmentResult } from './assessment/AssessmentResult';
 import { AssessmentHistory } from './assessment/AssessmentHistory';
 import { saveDeviceAssessment, useDeviceAssessments } from '@/lib/assessment-storage';
 
-function shuffleOptions<T>(items: readonly T[]): T[] {
-  const array = [...items];
-  for (let i = array.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    const temp = array[i];
-    array[i] = array[j];
-    array[j] = temp;
-  }
-  return array;
-}
-
-function getRandomizedQuestions(): AssessmentQuestion[] {
-  return assessmentQuestions.map((q) => ({
-    ...q,
-    options: shuffleOptions(q.options),
-  }));
-}
 
 interface AssessmentSectionProps {
   initialTab?: 'quiz' | 'history';
@@ -38,12 +22,13 @@ interface AssessmentSectionProps {
 
 export default function AssessmentSection({ initialTab }: AssessmentSectionProps = {}) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [questions, setQuestions] = useState<AssessmentQuestion[]>(assessmentQuestions);
+  const [sessionSeed, setSessionSeed] = useState<string>('initial-seed');
+  const [questions, setQuestions] = useState<AssessmentQuestion[]>(() => assessmentQuestions.slice(0, 8));
   // Always initialize with SSR-safe defaults based on props
   const [activeTab, setActiveTab] = useState<'quiz' | 'history'>(initialTab || 'quiz');
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState<'next' | 'prev'>('next');
-  const [answers, setAnswers] = useState<number[]>([]);
+  const [answersById, setAnswersById] = useState<Record<number, number>>({});
   const [done, setDone] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
 
@@ -94,10 +79,18 @@ export default function AssessmentSection({ initialTab }: AssessmentSectionProps
     } catch {}
   };
 
-  // Acak pilihan ganda pada setiap sesi baru di sisi client tanpa cascading render
+  // Acak sampling 8 pertanyaan dan pilihan ganda pada setiap sesi baru di sisi client tanpa cascading render
   useEffect(() => {
     const frame = requestAnimationFrame(() => {
-      setQuestions(getRandomizedQuestions());
+      try {
+        const freshSeed = `${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+        setSessionSeed(freshSeed);
+        setQuestions(sampleAssessmentQuestions(freshSeed));
+      } catch {
+        const fallback = `${Date.now()}`;
+        setSessionSeed(fallback);
+        setQuestions(sampleAssessmentQuestions(fallback));
+      }
     });
     return () => cancelAnimationFrame(frame);
   }, []);
@@ -105,19 +98,20 @@ export default function AssessmentSection({ initialTab }: AssessmentSectionProps
   const deviceAssessments = useDeviceAssessments();
   const historyCount = deviceAssessments.length;
 
-  const totalScore = answers.reduce((a, b) => a + b, 0);
-  const maxScore = assessmentQuestions.length * 3; // 8 * 3 = 24
+  const answeredValues = Object.values(answersById);
+  const totalScore = answeredValues.reduce((a, b) => a + b, 0);
+  const maxScore = questions.length * 3; // 8 * 3 = 24
 
   const result = done
     ? assessmentResults.find((r) => totalScore >= r.range[0] && totalScore <= r.range[1]) ?? assessmentResults[1]
     : null;
 
-  const dimensionScores: DimensionScoreResult[] = done ? computeDimensionScores(answers) : [];
+  const dimensionScores: DimensionScoreResult[] = done ? computeDimensionScoresById(answersById, questions) : [];
 
   // Automatically save completed assessment to device history
   useEffect(() => {
-    if (done && result && answers.length === assessmentQuestions.length) {
-      const scores = computeDimensionScores(answers);
+    if (done && result && answeredValues.length === questions.length) {
+      const scores = computeDimensionScoresById(answersById, questions);
       saveDeviceAssessment({
         totalScore,
         maxScore,
@@ -129,23 +123,25 @@ export default function AssessmentSection({ initialTab }: AssessmentSectionProps
         recs: result.recs,
       });
     }
-  }, [done, result, totalScore, maxScore, answers]);
+  }, [done, result, totalScore, maxScore, answeredValues.length, questions, answersById]);
 
   const handleSelect = useCallback(
     (score: number) => {
       if (isTransitioning) return;
+      const currentQuestion = questions[step];
+      if (!currentQuestion) return;
+
       setIsTransitioning(true);
       setDirection('next');
 
-      setAnswers((prev) => {
-        const updated = [...prev];
-        updated[step] = score;
-        return updated;
-      });
+      setAnswersById((prev) => ({
+        ...prev,
+        [currentQuestion.id]: score,
+      }));
 
       // Tactile delay: let user see the selected state before sliding to next question
       setTimeout(() => {
-        if (step < assessmentQuestions.length - 1) {
+        if (step < questions.length - 1) {
           setStep((prev) => prev + 1);
           if (containerRef.current) {
             const rect = containerRef.current.getBoundingClientRect();
@@ -162,7 +158,7 @@ export default function AssessmentSection({ initialTab }: AssessmentSectionProps
         setIsTransitioning(false);
       }, 190);
     },
-    [step, isTransitioning]
+    [step, isTransitioning, questions]
   );
 
   const handlePrev = useCallback(() => {
@@ -173,12 +169,17 @@ export default function AssessmentSection({ initialTab }: AssessmentSectionProps
   }, [step]);
 
   const handleReset = useCallback(() => {
+    const freshSeed = `${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+    try {
+      sessionStorage.setItem('amelia_assessment_session_seed', freshSeed);
+    } catch {}
+    setSessionSeed(freshSeed);
+    setQuestions(sampleAssessmentQuestions(freshSeed));
     setDirection('next');
     setStep(0);
-    setAnswers([]);
+    setAnswersById({});
     setDone(false);
     setIsTransitioning(false);
-    setQuestions(getRandomizedQuestions());
   }, []);
 
   const progress = Math.round(((step + (done ? 1 : 0)) / questions.length) * 100);
@@ -203,17 +204,13 @@ export default function AssessmentSection({ initialTab }: AssessmentSectionProps
             role="tab"
             aria-selected={activeTab === 'quiz'}
             onClick={() => handleTabChange('quiz')}
-            className={`group relative flex items-center justify-center gap-1.5 sm:gap-2 px-2.5 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-200 cursor-pointer border text-center select-none ${
+            className={`group relative flex items-center justify-center gap-1.5 sm:gap-2 px-2 min-[360px]:px-2.5 py-1.5 sm:px-4 sm:py-2 rounded-lg text-[11px] min-[360px]:text-xs sm:text-sm font-semibold transition-all duration-200 cursor-pointer border text-center select-none ${
               activeTab === 'quiz'
-                ? 'bg-[var(--color-surface)] text-[var(--color-ink)] border-[var(--color-paper-border)] shadow-xs scale-100'
+                ? 'bg-[var(--color-surface)] text-[var(--color-ink)] border-[var(--color-paper-border)] shadow-xs'
                 : 'border-transparent text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] hover:bg-[var(--color-surface)]/70 hover:shadow-2xs active:scale-[0.98]'
             }`}
           >
-            <ClipboardList
-              className={`w-4 h-4 text-[var(--color-accent)] shrink-0 transition-transform duration-200 ${
-                activeTab === 'quiz' ? 'scale-105' : 'group-hover:scale-110 group-hover:-rotate-3'
-              }`}
-            />
+            <ClipboardList className="w-4 h-4 text-[var(--color-accent)] shrink-0" />
             <span className="truncate">Mulai Asesmen</span>
           </button>
 
@@ -222,23 +219,19 @@ export default function AssessmentSection({ initialTab }: AssessmentSectionProps
             role="tab"
             aria-selected={activeTab === 'history'}
             onClick={() => handleTabChange('history')}
-            className={`group relative flex items-center justify-center gap-1.5 sm:gap-2 px-2.5 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-200 cursor-pointer border text-center select-none ${
+            className={`group relative flex items-center justify-center gap-1.5 sm:gap-2 px-2 min-[360px]:px-2.5 py-1.5 sm:px-4 sm:py-2 rounded-lg text-[11px] min-[360px]:text-xs sm:text-sm font-semibold transition-all duration-200 cursor-pointer border text-center select-none ${
               activeTab === 'history'
-                ? 'bg-[var(--color-surface)] text-[var(--color-ink)] border-[var(--color-paper-border)] shadow-xs scale-100'
+                ? 'bg-[var(--color-surface)] text-[var(--color-ink)] border-[var(--color-paper-border)] shadow-xs'
                 : 'border-transparent text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] hover:bg-[var(--color-surface)]/70 hover:shadow-2xs active:scale-[0.98]'
             }`}
           >
-            <History
-              className={`w-4 h-4 text-[var(--color-accent)] shrink-0 transition-transform duration-200 ${
-                activeTab === 'history' ? 'scale-105' : 'group-hover:scale-110 group-hover:rotate-6'
-              }`}
-            />
+            <History className="w-4 h-4 text-[var(--color-accent)] shrink-0" />
             <span className="truncate">
               <span className="inline sm:hidden">Riwayat</span>
               <span className="hidden sm:inline">Riwayat di Perangkat</span>
             </span>
             {historyCount > 0 && (
-              <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold rounded-full bg-[var(--color-accent)] text-white group-hover:scale-110 transition-transform duration-200 shrink-0">
+              <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold rounded-full bg-[var(--color-accent)] text-white shrink-0">
                 {historyCount}
               </span>
             )}
@@ -290,7 +283,7 @@ export default function AssessmentSection({ initialTab }: AssessmentSectionProps
                 step={step}
                 totalSteps={questions.length}
                 direction={direction}
-                selectedScore={answers[step]}
+                selectedScore={questions[step] ? answersById[questions[step].id] : undefined}
                 isTransitioning={isTransitioning}
                 onSelect={handleSelect}
                 onPrev={handlePrev}

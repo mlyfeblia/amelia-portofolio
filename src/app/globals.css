@@ -1,8 +1,5 @@
 @import "tailwindcss";
 
-/* Ensure hover interactions trigger reliably across all desktop & hybrid laptop displays without @media (hover: hover) blocking */
-@custom-variant hover (&:hover);
-@custom-variant group-hover (:where(.group):hover &);
 
 /*
  * ═══════════════════════════════════════════════════════════════
@@ -112,18 +109,31 @@
     width: 100%;
   }
 
-  a {
-    text-decoration: none;
-    transition: color var(--dur-fast) var(--ease-smooth), opacity var(--dur-fast) var(--ease-smooth);
-    cursor: pointer;
+  /* Scroll Isolation & Overscroll Containment:
+   * Prevents scroll chaining and bleeding to outer page when scrolling inside
+   * textareas, code blocks, or scrollable dialog panels.
+   */
+  textarea,
+  .scroll-isolated,
+  [data-scroll-isolated="true"] {
+    overscroll-behavior: contain;
+    overscroll-behavior-y: contain;
   }
 
+  /* Comprehensive Contextual Cursors */
+  a,
   button,
   [role="button"],
   input[type="button"],
   input[type="submit"],
   input[type="reset"],
-  summary {
+  input[type="checkbox"],
+  input[type="radio"],
+  select,
+  summary,
+  [role="tab"],
+  .chip-interactive,
+  .clickable {
     cursor: pointer;
   }
 
@@ -147,45 +157,74 @@
     cursor: text;
   }
 
-  input[type="checkbox"],
-  input[type="radio"],
-  select {
-    cursor: pointer;
+  /* Sliders and draggable tracks */
+  .slider-draggable,
+  [data-draggable="true"] {
+    cursor: grab;
+  }
+  .slider-draggable:active,
+  [data-draggable="true"]:active {
+    cursor: grabbing;
   }
 
   /* Text Selection Hygiene:
-   * Interactive controls and UI chrome are unselectable to prevent clumsy highlights on mobile/desktop taps.
-   * Articles, content paragraphs, booking codes, quotes, and inputs remain selectable and copyable.
+   * Interactive controls and UI chrome are strictly unselectable to prevent clumsy highlights
+   * on clicks, double-clicks, or taps.
    */
   button,
+  button *,
   [role="button"],
+  [role="button"] *,
   nav,
+  nav *,
   label,
+  label *,
   summary,
+  summary *,
   [role="tab"],
+  [role="tab"] *,
   [role="tablist"],
   .chip-interactive,
+  .chip-interactive *,
   .btn-primary,
+  .btn-primary *,
   .btn-secondary,
+  .btn-secondary *,
   .btn-danger,
+  .btn-danger *,
   .btn-white,
+  .btn-white *,
   .btn-ghost-white,
+  .btn-ghost-white *,
   .btn-interactive,
-  .pulse-dot {
+  .btn-interactive *,
+  .pulse-dot,
+  .no-select,
+  .select-none,
+  .select-none * {
     user-select: none;
     -webkit-user-select: none;
   }
 
+  /* Reading content, articles, curhat messages, quotes, and inputs are fully selectable and copyable */
   article,
+  article *,
   .prose,
+  .prose *,
+  .curhat-content,
+  .curhat-content *,
+  .curhat-answer,
+  .curhat-answer *,
   .selectable-text,
+  .selectable-text *,
+  .booking-code,
+  .about-content,
+  .about-content *,
   code,
   pre,
   input,
   textarea,
-  blockquote,
-  p,
-  h1, h2, h3, h4, h5, h6 {
+  blockquote {
     user-select: text;
     -webkit-user-select: text;
   }
@@ -731,6 +770,7 @@ select.form-input {
   touch-action: none;
   user-select: none;
   pointer-events: auto;
+  overscroll-behavior: contain;
 }
 
 .modal-backdrop-enter {
@@ -750,7 +790,7 @@ select.form-input {
 }
 
 .modal-window-exit {
-  animation: modalCardScaleOut 0.18s cubic-bezier(0.4, 0, 0.2, 1) both;
+  animation: modalCardScaleOut 0.2s cubic-bezier(0.4, 0, 0.2, 1) both;
   will-change: transform, opacity;
   pointer-events: none !important;
 }
@@ -761,9 +801,18 @@ select.form-input {
 }
 
 .modal-sheet-exit {
-  animation: modalSheetDown 0.18s cubic-bezier(0.4, 0, 0.2, 1) both;
+  animation: modalSheetDown 0.2s cubic-bezier(0.4, 0, 0.2, 1) both;
   will-change: transform, opacity;
   pointer-events: none !important;
+}
+
+@media (max-width: 640px) {
+  .modal-window-sheet-mobile.modal-window-enter {
+    animation: modalSheetUp 0.24s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  .modal-window-sheet-mobile.modal-window-exit {
+    animation: modalSheetDown 0.2s cubic-bezier(0.4, 0, 0.2, 1) both;
+  }
 }
 
 /* ── Upgraded High-Precision Mobile Nav Dropdown Transitions ── */
@@ -929,6 +978,57 @@ select.form-input {
   pointer-events: none !important;
 }
 
+/* Standardized Form Error Banner Animations */
+@keyframes formErrorEnter {
+  0% {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes formErrorExit {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    max-height: 160px;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.98);
+    max-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+    border-width: 0;
+  }
+}
+
+@keyframes formErrorProgress {
+  from {
+    width: 100%;
+  }
+  to {
+    width: 0%;
+  }
+}
+
+.form-error-enter {
+  animation: formErrorEnter 0.24s cubic-bezier(0.16, 1, 0.3, 1) both;
+  will-change: opacity, transform;
+}
+
+.form-error-exit {
+  animation: formErrorExit 0.22s cubic-bezier(0.4, 0, 0.2, 1) both;
+  pointer-events: none !important;
+  will-change: opacity, transform, max-height;
+  overflow: hidden;
+}
+
 /* Input Shake Validation Feedback */
 @keyframes shakeError {
   0%, 100% { transform: translateX(0); }
@@ -994,9 +1094,11 @@ select.form-input {
   will-change: transform, translate, scale;
 }
 
-.btn-interactive:hover {
-  /* Memberikan baseline tactile lift yang aman tanpa jitter loop */
-  transform: translateY(-1px);
+@media (hover: hover) and (pointer: fine) {
+  .btn-interactive:hover {
+    /* Memberikan baseline tactile lift yang aman tanpa jitter loop */
+    transform: translateY(-1px);
+  }
 }
 
 .btn-interactive:active {
@@ -1012,13 +1114,14 @@ select.form-input {
   will-change: transform;
 }
 
-
-.btn-icon-interactive:hover {
-  transform: scale(1.08);
+@media (hover: hover) and (pointer: fine) {
+  .btn-icon-interactive:hover {
+    transform: scale(1.04);
+  }
 }
 
 .btn-icon-interactive:active {
-  transform: scale(0.92);
+  transform: scale(0.95);
 }
 
 .chip-interactive {
@@ -1154,68 +1257,45 @@ select.form-input {
   will-change: opacity, transform;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .pagination-slide-enter {
-    animation: none !important;
-    opacity: 1 !important;
-    transform: none !important;
-  }
-}
-
-/* ── PWA App Launch Splash Transition & Hardware-Accelerated Progress Bar ── */
-@keyframes splashProgressBar {
-  0% {
-    transform: scaleX(0);
-  }
-  100% {
-    transform: scaleX(1);
-  }
-}
-
-.splash-progress-bar {
-  transform-origin: left;
-  animation: splashProgressBar 1.1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  will-change: transform;
-}
-
-.scale-102 {
-  transform: scale(1.02);
-}
-
-/* Interactive Card Elevation & Micro-transitions */
+/* Standardized Interactive Card Elevation & Micro-transitions */
 .card-interactive {
   transition: transform var(--dur-base) var(--ease-smooth),
-              translate var(--dur-base) var(--ease-smooth),
               box-shadow var(--dur-base) var(--ease-smooth),
               border-color var(--dur-base) var(--ease-smooth),
               background-color var(--dur-base) var(--ease-smooth);
-  will-change: transform, translate, box-shadow;
+  will-change: transform, box-shadow;
 }
 
-.card-interactive:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 12px 28px -4px rgba(25, 40, 32, 0.10), 0 4px 10px -2px rgba(25, 40, 32, 0.05);
-  border-color: var(--color-accent-border);
+@media (hover: hover) and (pointer: fine) {
+  .card-interactive:hover {
+    transform: translateY(-1.5px);
+    box-shadow: var(--shadow-sm);
+    border-color: var(--color-accent-border);
+  }
+
+  .card-interactive:hover .card-icon-pop {
+    transform: translateY(-2px) scale(1.04);
+    background-color: var(--color-accent-soft);
+    border-color: var(--color-accent-border);
+    color: var(--color-accent);
+    box-shadow: 0 4px 12px -2px rgba(45, 90, 39, 0.12);
+  }
 }
 
 .card-interactive:active {
   transform: translateY(0) scale(0.99);
 }
 
-.card-interactive:hover .card-icon-pop {
-  transform: scale(1.18);
-  background-color: var(--color-accent);
-  color: #FFFFFF;
-}
-
 .card-icon-pop {
   transition: transform var(--dur-base) var(--ease-smooth),
               background-color var(--dur-base) var(--ease-smooth),
+              border-color var(--dur-base) var(--ease-smooth),
+              box-shadow var(--dur-base) var(--ease-smooth),
               color var(--dur-base) var(--ease-smooth);
   will-change: transform;
 }
 
-/* ── Dedicated Rock-Solid Desktop Navbar Interactive States ── */
+/* ── Dedicated Standardized Desktop Navbar Interactive States ── */
 .nav-link-interactive {
   display: inline-flex;
   align-items: center;
@@ -1228,30 +1308,32 @@ select.form-input {
   user-select: none;
   border: 1px solid transparent;
   color: var(--color-ink-muted);
-  transition: transform var(--dur-instant) var(--ease-smooth),
-              translate var(--dur-instant) var(--ease-smooth),
-              scale var(--dur-instant) var(--ease-smooth),
-              color var(--dur-fast) var(--ease-smooth),
+  transition: color var(--dur-fast) var(--ease-smooth),
               background-color var(--dur-fast) var(--ease-smooth),
               border-color var(--dur-fast) var(--ease-smooth),
               box-shadow var(--dur-fast) var(--ease-smooth);
 }
 
-.nav-link-interactive:hover {
-  transform: translateY(-2px);
-  color: var(--color-accent);
-  background-color: var(--color-accent-soft);
-  border-color: var(--color-accent-border);
-  box-shadow: var(--shadow-xs);
-}
+@media (hover: hover) and (pointer: fine) {
+  .nav-link-interactive:hover {
+    color: var(--color-accent);
+    background-color: var(--color-accent-soft);
+    border-color: var(--color-accent-border);
+    box-shadow: var(--shadow-2xs);
+  }
 
-.nav-link-interactive:hover .nav-link-icon {
-  transform: scale(1.22);
-  color: var(--color-accent);
+  .nav-link-interactive:hover .nav-link-icon {
+    color: var(--color-accent);
+  }
+
+  .nav-link-interactive.is-active:hover {
+    border-color: var(--color-accent);
+    box-shadow: var(--shadow-xs);
+  }
 }
 
 .nav-link-interactive:active {
-  transform: translateY(0) scale(0.97);
+  transform: scale(0.98);
 }
 
 .nav-link-interactive.is-active {
@@ -1259,49 +1341,49 @@ select.form-input {
   background-color: var(--color-accent-soft);
   font-weight: 600;
   border-color: var(--color-accent-border);
-  box-shadow: var(--shadow-xs);
-}
-
-.nav-link-interactive.is-active:hover {
-  transform: translateY(-2px);
-  border-color: var(--color-accent);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-2xs);
 }
 
 .nav-link-icon {
-  transition: transform var(--dur-fast) var(--ease-smooth), color var(--dur-fast) var(--ease-smooth);
-  will-change: transform;
+  transition: color var(--dur-fast) var(--ease-smooth);
 }
 
-/* ── Dedicated Rock-Solid Hero Portrait Interactive States ── */
+/* ── Dedicated Standardized Hero Portrait Interactive States ── */
 .hero-photo-interactive {
   position: relative;
   width: 100%;
   border-radius: 1rem;
   overflow: hidden;
-  cursor: pointer;
   border: 1px solid var(--color-paper-border);
   box-shadow: var(--shadow-sm);
-  transition: transform var(--dur-base) var(--ease-smooth),
-              translate var(--dur-base) var(--ease-smooth),
-              box-shadow var(--dur-base) var(--ease-smooth),
+  transition: box-shadow var(--dur-base) var(--ease-smooth),
               border-color var(--dur-base) var(--ease-smooth);
-  will-change: transform, translate, box-shadow;
 }
 
-.hero-photo-interactive:hover {
-  transform: translateY(-6px);
-  box-shadow: var(--shadow-xl);
-  border-color: var(--color-accent);
+@media (hover: hover) and (pointer: fine) {
+  .hero-photo-interactive:hover {
+    box-shadow: var(--shadow-md);
+    border-color: var(--color-accent-border);
+  }
+
+  .hero-photo-interactive:hover img {
+    transform: scale(1.02);
+  }
 }
 
 .hero-photo-interactive img {
-  transition: transform 0.5s var(--ease-smooth);
+  transition: transform 0.6s var(--ease-smooth);
   will-change: transform;
 }
 
-.hero-photo-interactive:hover img {
-  transform: scale(1.08);
+@media (hover: none), (pointer: coarse) {
+  .card-interactive:hover,
+  .hero-photo-interactive:hover,
+  .btn-interactive:hover,
+  .btn-icon-interactive:hover,
+  .nav-link-interactive:hover {
+    transform: none !important;
+  }
 }
 
 /* Stagger animation utilities */
@@ -1354,6 +1436,8 @@ select.form-input {
   }
   .toast-enter,
   .toast-exit,
+  .form-error-enter,
+  .form-error-exit,
   .tooltip-enter,
   .dropdown-enter,
   .dropdown-exit,
@@ -1370,14 +1454,12 @@ select.form-input {
   .quiz-slide-prev,
   .modal-window-enter,
   .modal-window-exit,
+  .modal-sheet-enter,
+  .modal-sheet-exit,
   .modal-backdrop-enter,
   .modal-backdrop-exit,
-  .splash-progress-bar,
   .pagination-slide-enter {
     animation: none !important;
-  }
-  .splash-progress-bar {
-    transform: scaleX(1) !important;
   }
   .reveal-init,
   [data-reveal] {

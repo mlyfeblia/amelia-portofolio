@@ -20,7 +20,7 @@ export function ServicesPillars() {
         {pillars.map((p) => (
           <div
             key={p.num}
-            className="p-6 bg-[var(--color-surface)] border border-[var(--color-paper-border)] rounded-xl space-y-3 card-interactive flex flex-col justify-between"
+            className="p-6 bg-[var(--color-surface)] border border-[var(--color-paper-border)] rounded-xl space-y-3 shadow-2xs hover:border-[var(--color-accent-border)] transition-colors flex flex-col justify-between"
           >
             <div className="space-y-2">
               <h3 className="text-lg font-semibold text-[var(--color-ink)]">

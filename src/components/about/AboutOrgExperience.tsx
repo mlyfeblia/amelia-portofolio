@@ -27,7 +27,7 @@ export function AboutOrgExperience() {
         {orgExperiences.map((org, idx) => (
           <div
             key={idx}
-            className="p-6 sm:p-7 bg-[var(--color-surface)] border border-[var(--color-paper-border)] rounded-xl space-y-3.5 shadow-xs hover:border-[var(--color-accent-border)] transition-colors card-interactive"
+            className="p-6 sm:p-7 bg-[var(--color-surface)] border border-[var(--color-paper-border)] rounded-xl space-y-3.5 shadow-xs hover:border-[var(--color-accent-border)] transition-colors"
           >
             <div className="flex flex-wrap items-start justify-between gap-2">
               <div>

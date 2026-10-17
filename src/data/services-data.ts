@@ -44,16 +44,16 @@ export const pillars: ServicePillar[] = [
 
 export const formats: ServiceFormat[] = [
   {
-    title: 'Google Meet Virtual',
-    mode: 'online_meet',
-    dur: '60 Menit · Tatap Muka Daring',
-    desc: 'Cocok buat kamu yang nyaman berdiskusi lewat tatap muka langsung dari kamar atau sudut tenang rumahmu.',
-  },
-  {
     title: 'Chat Terjadwal',
     mode: 'online_chat',
-    dur: '60 Menit · Komunikasi Teks',
-    desc: 'Pilihan pas bagi kamu yang lebih leluasa dan tenang mengekspresikan isi hati lewat ketikan kata demi kata.',
+    dur: '60 Menit · Komunikasi Teks WhatsApp',
+    desc: 'Pilihan pas bagi kamu yang lebih leluasa dan tenang mengekspresikan isi hati lewat ketikan pesan chat WhatsApp.',
+  },
+  {
+    title: 'Video Call via WhatsApp',
+    mode: 'online_meet',
+    dur: '60 Menit · Tatap Muka Virtual',
+    desc: 'Cocok buat kamu yang nyaman berdiskusi tatap muka langsung via video call WhatsApp dari sudut tenang rumahmu.',
   },
   {
     title: 'Tatap Muka di Kampus',

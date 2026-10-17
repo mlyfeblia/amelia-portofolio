@@ -251,17 +251,13 @@ export function ArticleMarkdownCheatsheet({
   onInsertExample,
 }: ArticleMarkdownCheatsheetProps) {
   const mounted = useMounted();
-  const { isRendered, backdropClass, windowClass } = useModalAnimation({ isOpen });
+  const { isRendered, isExiting, backdropClass, windowClass } = useModalAnimation({
+    isOpen,
+    onClose,
+    closeOnEscape: true,
+    lockScroll: true,
+  });
   const [copiedSyntax, setCopiedSyntax] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!isOpen) return;
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
 
   const handleCopy = async (syntax: string) => {
     try {
@@ -277,17 +273,17 @@ export function ArticleMarkdownCheatsheet({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[10001] flex items-center justify-center p-0 sm:p-4 overflow-hidden"
+      className={cn(
+        'fixed inset-0 z-[10001] flex items-center justify-center p-0 sm:p-4 overflow-hidden select-none',
+        isExiting && 'pointer-events-none'
+      )}
       role="dialog"
       aria-modal="true"
       aria-labelledby="cheatsheet-title"
     >
       {/* Backdrop */}
       <div
-        className={cn(
-          'fixed inset-0 bg-black/45 backdrop-blur-sm touch-none select-none pointer-events-auto transition-opacity',
-          backdropClass
-        )}
+        className={cn(backdropClass)}
         aria-hidden="true"
         onClick={onClose}
       />
@@ -295,7 +291,7 @@ export function ArticleMarkdownCheatsheet({
       {/* Modal Dialog Content */}
       <div
         className={cn(
-          'relative z-10 w-full h-[95dvh] sm:h-[85vh] sm:max-w-2xl bg-[var(--color-surface)] border border-[var(--color-paper-border)] sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden pointer-events-auto',
+          'relative z-10 w-full h-[95dvh] sm:h-[85vh] sm:max-w-2xl bg-[var(--color-surface)] border border-[var(--color-paper-border)] sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden pointer-events-auto modal-window-sheet-mobile',
           windowClass
         )}
       >

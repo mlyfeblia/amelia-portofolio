@@ -17,13 +17,20 @@ export function CounselingDeleteModal({
   onClose,
   onConfirm,
 }: CounselingDeleteModalProps) {
-  if (!item) return null;
+  // Retain active item during exit transition without sudden unmount
+  const [cachedItem, setCachedItem] = React.useState<AnonymousMessage | null>(item);
+  if (item && item !== cachedItem) {
+    setCachedItem(item);
+  }
+  const activeItem = item ?? cachedItem;
+
+  if (!activeItem) return null;
 
   return (
     <ConfirmDecisionModal
       isOpen={isOpen}
       onClose={onClose}
-      onConfirm={() => onConfirm(item)}
+      onConfirm={() => onConfirm(activeItem)}
       variant="danger"
       title="Hapus Pesan Curhat?"
       description="Penghapusan pesan curhat anonim konseli."
@@ -34,12 +41,12 @@ export function CounselingDeleteModal({
           <p className="leading-relaxed break-words">
             Pesan dari{' '}
             <strong className="text-[var(--color-ink)] font-semibold break-words">
-              {item.alias || 'Teman Anonim'}
+              {activeItem.alias || 'Teman Anonim'}
             </strong>{' '}
-            ({item.category}) akan dihapus secara permanen.
+            ({activeItem.category}) akan dihapus secara permanen.
           </p>
           <div className="pt-2 border-t border-[var(--color-paper-border)]/60 text-xs italic leading-relaxed max-h-24 overflow-y-auto break-words">
-            &ldquo;{item.message}&rdquo;
+            &ldquo;{activeItem.message}&rdquo;
           </div>
         </div>
       }

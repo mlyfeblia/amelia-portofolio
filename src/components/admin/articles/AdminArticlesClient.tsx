@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Article } from '@/types';
+import { parseIndonesianDate } from '@/lib/utils';
 import dynamic from 'next/dynamic';
 import { ArticleHeader } from '@/components/admin/articles/ArticleHeader';
 import { ArticleFilters } from '@/components/admin/articles/ArticleFilters';
@@ -276,7 +277,7 @@ export function AdminArticlesClient() {
       if (data.success) {
         setArticles((prev) => prev.filter((a) => a.id !== art.id));
         setDeleteModalOpen(false);
-        setDeletingArticle(null);
+        setTimeout(() => setDeletingArticle(null), 300);
       }
     } catch (e) {
       console.error('Failed to delete article:', e);
@@ -315,28 +316,54 @@ export function AdminArticlesClient() {
     return ['Semua', ...Array.from(set)];
   }, [articles]);
 
-  // Available unique dates from publishedAt sorted descending
+  // Available unique dates from publishedAt sorted descending with Indonesian labels
   const availableDates = useMemo(() => {
     const dateCounts: Record<string, number> = {};
     articles.forEach((a) => {
-      if (a.publishedAt && a.publishedAt.trim()) {
-        const val = a.publishedAt.trim();
-        dateCounts[val] = (dateCounts[val] || 0) + 1;
+      if (a.publishedAt) {
+        const dt = parseIndonesianDate(a.publishedAt);
+        if (!isNaN(dt.getTime())) {
+          const dateKey = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jakarta' }).format(dt);
+          if (dateKey) {
+            dateCounts[dateKey] = (dateCounts[dateKey] || 0) + 1;
+          }
+        }
       }
     });
 
+    const todayStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jakarta' }).format(new Date());
+
     return Object.keys(dateCounts)
       .sort((a, b) => b.localeCompare(a))
-      .map((dateStr) => ({
-        value: dateStr,
-        label: dateStr,
-        count: dateCounts[dateStr],
-      }));
+      .map((dateStr) => {
+        let formattedLabel = dateStr;
+        try {
+          const [y, m, d] = dateStr.split('-').map(Number);
+          if (y && m && d) {
+            const dt = new Date(y, m - 1, d);
+            formattedLabel = new Intl.DateTimeFormat('id-ID', {
+              weekday: 'short',
+              day: 'numeric',
+              month: 'short',
+              year: 'numeric',
+            }).format(dt);
+          }
+        } catch {}
+
+        const isToday = dateStr === todayStr;
+        const label = isToday ? `Hari Ini (${formattedLabel})` : formattedLabel;
+
+        return {
+          value: dateStr,
+          label,
+          count: dateCounts[dateStr],
+        };
+      });
   }, [articles]);
 
   // Filtered Articles
   const filteredArticles = useMemo(() => {
-    return articles.filter((art) => {
+    const list = articles.filter((art) => {
       const isPublic = art.isPublished ?? true;
       const matchesStatus =
         statusFilter === 'semua' ||
@@ -347,7 +374,14 @@ export function AdminArticlesClient() {
         landingFilter === 'semua' || (landingFilter === 'landing' && art.showOnLandingPage);
 
       const matchesCategory = selectedCategory === 'Semua' || art.category === selectedCategory;
-      const matchesDate = !dateFilter || (art.publishedAt && art.publishedAt.includes(dateFilter));
+
+      const matchesDate = !dateFilter || (() => {
+        if (!art.publishedAt) return false;
+        const dt = parseIndonesianDate(art.publishedAt);
+        if (isNaN(dt.getTime())) return art.publishedAt.includes(dateFilter);
+        const dateKey = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jakarta' }).format(dt);
+        return dateKey === dateFilter;
+      })();
 
       const q = search.toLowerCase();
       const matchesSearch =
@@ -359,6 +393,24 @@ export function AdminArticlesClient() {
         (art.tags && art.tags.some((t) => t.toLowerCase().includes(q)));
 
       return matchesStatus && matchesLanding && matchesCategory && matchesDate && matchesSearch;
+    });
+
+    // Action-First Priority Triage:
+    // 1. In 'semua' view, Draft articles (!art.isPublished) come first for quick authoring review
+    // 2. Published articles come next
+    // 3. Within each group, sort by publishedAt/date descending
+    return [...list].sort((a, b) => {
+      const aDraft = !(a.isPublished ?? true);
+      const bDraft = !(b.isPublished ?? true);
+
+      if (statusFilter === 'semua') {
+        if (aDraft && !bDraft) return -1;
+        if (!aDraft && bDraft) return 1;
+      }
+
+      const dateA = a.publishedAt ? parseIndonesianDate(a.publishedAt).getTime() : 0;
+      const dateB = b.publishedAt ? parseIndonesianDate(b.publishedAt).getTime() : 0;
+      return dateB - dateA;
     });
   }, [articles, statusFilter, landingFilter, selectedCategory, dateFilter, search]);
 
@@ -459,7 +511,7 @@ export function AdminArticlesClient() {
         isOpen={deleteModalOpen}
         onClose={() => {
           setDeleteModalOpen(false);
-          setDeletingArticle(null);
+          setTimeout(() => setDeletingArticle(null), 300);
         }}
         onConfirm={handleConfirmDelete}
       />

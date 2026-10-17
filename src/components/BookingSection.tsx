@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useId } from 'react';
+import React, { useState, useId, useCallback } from 'react';
 import { AlertCircle, CalendarPlus, Search } from 'lucide-react';
 import {
   BookingFormState,
@@ -8,12 +8,14 @@ import {
   BOOKING_MODES,
   getTodayDateString,
   getMaxBookingDateString,
+  resolveBookingCategory,
 } from '@/data/booking-data';
 import { BookingSuccessCard } from './booking/BookingSuccessCard';
 import { BookingClientInfoStep } from './booking/BookingClientInfoStep';
 import { BookingSessionDetailsStep } from './booking/BookingSessionDetailsStep';
 import { BookingTracker } from './booking/BookingTracker';
 import { ConfirmDecisionModal } from '@/components/ui/ConfirmDecisionModal';
+import { FormErrorMessage } from '@/components/ui/FormErrorMessage';
 import { saveDeviceBooking, useDeviceBookings } from '@/lib/booking-storage';
 import {
   isNotificationSupported,
@@ -30,9 +32,15 @@ interface BookingSectionProps {
   initialTab?: 'new' | 'tracker';
   initialCode?: string;
   initialMode?: CounselingMode;
+  initialCategory?: string;
 }
 
-export default function BookingSection({ initialTab, initialCode, initialMode }: BookingSectionProps = {}) {
+export default function BookingSection({
+  initialTab,
+  initialCode,
+  initialMode,
+  initialCategory,
+}: BookingSectionProps = {}) {
   const formId = useId();
   // Always initialize with SSR-safe defaults based on props
   const [form, setForm] = useState<BookingFormState>(() => {
@@ -40,9 +48,14 @@ export default function BookingSection({ initialTab, initialCode, initialMode }:
     if (initialMode && ['online_meet', 'online_chat', 'tatap_muka_cirebon'].includes(initialMode)) {
       mode = initialMode;
     }
+    let category = DEFAULT_BOOKING_FORM.category;
+    if (initialCategory) {
+      category = resolveBookingCategory(initialCategory);
+    }
     return {
       ...DEFAULT_BOOKING_FORM,
       mode,
+      category,
     };
   });
 
@@ -65,6 +78,17 @@ export default function BookingSection({ initialTab, initialCode, initialMode }:
     if (initialCode) setTrackCode(initialCode);
   }
 
+  const [prevInitialCategory, setPrevInitialCategory] = useState(initialCategory);
+  if (prevInitialCategory !== initialCategory) {
+    setPrevInitialCategory(initialCategory);
+    if (initialCategory) {
+      setForm((prev) => ({
+        ...prev,
+        category: resolveBookingCategory(initialCategory),
+      }));
+    }
+  }
+
   // Listen to browser back/forward and hash changes, sync on mount post-hydration
   React.useEffect(() => {
     const handlePopState = () => {
@@ -73,15 +97,18 @@ export default function BookingSection({ initialTab, initialCode, initialMode }:
         const tabParam = searchParams.get('tab');
         const hash = window.location.hash;
 
-        if (tabParam === 'tracker' || hash === '#tracker' || hash === '#lacak') {
+        const codeParam =
+          searchParams.get('code') ||
+          searchParams.get('kode') ||
+          searchParams.get('track');
+
+        if (codeParam) {
+          setTrackCode(codeParam);
+          setActiveTab('tracker');
+        } else if (tabParam === 'tracker' || hash === '#tracker' || hash === '#lacak') {
           setActiveTab('tracker');
         } else if (tabParam === 'new') {
           setActiveTab('new');
-        }
-
-        const codeParam = searchParams.get('code');
-        if (codeParam) {
-          setTrackCode(codeParam);
         }
 
         const modeParam = searchParams.get('format') || searchParams.get('mode');
@@ -92,6 +119,18 @@ export default function BookingSection({ initialTab, initialCode, initialMode }:
           setForm((prev) => ({
             ...prev,
             mode: modeParam as CounselingMode,
+          }));
+        }
+
+        const catParam =
+          searchParams.get('kategori') ||
+          searchParams.get('category') ||
+          searchParams.get('topik');
+        if (catParam) {
+          const resolvedCat = resolveBookingCategory(catParam);
+          setForm((prev) => ({
+            ...prev,
+            category: resolvedCat,
           }));
         }
       } catch {}
@@ -107,7 +146,7 @@ export default function BookingSection({ initialTab, initialCode, initialMode }:
     };
   }, []);
 
-  const handleTabChange = (tab: 'new' | 'tracker') => {
+  const handleTabChange = useCallback((tab: 'new' | 'tracker') => {
     setActiveTab(tab);
     setTrackCode('');
     try {
@@ -122,9 +161,9 @@ export default function BookingSection({ initialTab, initialCode, initialMode }:
       url.searchParams.delete('code');
       window.history.replaceState({}, '', url.toString());
     } catch {}
-  };
+  }, []);
 
-  const handleTrackCodeChange = (code: string) => {
+  const handleTrackCodeChange = useCallback((code: string) => {
     setTrackCode(code);
     try {
       const url = new URL(window.location.href);
@@ -137,7 +176,7 @@ export default function BookingSection({ initialTab, initialCode, initialMode }:
       }
       window.history.replaceState({}, '', url.toString());
     } catch {}
-  };
+  }, []);
   const [botTrap, setBotTrap] = useState('');
   const [loading, setLoading] = useState(false);
   const [showBookingConfirmModal, setShowBookingConfirmModal] = useState(false);
@@ -148,11 +187,13 @@ export default function BookingSection({ initialTab, initialCode, initialMode }:
     alias?: string;
     date: string;
     slot: string;
+    mode?: CounselingMode;
   } | null>(null);
 
   const handleChange = (key: keyof BookingFormState, value: string) => {
     const formattedValue = key === 'name' || key === 'alias' ? formatPersonName(value) : value;
     setForm((prev) => ({ ...prev, [key]: formattedValue }));
+    if (error) setError('');
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -168,6 +209,7 @@ export default function BookingSection({ initialTab, initialCode, initialMode }:
           name: form.name || 'Sahabat',
           date: form.date,
           slot: form.timeSlot,
+          mode: form.mode,
         });
       }, 500);
       return;
@@ -264,6 +306,7 @@ export default function BookingSection({ initialTab, initialCode, initialMode }:
         alias: newBooking.alias || form.alias || undefined,
         date: newBooking.date,
         slot: newBooking.timeSlot,
+        mode: newBooking.mode,
       });
       setForm(DEFAULT_BOOKING_FORM);
       setShowBookingConfirmModal(false);
@@ -296,15 +339,13 @@ export default function BookingSection({ initialTab, initialCode, initialMode }:
             role="tab"
             aria-selected={activeTab === 'new'}
             onClick={() => handleTabChange('new')}
-            className={`group relative flex items-center justify-center gap-1.5 sm:gap-2 px-2.5 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-200 cursor-pointer border text-center select-none ${
+            className={`group relative flex items-center justify-center gap-1.5 sm:gap-2 px-2 min-[360px]:px-2.5 py-1.5 sm:px-4 sm:py-2 rounded-lg text-[11px] min-[360px]:text-xs sm:text-sm font-semibold transition-all duration-200 cursor-pointer border text-center select-none ${
               activeTab === 'new'
-                ? 'bg-[var(--color-surface)] text-[var(--color-ink)] border-[var(--color-paper-border)] shadow-xs scale-100'
+                ? 'bg-[var(--color-surface)] text-[var(--color-ink)] border-[var(--color-paper-border)] shadow-xs'
                 : 'border-transparent text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] hover:bg-[var(--color-surface)]/70 hover:shadow-2xs active:scale-[0.98]'
             }`}
           >
-            <CalendarPlus className={`w-4 h-4 text-[var(--color-accent)] shrink-0 transition-transform duration-200 ${
-              activeTab === 'new' ? 'scale-105' : 'group-hover:scale-110 group-hover:-rotate-3'
-            }`} />
+            <CalendarPlus className="w-4 h-4 text-[var(--color-accent)] shrink-0" />
             <span className="truncate">
               <span className="inline sm:hidden">Janji Temu</span>
               <span className="hidden sm:inline">Ajukan Janji Temu</span>
@@ -316,21 +357,19 @@ export default function BookingSection({ initialTab, initialCode, initialMode }:
             role="tab"
             aria-selected={activeTab === 'tracker'}
             onClick={() => handleTabChange('tracker')}
-            className={`group relative flex items-center justify-center gap-1.5 sm:gap-2 px-2.5 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-200 cursor-pointer border text-center select-none ${
+            className={`group relative flex items-center justify-center gap-1.5 sm:gap-2 px-2 min-[360px]:px-2.5 py-1.5 sm:px-4 sm:py-2 rounded-lg text-[11px] min-[360px]:text-xs sm:text-sm font-semibold transition-all duration-200 cursor-pointer border text-center select-none ${
               activeTab === 'tracker'
-                ? 'bg-[var(--color-surface)] text-[var(--color-ink)] border-[var(--color-paper-border)] shadow-xs scale-100'
+                ? 'bg-[var(--color-surface)] text-[var(--color-ink)] border-[var(--color-paper-border)] shadow-xs'
                 : 'border-transparent text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] hover:bg-[var(--color-surface)]/70 hover:shadow-2xs active:scale-[0.98]'
             }`}
           >
-            <Search className={`w-4 h-4 text-[var(--color-accent)] shrink-0 transition-transform duration-200 ${
-              activeTab === 'tracker' ? 'scale-105' : 'group-hover:scale-110 group-hover:rotate-6'
-            }`} />
+            <Search className="w-4 h-4 text-[var(--color-accent)] shrink-0" />
             <span className="truncate">
               <span className="inline sm:hidden">Lacak Status</span>
               <span className="hidden sm:inline">Lacak Status Sesi</span>
             </span>
             {deviceBookingCount > 0 && (
-              <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold rounded-full bg-[var(--color-accent)] text-white group-hover:scale-110 transition-transform duration-200 shrink-0">
+              <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold rounded-full bg-[var(--color-accent)] text-white shrink-0">
                 {deviceBookingCount}
               </span>
             )}
@@ -392,16 +431,11 @@ export default function BookingSection({ initialTab, initialCode, initialMode }:
               />
             </div>
 
-            {error && (
-              <div
-                className="flex items-start gap-2.5 p-3.5 text-xs sm:text-sm text-[var(--color-error)] bg-[var(--color-error-soft)] border border-[var(--color-error-border)] rounded-md"
-                role="alert"
-                aria-live="assertive"
-              >
-                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" aria-hidden="true" />
-                <span>{error}</span>
-              </div>
-            )}
+            <FormErrorMessage
+              message={error}
+              onClose={() => setError('')}
+              autoDismissMs={6000}
+            />
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
               <BookingClientInfoStep

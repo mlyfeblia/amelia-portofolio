@@ -51,7 +51,7 @@ export function AppShowcaseSection() {
 
             {/* 4 Core Value Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-5 pt-1">
-              <div className="p-5 rounded-xl bg-[var(--color-surface)] border border-[var(--color-paper-border)] flex items-start gap-3.5 card-interactive">
+              <div className="p-5 rounded-xl bg-[var(--color-surface)] border border-[var(--color-paper-border)] flex items-start gap-3.5 shadow-2xs">
                 <div className="w-9 h-9 rounded-xl bg-[var(--color-accent-soft)] text-[var(--color-accent)] flex items-center justify-center shrink-0 mt-0.5">
                   <Zap className="w-4 h-4" />
                 </div>
@@ -63,7 +63,7 @@ export function AppShowcaseSection() {
                 </div>
               </div>
 
-              <div className="p-5 rounded-xl bg-[var(--color-surface)] border border-[var(--color-paper-border)] flex items-start gap-3.5 card-interactive">
+              <div className="p-5 rounded-xl bg-[var(--color-surface)] border border-[var(--color-paper-border)] flex items-start gap-3.5 shadow-2xs">
                 <div className="w-9 h-9 rounded-xl bg-[var(--color-accent-soft)] text-[var(--color-accent)] flex items-center justify-center shrink-0 mt-0.5">
                   <WifiOff className="w-4 h-4" />
                 </div>
@@ -75,7 +75,7 @@ export function AppShowcaseSection() {
                 </div>
               </div>
 
-              <div className="p-5 rounded-xl bg-[var(--color-surface)] border border-[var(--color-paper-border)] flex items-start gap-3.5 card-interactive">
+              <div className="p-5 rounded-xl bg-[var(--color-surface)] border border-[var(--color-paper-border)] flex items-start gap-3.5 shadow-2xs">
                 <div className="w-9 h-9 rounded-xl bg-[var(--color-accent-soft)] text-[var(--color-accent)] flex items-center justify-center shrink-0 mt-0.5">
                   <Feather className="w-4 h-4" />
                 </div>
@@ -87,7 +87,7 @@ export function AppShowcaseSection() {
                 </div>
               </div>
 
-              <div className="p-5 rounded-xl bg-[var(--color-surface)] border border-[var(--color-paper-border)] flex items-start gap-3.5 card-interactive">
+              <div className="p-5 rounded-xl bg-[var(--color-surface)] border border-[var(--color-paper-border)] flex items-start gap-3.5 shadow-2xs">
                 <div className="w-9 h-9 rounded-xl bg-[var(--color-accent-soft)] text-[var(--color-accent)] flex items-center justify-center shrink-0 mt-0.5">
                   <Lock className="w-4 h-4" />
                 </div>

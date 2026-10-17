@@ -29,8 +29,10 @@ export function ApproachSection() {
           </div>
 
           <div className="md:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-6">
-            <div className="p-5 sm:p-6 bg-[var(--color-surface)] border border-[var(--color-paper-border)] hover:border-[var(--color-accent)] rounded-xl space-y-2 card-interactive group cursor-pointer hover:shadow-xl hover:-translate-y-2 transition-all duration-300 ease-out">
-              <Heart className="w-5 h-5 text-[var(--color-accent)] transition-transform duration-300 group-hover:scale-125" />
+            <div className="p-5 sm:p-6 bg-[var(--color-surface)] border border-[var(--color-paper-border)] rounded-xl space-y-3 card-interactive group">
+              <div className="card-icon-pop w-10 h-10 rounded-xl bg-[var(--color-accent-soft)] text-[var(--color-accent)] border border-[var(--color-accent-border)]/50 flex items-center justify-center shrink-0">
+                <Heart className="w-5 h-5" />
+              </div>
               <h3 className="text-sm sm:text-base font-semibold text-[var(--color-ink)] group-hover:text-[var(--color-accent)] transition-colors">
                 Penerimaan Tanpa Syarat
               </h3>
@@ -39,8 +41,10 @@ export function ApproachSection() {
               </p>
             </div>
 
-            <div className="p-5 sm:p-6 bg-[var(--color-surface)] border border-[var(--color-paper-border)] hover:border-[var(--color-accent)] rounded-xl space-y-2 card-interactive group cursor-pointer hover:shadow-xl hover:-translate-y-2 transition-all duration-300 ease-out">
-              <Lock className="w-5 h-5 text-[var(--color-accent)] transition-transform duration-300 group-hover:scale-125" />
+            <div className="p-5 sm:p-6 bg-[var(--color-surface)] border border-[var(--color-paper-border)] rounded-xl space-y-3 card-interactive group">
+              <div className="card-icon-pop w-10 h-10 rounded-xl bg-[var(--color-accent-soft)] text-[var(--color-accent)] border border-[var(--color-accent-border)]/50 flex items-center justify-center shrink-0">
+                <Lock className="w-5 h-5" />
+              </div>
               <h3 className="text-sm sm:text-base font-semibold text-[var(--color-ink)] group-hover:text-[var(--color-accent)] transition-colors">
                 Kerahasiaan Terjaga Mutlak
               </h3>
@@ -49,8 +53,10 @@ export function ApproachSection() {
               </p>
             </div>
 
-            <div className="p-5 sm:p-6 bg-[var(--color-surface)] border border-[var(--color-paper-border)] hover:border-[var(--color-accent)] rounded-xl space-y-2 card-interactive group cursor-pointer hover:shadow-xl hover:-translate-y-2 transition-all duration-300 ease-out">
-              <ShieldCheck className="w-5 h-5 text-[var(--color-accent)] transition-transform duration-300 group-hover:scale-125" />
+            <div className="p-5 sm:p-6 bg-[var(--color-surface)] border border-[var(--color-paper-border)] rounded-xl space-y-3 card-interactive group">
+              <div className="card-icon-pop w-10 h-10 rounded-xl bg-[var(--color-accent-soft)] text-[var(--color-accent)] border border-[var(--color-accent-border)]/50 flex items-center justify-center shrink-0">
+                <ShieldCheck className="w-5 h-5" />
+              </div>
               <h3 className="text-sm sm:text-base font-semibold text-[var(--color-ink)] group-hover:text-[var(--color-accent)] transition-colors">
                 Integrasi Nilai &amp; Adab
               </h3>
@@ -59,8 +65,10 @@ export function ApproachSection() {
               </p>
             </div>
 
-            <div className="p-5 sm:p-6 bg-[var(--color-surface)] border border-[var(--color-paper-border)] hover:border-[var(--color-accent)] rounded-xl space-y-2 card-interactive group cursor-pointer hover:shadow-xl hover:-translate-y-2 transition-all duration-300 ease-out">
-              <MessageCircle className="w-5 h-5 text-[var(--color-accent)] transition-transform duration-300 group-hover:scale-125" />
+            <div className="p-5 sm:p-6 bg-[var(--color-surface)] border border-[var(--color-paper-border)] rounded-xl space-y-3 card-interactive group">
+              <div className="card-icon-pop w-10 h-10 rounded-xl bg-[var(--color-accent-soft)] text-[var(--color-accent)] border border-[var(--color-accent-border)]/50 flex items-center justify-center shrink-0">
+                <MessageCircle className="w-5 h-5" />
+              </div>
               <h3 className="text-sm sm:text-base font-semibold text-[var(--color-ink)] group-hover:text-[var(--color-accent)] transition-colors">
                 Akses Daring Fleksibel
               </h3>

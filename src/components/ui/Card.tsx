@@ -16,7 +16,7 @@ const CARD_VARIANT_MAP: Record<CardVariant, string> = {
   muted: 'bg-[var(--color-paper-muted)] border-[var(--color-paper-border)] text-[var(--color-ink)]',
   accent: 'bg-[var(--color-accent-soft)]/50 border-[var(--color-accent-border)] text-[var(--color-ink)]',
   interactive:
-    'bg-[var(--color-surface)] border-[var(--color-paper-border)] text-[var(--color-ink)] shadow-2xs hover:shadow-md hover:border-[var(--color-accent-border)] hover:-translate-y-0.5 transition-all duration-200 cursor-pointer',
+    'bg-[var(--color-surface)] border-[var(--color-paper-border)] text-[var(--color-ink)] shadow-2xs card-interactive cursor-pointer',
 };
 
 const PADDING_MAP: Record<CardPadding, string> = {
@@ -35,8 +35,7 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
           'rounded-2xl border',
           CARD_VARIANT_MAP[variant],
           PADDING_MAP[padding],
-          hoverEffect &&
-            'hover:shadow-md hover:border-[var(--color-accent-border)] hover:-translate-y-0.5 transition-all duration-200',
+          hoverEffect && 'card-interactive cursor-pointer',
           className
         )}
         {...props}

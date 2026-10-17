@@ -21,19 +21,24 @@ export function ArticleListItem({ article }: { article: Article }) {
         </h2>
 
         <p className="text-sm sm:text-base text-[var(--color-ink-muted)] leading-relaxed line-clamp-2">
-          {article.publishedAt ? `${formatIndonesianDate(article.publishedAt) || article.publishedAt} — ` : ''}{article.excerpt}
+          {article.publishedAt ? `${formatIndonesianDate(article.publishedAt) || article.publishedAt} - ` : ''}{article.excerpt}
         </p>
 
-        <div className="pt-2 flex items-end justify-between gap-3 text-xs text-[var(--color-ink-soft)]">
-          <div className="flex flex-col gap-1 min-w-0">
-            <span className="font-semibold text-[var(--color-accent)] truncate">
+        <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-[var(--color-ink-soft)]">
+          <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0 text-xs text-[var(--color-ink-soft)]">
+            <span className="font-semibold text-[var(--color-accent)] truncate min-w-0 shrink" title={article.category}>
               {article.category}
             </span>
-            <span className="inline-flex items-center gap-1.5 text-[var(--color-ink-muted)]">
+            <span className="text-[var(--color-paper-border)] shrink-0 select-none" aria-hidden="true">&bull;</span>
+            <span className="inline-flex items-center gap-1 sm:gap-1.5 text-[var(--color-ink-muted)] shrink-0 whitespace-nowrap">
               <Clock className="w-3.5 h-3.5 text-[var(--color-accent)] shrink-0" aria-hidden="true" />
-              <span>{article.readTime}</span>
+              <span>
+                {article.readTime.replace(' baca', '')}
+                <span className="hidden min-[400px]:inline"> baca</span>
+              </span>
             </span>
-            <span className="inline-flex items-center gap-1.5 text-[var(--color-ink-muted)]">
+            <span className="text-[var(--color-paper-border)] shrink-0 select-none" aria-hidden="true">&bull;</span>
+            <span className="inline-flex items-center gap-1 sm:gap-1.5 text-[var(--color-ink-muted)] shrink-0 whitespace-nowrap">
               <Eye className="w-3.5 h-3.5 text-[var(--color-accent)] shrink-0" aria-hidden="true" />
               <span>{typeof article.views === 'number' ? article.views : 0} pembaca</span>
             </span>
@@ -41,7 +46,7 @@ export function ArticleListItem({ article }: { article: Article }) {
 
           <Link
             href={`/articles/${article.slug}`}
-            className="btn-secondary btn-interactive inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-[var(--color-ink)] hover:text-[var(--color-accent)] bg-[var(--color-surface)] border border-[var(--color-paper-border)] hover:border-[var(--color-accent-border)] hover:bg-[var(--color-accent-soft)]/50 shadow-2xs shrink-0 self-end transition-all"
+            className="btn-secondary btn-interactive inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-[var(--color-ink)] hover:text-[var(--color-accent)] bg-[var(--color-surface)] border border-[var(--color-paper-border)] hover:border-[var(--color-accent-border)] hover:bg-[var(--color-accent-soft)]/50 shadow-2xs shrink-0 self-start sm:self-auto transition-all"
           >
             <BookOpen className="w-3.5 h-3.5 text-[var(--color-accent)] shrink-0" aria-hidden="true" />
             <span>Baca Tulisan</span>

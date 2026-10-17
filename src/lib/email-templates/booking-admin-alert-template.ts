@@ -28,12 +28,12 @@ function formatDisplayDate(dateStr: string): string {
 
 function getModeLabel(mode: string): string {
   switch (mode) {
-    case 'online_meet':
-      return 'Google Meet Virtual';
     case 'online_chat':
-      return 'Chat Terjadwal';
+      return 'Chat WhatsApp Terjadwal';
+    case 'online_meet':
+      return 'Video Call via WhatsApp';
     case 'tatap_muka_cirebon':
-      return 'Tatap Muka di Kampus';
+      return 'Tatap Muka di Kampus (Cirebon)';
     default:
       return escapeHtml(mode);
   }
@@ -79,17 +79,52 @@ export function generateBookingAdminAlertHtml(booking: Booking): string {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="color-scheme" content="light">
   <title>Alert Jadwal Baru - Amelia BKI</title>
+  <style>
+    @media only screen and (max-width: 600px) {
+      .email-wrapper {
+        padding: 16px 8px !important;
+      }
+      .email-card {
+        border-radius: 12px !important;
+      }
+      .email-header-cell {
+        padding: 24px 18px !important;
+      }
+      .email-body-cell {
+        padding: 24px 18px !important;
+      }
+      .email-footer-cell {
+        padding: 18px 16px !important;
+      }
+      .col-label {
+        width: 44% !important;
+        font-size: 12px !important;
+      }
+      .col-value {
+        width: 56% !important;
+        font-size: 13px !important;
+      }
+      .btn-block {
+        display: block !important;
+        width: 100% !important;
+        padding-left: 12px !important;
+        padding-right: 12px !important;
+        box-sizing: border-box !important;
+        font-size: 14px !important;
+      }
+    }
+  </style>
 </head>
 <body style="margin: 0; padding: 0; background-color: #F4F1EA; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; color: #192820;">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #F4F1EA; padding: 32px 12px;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="email-wrapper" style="background-color: #F4F1EA; padding: 32px 12px;">
     <tr>
       <td align="center">
         <!-- Main Card Container -->
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width: 600px; background-color: #FFFFFF; border: 1px solid #E5DFD5; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(25, 40, 32, 0.06);">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="email-card" style="max-width: 600px; background-color: #FFFFFF; border: 1px solid #E5DFD5; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(25, 40, 32, 0.06);">
           
           <!-- Header Banner -->
           <tr>
-            <td style="background-color: #1A563C; padding: 32px; text-align: left;">
+            <td class="email-header-cell" style="background-color: #1A563C; padding: 32px; text-align: left;">
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                 <tr>
                   <td>
@@ -110,7 +145,7 @@ export function generateBookingAdminAlertHtml(booking: Booking): string {
 
           <!-- Main Content Body -->
           <tr>
-            <td style="padding: 32px;">
+            <td class="email-body-cell" style="padding: 32px;">
               <p style="margin: 0 0 20px 0; color: #42564C; font-size: 14px; line-height: 1.5;">
                 Halo Mel, ada konseli baru yang baru saja mengajukan jadwal konsultasi melalui website:
               </p>
@@ -121,40 +156,40 @@ export function generateBookingAdminAlertHtml(booking: Booking): string {
                   <td style="padding: 20px;">
                     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                       <tr>
-                        <td width="35%" style="padding: 7px 0; color: #60756B; font-size: 13px; font-weight: 500;">Nama Konseli</td>
-                        <td width="65%" style="padding: 7px 0; color: #192820; font-size: 14px; font-weight: 700;">
+                        <td width="35%" class="col-label" style="padding: 7px 0; color: #60756B; font-size: 13px; font-weight: 500;">Nama Konseli</td>
+                        <td width="65%" class="col-value" style="padding: 7px 0; color: #192820; font-size: 14px; font-weight: 700;">
                           ${safeName} ${safeAlias ? `<span style="font-weight: 400; color: #60756B;">(alias: ${safeAlias})</span>` : ''}
                         </td>
                       </tr>
                       <tr>
-                        <td style="padding: 7px 0; color: #60756B; font-size: 13px; font-weight: 500; border-top: 1px dashed #E5DFD5;">Kontak WhatsApp</td>
-                        <td style="padding: 7px 0; color: #1A563C; font-size: 14px; font-weight: 600; border-top: 1px dashed #E5DFD5;">
+                        <td class="col-label" style="padding: 7px 0; color: #60756B; font-size: 13px; font-weight: 500; border-top: 1px dashed #E5DFD5;">Kontak WhatsApp</td>
+                        <td class="col-value" style="padding: 7px 0; color: #1A563C; font-size: 14px; font-weight: 600; border-top: 1px dashed #E5DFD5;">
                           <a href="${waDirectUrl}" target="_blank" style="color: #1A563C; text-decoration: underline;">
                             ${safePhone} (Klik untuk Chat)
                           </a>
                         </td>
                       </tr>
                       <tr>
-                        <td style="padding: 7px 0; color: #60756B; font-size: 13px; font-weight: 500; border-top: 1px dashed #E5DFD5;">Email</td>
-                        <td style="padding: 7px 0; color: #192820; font-size: 14px; border-top: 1px dashed #E5DFD5;">
+                        <td class="col-label" style="padding: 7px 0; color: #60756B; font-size: 13px; font-weight: 500; border-top: 1px dashed #E5DFD5;">Email</td>
+                        <td class="col-value" style="padding: 7px 0; color: #192820; font-size: 14px; border-top: 1px dashed #E5DFD5;">
                           <a href="mailto:${safeEmail}" style="color: #1A563C; text-decoration: none;">${safeEmail}</a>
                         </td>
                       </tr>
                       <tr>
-                        <td style="padding: 7px 0; color: #60756B; font-size: 13px; font-weight: 500; border-top: 1px dashed #E5DFD5;">Topik Konseling</td>
-                        <td style="padding: 7px 0; color: #192820; font-size: 14px; font-weight: 600; border-top: 1px dashed #E5DFD5;">
+                        <td class="col-label" style="padding: 7px 0; color: #60756B; font-size: 13px; font-weight: 500; border-top: 1px dashed #E5DFD5;">Topik Konseling</td>
+                        <td class="col-value" style="padding: 7px 0; color: #192820; font-size: 14px; font-weight: 600; border-top: 1px dashed #E5DFD5;">
                           ${safeCategory}
                         </td>
                       </tr>
                       <tr>
-                        <td style="padding: 7px 0; color: #60756B; font-size: 13px; font-weight: 500; border-top: 1px dashed #E5DFD5;">Format Sesi</td>
-                        <td style="padding: 7px 0; color: #192820; font-size: 14px; font-weight: 600; border-top: 1px dashed #E5DFD5;">
+                        <td class="col-label" style="padding: 7px 0; color: #60756B; font-size: 13px; font-weight: 500; border-top: 1px dashed #E5DFD5;">Format Sesi</td>
+                        <td class="col-value" style="padding: 7px 0; color: #192820; font-size: 14px; font-weight: 600; border-top: 1px dashed #E5DFD5;">
                           ${modeLabel}
                         </td>
                       </tr>
                       <tr>
-                        <td style="padding: 7px 0; color: #60756B; font-size: 13px; font-weight: 500; border-top: 1px dashed #E5DFD5;">Waktu Diminta</td>
-                        <td style="padding: 7px 0; color: #192820; font-size: 14px; font-weight: 600; border-top: 1px dashed #E5DFD5;">
+                        <td class="col-label" style="padding: 7px 0; color: #60756B; font-size: 13px; font-weight: 500; border-top: 1px dashed #E5DFD5;">Waktu Diminta</td>
+                        <td class="col-value" style="padding: 7px 0; color: #192820; font-size: 14px; font-weight: 600; border-top: 1px dashed #E5DFD5;">
                           ${formattedDate} · ${safeTimeSlot}
                         </td>
                       </tr>
@@ -177,7 +212,7 @@ export function generateBookingAdminAlertHtml(booking: Booking): string {
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 12px;">
                 <tr>
                   <td align="center">
-                    <a href="${adminUrl}" target="_blank" style="display: block; width: 100%; box-sizing: border-box; background-color: #1A563C; color: #FFFFFF; font-size: 15px; font-weight: 600; text-align: center; text-decoration: none; padding: 14px 24px; border-radius: 8px; box-shadow: 0 2px 8px rgba(26, 86, 60, 0.25);">
+                    <a href="${adminUrl}" target="_blank" class="btn-block" style="display: block; width: 100%; box-sizing: border-box; background-color: #1A563C; color: #FFFFFF; font-size: 15px; font-weight: 600; text-align: center; text-decoration: none; padding: 14px 24px; border-radius: 8px; box-shadow: 0 2px 8px rgba(26, 86, 60, 0.25);">
                       ⚙️ Buka Panel Admin Bookings
                     </a>
                   </td>
@@ -189,7 +224,7 @@ export function generateBookingAdminAlertHtml(booking: Booking): string {
 
           <!-- Footer -->
           <tr>
-            <td style="background-color: #FBF9F5; border-top: 1px solid #E5DFD5; padding: 20px 32px; text-align: center;">
+            <td class="email-footer-cell" style="background-color: #FBF9F5; border-top: 1px solid #E5DFD5; padding: 20px 32px; text-align: center;">
               <p style="margin: 0; color: #8C9E94; font-size: 12px;">
                 Notifikasi Otomatis Sistem Konselor Amelia BKI · UIN Siber Cirebon
               </p>

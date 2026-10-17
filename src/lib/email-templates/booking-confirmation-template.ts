@@ -28,12 +28,12 @@ function formatDisplayDate(dateStr: string): string {
 
 function getModeLabel(mode: string): string {
   switch (mode) {
-    case 'online_meet':
-      return 'Google Meet Virtual';
     case 'online_chat':
-      return 'Chat Terjadwal';
+      return 'Chat WhatsApp Terjadwal';
+    case 'online_meet':
+      return 'Video Call via WhatsApp';
     case 'tatap_muka_cirebon':
-      return 'Tatap Muka di Kampus';
+      return 'Tatap Muka di Kampus (Cirebon)';
     default:
       return escapeHtml(mode);
   }
@@ -51,7 +51,7 @@ export function generateBookingConfirmationHtml(booking: Booking): string {
   const safeTimeSlot = escapeHtml(booking.timeSlot);
   const modeLabel = getModeLabel(booking.mode);
   const safeCategory = escapeHtml(booking.category);
-  const trackUrl = `${siteUrl}/schedule?code=${encodeURIComponent(booking.code)}`;
+  const trackUrl = `${siteUrl}/schedule?tab=tracker&code=${encodeURIComponent(booking.code)}`;
   const waUrl = `https://wa.me/6282210445785?text=${encodeURIComponent(
     `Assalamu'alaikum Kak Amel, saya sudah mengajukan jadwal konseling dengan Kode Reservasi ${booking.code}.`
   )}`;
@@ -63,17 +63,61 @@ export function generateBookingConfirmationHtml(booking: Booking): string {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="color-scheme" content="light">
   <title>Konfirmasi Jadwal Konseling - Amelia BKI</title>
+  <style>
+    @media only screen and (max-width: 600px) {
+      .email-wrapper {
+        padding: 16px 8px !important;
+      }
+      .email-card {
+        border-radius: 12px !important;
+      }
+      .email-header-cell {
+        padding: 24px 18px !important;
+      }
+      .email-body-cell {
+        padding: 24px 18px !important;
+      }
+      .email-footer-cell {
+        padding: 20px 18px !important;
+      }
+      .email-code-cell {
+        padding: 14px 16px !important;
+      }
+      .email-code-text {
+        font-size: 22px !important;
+      }
+      .email-details-cell {
+        padding: 14px 16px !important;
+      }
+      .btn-block {
+        display: block !important;
+        width: 100% !important;
+        padding-left: 12px !important;
+        padding-right: 12px !important;
+        box-sizing: border-box !important;
+        font-size: 14px !important;
+      }
+      .col-label {
+        width: 44% !important;
+        font-size: 12px !important;
+      }
+      .col-value {
+        width: 56% !important;
+        font-size: 13px !important;
+      }
+    }
+  </style>
 </head>
 <body style="margin: 0; padding: 0; background-color: #F4F1EA; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; color: #192820;">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #F4F1EA; padding: 32px 12px;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="email-wrapper" style="background-color: #F4F1EA; padding: 32px 12px;">
     <tr>
       <td align="center">
         <!-- Main Card Container -->
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width: 600px; background-color: #FFFFFF; border: 1px solid #E5DFD5; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(25, 40, 32, 0.06);">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="email-card" style="max-width: 600px; background-color: #FFFFFF; border: 1px solid #E5DFD5; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(25, 40, 32, 0.06);">
           
           <!-- Header Banner -->
           <tr>
-            <td style="background-color: #1A563C; padding: 36px 32px; text-align: center;">
+            <td class="email-header-cell" style="background-color: #1A563C; padding: 36px 32px; text-align: center;">
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                 <tr>
                   <td align="center">
@@ -95,7 +139,7 @@ export function generateBookingConfirmationHtml(booking: Booking): string {
 
           <!-- Main Content Body -->
           <tr>
-            <td style="padding: 36px 32px;">
+            <td class="email-body-cell" style="padding: 36px 32px;">
               <!-- Greeting & Status -->
               <p style="margin: 0 0 8px 0; color: #1A563C; font-size: 14px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase;">
                 Status: Diterima
@@ -111,32 +155,32 @@ export function generateBookingConfirmationHtml(booking: Booking): string {
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #FBF9F5; border: 1px solid #E5DFD5; border-radius: 12px; margin-bottom: 28px; overflow: hidden;">
                 <!-- Code Highlight -->
                 <tr>
-                  <td style="padding: 18px 24px; background-color: #EDF5F0; border-bottom: 1px solid #C8DFD2;">
+                  <td class="email-code-cell" style="padding: 18px 24px; background-color: #EDF5F0; border-bottom: 1px solid #C8DFD2;">
                     <span style="display: block; font-size: 11px; font-weight: 700; color: #1A563C; letter-spacing: 1px; text-transform: uppercase;">KODE RESERVASI SESI</span>
-                    <span style="display: block; font-family: 'Courier New', Courier, monospace; font-size: 26px; font-weight: 700; color: #1A563C; letter-spacing: 1.5px; margin-top: 4px;">${safeCode}</span>
+                    <span class="email-code-text" style="display: block; font-family: 'Courier New', Courier, monospace; font-size: 26px; font-weight: 700; color: #1A563C; letter-spacing: 1.5px; margin-top: 4px;">${safeCode}</span>
                   </td>
                 </tr>
                 <!-- Details Rows -->
                 <tr>
-                  <td style="padding: 20px 24px;">
+                  <td class="email-details-cell" style="padding: 20px 24px;">
                     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                       <tr>
-                        <td width="38%" style="padding: 8px 0; color: #60756B; font-size: 13px; font-weight: 500;">Tanggal Sesi</td>
-                        <td width="62%" style="padding: 8px 0; color: #192820; font-size: 14px; font-weight: 600;">${formattedDate}</td>
+                        <td width="38%" class="col-label" style="padding: 8px 0; color: #60756B; font-size: 13px; font-weight: 500;">Tanggal Sesi</td>
+                        <td width="62%" class="col-value" style="padding: 8px 0; color: #192820; font-size: 14px; font-weight: 600;">${formattedDate}</td>
                       </tr>
                       <tr>
-                        <td style="padding: 8px 0; color: #60756B; font-size: 13px; font-weight: 500; border-top: 1px dashed #E5DFD5;">Waktu / Sesi</td>
-                        <td style="padding: 8px 0; color: #192820; font-size: 14px; font-weight: 600; border-top: 1px dashed #E5DFD5;">${safeTimeSlot}</td>
+                        <td class="col-label" style="padding: 8px 0; color: #60756B; font-size: 13px; font-weight: 500; border-top: 1px dashed #E5DFD5;">Waktu / Sesi</td>
+                        <td class="col-value" style="padding: 8px 0; color: #192820; font-size: 14px; font-weight: 600; border-top: 1px dashed #E5DFD5;">${safeTimeSlot}</td>
                       </tr>
                       <tr>
-                        <td style="padding: 8px 0; color: #60756B; font-size: 13px; font-weight: 500; border-top: 1px dashed #E5DFD5;">Format Konseling</td>
-                        <td style="padding: 8px 0; color: #1A563C; font-size: 14px; font-weight: 600; border-top: 1px dashed #E5DFD5;">
+                        <td class="col-label" style="padding: 8px 0; color: #60756B; font-size: 13px; font-weight: 500; border-top: 1px dashed #E5DFD5;">Format Konseling</td>
+                        <td class="col-value" style="padding: 8px 0; color: #1A563C; font-size: 14px; font-weight: 600; border-top: 1px dashed #E5DFD5;">
                           ${modeLabel}
                         </td>
                       </tr>
                       <tr>
-                        <td style="padding: 8px 0; color: #60756B; font-size: 13px; font-weight: 500; border-top: 1px dashed #E5DFD5;">Topik Konsultasi</td>
-                        <td style="padding: 8px 0; color: #192820; font-size: 14px; font-weight: 600; border-top: 1px dashed #E5DFD5;">${safeCategory}</td>
+                        <td class="col-label" style="padding: 8px 0; color: #60756B; font-size: 13px; font-weight: 500; border-top: 1px dashed #E5DFD5;">Topik Konsultasi</td>
+                        <td class="col-value" style="padding: 8px 0; color: #192820; font-size: 14px; font-weight: 600; border-top: 1px dashed #E5DFD5;">${safeCategory}</td>
                       </tr>
                     </table>
                   </td>
@@ -147,14 +191,14 @@ export function generateBookingConfirmationHtml(booking: Booking): string {
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 28px;">
                 <tr>
                   <td align="center" style="padding-bottom: 12px;">
-                    <a href="${trackUrl}" target="_blank" style="display: block; width: 100%; box-sizing: border-box; background-color: #1A563C; color: #FFFFFF; font-size: 15px; font-weight: 600; text-align: center; text-decoration: none; padding: 14px 24px; border-radius: 8px; box-shadow: 0 2px 8px rgba(26, 86, 60, 0.25);">
+                    <a href="${trackUrl}" target="_blank" class="btn-block" style="display: block; width: 100%; box-sizing: border-box; background-color: #1A563C; color: #FFFFFF; font-size: 15px; font-weight: 600; text-align: center; text-decoration: none; padding: 14px 24px; border-radius: 8px; box-shadow: 0 2px 8px rgba(26, 86, 60, 0.25);">
                       🔍 Lacak &amp; Pantau Status Sesi
                     </a>
                   </td>
                 </tr>
                 <tr>
                   <td align="center">
-                    <a href="${waUrl}" target="_blank" style="display: block; width: 100%; box-sizing: border-box; background-color: #EDF5F0; border: 1px solid #C8DFD2; color: #1A563C; font-size: 14px; font-weight: 600; text-align: center; text-decoration: none; padding: 12px 24px; border-radius: 8px;">
+                    <a href="${waUrl}" target="_blank" class="btn-block" style="display: block; width: 100%; box-sizing: border-box; background-color: #EDF5F0; border: 1px solid #C8DFD2; color: #1A563C; font-size: 14px; font-weight: 600; text-align: center; text-decoration: none; padding: 12px 24px; border-radius: 8px;">
                       💬 Konfirmasi / Tanya via WhatsApp Konselor
                     </a>
                   </td>
@@ -184,7 +228,7 @@ export function generateBookingConfirmationHtml(booking: Booking): string {
 
           <!-- Footer -->
           <tr>
-            <td style="background-color: #FBF9F5; border-top: 1px solid #E5DFD5; padding: 28px 32px; text-align: center;">
+            <td class="email-footer-cell" style="background-color: #FBF9F5; border-top: 1px solid #E5DFD5; padding: 28px 32px; text-align: center;">
               <p style="margin: 0 0 6px 0; color: #192820; font-size: 13px; font-weight: 600;">
                 Amelia (Amel) · Konselor Sebaya BKI
               </p>

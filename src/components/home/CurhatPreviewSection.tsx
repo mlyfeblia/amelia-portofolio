@@ -62,7 +62,7 @@ export function CurhatPreviewSection({ messages }: CurhatPreviewSectionProps) {
           {messages.map((item) => (
             <div
               key={item.id}
-              className="p-4 min-[340px]:p-5 sm:p-6 lg:p-7 bg-[var(--color-paper)] border border-[var(--color-paper-border)] rounded-xl space-y-4 card-interactive flex flex-col justify-between"
+              className="p-4 min-[340px]:p-5 sm:p-6 lg:p-7 bg-[var(--color-paper)] border border-[var(--color-paper-border)] rounded-xl space-y-4 shadow-2xs hover:border-[var(--color-accent-border)] transition-colors flex flex-col justify-between"
             >
               <div className="space-y-3.5 min-w-0">
                 {/* Nama samaran tetap di paling atas */}

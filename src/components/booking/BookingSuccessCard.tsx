@@ -11,6 +11,7 @@ interface BookingSuccessCardProps {
     alias?: string;
     date: string;
     slot: string;
+    mode?: string;
   };
   onReset: () => void;
   onTrack?: (code: string) => void;
@@ -64,19 +65,22 @@ export function BookingSuccessCard({ success, onReset, onTrack }: BookingSuccess
 
       <div className="text-xs text-[var(--color-ink-soft)] space-y-1">
         <p>Jadwal: {success.date} ({success.slot})</p>
+        <p>
+          Format:{' '}
+          <span className="font-semibold text-[var(--color-ink)]">
+            {success.mode === 'online_meet'
+              ? 'Video Call via WhatsApp'
+              : success.mode === 'online_chat'
+              ? 'Chat WhatsApp Terjadwal'
+              : success.mode === 'tatap_muka_cirebon'
+              ? 'Tatap Muka di Kampus'
+              : 'Konseling Privat'}
+          </span>
+        </p>
         <p>Amel akan menghubungi nomor WhatsApp kamu buat konfirmasi sesi ya.</p>
       </div>
 
-      <div className="pt-2 flex flex-wrap justify-center gap-3">
-        {onTrack && (
-          <button
-            onClick={() => onTrack(success.code)}
-            type="button"
-            className="btn-primary btn-interactive text-sm inline-flex items-center gap-2 cursor-pointer"
-          >
-            <span>Pantau Status Janji Temu</span>
-          </button>
-        )}
+      <div className="pt-2 flex flex-col sm:flex-row justify-center items-center gap-3">
         <a
           href={getBookingConfirmationWhatsAppUrl({
             name: success.name,
@@ -84,18 +88,19 @@ export function BookingSuccessCard({ success, onReset, onTrack }: BookingSuccess
             code: success.code,
             date: success.date,
             slot: success.slot,
+            mode: success.mode,
           })}
           target="_blank"
           rel="noopener noreferrer"
-          className="btn-secondary btn-interactive text-sm inline-flex items-center gap-2"
+          className="btn-primary btn-interactive text-sm inline-flex items-center justify-center gap-2 w-full sm:w-auto shadow-xs"
         >
-          <MessageCircle className="w-4 h-4 text-emerald-600" />
+          <MessageCircle className="w-4 h-4 text-white" />
           <span>Konfirmasi via WhatsApp</span>
         </a>
         <button
           onClick={onReset}
           type="button"
-          className="btn-secondary btn-interactive text-sm cursor-pointer inline-flex items-center gap-2"
+          className="btn-secondary btn-interactive text-sm cursor-pointer inline-flex items-center justify-center gap-2 w-full sm:w-auto"
         >
           <RotateCcw className="w-4 h-4 text-[var(--color-ink-soft)]" />
           <span>Ajukan Jadwal Lain</span>

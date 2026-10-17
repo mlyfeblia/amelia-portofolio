@@ -2,6 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import { getGeneralWhatsAppUrl } from '@/lib/whatsapp';
 import FooterVersion from '@/components/FooterVersion';
+import FooterInstallButton from '@/components/FooterInstallButton';
 
 const footerNav = [
   { label: 'Beranda', href: '/' },
@@ -37,12 +38,7 @@ export default function Footer() {
               Ruang aman bimbingan konseling sebaya dan portofolio profesional Amelia. Mengedepankan ketulusan, kerahasiaan amanah, dan pelayanan yang hangat.
             </p>
             <div className="pt-3 border-t border-white/10 max-w-sm">
-              <Link
-                href="/#app-showcase"
-                className="text-[var(--color-accent-soft)] hover:text-white text-xs font-medium transition-colors inline-block"
-              >
-                Pasang Web App &rarr;
-              </Link>
+              <FooterInstallButton />
             </div>
           </div>
 

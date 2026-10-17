@@ -37,6 +37,7 @@ export interface BookingConfirmationParams {
   code: string;
   date: string;
   slot: string;
+  mode?: string;
 }
 
 export function getBookingConfirmationWhatsAppUrl(params: BookingConfirmationParams): string {
@@ -44,7 +45,12 @@ export function getBookingConfirmationWhatsAppUrl(params: BookingConfirmationPar
     ? `${params.name} (${params.alias})`
     : params.name;
 
-  const text = `Halo Kak Amel, perkenalkan nama saya ${displayName}. Saya telah mengajukan janji temu konseling di website dengan Kode Referensi: ${params.code} untuk tanggal ${params.date} (${params.slot}). Mohon konfirmasi jadwal dan tautan sesinya ya kak, terima kasih banyak!`;
+  let modeText = '';
+  if (params.mode === 'online_meet') modeText = ' via Video Call WhatsApp';
+  else if (params.mode === 'online_chat') modeText = ' via Chat WhatsApp Terjadwal';
+  else if (params.mode === 'tatap_muka_cirebon') modeText = ' secara Tatap Muka di Kampus';
+
+  const text = `Halo Kak Amel, perkenalkan nama saya ${displayName}. Saya telah mengajukan janji temu konseling di website dengan Kode Reservasi: ${params.code} untuk tanggal ${params.date} (${params.slot})${modeText}. Mohon konfirmasi jadwal dan ketersediaan sesinya ya kak, terima kasih banyak!`;
 
   return `https://wa.me/${AMELIA_WHATSAPP_NUMBER}?text=${encodeURIComponent(text)}`;
 }
@@ -59,11 +65,17 @@ export interface AdminContactParams {
   code: string;
   date: string;
   slot: string;
+  mode?: string;
 }
 
 export function getAdminContactWhatsAppUrl(params: AdminContactParams): string {
   const targetPhone = formatWhatsAppNumber(params.clientPhone);
-  const text = `Halo ${params.clientName}, salam kenal dari Amel (Konselor Sebaya UIN Siber Cirebon). Terkait janji temu konseling kamu (${params.code}) untuk jadwal ${params.date} (${params.slot}), aku ingin konfirmasi kesiapan sesi kita. Apakah jadwal tersebut sudah pas buat kamu? Terima kasih ya.`;
+  let modeDesc = '';
+  if (params.mode === 'online_meet') modeDesc = ' (format Video Call via WhatsApp)';
+  else if (params.mode === 'online_chat') modeDesc = ' (format Chat WhatsApp Terjadwal)';
+  else if (params.mode === 'tatap_muka_cirebon') modeDesc = ' (format Tatap Muka di Kampus Cirebon)';
+
+  const text = `Halo ${params.clientName}, salam kenal dari Amel (Konselor Sebaya UIN Siber Cirebon). Terkait janji temu konseling kamu (${params.code}) untuk jadwal ${params.date} (${params.slot})${modeDesc}, aku ingin konfirmasi kesiapan sesi kita. Apakah jadwal tersebut sudah pas buat kamu? Terima kasih ya.`;
 
   return `https://wa.me/${targetPhone}?text=${encodeURIComponent(text)}`;
 }

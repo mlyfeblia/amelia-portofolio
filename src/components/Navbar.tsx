@@ -38,6 +38,7 @@ export default function Navbar() {
   const { isRendered, isExiting } = useModalAnimation({
     isOpen: open,
     durationMs: 240,
+    lockScroll: false,
   });
 
   // Freeze background scrolling & touch interactions while mobile menu is open (zero-jump)
@@ -141,7 +142,7 @@ export default function Navbar() {
             onClick={() => setOpen(false)}
           >
             <span
-              className="text-xl sm:text-2xl font-medium tracking-tight text-[var(--color-ink)] group-hover:text-[var(--color-accent)] group-hover:-translate-y-1 group-active:translate-y-0 group-active:scale-95 transition-all duration-200 ease-out inline-block"
+              className="text-xl sm:text-2xl font-medium tracking-tight text-[var(--color-ink)] group-hover:text-[var(--color-accent)] transition-colors duration-200 ease-out inline-block"
               style={{ fontFamily: 'var(--font-display)' }}
             >
               Amelia
@@ -193,7 +194,7 @@ export default function Navbar() {
                   href="/schedule"
                   onClick={() => setOpen(false)}
                   tabIndex={open ? -1 : 0}
-                  className="inline-flex items-center justify-center gap-1.5 h-8 md:h-9 px-3.5 md:px-4 text-xs md:text-sm font-semibold rounded-lg text-white bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] shadow-[0_1px_2px_rgba(25,40,32,0.1)] hover:-translate-y-1 hover:shadow-[0_4px_14px_rgba(26,86,60,0.28)] active:translate-y-0 active:scale-[0.98] active:shadow-[0_1px_3px_rgba(26,86,60,0.15)] whitespace-nowrap select-none cursor-pointer transition-all duration-200 ease-out"
+                  className="btn-interactive inline-flex items-center justify-center gap-1.5 h-8 md:h-9 px-3.5 md:px-4 text-xs md:text-sm font-semibold rounded-lg text-white bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] shadow-xs hover:shadow-sm whitespace-nowrap select-none cursor-pointer transition-all duration-200 ease-out"
                 >
                   <Calendar className="w-3.5 h-3.5 shrink-0" />
                   <span>Janji Temu</span>
@@ -211,14 +212,14 @@ export default function Navbar() {
               >
                 <Menu
                   className={cn(
-                    'w-4.5 h-4.5 absolute inset-0 m-auto transition-all duration-200 ease-out transform group-hover:scale-110',
+                    'w-4.5 h-4.5 absolute inset-0 m-auto transition-all duration-200 ease-out transform',
                     open ? 'opacity-0 rotate-90 scale-75' : 'opacity-100 rotate-0 scale-100'
                   )}
                   aria-hidden="true"
                 />
                 <X
                   className={cn(
-                    'w-4.5 h-4.5 absolute inset-0 m-auto transition-all duration-200 ease-out transform group-hover:scale-110',
+                    'w-4.5 h-4.5 absolute inset-0 m-auto transition-all duration-200 ease-out transform',
                     open ? 'opacity-100 rotate-0 scale-100' : 'opacity-0 -rotate-90 scale-75'
                   )}
                   aria-hidden="true"
@@ -251,7 +252,7 @@ export default function Navbar() {
                     onClick={() => setOpen(false)}
                     style={{ animationDelay: `${25 + idx * 25}ms` }}
                     className={cn(
-                      'group px-3.5 py-2.5 text-sm font-medium rounded-xl transition-all duration-200 ease-out flex items-center justify-between nav-item-stagger hover:translate-x-1.5 active:translate-x-0.5 active:scale-[0.98]',
+                      'group px-3.5 py-2.5 text-sm font-medium rounded-xl transition-colors duration-150 flex items-center justify-between nav-item-stagger active:scale-[0.98]',
                       isActive
                         ? 'text-[var(--color-accent)] bg-[var(--color-accent-soft)] font-semibold border border-[var(--color-accent-border)] hover:border-[var(--color-accent)] hover:bg-[var(--color-accent-soft)]/90'
                         : 'text-[var(--color-ink)] hover:text-[var(--color-accent)] hover:bg-[var(--color-paper-muted)]'
@@ -261,15 +262,15 @@ export default function Navbar() {
                     <div className="flex items-center gap-2.5">
                       <Icon
                         className={cn(
-                          'w-4 h-4 shrink-0 transition-all duration-200 group-hover:scale-110',
-                          isActive ? 'text-[var(--color-accent)]' : 'text-[var(--color-ink-soft)] group-hover:text-[var(--color-accent)]'
+                          'w-4 h-4 shrink-0 transition-colors duration-150',
+                          isActive ? 'text-[var(--color-accent)]' : 'text-[var(--color-ink-soft)]'
                         )}
                         aria-hidden="true"
                       />
-                      <span className="transition-colors duration-200">{item.label}</span>
+                      <span className="transition-colors duration-150">{item.label}</span>
                     </div>
                     {isActive && (
-                      <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-accent)] transition-transform duration-200 group-hover:scale-125" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-accent)]" />
                     )}
                   </Link>
                 );
@@ -283,7 +284,7 @@ export default function Navbar() {
               <Link
                 href="/schedule"
                 onClick={() => setOpen(false)}
-                className="w-full py-2.5 px-4 rounded-xl bg-[var(--color-accent)] text-white text-xs font-semibold hover:bg-[var(--color-accent-hover)] shadow-xs inline-flex items-center justify-center gap-2 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 active:scale-[0.98] transition-all duration-200 ease-out select-none cursor-pointer"
+                className="w-full py-2.5 px-4 rounded-xl bg-[var(--color-accent)] text-white text-xs font-semibold hover:bg-[var(--color-accent-hover)] shadow-xs inline-flex items-center justify-center gap-2 active:scale-[0.98] transition-colors duration-150 select-none cursor-pointer"
               >
                 <Calendar className="w-4 h-4" />
                 <span>Janji Temu Konseling</span>
@@ -295,7 +296,7 @@ export default function Navbar() {
                   setOpen(false);
                   triggerPwaInstall();
                 }}
-                className="w-full py-2.5 px-4 rounded-xl bg-white border border-[var(--color-paper-border)] text-[var(--color-ink)] text-xs font-medium hover:text-[var(--color-accent)] hover:border-[var(--color-accent-border)] hover:bg-[var(--color-paper-muted)] hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-all duration-200 ease-out flex items-center justify-center gap-2 select-none cursor-pointer"
+                className="w-full py-2.5 px-4 rounded-xl bg-white border border-[var(--color-paper-border)] text-[var(--color-ink)] text-xs font-medium hover:text-[var(--color-accent)] hover:border-[var(--color-accent-border)] hover:bg-[var(--color-paper-muted)] active:scale-[0.98] transition-colors duration-150 flex items-center justify-center gap-2 select-none cursor-pointer"
               >
                 <Smartphone className="w-4 h-4 text-[var(--color-accent)]" />
                 <span>{isInstalled ? 'Aplikasi Amelia (Terpasang)' : 'Pasang Aplikasi Amelia'}</span>
@@ -311,8 +312,9 @@ export default function Navbar() {
       {/* ── Pure Frosted Transparent Blur Backdrop (Zero Dark/Black Tint, Touch & Scroll Blocked) ── */}
       {isRendered && (
         <div
+          onClick={() => setOpen(false)}
           className={cn(
-            'fixed inset-0 z-40 bg-transparent backdrop-blur-md md:hidden touch-none select-none pointer-events-auto',
+            'fixed inset-0 z-40 bg-transparent backdrop-blur-md md:hidden touch-none select-none pointer-events-auto cursor-pointer',
             isExiting ? 'nav-backdrop-exit' : 'nav-backdrop-enter'
           )}
           aria-hidden="true"

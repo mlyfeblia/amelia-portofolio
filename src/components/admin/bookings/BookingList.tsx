@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useRef } from 'react';
 import { Calendar, SearchX, RotateCcw } from 'lucide-react';
 import { Booking, BookingStatus } from '@/types';
 import { BookingCard } from './BookingCard';
@@ -115,8 +115,17 @@ export function BookingList({
     );
   }
 
+  const listTopRef = useRef<HTMLDivElement>(null);
+
+  const handlePageChange = (newPage: number) => {
+    onPageChange?.(newPage);
+    if (listTopRef.current) {
+      listTopRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
   return (
-    <div className="space-y-4">
+    <div ref={listTopRef} className="space-y-4 scroll-mt-24">
       <div key={currentPage} className="space-y-3.5 sm:space-y-4 pagination-slide-enter">
         {bookings.map((item) => (
           <BookingCard
@@ -136,7 +145,7 @@ export function BookingList({
           totalItems={totalItems || bookings.length}
           itemsPerPage={itemsPerPage || 6}
           itemLabel="janji temu"
-          onPageChange={onPageChange}
+          onPageChange={handlePageChange}
         />
       )}
     </div>

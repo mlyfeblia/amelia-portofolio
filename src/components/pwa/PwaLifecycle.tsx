@@ -17,7 +17,6 @@ import {
 } from '@/lib/pwa-store';
 import { useModalAnimation } from '@/lib/use-modal-animation';
 import { cn } from '@/lib/utils';
-import PwaSplashScreen from '@/components/pwa/PwaSplashScreen';
 import { PwaChangelogModal } from '@/components/pwa/PwaChangelogModal';
 import { PwaBrowserGuideModal } from '@/components/pwa/PwaBrowserGuideModal';
 import { PwaInstalledInfoModal } from '@/components/pwa/PwaInstalledInfoModal';
@@ -65,7 +64,12 @@ export default function PwaLifecycle() {
     isRendered: isIosModalRendered,
     backdropClass: iosBackdropClass,
     windowClass: iosWindowClass,
-  } = useModalAnimation({ isOpen: showIosModal });
+  } = useModalAnimation({
+    isOpen: showIosModal,
+    onClose: closeIosModal,
+    closeOnEscape: true,
+    lockScroll: true,
+  });
 
   const [updateWaiting, setUpdateWaiting] = useState(false);
   const [waitingWorker, setWaitingWorker] = useState<ServiceWorker | null>(null);
@@ -137,29 +141,7 @@ export default function PwaLifecycle() {
     };
   }, []);
 
-  // Close iOS guide modal on Escape key press
-  useEffect(() => {
-    if (!showIosModal) return;
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') closeIosModal();
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [showIosModal]);
 
-  // Prevent body & document scrolling when iOS guide modal is open
-  useEffect(() => {
-    if (!showIosModal) return;
-    const originalBodyOverflow = document.body.style.overflow;
-    const originalHtmlOverflow = document.documentElement.style.overflow;
-    document.body.style.overflow = 'hidden';
-    document.documentElement.style.overflow = 'hidden';
-
-    return () => {
-      document.body.style.overflow = originalBodyOverflow;
-      document.documentElement.style.overflow = originalHtmlOverflow;
-    };
-  }, [showIosModal]);
 
   // Show a temporary "Back Online" toast when the 'online' event fires
   useEffect(() => {
@@ -360,9 +342,6 @@ export default function PwaLifecycle() {
 
   return (
     <>
-      {/* ── Native Standalone PWA Welcome Splash Screen ────────────── */}
-      <PwaSplashScreen />
-
       {/* ── Offline Banner ────────────────────────────────────────── */}
       {isOffline && (
         <aside
@@ -558,14 +537,14 @@ export default function PwaLifecycle() {
           role="dialog"
           aria-modal="true"
           aria-labelledby="ios-modal-title"
-          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 overflow-y-auto"
+          className={cn(
+            'fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 overflow-hidden select-none',
+            !showIosModal && 'pointer-events-none'
+          )}
         >
-          {/* Dedicated full-viewport backdrop with strong blur, scroll blocked - Cannot Be Dismissed By Touching Backdrop */}
+          {/* Dedicated full-viewport backdrop with strong blur, scroll blocked */}
           <div
-            className={cn(
-              'fixed inset-0 bg-transparent backdrop-blur-md touch-none select-none pointer-events-auto',
-              iosBackdropClass
-            )}
+            className={cn(iosBackdropClass)}
             aria-hidden="true"
             onWheel={(e) => e.preventDefault()}
             onTouchMove={(e) => e.preventDefault()}

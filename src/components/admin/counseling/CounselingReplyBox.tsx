@@ -4,10 +4,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { Send, Eye, EyeOff, Star, Check, X } from 'lucide-react';
 import { useMounted } from '@/lib/use-mounted';
+import { useModalAnimation } from '@/lib/use-modal-animation';
+import { cn } from '@/lib/utils';
 import { ConfirmDecisionModal } from '@/components/ui/ConfirmDecisionModal';
 import { Spinner } from '@/components/ui/Spinner';
 
-interface CounselingReplyBoxProps {
+export interface CounselingReplyBoxProps {
+  isOpen?: boolean;
   initialText: string;
   initialPublic: boolean;
   initialLanding?: boolean;
@@ -19,6 +22,7 @@ interface CounselingReplyBoxProps {
 }
 
 export function CounselingReplyBox({
+  isOpen = true,
   initialText,
   initialPublic,
   initialLanding = false,
@@ -40,28 +44,21 @@ export function CounselingReplyBox({
   const [lastSavedTime, setLastSavedTime] = useState<string | null>(null);
   const isRestoredRef = useRef(false);
 
-  // Strict Body & HTML scroll locking for entire modal lifecycle
+  const { isRendered, isExiting, backdropClass, windowClass } = useModalAnimation({
+    isOpen,
+    onClose: onCancel,
+    closeOnEscape: !saving,
+    lockScroll: true,
+  });
+
+  // Synchronize state when modal is opened or item changes
   useEffect(() => {
-    if (!mounted) return;
-
-    const originalBodyOverflow = document.body.style.overflow;
-    const originalHtmlOverflow = document.documentElement.style.overflow;
-    document.body.style.overflow = 'hidden';
-    document.documentElement.style.overflow = 'hidden';
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && !saving) {
-        onCancel();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-
-    return () => {
-      document.body.style.overflow = originalBodyOverflow;
-      document.documentElement.style.overflow = originalHtmlOverflow;
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [mounted, saving, onCancel]);
+    if (isOpen) {
+      setReplyText(initialText);
+      setReplyPublic(initialPublic);
+      setReplyLanding(initialLanding);
+    }
+  }, [isOpen, initialText, initialPublic, initialLanding, itemId]);
 
   // Restore saved draft safely on mount post-hydration
   useEffect(() => {
@@ -122,7 +119,7 @@ export function CounselingReplyBox({
     }
   };
 
-  if (!mounted || typeof document === 'undefined') {
+  if (!mounted || !isRendered || typeof document === 'undefined') {
     return null;
   }
 
@@ -131,19 +128,27 @@ export function CounselingReplyBox({
       role="dialog"
       aria-modal="true"
       aria-labelledby="counseling-reply-modal-title"
-      className="fixed inset-0 z-[9999] flex items-center justify-center p-0 sm:p-4 overflow-hidden"
+      className={cn(
+        'fixed inset-0 z-[9999] flex items-center justify-center p-0 sm:p-4 overflow-hidden select-none',
+        isExiting && 'pointer-events-none'
+      )}
     >
-      {/* Blurred Backdrop with scroll protection */}
+      {/* Standardized Blurred Backdrop with scroll protection */}
       <div
-        className="fixed inset-0 bg-black/40 backdrop-blur-md touch-none select-none pointer-events-auto transition-opacity duration-200"
+        className={cn(backdropClass)}
         aria-hidden="true"
         onWheel={(e) => e.preventDefault()}
         onTouchMove={(e) => e.preventDefault()}
         onClick={onCancel}
       />
 
-      {/* Unified Modal Dialog Container */}
-      <div className="relative z-10 w-full sm:max-w-xl h-full sm:h-auto sm:max-h-[90vh] flex flex-col pointer-events-auto my-auto animate-fade-in-up">
+      {/* Unified Modal Dialog Container with Standardized Animation */}
+      <div
+        className={cn(
+          'relative z-10 w-full sm:max-w-xl h-full sm:h-auto sm:max-h-[90vh] flex flex-col pointer-events-auto my-auto select-text modal-window-sheet-mobile',
+          windowClass
+        )}
+      >
         <div className="w-full h-full bg-[var(--color-surface)] sm:border sm:border-[var(--color-paper-border)] sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden">
           
           {/* Modal Header */}
@@ -202,7 +207,7 @@ export function CounselingReplyBox({
                 value={replyText}
                 onChange={(e) => setReplyText(e.target.value)}
                 placeholder="Tuliskan penerimaan, validasi empati, perspektif konseling Islam / CBT, dan kata-kata penenteram jiwa..."
-                className="form-input text-xs sm:text-sm p-3 resize-y w-full min-h-[140px] sm:min-h-[160px] textarea-custom-scroll leading-relaxed"
+                className="form-input text-xs sm:text-sm p-3 resize-y w-full min-h-[140px] sm:min-h-[160px] textarea-custom-scroll leading-relaxed overscroll-contain scroll-isolated cursor-text select-text"
                 autoFocus
               />
             </div>

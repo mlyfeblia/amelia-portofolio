@@ -13,6 +13,7 @@ import { parseIndonesianDate } from '@/lib/utils';
 import { SkeletonCurhatCard } from '@/components/ui/Skeleton';
 import { PaginationBar } from '@/components/ui/PaginationBar';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/Tabs';
+import { useSessionSeed, seededShuffle } from '@/lib/seeded-random';
 
 const ITEMS_PER_PAGE = 5;
 
@@ -43,6 +44,7 @@ export function CurhatWall({ messages, loading = false }: CurhatWallProps) {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [currentPage, setCurrentPage] = useState<number>(1);
   const wallTopRef = useRef<HTMLDivElement>(null);
+  const { seed, isReady } = useSessionSeed('curhat_wall');
 
   // Clean up legacy sticky sessionStorage on mount and synchronize URL params safely
   useEffect(() => {
@@ -100,9 +102,9 @@ export function CurhatWall({ messages, loading = false }: CurhatWallProps) {
     return Array.from(set);
   }, [messages]);
 
-  // Filter messages based on category and search query
+  // Filter messages based on category, search query, and 2-tier public discovery
   const filteredMessages = useMemo(() => {
-    return messages.filter((item) => {
+    const matched = messages.filter((item) => {
       const matchCategory = activeTab === 'Semua' || item.category === activeTab;
       if (!matchCategory) return false;
 
@@ -114,7 +116,20 @@ export function CurhatWall({ messages, loading = false }: CurhatWallProps) {
       const matchCat = item.category.toLowerCase().includes(query);
       return matchMessage || matchAlias || matchAnswer || matchCat;
     });
-  }, [messages, activeTab, searchQuery]);
+
+    if (searchQuery.trim()) {
+      return matched;
+    }
+
+    // 2-tier public discovery:
+    // Tier 1 (Front): Answered messages shuffled per session
+    // Tier 2 (Bottom): Unanswered messages placed at the end
+    const answered = matched.filter((m) => m.isAnswered || Boolean(m.answer && m.answer.trim().length > 0));
+    const unanswered = matched.filter((m) => !m.isAnswered && (!m.answer || m.answer.trim().length === 0));
+
+    const shuffledAnswered = seed && isReady ? seededShuffle(answered, `${seed}_${activeTab}`) : answered;
+    return [...shuffledAnswered, ...unanswered];
+  }, [messages, activeTab, searchQuery, seed, isReady]);
 
   // Pagination calculation
   const totalItems = filteredMessages.length;
@@ -148,7 +163,7 @@ export function CurhatWall({ messages, loading = false }: CurhatWallProps) {
   };
 
   return (
-    <div ref={wallTopRef} className="space-y-4 sm:space-y-5" id="curhat-wall-container">
+    <div ref={wallTopRef} className="space-y-4 sm:space-y-5 scroll-mt-20 sm:scroll-mt-24" id="curhat-wall-container">
       {/* Search & Filter Controls */}
       <div className="space-y-3">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-4">
@@ -291,7 +306,7 @@ export function CurhatWall({ messages, loading = false }: CurhatWallProps) {
             {paginatedMessages.map((item) => (
               <article
                 key={item.id}
-                className="p-3.5 min-[340px]:p-4 sm:p-6 bg-[var(--color-surface)] border border-[var(--color-paper-border)] rounded-2xl space-y-3.5 card-interactive shadow-xs transition-all flex flex-col justify-between"
+                className="p-3.5 min-[340px]:p-4 sm:p-6 bg-[var(--color-surface)] border border-[var(--color-paper-border)] rounded-2xl space-y-3.5 shadow-xs transition-colors duration-200 hover:border-[var(--color-accent)]/30 flex flex-col justify-between"
               >
                 <div className="space-y-3.5 min-w-0">
                   {/* Nama samaran tetap di paling atas */}

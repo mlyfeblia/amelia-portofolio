@@ -25,7 +25,7 @@ export function AboutSkills() {
 
       <div className="md:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-6 lg:gap-8">
         {/* Hard Skills */}
-        <div className="p-6 sm:p-7 bg-[var(--color-surface)] border border-[var(--color-paper-border)] rounded-xl space-y-4 card-interactive">
+        <div className="p-6 sm:p-7 bg-[var(--color-surface)] border border-[var(--color-paper-border)] rounded-xl space-y-4 shadow-2xs">
           <div className="flex items-center gap-2 pb-2.5 border-b border-[var(--color-paper-border)]">
             <FileSpreadsheet className="w-4 h-4 text-[var(--color-accent)]" />
             <h3 className="text-sm font-semibold text-[var(--color-ink)] uppercase tracking-wider">
@@ -43,7 +43,7 @@ export function AboutSkills() {
         </div>
 
         {/* Soft Skills */}
-        <div className="p-6 sm:p-7 bg-[var(--color-surface)] border border-[var(--color-paper-border)] rounded-xl space-y-4 card-interactive">
+        <div className="p-6 sm:p-7 bg-[var(--color-surface)] border border-[var(--color-paper-border)] rounded-xl space-y-4 shadow-2xs">
           <div className="flex items-center gap-2 pb-2.5 border-b border-[var(--color-paper-border)]">
             <HeartHandshake className="w-4 h-4 text-[var(--color-accent)]" />
             <h3 className="text-sm font-semibold text-[var(--color-ink)] uppercase tracking-wider">

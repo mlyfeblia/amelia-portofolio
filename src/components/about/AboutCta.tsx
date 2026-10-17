@@ -6,7 +6,7 @@ import { getGeneralWhatsAppUrl } from '@/lib/whatsapp';
 export function AboutCta() {
   return (
     <section
-      className="p-8 sm:p-10 bg-[var(--color-surface)] border border-[var(--color-paper-border)] rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 shadow-xs card-interactive"
+      className="p-8 sm:p-10 bg-[var(--color-surface)] border border-[var(--color-paper-border)] rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 shadow-xs"
       data-reveal
     >
       <div className="space-y-1.5 max-w-xl">

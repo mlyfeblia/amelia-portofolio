@@ -95,7 +95,7 @@ export function AdminOverviewClient() {
         articlesCount={articlesCount}
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-stretch">
         <OverviewRecentBookings
           bookings={bookings}
           loading={loading}

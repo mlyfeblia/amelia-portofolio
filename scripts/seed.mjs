@@ -37,7 +37,8 @@ function toIsoTimestamp(dateStr) {
     const month = INDO_MONTHS[parts[1].toLowerCase()];
     const year = parts[2];
     if (month && year) {
-      const parsed = new Date(`${year}-${month}-${day}T00:00:00.000Z`);
+      const hourUtc = (day === '29' && month === '09' && year === '2026') ? '10:30:00' : '02:30:00';
+      const parsed = new Date(`${year}-${month}-${day}T${hourUtc}.000Z`);
       if (!isNaN(parsed.getTime())) {
         return parsed.toISOString();
       }
@@ -165,10 +166,14 @@ async function seed() {
             ${answeredAt}
           )
           ON CONFLICT (id) DO UPDATE SET
+            alias = EXCLUDED.alias,
+            category = EXCLUDED.category,
+            message = EXCLUDED.message,
             answer = EXCLUDED.answer,
             is_answered = EXCLUDED.is_answered,
             is_public = EXCLUDED.is_public,
             show_on_landing_page = EXCLUDED.show_on_landing_page,
+            created_at = EXCLUDED.created_at,
             answered_at = EXCLUDED.answered_at;
         `;
       }

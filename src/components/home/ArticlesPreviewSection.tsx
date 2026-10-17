@@ -60,7 +60,7 @@ export function ArticlesPreviewSection({ articles }: ArticlesPreviewSectionProps
                   </Link>
                 </h3>
                 <p className="text-sm text-[var(--color-ink-muted)] leading-relaxed line-clamp-2 break-words">
-                  {art.publishedAt ? `${formatIndonesianDate(art.publishedAt) || art.publishedAt} — ` : ''}{art.excerpt}
+                  {art.publishedAt ? `${formatIndonesianDate(art.publishedAt) || art.publishedAt} - ` : ''}{art.excerpt}
                 </p>
               </div>
 

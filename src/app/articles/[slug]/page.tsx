@@ -1,7 +1,7 @@
 import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import type { Metadata } from 'next';
 import { ArrowLeft, ChevronRight, Clock, Eye, BookOpen } from 'lucide-react';
 import { getArticleBySlug, getArticles } from '@/lib/data-store';
@@ -17,6 +17,8 @@ import { ArticleCta } from '@/components/articles/ArticleCta';
 import { ArticleShareBar } from '@/components/articles/ArticleShareBar';
 import { ArticleSidebar } from '@/components/articles/ArticleSidebar';
 import { ArticleMobileTopicExplorer } from '@/components/articles/ArticleMobileTopicExplorer';
+import { seededShuffle } from '@/lib/prng';
+import { LEGACY_SLUG_REDIRECTS } from '@/lib/article-redirects';
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://mlyfeblia.vercel.app';
 
@@ -34,7 +36,8 @@ export async function generateMetadata(props: {
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await props.params;
-  const article = await getArticleBySlug(slug, true);
+  const targetSlug = LEGACY_SLUG_REDIRECTS[slug] || slug;
+  const article = await getArticleBySlug(targetSlug, true);
 
   if (!article) {
     return {
@@ -44,7 +47,7 @@ export async function generateMetadata(props: {
     };
   }
 
-  const url = `${BASE_URL}/articles/${slug}`;
+  const url = `${BASE_URL}/articles/${targetSlug}`;
   const keywordsList = [
     ...(article.tags ?? []),
     article.category,
@@ -59,7 +62,7 @@ export async function generateMetadata(props: {
     ? article.coverImage.startsWith('http')
       ? article.coverImage
       : `${BASE_URL}${article.coverImage}`
-    : `${BASE_URL}/articles/${slug}/opengraph-image`;
+    : `${BASE_URL}/articles/${targetSlug}/opengraph-image`;
 
   return {
     title: article.title,
@@ -116,6 +119,11 @@ export default async function ArticleDetailPage(props: {
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await props.params;
+
+  if (LEGACY_SLUG_REDIRECTS[slug]) {
+    redirect(`/articles/${LEGACY_SLUG_REDIRECTS[slug]}`);
+  }
+
   const [article, allArticles] = await Promise.all([
     getArticleBySlug(slug, true),
     getArticles(true),
@@ -127,15 +135,16 @@ export default async function ArticleDetailPage(props: {
 
   const articleFullUrl = `${BASE_URL}/articles/${slug}`;
 
-  // Find related articles (same category or shared tags, excluding self)
-  const relatedArticles = allArticles
-    .filter((a) => a.slug !== slug)
-    .sort((a, b) => {
-      const aSameCategory = a.category === article.category ? 1 : 0;
-      const bSameCategory = b.category === article.category ? 1 : 0;
-      return bSameCategory - aSameCategory;
-    })
-    .slice(0, 3);
+  // Find related articles with deterministic slug-seeded diversity shuffle
+  const otherArticles = allArticles.filter((a) => a.slug !== slug);
+  const sameCategoryArticles = otherArticles.filter((a) => a.category === article.category);
+  const otherCategoryArticles = otherArticles.filter((a) => a.category !== article.category);
+
+  // Deterministically rotate same-category articles so all articles get internal link equity
+  const shuffledSameCategory = seededShuffle(sameCategoryArticles, `related_${slug}`);
+  const shuffledOtherCategory = seededShuffle(otherCategoryArticles, `related_fallback_${slug}`);
+
+  const relatedArticles = [...shuffledSameCategory, ...shuffledOtherCategory].slice(0, 3);
 
   return (
     <>
@@ -256,7 +265,7 @@ export default async function ArticleDetailPage(props: {
                   {relatedArticles.map((rel) => (
                     <div
                       key={rel.id}
-                      className="group p-5 sm:p-6 bg-[var(--color-surface)] border border-[var(--color-paper-border)] hover:border-[var(--color-accent)] hover:shadow-sm rounded-2xl flex flex-col justify-between space-y-3 card-interactive shadow-2xs transition-all duration-200"
+                      className="group p-5 sm:p-6 bg-[var(--color-surface)] border border-[var(--color-paper-border)] hover:border-[var(--color-accent)] rounded-2xl flex flex-col justify-between space-y-3 card-interactive shadow-2xs"
                     >
                       <div className="space-y-2">
                         <h4
@@ -268,7 +277,7 @@ export default async function ArticleDetailPage(props: {
                           </Link>
                         </h4>
                         <p className="text-xs sm:text-sm text-[var(--color-ink-muted)] line-clamp-3 leading-relaxed">
-                          {rel.publishedAt ? `${rel.publishedAt} — ` : ''}{rel.excerpt}
+                          {rel.publishedAt ? `${rel.publishedAt} - ` : ''}{rel.excerpt}
                         </p>
                       </div>
 
@@ -301,7 +310,7 @@ export default async function ArticleDetailPage(props: {
             )}
 
             {/* Consultation CTA Banner */}
-            <ArticleCta />
+            <ArticleCta category={article.category} />
           </div>
         </div>
       </main>

@@ -11,9 +11,9 @@ export function ArticleSidebar({ currentCategory }: ArticleSidebarProps) {
   return (
     <aside className="space-y-6" aria-label="Informasi Penulis dan Topik">
       {/* Profile Card */}
-      <div className="p-5 sm:p-6 rounded-2xl bg-[var(--color-surface)] border-2 border-[var(--color-paper-border)] hover:border-[var(--color-accent)] hover:shadow-md transition-all duration-300 space-y-4 shadow-2xs group">
+      <div className="p-5 sm:p-6 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-paper-border)] space-y-4 shadow-xs">
         <div className="flex items-center gap-3.5">
-          <div className="relative w-12 h-12 rounded-full overflow-hidden border border-[var(--color-accent-border)] bg-[var(--color-surface)] shrink-0 shadow-2xs group-hover:scale-105 transition-transform duration-200">
+          <div className="relative w-12 h-12 rounded-full overflow-hidden border border-[var(--color-accent-border)] bg-[var(--color-surface)] shrink-0 shadow-2xs">
             <Image
               src="/amelia.webp"
               alt="Amelia"
@@ -24,7 +24,7 @@ export function ArticleSidebar({ currentCategory }: ArticleSidebarProps) {
             />
           </div>
           <div>
-            <h3 className="text-base font-semibold text-[var(--color-ink)] group-hover:text-[var(--color-accent)] transition-colors duration-200">
+            <h3 className="text-base font-semibold text-[var(--color-ink)]">
               Amelia (Amel)
             </h3>
             <p className="text-xs text-[var(--color-ink-soft)] line-clamp-1">
@@ -39,14 +39,14 @@ export function ArticleSidebar({ currentCategory }: ArticleSidebarProps) {
 
         <div className="pt-2 border-t border-[var(--color-paper-border)] space-y-2">
           <Link
-            href="/schedule"
+            href={`/schedule?kategori=${encodeURIComponent(currentCategory)}`}
             className="w-full btn-primary btn-interactive py-2 text-xs font-semibold rounded-lg inline-flex items-center justify-center gap-1.5 shadow-2xs"
           >
             <Calendar className="w-3.5 h-3.5" />
             <span>Jadwalkan Konsultasi</span>
           </Link>
           <Link
-            href="/counseling"
+            href={`/counseling?kategori=${encodeURIComponent(currentCategory)}`}
             className="w-full btn-secondary btn-interactive py-2 text-xs font-medium rounded-lg inline-flex items-center justify-center gap-1.5"
           >
             <MessageCircleHeart className="w-3.5 h-3.5 text-[var(--color-accent)]" />
@@ -56,7 +56,7 @@ export function ArticleSidebar({ currentCategory }: ArticleSidebarProps) {
       </div>
 
       {/* Topics Guidance Box */}
-      <div className="p-4 sm:p-5 rounded-2xl bg-[var(--color-paper-muted)]/60 border border-[var(--color-paper-border)] hover:border-[var(--color-accent-border)] hover:bg-[var(--color-paper-muted)]/90 transition-all duration-200 space-y-2.5">
+      <div className="p-4 sm:p-5 rounded-2xl bg-[var(--color-paper-muted)]/60 border border-[var(--color-paper-border)] space-y-2.5 shadow-xs">
         <div className="flex items-center gap-2 text-xs font-semibold text-[var(--color-ink)]">
           <Compass className="w-3.5 h-3.5 text-[var(--color-accent)]" />
           <span>Fokus Topik</span>

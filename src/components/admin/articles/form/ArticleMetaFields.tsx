@@ -199,7 +199,7 @@ export function ArticleMetaFields({
             }));
           }}
           placeholder="Tuliskan 1-2 kalimat pengantar artikel..."
-          className="form-input text-xs sm:text-sm py-2 resize-y min-h-[64px] max-h-[160px]"
+          className="form-input text-xs sm:text-sm py-2 resize-y min-h-[64px] max-h-[160px] overscroll-contain scroll-isolated cursor-text select-text"
           required
         />
       </div>

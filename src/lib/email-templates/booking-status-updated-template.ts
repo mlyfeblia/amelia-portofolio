@@ -28,10 +28,10 @@ function formatDisplayDate(dateStr: string): string {
 
 function getModeLabel(mode: string): string {
   switch (mode) {
-    case 'online_meet':
-      return 'Google Meet Virtual (Tatap Muka Daring)';
     case 'online_chat':
-      return 'Chat Terjadwal (Komunikasi Teks)';
+      return 'Chat WhatsApp Terjadwal (Komunikasi Teks)';
+    case 'online_meet':
+      return 'Video Call via WhatsApp (Tatap Muka Daring)';
     case 'tatap_muka_cirebon':
       return 'Tatap Muka di Kampus UIN Siber Cirebon';
     default:
@@ -65,9 +65,9 @@ function getStatusConfig(status: BookingStatus, safeName: string, safeCode: stri
         introText: `Kabar baik untukmu, Kak <strong>${safeName}</strong>. Permohonan jadwal konselingmu telah ditinjau dan disetujui resmi oleh Kak Amel. Ruang aman kita sudah disiapkan untuk sesi mendatang.`,
         quoteArabic: `فَإِنَّ مَعَ الْعُسْرِ يُسْرًا • إِنَّ مَعَ الْعُسْرِ يُسْرًا`,
         quoteTranslation: `“Maka sesungguhnya beserta kesulitan ada kemudahan, sesungguhnya beserta kesulitan ada kemudahan.”`,
-        quoteSource: `QS. Al-Insyirah: 5–6`,
+        quoteSource: `QS. Al-Insyirah: 5-6`,
         instructionTitle: `Adab &amp; Persiapan Sesi Pertemuan`,
-        instructionText: `Pilihlah ruangan yang tenang dan kondusif agar kamu bisa bercerita dengan leluasa tanpa gangguan. Untuk sesi virtual, Kak Amel akan mengontakmu melalui WhatsApp sebelum sesi dimulai.`,
+        instructionText: `Pilihlah ruangan yang tenang dan kondusif agar kamu bisa bercerita dengan leluasa tanpa gangguan. Kak Amel akan menghubungi nomor WhatsApp milikmu sesuai jadwal yang telah disepakati.`,
       };
     case 'selesai':
       return {
@@ -79,7 +79,7 @@ function getStatusConfig(status: BookingStatus, safeName: string, safeCode: stri
         introText: `Alhamdulillah, sesi konseling untuk reservasi <strong>${safeCode}</strong> telah selesai dilaksanakan. Terima kasih atas keberanian dan ketulusanmu meluangkan waktu untuk merawat kesehatan batin.`,
         quoteArabic: `رَبِّ اشْرَحْ لِي صَدْرِي وَيَسِّرْ لِي أَمْرِي`,
         quoteTranslation: `“Ya Tuhanku, lapangkanlah dadaku, dan mudahkanlah untukku urusanku.”`,
-        quoteSource: `QS. Thaha: 25–26`,
+        quoteSource: `QS. Thaha: 25-26`,
         instructionTitle: `Langkah Muhasabah &amp; Tindak Lanjut`,
         instructionText: `Perjalanan bertumbuh membutuhkan waktu dan kelembutan pada diri sendiri. Jika suatu saat kamu membutuhkan teman bicara atau sesi penguatan lanjutan, pintu ruang konseling Kak Amel selalu terbuka untukmu.`,
       };
@@ -124,7 +124,7 @@ export function generateBookingStatusUpdatedHtml(
   const safeTimeSlot = escapeHtml(booking.timeSlot);
   const modeLabel = getModeLabel(booking.mode);
   const safeCategory = escapeHtml(booking.category);
-  const trackUrl = `${siteUrl}/schedule?code=${encodeURIComponent(booking.code)}`;
+  const trackUrl = `${siteUrl}/schedule?tab=tracker&code=${encodeURIComponent(booking.code)}`;
   const waUrl = `https://wa.me/6282210445785?text=${encodeURIComponent(
     `Assalamu'alaikum Kak Amel, saya ingin menanyakan perihal jadwal konseling dengan Kode Reservasi ${booking.code}.`
   )}`;
@@ -137,17 +137,61 @@ export function generateBookingStatusUpdatedHtml(
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="color-scheme" content="light">
   <title>${cfg.headline} - Amelia BKI</title>
+  <style>
+    @media only screen and (max-width: 600px) {
+      .email-wrapper {
+        padding: 16px 8px !important;
+      }
+      .email-card {
+        border-radius: 12px !important;
+      }
+      .email-header-cell {
+        padding: 24px 18px !important;
+      }
+      .email-body-cell {
+        padding: 24px 18px !important;
+      }
+      .email-footer-cell {
+        padding: 20px 18px !important;
+      }
+      .email-code-cell {
+        padding: 14px 16px !important;
+      }
+      .email-code-text {
+        font-size: 20px !important;
+      }
+      .email-details-cell {
+        padding: 14px 16px !important;
+      }
+      .btn-block {
+        display: block !important;
+        width: 100% !important;
+        padding-left: 12px !important;
+        padding-right: 12px !important;
+        box-sizing: border-box !important;
+        font-size: 14px !important;
+      }
+      .col-label {
+        width: 44% !important;
+        font-size: 12px !important;
+      }
+      .col-value {
+        width: 56% !important;
+        font-size: 13px !important;
+      }
+    }
+  </style>
 </head>
 <body style="margin: 0; padding: 0; background-color: #F4F1EA; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; color: #192820;">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #F4F1EA; padding: 32px 12px;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="email-wrapper" style="background-color: #F4F1EA; padding: 32px 12px;">
     <tr>
       <td align="center">
         <!-- Main Card Container -->
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width: 600px; background-color: #FFFFFF; border: 1px solid #E5DFD5; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(25, 40, 32, 0.06);">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="email-card" style="max-width: 600px; background-color: #FFFFFF; border: 1px solid #E5DFD5; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(25, 40, 32, 0.06);">
           
           <!-- Branded Islamic Header -->
           <tr>
-            <td style="background-color: #1A563C; padding: 36px 32px; text-align: center;">
+            <td class="email-header-cell" style="background-color: #1A563C; padding: 36px 32px; text-align: center;">
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                 <tr>
                   <td align="center">
@@ -173,7 +217,7 @@ export function generateBookingStatusUpdatedHtml(
 
           <!-- Main Content Body -->
           <tr>
-            <td style="padding: 36px 32px;">
+            <td class="email-body-cell" style="padding: 36px 32px;">
               <!-- Status Pill Badge -->
               <div style="margin-bottom: 16px;">
                 <span style="display: inline-block; background-color: ${cfg.badgeBg}; color: ${cfg.badgeColor}; border: 1px solid ${cfg.badgeBorder}; font-size: 11px; font-weight: 700; letter-spacing: 1px; padding: 6px 14px; border-radius: 999px;">
@@ -193,32 +237,32 @@ export function generateBookingStatusUpdatedHtml(
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #FBF9F5; border: 1px solid #E5DFD5; border-radius: 12px; margin-bottom: 24px; overflow: hidden;">
                 <!-- Code Header -->
                 <tr>
-                  <td style="padding: 16px 22px; background-color: #EDF5F0; border-bottom: 1px solid #C8DFD2;">
+                  <td class="email-code-cell" style="padding: 16px 22px; background-color: #EDF5F0; border-bottom: 1px solid #C8DFD2;">
                     <span style="display: block; font-size: 11px; font-weight: 700; color: #1A563C; letter-spacing: 1px; text-transform: uppercase;">KODE RESERVASI SESI</span>
-                    <span style="display: block; font-family: 'Courier New', Courier, monospace; font-size: 24px; font-weight: 700; color: #1A563C; letter-spacing: 1.5px; margin-top: 3px;">${safeCode}</span>
+                    <span class="email-code-text" style="display: block; font-family: 'Courier New', Courier, monospace; font-size: 24px; font-weight: 700; color: #1A563C; letter-spacing: 1.5px; margin-top: 3px;">${safeCode}</span>
                   </td>
                 </tr>
                 <!-- Details Rows -->
                 <tr>
-                  <td style="padding: 18px 22px;">
+                  <td class="email-details-cell" style="padding: 18px 22px;">
                     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                       <tr>
-                        <td width="38%" style="padding: 7px 0; color: #60756B; font-size: 13px; font-weight: 500;">Tanggal Pertemuan</td>
-                        <td width="62%" style="padding: 7px 0; color: #192820; font-size: 14px; font-weight: 600;">${formattedDate}</td>
+                        <td width="38%" class="col-label" style="padding: 7px 0; color: #60756B; font-size: 13px; font-weight: 500;">Tanggal Pertemuan</td>
+                        <td width="62%" class="col-value" style="padding: 7px 0; color: #192820; font-size: 14px; font-weight: 600;">${formattedDate}</td>
                       </tr>
                       <tr>
-                        <td style="padding: 7px 0; color: #60756B; font-size: 13px; font-weight: 500; border-top: 1px dashed #E5DFD5;">Waktu / Sesi</td>
-                        <td style="padding: 7px 0; color: #192820; font-size: 14px; font-weight: 600; border-top: 1px dashed #E5DFD5;">${safeTimeSlot}</td>
+                        <td class="col-label" style="padding: 7px 0; color: #60756B; font-size: 13px; font-weight: 500; border-top: 1px dashed #E5DFD5;">Waktu / Sesi</td>
+                        <td class="col-value" style="padding: 7px 0; color: #192820; font-size: 14px; font-weight: 600; border-top: 1px dashed #E5DFD5;">${safeTimeSlot}</td>
                       </tr>
                       <tr>
-                        <td style="padding: 7px 0; color: #60756B; font-size: 13px; font-weight: 500; border-top: 1px dashed #E5DFD5;">Format Sesi</td>
-                        <td style="padding: 7px 0; color: #1A563C; font-size: 14px; font-weight: 600; border-top: 1px dashed #E5DFD5;">
+                        <td class="col-label" style="padding: 7px 0; color: #60756B; font-size: 13px; font-weight: 500; border-top: 1px dashed #E5DFD5;">Format Sesi</td>
+                        <td class="col-value" style="padding: 7px 0; color: #1A563C; font-size: 14px; font-weight: 600; border-top: 1px dashed #E5DFD5;">
                           ${modeLabel}
                         </td>
                       </tr>
                       <tr>
-                        <td style="padding: 7px 0; color: #60756B; font-size: 13px; font-weight: 500; border-top: 1px dashed #E5DFD5;">Topik Konsultasi</td>
-                        <td style="padding: 7px 0; color: #192820; font-size: 14px; font-weight: 600; border-top: 1px dashed #E5DFD5;">${safeCategory}</td>
+                        <td class="col-label" style="padding: 7px 0; color: #60756B; font-size: 13px; font-weight: 500; border-top: 1px dashed #E5DFD5;">Topik Konsultasi</td>
+                        <td class="col-value" style="padding: 7px 0; color: #192820; font-size: 14px; font-weight: 600; border-top: 1px dashed #E5DFD5;">${safeCategory}</td>
                       </tr>
                     </table>
                   </td>
@@ -236,7 +280,7 @@ export function generateBookingStatusUpdatedHtml(
                     <p style="margin: 0 0 4px 0; color: #42564C; font-size: 13px; font-style: italic; line-height: 1.5;">
                       ${cfg.quoteTranslation}
                     </p>
-                    <span style="font-size: 11px; font-weight: 600; color: #60756B;">— ${cfg.quoteSource}</span>
+                    <span style="font-size: 11px; font-weight: 600; color: #60756B;">- ${cfg.quoteSource}</span>
                   </td>
                 </tr>
               </table>
@@ -260,14 +304,14 @@ export function generateBookingStatusUpdatedHtml(
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 24px;">
                 <tr>
                   <td align="center" style="padding-bottom: 12px;">
-                    <a href="${trackUrl}" target="_blank" style="display: block; width: 100%; box-sizing: border-box; background-color: #1A563C; color: #FFFFFF; font-size: 14.5px; font-weight: 600; text-align: center; text-decoration: none; padding: 13px 24px; border-radius: 10px; box-shadow: 0 2px 8px rgba(26, 86, 60, 0.25);">
+                    <a href="${trackUrl}" target="_blank" class="btn-block" style="display: block; width: 100%; box-sizing: border-box; background-color: #1A563C; color: #FFFFFF; font-size: 14.5px; font-weight: 600; text-align: center; text-decoration: none; padding: 13px 24px; border-radius: 10px; box-shadow: 0 2px 8px rgba(26, 86, 60, 0.25);">
                       Buka Lacak Janji Temu Konseling
                     </a>
                   </td>
                 </tr>
                 <tr>
                   <td align="center">
-                    <a href="${waUrl}" target="_blank" style="display: block; width: 100%; box-sizing: border-box; background-color: #EDF5F0; border: 1px solid #C8DFD2; color: #1A563C; font-size: 13.5px; font-weight: 600; text-align: center; text-decoration: none; padding: 11px 24px; border-radius: 10px;">
+                    <a href="${waUrl}" target="_blank" class="btn-block" style="display: block; width: 100%; box-sizing: border-box; background-color: #EDF5F0; border: 1px solid #C8DFD2; color: #1A563C; font-size: 13.5px; font-weight: 600; text-align: center; text-decoration: none; padding: 11px 24px; border-radius: 10px;">
                       Hubungi / Konfirmasi via WhatsApp Kak Amel
                     </a>
                   </td>
@@ -282,7 +326,7 @@ export function generateBookingStatusUpdatedHtml(
 
           <!-- Footer -->
           <tr>
-            <td style="background-color: #FBF9F5; border-top: 1px solid #E5DFD5; padding: 26px 32px; text-align: center;">
+            <td class="email-footer-cell" style="background-color: #FBF9F5; border-top: 1px solid #E5DFD5; padding: 26px 32px; text-align: center;">
               <p style="margin: 0 0 5px 0; color: #192820; font-size: 13px; font-weight: 600;">
                 Amelia (Amel) · Konselor Sebaya BKI
               </p>

@@ -6,6 +6,7 @@ import { Article, ARTICLE_CATEGORIES } from '@/types';
 import { ArticleListItem } from './ArticleListItem';
 import { PaginationBar } from '@/components/ui/PaginationBar';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/Tabs';
+import { useSessionSeed, seededShuffle } from '@/lib/seeded-random';
 
 const ARTICLES_PER_PAGE = 6;
 const ITEMS_PER_PAGE = ARTICLES_PER_PAGE;
@@ -20,6 +21,7 @@ export function ArticlesDirectory({ initialArticles }: ArticlesDirectoryProps) {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [currentPage, setCurrentPage] = useState<number>(1);
   const containerRef = useRef<HTMLDivElement>(null);
+  const { seed, isReady } = useSessionSeed('articles_directory');
 
   // Synchronize URL query parameters safely on client after hydration & on popstate
   useEffect(() => {
@@ -83,9 +85,9 @@ export function ArticlesDirectory({ initialArticles }: ArticlesDirectoryProps) {
     return Array.from(set);
   }, [initialArticles]);
 
-  // Filtered articles based on category and search
+  // Filtered and discovery-shuffled articles
   const filteredArticles = useMemo(() => {
-    return initialArticles.filter((art) => {
+    const matched = initialArticles.filter((art) => {
       const matchCategory = activeCategory === 'Semua' || art.category === activeCategory;
       if (!matchCategory) return false;
 
@@ -97,7 +99,16 @@ export function ArticlesDirectory({ initialArticles }: ArticlesDirectoryProps) {
       const matchTags = (art.tags || []).some((t) => t.toLowerCase().includes(q));
       return matchTitle || matchExcerpt || matchCategoryText || matchTags;
     });
-  }, [initialArticles, activeCategory, searchQuery]);
+
+    if (searchQuery.trim()) {
+      return matched;
+    }
+
+    if (seed && isReady) {
+      return seededShuffle(matched, `${seed}_${activeCategory}`);
+    }
+    return matched;
+  }, [initialArticles, activeCategory, searchQuery, seed, isReady]);
 
   // Pagination calculation
   const totalItems = filteredArticles.length;
@@ -138,7 +149,7 @@ export function ArticlesDirectory({ initialArticles }: ArticlesDirectoryProps) {
   };
 
   return (
-    <div ref={containerRef} className="space-y-6 sm:space-y-8" id="articles-directory-container">
+    <div ref={containerRef} className="space-y-6 sm:space-y-8 scroll-mt-20 sm:scroll-mt-24" id="articles-directory-container">
       {/* Search & Filter Controls */}
       <div className="space-y-3">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-4">

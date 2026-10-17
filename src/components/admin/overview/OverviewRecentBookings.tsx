@@ -22,7 +22,7 @@ export function OverviewRecentBookings({
   const waitingBookings = bookings.filter((b) => b.status === 'menunggu');
 
   return (
-    <div className="lg:col-span-7 space-y-3.5">
+    <div className="lg:col-span-7 flex flex-col h-full space-y-3.5">
       <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3">
         <div className="min-w-0">
           <h2
@@ -45,15 +45,19 @@ export function OverviewRecentBookings({
       </div>
 
       {loading ? (
-        <div className="space-y-3">
+        <div className="space-y-3 flex-1">
           <SkeletonBookingCard />
           <SkeletonBookingCard />
         </div>
       ) : waitingBookings.length === 0 ? (
-        <div className="p-8 text-center bg-[var(--color-surface)] border border-[var(--color-paper-border)] rounded-2xl text-xs text-[var(--color-ink-muted)] space-y-1">
-          <CheckCircle2 className="w-6 h-6 text-[var(--color-accent)] mx-auto mb-2" />
-          <p className="font-semibold text-[var(--color-ink)]">Semua janji temu sudah terkonfirmasi!</p>
-          <p>Tidak ada permohonan baru yang tertunda saat ini.</p>
+        <div className="flex-1 flex flex-col items-center justify-center p-8 sm:p-12 text-center bg-[var(--color-surface)] border border-[var(--color-paper-border)] rounded-2xl text-xs text-[var(--color-ink-muted)] space-y-2 shadow-2xs min-h-[240px]">
+          <CheckCircle2 className="w-7 h-7 sm:w-8 sm:h-8 text-[var(--color-accent)] mx-auto mb-1" />
+          <p className="font-semibold text-sm sm:text-base text-[var(--color-ink)]">
+            Semua janji temu sudah terkonfirmasi!
+          </p>
+          <p className="max-w-xs text-xs sm:text-[13px] leading-relaxed">
+            Tidak ada permohonan baru yang tertunda saat ini.
+          </p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -94,6 +98,7 @@ export function OverviewRecentBookings({
                     code: item.code,
                     date: item.date,
                     slot: item.timeSlot,
+                    mode: item.mode,
                   })}
                   target="_blank"
                   rel="noopener noreferrer"

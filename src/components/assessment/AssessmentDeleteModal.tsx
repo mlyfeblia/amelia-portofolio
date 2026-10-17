@@ -22,7 +22,12 @@ export function AssessmentDeleteModal({
   onConfirm,
 }: AssessmentDeleteModalProps) {
   const mounted = useMounted();
-  const { isRendered, backdropClass, windowClass } = useModalAnimation({ isOpen });
+  const { isRendered, isExiting, backdropClass, windowClass } = useModalAnimation({
+    isOpen,
+    onClose,
+    closeOnEscape: true,
+    lockScroll: true,
+  });
 
   // Retain active record during exit transition without flickering
   const [cachedRecord, setCachedRecord] = React.useState<DeviceAssessmentRecord | null>(record);
@@ -31,43 +36,23 @@ export function AssessmentDeleteModal({
   }
   const activeRecord = record ?? cachedRecord;
 
-  // Lock body & document scroll while modal is active and handle Escape
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const originalBodyOverflow = document.body.style.overflow;
-    const originalHtmlOverflow = document.documentElement.style.overflow;
-    document.body.style.overflow = 'hidden';
-    document.documentElement.style.overflow = 'hidden';
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-    window.addEventListener('keydown', handleKeyDown);
-
-    return () => {
-      document.body.style.overflow = originalBodyOverflow;
-      document.documentElement.style.overflow = originalHtmlOverflow;
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [isOpen, onClose]);
-
   if (!mounted || !isRendered || !activeRecord) return null;
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 overflow-hidden select-none"
+      className={cn(
+        'fixed inset-0 z-[9999] flex items-center justify-center p-4 overflow-hidden select-none',
+        isExiting && 'pointer-events-none'
+      )}
       role="dialog"
       aria-modal="true"
       aria-labelledby="device-delete-assessment-title"
     >
-      {/* Dedicated Full-Screen Backdrop Layer - Pure Transparent Blur (Identik Navbar, Tanpa Warna Gelap, Touch & Scroll Blocked) */}
+      {/* Dedicated Full-Screen Backdrop Layer */}
       <div
-        className={cn(
-          'fixed inset-0 bg-transparent backdrop-blur-md touch-none select-none pointer-events-auto',
-          backdropClass
-        )}
+        className={cn(backdropClass)}
         aria-hidden="true"
+        onClick={onClose}
         onWheel={(e) => e.preventDefault()}
         onTouchMove={(e) => e.preventDefault()}
       />
@@ -78,19 +63,19 @@ export function AssessmentDeleteModal({
           windowClass
         )}
       >
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3 sm:gap-3.5">
-            <div className="w-10 h-10 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0 border border-rose-100 shadow-xs">
+        <div className="flex items-start justify-between gap-2.5">
+          <div className="flex items-start gap-3 sm:gap-3.5 min-w-0 flex-1">
+            <div className="w-10 h-10 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0 border border-rose-100 shadow-xs mt-0.5">
               <AlertTriangle className="w-5 h-5" />
             </div>
-            <div>
+            <div className="min-w-0 flex-1">
               <h3 
                 id="device-delete-assessment-title" 
-                className="font-display font-semibold text-base sm:text-lg text-[var(--color-ink)] leading-snug"
+                className="font-display font-semibold text-base sm:text-lg text-[var(--color-ink)] leading-snug break-words"
               >
                 Hapus Rekaman Asesmen?
               </h3>
-              <p className="text-xs text-[var(--color-ink-muted)] mt-0.5">
+              <p className="text-xs text-[var(--color-ink-muted)] mt-0.5 break-words">
                 Rekaman hasil asesmen mandiri di perambanmu.
               </p>
             </div>
@@ -99,7 +84,7 @@ export function AssessmentDeleteModal({
           <button
             onClick={onClose}
             type="button"
-            className="text-[var(--color-ink-soft)] hover:text-[var(--color-ink)] p-1.5 rounded-lg transition-colors cursor-pointer shrink-0"
+            className="text-[var(--color-ink-soft)] hover:text-[var(--color-ink)] p-1.5 rounded-lg transition-colors cursor-pointer shrink-0 -mr-1"
             aria-label="Tutup dialog verifikasi"
           >
             <X className="w-5 h-5" />

@@ -165,11 +165,32 @@ export const TabsList = forwardRef<HTMLDivElement, TabsListProps>(
       setTimeout(checkScroll, 220);
     };
 
-    const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
-      if (Math.abs(e.deltaX) < Math.abs(e.deltaY) && listRef.current) {
-        listRef.current.scrollLeft += e.deltaY;
-      }
-    };
+    // Non-passive native wheel listener to isolate scroll to the horizontal tabs slider and prevent simultaneous page scrolling
+    useEffect(() => {
+      const el = listRef.current;
+      if (!el) return;
+
+      const onNativeWheel = (e: WheelEvent) => {
+        // Only intercept if the tabs list has horizontal overflow to scroll
+        const maxScroll = el.scrollWidth - el.clientWidth;
+        if (maxScroll <= 1) return;
+
+        const delta = Math.abs(e.deltaX) >= Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+        if (delta === 0) return;
+
+        // Prevent simultaneous vertical page scrolling while mouse is over horizontal slider
+        e.preventDefault();
+
+        // Immediately scroll the slider horizontally
+        el.scrollBy({ left: delta, behavior: 'auto' });
+        checkScroll();
+      };
+
+      el.addEventListener('wheel', onNativeWheel, { passive: false });
+      return () => {
+        el.removeEventListener('wheel', onNativeWheel);
+      };
+    }, [checkScroll, listRef]);
 
     // Auto-center when active tab value changes
     useEffect(() => {
@@ -289,10 +310,9 @@ export const TabsList = forwardRef<HTMLDivElement, TabsListProps>(
           role="tablist"
           tabIndex={0}
           onScroll={checkScroll}
-          onWheel={handleWheel}
           onKeyDown={handleKeyDown}
           className={cn(
-            'flex items-center overflow-x-auto no-scrollbar scroll-smooth px-1 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--color-accent)] rounded-lg',
+            'flex items-center overflow-x-auto no-scrollbar scroll-smooth overscroll-x-contain px-1 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--color-accent)] rounded-lg',
             variantStyles[variant],
             className
           )}

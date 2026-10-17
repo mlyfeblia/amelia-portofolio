@@ -277,7 +277,7 @@ export function AdminCounselingClient() {
       if (data.success) {
         setCurhatList((prev) => prev.filter((c) => c.id !== item.id));
         setDeleteModalOpen(false);
-        setDeleteItem(null);
+        setTimeout(() => setDeleteItem(null), 300);
       }
     } catch (e) {
       console.error('Failed to delete curhat:', e);
@@ -339,7 +339,7 @@ export function AdminCounselingClient() {
   }, [curhatList]);
 
   const filteredMessages = useMemo(() => {
-    return curhatList.filter((c) => {
+    const list = curhatList.filter((c) => {
       const matchesCategory = categoryFilter === 'Semua' || c.category === categoryFilter;
       const matchesStatus =
         statusFilter === 'semua' ||
@@ -364,6 +364,21 @@ export function AdminCounselingClient() {
         (c.answer && c.answer.toLowerCase().includes(q));
 
       return matchesCategory && matchesStatus && matchesVisibility && matchesLanding && matchesDate && matchesSearch;
+    });
+
+    // Action-First Priority Triage:
+    // 1. Unanswered messages (!c.isAnswered) come FIRST (sorted newest to oldest)
+    // 2. Answered messages come AFTER (sorted newest to oldest)
+    return [...list].sort((a, b) => {
+      const aUnanswered = !a.isAnswered && (!a.answer || a.answer.trim().length === 0);
+      const bUnanswered = !b.isAnswered && (!b.answer || b.answer.trim().length === 0);
+
+      if (aUnanswered && !bUnanswered) return -1;
+      if (!aUnanswered && bUnanswered) return 1;
+
+      const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return dateB - dateA;
     });
   }, [curhatList, categoryFilter, statusFilter, visibilityFilter, landingFilter, dateFilter, search]);
 
@@ -474,7 +489,7 @@ export function AdminCounselingClient() {
         item={deleteItem}
         onClose={() => {
           setDeleteModalOpen(false);
-          setDeleteItem(null);
+          setTimeout(() => setDeleteItem(null), 300);
         }}
         onConfirm={handleConfirmDelete}
       />

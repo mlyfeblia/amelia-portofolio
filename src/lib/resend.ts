@@ -41,7 +41,7 @@ export async function sendBookingConfirmationEmail(booking: Booking): Promise<bo
         to: booking.email,
         subject: `Konfirmasi Permohonan Sesi Konseling [${booking.code}] - Amelia BKI`,
         html,
-        text: `Assalamu'alaikum Warahmatullahi Wabarakatuh, Kak ${booking.name}.\n\nPermohonan sesi konseling kamu telah berhasil diterima.\nKode Reservasi: ${booking.code}\nTanggal: ${booking.date}\nSesi Waktu: ${booking.timeSlot}\nFormat: ${booking.mode}\nTopik: ${booking.category}\n\nLacak status: ${env.SITE_URL}/schedule?code=${booking.code}\nWhatsApp Konselor: +62 822-1044-5785\n\nSalam hangat,\nAmelia (Amel) - BKI UIN Siber Cirebon`,
+        text: `Assalamu'alaikum Warahmatullahi Wabarakatuh, Kak ${booking.name}.\n\nPermohonan sesi konseling kamu telah berhasil diterima.\nKode Reservasi: ${booking.code}\nTanggal: ${booking.date}\nSesi Waktu: ${booking.timeSlot}\nFormat: ${booking.mode === 'online_meet' ? 'Video Call via WhatsApp' : booking.mode === 'online_chat' ? 'Chat WhatsApp Terjadwal' : 'Tatap Muka di Kampus'}\nTopik: ${booking.category}\n\nLacak status: ${env.SITE_URL}/schedule?tab=tracker&code=${booking.code}\nWhatsApp Konselor: +62 822-1044-5785\n\nSalam hangat,\nAmelia (Amel) - BKI UIN Siber Cirebon`,
         tags: [
           { name: 'category', value: 'booking-confirmation' },
           { name: 'booking_code', value: booking.code },
@@ -88,7 +88,8 @@ export async function sendAdminBookingAlertEmail(booking: Booking): Promise<bool
 
   try {
     const html = generateBookingAdminAlertHtml(booking);
-    const text = `Permohonan Jadwal Konseling Baru Masuk\n\nDetail Konseli:\n- Nama: ${booking.name}${booking.alias ? ` (${booking.alias})` : ''}\n- Kontak WhatsApp: ${booking.phone}\n- Email: ${booking.email}\n- Topik: ${booking.category}\n- Format: ${booking.mode}\n- Tanggal: ${booking.date}\n- Sesi: ${booking.timeSlot}\n- Catatan: ${booking.notes || 'Tidak ada catatan tambahan'}\n- Kode Reservasi: ${booking.code}\n\nBuka Panel Admin: ${env.SITE_URL}/admin/bookings`;
+    const modeLabel = booking.mode === 'online_meet' ? 'Video Call via WhatsApp' : booking.mode === 'online_chat' ? 'Chat WhatsApp Terjadwal' : 'Tatap Muka di Kampus (Cirebon)';
+    const text = `Permohonan Jadwal Konseling Baru Masuk\n\nDetail Konseli:\n- Nama: ${booking.name}${booking.alias ? ` (${booking.alias})` : ''}\n- Kontak WhatsApp: ${booking.phone}\n- Email: ${booking.email}\n- Topik: ${booking.category}\n- Format: ${modeLabel}\n- Tanggal: ${booking.date}\n- Sesi: ${booking.timeSlot}\n- Catatan: ${booking.notes || 'Tidak ada catatan tambahan'}\n- Kode Reservasi: ${booking.code}\n\nBuka Panel Admin: ${env.SITE_URL}/admin/bookings`;
 
     const { data, error } = await resend.emails.send(
       {
@@ -225,7 +226,7 @@ export async function sendBookingStatusUpdateEmail(
         to: booking.email,
         subject,
         html,
-        text: `Assalamu'alaikum Warahmatullahi Wabarakatuh, Kak ${booking.name}.\n\nStatus jadwal sesi konseling kamu (${booking.code}) telah diperbarui menjadi: ${newStatus}.\nTanggal: ${booking.date}\nWaktu: ${booking.timeSlot}\n\nLacak status selengkapnya: ${env.SITE_URL}/schedule?code=${booking.code}\nWhatsApp Konselor: +62 822-1044-5785\n\nSalam hangat,\nAmelia (Amel) - BKI UIN Siber Cirebon`,
+        text: `Assalamu'alaikum Warahmatullahi Wabarakatuh, Kak ${booking.name}.\n\nStatus jadwal sesi konseling kamu (${booking.code}) telah diperbarui menjadi: ${newStatus}.\nTanggal: ${booking.date}\nWaktu: ${booking.timeSlot}\n\nLacak status selengkapnya: ${env.SITE_URL}/schedule?tab=tracker&code=${booking.code}\nWhatsApp Konselor: +62 822-1044-5785\n\nSalam hangat,\nAmelia (Amel) - BKI UIN Siber Cirebon`,
         tags: [
           { name: 'category', value: 'booking-status-update' },
           { name: 'booking_code', value: booking.code },

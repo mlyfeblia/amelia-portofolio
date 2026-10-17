@@ -28,9 +28,16 @@ export function ArticleCard({
 }: ArticleCardProps) {
   const isPublic = article.isPublished !== false;
   const [confirmAction, setConfirmAction] = useState<'publish' | 'landing' | null>(null);
+  const [cachedAction, setCachedAction] = useState<'publish' | 'landing' | null>(null);
+
+  if (confirmAction && confirmAction !== cachedAction) {
+    setCachedAction(confirmAction);
+  }
+
+  const activeAction = confirmAction ?? cachedAction;
 
   const getModalProps = () => {
-    if (confirmAction === 'publish') {
+    if (activeAction === 'publish') {
       return {
         title: isPublic ? 'Ubah Artikel Menjadi Draf?' : 'Terbitkan Artikel ke Publik?',
         description: isPublic
@@ -49,7 +56,7 @@ export function ArticleCard({
       };
     }
 
-    if (confirmAction === 'landing') {
+    if (activeAction === 'landing') {
       return {
         title: article.showOnLandingPage ? 'Hapus dari Beranda Utama?' : 'Tampilkan di Beranda Utama?',
         description: article.showOnLandingPage
@@ -74,7 +81,7 @@ export function ArticleCard({
   const modalProps = getModalProps();
 
   return (
-    <div className="card-interactive p-3.5 sm:p-6 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-paper-border)] shadow-xs space-y-3.5">
+    <div className="p-3.5 sm:p-6 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-paper-border)] shadow-xs space-y-3.5 transition-colors duration-200 hover:border-[var(--color-accent)]/30">
       {/* Header Info & Actions */}
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
         <div className="space-y-1.5 flex-1 min-w-0">
@@ -86,7 +93,7 @@ export function ArticleCard({
           </h2>
 
           <p className="text-xs sm:text-sm text-[var(--color-ink-muted)] leading-relaxed line-clamp-2">
-            {article.publishedAt ? `${formatIndonesianDate(article.publishedAt) || article.publishedAt} — ` : ''}{article.excerpt}
+            {article.publishedAt ? `${formatIndonesianDate(article.publishedAt) || article.publishedAt} - ` : ''}{article.excerpt}
           </p>
 
           <div className="flex items-center gap-2 pt-1 text-xs text-[var(--color-ink-muted)] flex-nowrap overflow-hidden">

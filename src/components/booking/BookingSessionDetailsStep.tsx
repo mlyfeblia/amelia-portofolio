@@ -142,7 +142,7 @@ export function BookingSessionDetailsStep({
             }
           }}
           placeholder="Ceritakan harapan atau hal yang ingin diurai dalam sesi ini..."
-          className="form-input text-sm py-2 resize-y min-h-[72px] max-h-[220px] overflow-y-auto textarea-custom-scroll"
+          className="form-input text-sm py-2 resize-y min-h-[72px] max-h-[220px] overflow-y-auto textarea-custom-scroll overscroll-contain scroll-isolated cursor-text select-text"
         />
       </div>
 

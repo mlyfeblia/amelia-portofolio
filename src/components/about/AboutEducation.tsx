@@ -27,7 +27,7 @@ export function AboutEducation() {
         {educations.map((edu, idx) => (
           <div
             key={idx}
-            className="p-6 sm:p-7 bg-[var(--color-surface)] border border-[var(--color-paper-border)] rounded-xl space-y-2.5 card-interactive"
+            className="p-6 sm:p-7 bg-[var(--color-surface)] border border-[var(--color-paper-border)] rounded-xl space-y-2.5 shadow-2xs hover:border-[var(--color-accent-border)] transition-colors"
           >
             <div className="flex flex-wrap items-center justify-between gap-2">
               <h3 className="text-base sm:text-lg font-semibold text-[var(--color-ink)]">

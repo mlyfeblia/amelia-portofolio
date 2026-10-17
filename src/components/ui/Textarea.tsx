@@ -72,6 +72,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
             'w-full text-base sm:text-sm text-[var(--color-ink)] placeholder:text-[var(--color-ink-muted)]/70',
             'p-3.5 rounded-xl border transition-all duration-150',
             'bg-[var(--color-surface)] border-[var(--color-paper-border)] shadow-2xs resize-y',
+            'overscroll-contain scroll-isolated cursor-text select-text',
             'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:border-[var(--color-accent)]',
             error && 'border-red-400 focus-visible:ring-red-500 focus-visible:border-red-500',
             disabled && 'opacity-60 cursor-not-allowed bg-[var(--color-paper-muted)]',

@@ -55,10 +55,10 @@ export function BookingDetailCard({
 
   const getModeDetails = (mode: CounselingMode) => {
     switch (mode) {
-      case 'online_meet':
-        return { label: 'Google Meet', desc: 'Tatap muka video virtual privat', icon: Video };
       case 'online_chat':
-        return { label: 'Chat Terjadwal', desc: 'Percakapan intensif via WhatsApp 60 menit', icon: MessageSquare };
+        return { label: 'Chat Terjadwal', desc: 'Percakapan teks intensif via WhatsApp 60 menit', icon: MessageSquare };
+      case 'online_meet':
+        return { label: 'Video Call via WhatsApp', desc: 'Tatap muka video virtual privat langsung di WhatsApp', icon: Video };
       case 'tatap_muka_cirebon':
         return { label: 'Tatap Muka Langsung', desc: 'Area Kampus UIN Siber Syekh Nurjati Cirebon', icon: Users };
       default:
@@ -75,6 +75,7 @@ export function BookingDetailCard({
     code: booking.code,
     date: booking.date,
     slot: booking.timeSlot,
+    mode: booking.mode,
   });
 
   return (
@@ -111,11 +112,12 @@ export function BookingDetailCard({
             <button
               onClick={() => onRemoveFromDevice(booking.code)}
               type="button"
-              className="btn-interactive text-xs text-[var(--color-ink-muted)] hover:text-rose-600 px-2.5 py-1.5 rounded-lg border border-[var(--color-paper-border)] hover:border-rose-200 hover:bg-rose-50 transition-colors inline-flex items-center gap-1.5 cursor-pointer shadow-2xs"
+              className="btn-interactive text-xs text-[var(--color-ink-muted)] hover:text-rose-600 p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg border border-[var(--color-paper-border)] hover:border-rose-200 hover:bg-rose-50 transition-colors inline-flex items-center gap-1.5 cursor-pointer shadow-2xs"
               title="Hapus dari histori perangkat ini"
+              aria-label="Hapus dari histori perangkat ini"
             >
-              <Trash2 className="w-3.5 h-3.5" />
-              <span>Hapus Histori</span>
+              <Trash2 className="w-3.5 h-3.5 shrink-0" />
+              <span className="hidden sm:inline">Hapus Histori</span>
             </button>
           )}
 

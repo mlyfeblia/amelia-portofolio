@@ -13,31 +13,12 @@ interface PwaChangelogModalProps {
 }
 
 export function PwaChangelogModal({ isOpen, onClose }: PwaChangelogModalProps) {
-  const { isRendered, backdropClass, windowClass } = useModalAnimation({ isOpen });
-
-  // Escape key handler
-  useEffect(() => {
-    if (!isOpen) return;
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
-
-  // Lock body scroll while modal is active
-  useEffect(() => {
-    if (!isOpen) return;
-    const originalBodyOverflow = document.body.style.overflow;
-    const originalHtmlOverflow = document.documentElement.style.overflow;
-    document.body.style.overflow = 'hidden';
-    document.documentElement.style.overflow = 'hidden';
-
-    return () => {
-      document.body.style.overflow = originalBodyOverflow;
-      document.documentElement.style.overflow = originalHtmlOverflow;
-    };
-  }, [isOpen]);
+  const { isRendered, isExiting, backdropClass, windowClass } = useModalAnimation({
+    isOpen,
+    onClose,
+    closeOnEscape: true,
+    lockScroll: true,
+  });
 
   if (!isRendered || typeof document === 'undefined') return null;
 
@@ -46,15 +27,16 @@ export function PwaChangelogModal({ isOpen, onClose }: PwaChangelogModalProps) {
       role="dialog"
       aria-modal="true"
       aria-labelledby="changelog-modal-title"
-      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 overflow-hidden select-none"
+      className={cn(
+        'fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 overflow-hidden select-none',
+        isExiting && 'pointer-events-none'
+      )}
     >
-      {/* Dedicated Full-Screen Backdrop Layer - Pure Transparent Blur (Identik Navbar, Tanpa Warna Gelap, Touch & Scroll Blocked) */}
+      {/* Dedicated Full-Screen Backdrop Layer */}
       <div
-        className={cn(
-          'fixed inset-0 bg-transparent backdrop-blur-md touch-none select-none pointer-events-auto',
-          backdropClass
-        )}
+        className={cn(backdropClass)}
         aria-hidden="true"
+        onClick={onClose}
         onWheel={(e) => e.preventDefault()}
         onTouchMove={(e) => e.preventDefault()}
       />

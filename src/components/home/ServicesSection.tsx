@@ -28,27 +28,13 @@ export function ServicesSection() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 lg:gap-8">
-          <div className="p-6 lg:p-7 bg-[var(--color-paper)] border border-[var(--color-paper-border)] hover:border-[var(--color-accent)] rounded-xl space-y-3 card-interactive group cursor-pointer hover:shadow-xl hover:-translate-y-2 transition-all duration-300 ease-out flex flex-col justify-between">
-            <div className="space-y-2">
-              <h3 className="text-base font-semibold text-[var(--color-ink)] group-hover:text-[var(--color-accent)] transition-colors">
-                Google Meet Virtual
-              </h3>
-              <p className="text-sm text-[var(--color-ink-muted)] leading-relaxed">
-                Diskusi interaktif langsung via video conference privat dari ruang ternyamanmu.
-              </p>
-            </div>
-            <div className="pt-3 border-t border-[var(--color-paper-border)] text-xs font-semibold text-[var(--color-accent)]">
-              60 Menit · Tatap Muka Daring
-            </div>
-          </div>
-
-          <div className="p-6 lg:p-7 bg-[var(--color-paper)] border border-[var(--color-paper-border)] hover:border-[var(--color-accent)] rounded-xl space-y-3 card-interactive group cursor-pointer hover:shadow-xl hover:-translate-y-2 transition-all duration-300 ease-out flex flex-col justify-between">
+          <div className="p-6 lg:p-7 bg-[var(--color-paper)] border border-[var(--color-paper-border)] rounded-xl space-y-3 card-interactive group flex flex-col justify-between">
             <div className="space-y-2">
               <h3 className="text-base font-semibold text-[var(--color-ink)] group-hover:text-[var(--color-accent)] transition-colors">
                 Chat Terjadwal
               </h3>
               <p className="text-sm text-[var(--color-ink-muted)] leading-relaxed">
-                Percakapan mendalam via perpesanan langsung bagi yang lebih nyaman menuliskan isi hati.
+                Percakapan mendalam via perpesanan langsung WhatsApp bagi yang lebih nyaman menuliskan isi hati.
               </p>
             </div>
             <div className="pt-3 border-t border-[var(--color-paper-border)] text-xs font-semibold text-[var(--color-accent)]">
@@ -56,10 +42,24 @@ export function ServicesSection() {
             </div>
           </div>
 
-          <div className="p-6 lg:p-7 bg-[var(--color-paper)] border border-[var(--color-paper-border)] hover:border-[var(--color-accent)] rounded-xl space-y-3 card-interactive group cursor-pointer hover:shadow-xl hover:-translate-y-2 transition-all duration-300 ease-out flex flex-col justify-between">
+          <div className="p-6 lg:p-7 bg-[var(--color-paper)] border border-[var(--color-paper-border)] rounded-xl space-y-3 card-interactive group flex flex-col justify-between">
             <div className="space-y-2">
               <h3 className="text-base font-semibold text-[var(--color-ink)] group-hover:text-[var(--color-accent)] transition-colors">
-                Tatap Muka Cirebon
+                Video Call via WhatsApp
+              </h3>
+              <p className="text-sm text-[var(--color-ink-muted)] leading-relaxed">
+                Diskusi interaktif langsung via video call WhatsApp privat dari ruang ternyamanmu.
+              </p>
+            </div>
+            <div className="pt-3 border-t border-[var(--color-paper-border)] text-xs font-semibold text-[var(--color-accent)]">
+              60 Menit · Tatap Muka Daring
+            </div>
+          </div>
+
+          <div className="p-6 lg:p-7 bg-[var(--color-paper)] border border-[var(--color-paper-border)] rounded-xl space-y-3 card-interactive group flex flex-col justify-between">
+            <div className="space-y-2">
+              <h3 className="text-base font-semibold text-[var(--color-ink)] group-hover:text-[var(--color-accent)] transition-colors">
+                Tatap Muka di Kampus
               </h3>
               <p className="text-sm text-[var(--color-ink-muted)] leading-relaxed">
                 Pertemuan luring di area kampus UIN Siber Syekh Nurjati Cirebon dengan kesepakatan waktu.

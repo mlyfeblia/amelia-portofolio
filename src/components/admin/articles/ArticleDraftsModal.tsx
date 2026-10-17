@@ -41,34 +41,21 @@ export function ArticleDraftsModal({
   currentDraftId,
 }: ArticleDraftsModalProps) {
   const mounted = useMounted();
-  const { isRendered, backdropClass, windowClass } = useModalAnimation({ isOpen });
-
   const drafts = useArticleDrafts();
   const [searchQuery, setSearchQuery] = useState('');
   const [draftToDelete, setDraftToDelete] = useState<ArticleDraftItem | null>(null);
+  const [cachedDraftToDelete, setCachedDraftToDelete] = useState<ArticleDraftItem | null>(draftToDelete);
+  if (draftToDelete && draftToDelete !== cachedDraftToDelete) {
+    setCachedDraftToDelete(draftToDelete);
+  }
+  const activeDraftToDelete = draftToDelete ?? cachedDraftToDelete;
 
-  // Lock body & document scroll and handle Escape key
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const originalBodyOverflow = document.body.style.overflow;
-    const originalHtmlOverflow = document.documentElement.style.overflow;
-    document.body.style.overflow = 'hidden';
-    document.documentElement.style.overflow = 'hidden';
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && !draftToDelete) {
-        onClose();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-
-    return () => {
-      document.body.style.overflow = originalBodyOverflow;
-      document.documentElement.style.overflow = originalHtmlOverflow;
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [isOpen, draftToDelete, onClose]);
+  const { isRendered, isExiting, backdropClass, windowClass } = useModalAnimation({
+    isOpen,
+    onClose,
+    closeOnEscape: !draftToDelete,
+    lockScroll: true,
+  });
 
   // Filter drafts by search query
   const filteredDrafts = useMemo(() => {
@@ -89,17 +76,17 @@ export function ArticleDraftsModal({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[10000] flex items-center justify-center p-2 min-[340px]:p-3 sm:p-6 overflow-hidden"
+      className={cn(
+        'fixed inset-0 z-[10000] flex items-center justify-center p-2 min-[340px]:p-3 sm:p-6 overflow-hidden select-none',
+        isExiting && 'pointer-events-none'
+      )}
       role="dialog"
       aria-modal="true"
       aria-labelledby="drafts-modal-title"
     >
       {/* Glassmorphic Backdrop Layer */}
       <div
-        className={cn(
-          'fixed inset-0 bg-transparent backdrop-blur-md touch-none select-none pointer-events-auto',
-          backdropClass
-        )}
+        className={cn(backdropClass)}
         aria-hidden="true"
         onClick={onClose}
         onWheel={(e) => e.preventDefault()}
@@ -333,15 +320,15 @@ export function ArticleDraftsModal({
       <ConfirmDecisionModal
         isOpen={Boolean(draftToDelete)}
         onClose={() => setDraftToDelete(null)}
-        onConfirm={() => {
-          if (draftToDelete) {
-            deleteDraft(draftToDelete.id);
+        onConfirm={async () => {
+          if (activeDraftToDelete) {
+            deleteDraft(activeDraftToDelete.id);
             setDraftToDelete(null);
           }
         }}
         title="Hapus Draf Artikel?"
         description={`Apakah Anda yakin ingin menghapus draf "${
-          draftToDelete?.title.trim() || 'Draf Tanpa Judul'
+          activeDraftToDelete?.title.trim() || 'Draf Tanpa Judul'
         }"? Tindakan ini akan menghapus draf dari penyimpanan lokal secara permanen.`}
         confirmLabel="Hapus Draf"
         cancelLabel="Batal"

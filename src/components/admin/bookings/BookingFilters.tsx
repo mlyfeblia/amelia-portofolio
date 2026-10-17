@@ -1,11 +1,10 @@
 'use client';
 
 import React from 'react';
-import { Search, X, Filter, Calendar } from 'lucide-react';
+import { Search, X, Filter, Calendar, ListFilter } from 'lucide-react';
 import { BookingStatus } from '@/types';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 
-const STATUS_TABS: { label: string; value: BookingStatus | 'semua' }[] = [
+const STATUS_OPTIONS: { label: string; value: BookingStatus | 'semua' }[] = [
   { label: 'Semua', value: 'semua' },
   { label: 'Menunggu', value: 'menunggu' },
   { label: 'Terkonfirmasi', value: 'terkonfirmasi' },
@@ -68,41 +67,38 @@ export function BookingFilters({
         )}
       </div>
 
-      {/* Status Tabs */}
-      <div className="pt-2 border-t border-[var(--color-paper-border)]">
-        <Tabs
-          value={statusFilter}
-          onValueChange={(val) => onStatusChange(val as BookingStatus | 'semua')}
-        >
-          <TabsList aria-label="Filter status janji temu">
-            {STATUS_TABS.map((tab) => {
-              const count = tab.value === 'semua' ? totalCount : statusCounts[tab.value] || 0;
+      {/* 3-Column Dropdown Filters: Status, Topik & Tanggal */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-2 border-t border-[var(--color-paper-border)] text-xs">
+        {/* Status Dropdown */}
+        <div className="flex items-center gap-2 bg-[var(--color-paper)] px-3 py-1.5 rounded-xl border border-[var(--color-paper-border)]">
+          <ListFilter className="w-3.5 h-3.5 text-[var(--color-ink-muted)] shrink-0" />
+          <select
+            value={statusFilter}
+            onChange={(e) => onStatusChange(e.target.value as BookingStatus | 'semua')}
+            className="w-full bg-transparent text-xs text-[var(--color-ink)] focus:outline-none cursor-pointer"
+            aria-label="Filter status janji temu"
+          >
+            {STATUS_OPTIONS.map((opt) => {
+              const count = opt.value === 'semua' ? totalCount : statusCounts[opt.value] || 0;
               return (
-                <TabsTrigger
-                  key={tab.value}
-                  value={tab.value}
-                  badge={
-                    <span
-                      className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
-                        statusFilter === tab.value
-                          ? 'bg-white/20 text-white font-bold'
-                          : 'bg-[var(--color-paper-muted)] text-[var(--color-ink-muted)]'
-                      }`}
-                    >
-                      {count}
-                    </span>
-                  }
-                >
-                  {tab.label}
-                </TabsTrigger>
+                <option key={opt.value} value={opt.value}>
+                  Status: {opt.label} ({count})
+                </option>
               );
             })}
-          </TabsList>
-        </Tabs>
-      </div>
+          </select>
+          {statusFilter !== 'semua' && (
+            <button
+              onClick={() => onStatusChange('semua')}
+              className="text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] p-0.5 cursor-pointer"
+              title="Reset status ke Semua"
+              type="button"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
 
-      {/* Secondary Filters: Topik & Tanggal Dropdowns */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2 border-t border-[var(--color-paper-border)] text-xs">
         {/* Category Dropdown */}
         <div className="flex items-center gap-2 bg-[var(--color-paper)] px-3 py-1.5 rounded-xl border border-[var(--color-paper-border)]">
           <Filter className="w-3.5 h-3.5 text-[var(--color-ink-muted)] shrink-0" />
@@ -110,6 +106,7 @@ export function BookingFilters({
             value={categoryFilter}
             onChange={(e) => onCategoryChange(e.target.value)}
             className="w-full bg-transparent text-xs text-[var(--color-ink)] focus:outline-none cursor-pointer"
+            aria-label="Filter topik konseling"
           >
             {categories.map((cat) => (
               <option key={cat} value={cat}>
@@ -136,6 +133,7 @@ export function BookingFilters({
             value={dateFilter}
             onChange={(e) => onDateChange(e.target.value)}
             className="w-full bg-transparent text-xs text-[var(--color-ink)] focus:outline-none cursor-pointer"
+            aria-label="Filter tanggal janji temu"
           >
             <option value="">Tanggal: Semua</option>
             {availableDates.map((item) => (

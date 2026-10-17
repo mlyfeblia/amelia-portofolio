@@ -57,6 +57,25 @@ describe('Core UX & Interactive Features Verification', () => {
       expect(pillsBody).not.toContain('rounded-full');
       expect(pillsBody).not.toContain('min-h-[44px]');
     });
+
+    it('attaches non-passive native wheel listener with e.preventDefault to prevent dual-scroll on desktop', () => {
+      expect(tabsContent).toContain("addEventListener('wheel', onNativeWheel, { passive: false })");
+      expect(tabsContent).toContain('e.preventDefault()');
+      expect(tabsContent).toContain('overscroll-x-contain');
+    });
+  });
+
+  describe('ArticleEditorToolbar.tsx wheel scroll isolation', () => {
+    const toolbarContent = fs.readFileSync(
+      path.resolve(process.cwd(), 'src/components/admin/articles/form/ArticleEditorToolbar.tsx'),
+      'utf-8'
+    );
+
+    it('uses non-passive wheel listener with e.preventDefault and overscroll-x-contain', () => {
+      expect(toolbarContent).toContain("addEventListener('wheel', onNativeWheel, { passive: false })");
+      expect(toolbarContent).toContain('e.preventDefault()');
+      expect(toolbarContent).toContain('overscroll-x-contain');
+    });
   });
 
   describe('ArticlesDirectory.tsx divider and search stabilization', () => {
@@ -136,4 +155,163 @@ describe('Core UX & Interactive Features Verification', () => {
       expect(bookingSectionContent).toMatch(/focusAndScrollToField\(`\$\{formId\}-date`\)/);
     });
   });
+
+  describe('Footer Web App Install Button & PWA Integration', () => {
+    const footerContent = fs.readFileSync(
+      path.resolve(process.cwd(), 'src/components/Footer.tsx'),
+      'utf-8'
+    );
+    const installBtnContent = fs.readFileSync(
+      path.resolve(process.cwd(), 'src/components/FooterInstallButton.tsx'),
+      'utf-8'
+    );
+
+    it('Footer.tsx renders FooterInstallButton component instead of dead anchor link', () => {
+      expect(footerContent).toContain('import FooterInstallButton from');
+      expect(footerContent).toContain('<FooterInstallButton />');
+      expect(footerContent).not.toContain('href="/#app-showcase"');
+    });
+
+    it('FooterInstallButton.tsx wires directly to triggerPwaInstall and openInstalledInfoModal', () => {
+      expect(installBtnContent).toContain('triggerPwaInstall');
+      expect(installBtnContent).toContain('openInstalledInfoModal');
+      expect(installBtnContent).toContain('usePwa');
+      expect(installBtnContent).toContain('cursor-pointer');
+      expect(installBtnContent).toContain('select-none');
+    });
+  });
+
+  describe('Scroll Isolation & Dual-Scroll Prevention Architecture', () => {
+    const scrollProviderContent = fs.readFileSync(
+      path.resolve(process.cwd(), 'src/components/ScrollRestorationProvider.tsx'),
+      'utf-8'
+    );
+    const globalsCssContent = fs.readFileSync(
+      path.resolve(process.cwd(), 'src/app/globals.css'),
+      'utf-8'
+    );
+    const textareaUiContent = fs.readFileSync(
+      path.resolve(process.cwd(), 'src/components/ui/Textarea.tsx'),
+      'utf-8'
+    );
+
+    it('ScrollRestorationProvider registers non-passive wheel interceptor for textareas and scroll-isolated containers', () => {
+      expect(scrollProviderContent).toContain("window.addEventListener('wheel', handleGlobalWheel, { passive: false })");
+      expect(scrollProviderContent).toContain("target.closest('textarea')");
+      expect(scrollProviderContent).toContain('textarea.scrollHeight - textarea.clientHeight');
+      expect(scrollProviderContent).toContain('textarea.scrollTop += delta');
+      expect(scrollProviderContent).toContain('e.preventDefault()');
+      expect(scrollProviderContent).toContain('.scroll-isolated');
+    });
+
+    it('globals.css applies overscroll-behavior contain to textarea and .scroll-isolated', () => {
+      expect(globalsCssContent).toContain('overscroll-behavior: contain;');
+      expect(globalsCssContent).toContain('overscroll-behavior-y: contain;');
+    });
+
+    it('ui/Textarea.tsx contains scroll-isolated, overscroll-contain, cursor-text, and select-text', () => {
+      expect(textareaUiContent).toContain('overscroll-contain');
+      expect(textareaUiContent).toContain('scroll-isolated');
+      expect(textareaUiContent).toContain('cursor-text');
+      expect(textareaUiContent).toContain('select-text');
+    });
+  });
+
+  describe('Contextual Cursors and Text Selection Hygiene', () => {
+    const globalsCssContent = fs.readFileSync(
+      path.resolve(process.cwd(), 'src/app/globals.css'),
+      'utf-8'
+    );
+
+    it('globals.css maps pointer cursor to all clickable controls', () => {
+      expect(globalsCssContent).toContain('cursor: pointer;');
+      expect(globalsCssContent).toContain('input[type="checkbox"]');
+      expect(globalsCssContent).toContain('input[type="radio"]');
+      expect(globalsCssContent).toContain('.chip-interactive');
+    });
+
+    it('globals.css maps cursor-text to inputs and textareas', () => {
+      expect(globalsCssContent).toContain('cursor: text;');
+      expect(globalsCssContent).toContain('input[type="text"]');
+      expect(globalsCssContent).toContain('textarea');
+    });
+
+    it('globals.css enforces cursor: not-allowed on disabled elements', () => {
+      expect(globalsCssContent).toContain('cursor: not-allowed !important;');
+      expect(globalsCssContent).toContain('button:disabled');
+      expect(globalsCssContent).toContain('[aria-disabled="true"]');
+    });
+
+    it('globals.css enforces strict user-select: none on UI controls and children', () => {
+      expect(globalsCssContent).toContain('button,');
+      expect(globalsCssContent).toContain('button *,');
+      expect(globalsCssContent).toContain('[role="button"],');
+      expect(globalsCssContent).toContain('[role="tab"],');
+      expect(globalsCssContent).toContain('.chip-interactive,');
+      expect(globalsCssContent).toContain('user-select: none;');
+    });
+
+    it('globals.css guarantees user-select: text on articles, reading typography, and curhat answers', () => {
+      expect(globalsCssContent).toContain('article,');
+      expect(globalsCssContent).toContain('.prose,');
+      expect(globalsCssContent).toContain('.curhat-content,');
+      expect(globalsCssContent).toContain('.curhat-answer,');
+      expect(globalsCssContent).toContain('user-select: text;');
+    });
+  });
+
+  describe('FormErrorMessage Manual Dismiss and Auto-Dismiss Architecture', () => {
+    const formErrorContent = fs.readFileSync(
+      path.resolve(process.cwd(), 'src/components/ui/FormErrorMessage.tsx'),
+      'utf-8'
+    );
+    const bookingSectionContent = fs.readFileSync(
+      path.resolve(process.cwd(), 'src/components/BookingSection.tsx'),
+      'utf-8'
+    );
+    const curhatFormContent = fs.readFileSync(
+      path.resolve(process.cwd(), 'src/components/counseling/CurhatForm.tsx'),
+      'utf-8'
+    );
+    const bookingTrackerContent = fs.readFileSync(
+      path.resolve(process.cwd(), 'src/components/booking/BookingTracker.tsx'),
+      'utf-8'
+    );
+
+    it('FormErrorMessage provides manual close button with X icon and smooth exit animation', () => {
+      expect(formErrorContent).toContain('onClick={startExit}');
+      expect(formErrorContent).toContain('aria-label="Tutup pesan peringatan"');
+      expect(formErrorContent).toContain('<X className="w-4 h-4"');
+      expect(formErrorContent).toContain('form-error-enter');
+      expect(formErrorContent).toContain('form-error-exit');
+      expect(formErrorContent).toContain('formErrorProgress');
+    });
+
+    it('FormErrorMessage supports autoDismissMs timer with pause on hover', () => {
+      expect(formErrorContent).toContain('autoDismissMs = 6000');
+      expect(formErrorContent).toContain('onMouseEnter={() => setIsHovered(true)}');
+      expect(formErrorContent).toContain('onMouseLeave={() => setIsHovered(false)}');
+      expect(formErrorContent).toContain('setTimeout');
+      expect(formErrorContent).toContain('clearTimeout');
+    });
+
+    it('BookingSection.tsx uses FormErrorMessage and clears error on input change', () => {
+      expect(bookingSectionContent).toContain('import { FormErrorMessage } from');
+      expect(bookingSectionContent).toContain('<FormErrorMessage');
+      expect(bookingSectionContent).toContain("if (error) setError('');");
+    });
+
+    it('CurhatForm.tsx uses FormErrorMessage and clears error on input edit', () => {
+      expect(curhatFormContent).toContain('import { FormErrorMessage } from');
+      expect(curhatFormContent).toContain('<FormErrorMessage');
+      expect(curhatFormContent).toContain("if (sendError) setSendError('');");
+    });
+
+    it('BookingTracker.tsx uses FormErrorMessage for consistent dismissible alerts', () => {
+      expect(bookingTrackerContent).toContain('import { FormErrorMessage } from');
+      expect(bookingTrackerContent).toContain('<FormErrorMessage');
+    });
+  });
 });
+
+

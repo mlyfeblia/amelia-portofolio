@@ -50,31 +50,12 @@ export function Modal({
   const descId = `${modalId}-desc`;
   const windowRef = useRef<HTMLDivElement>(null);
 
-  const { isRendered, backdropClass, windowClass } = useModalAnimation({ isOpen });
-
-  // Body & document scroll lock & Escape listener
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const originalBodyOverflow = document.body.style.overflow;
-    const originalHtmlOverflow = document.documentElement.style.overflow;
-    document.body.style.overflow = 'hidden';
-    document.documentElement.style.overflow = 'hidden';
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && closeOnEscape) {
-        onClose();
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-
-    return () => {
-      document.body.style.overflow = originalBodyOverflow;
-      document.documentElement.style.overflow = originalHtmlOverflow;
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [isOpen, closeOnEscape, onClose]);
+  const { isRendered, isExiting, backdropClass, windowClass } = useModalAnimation({
+    isOpen,
+    onClose,
+    closeOnEscape,
+    lockScroll: true,
+  });
 
   // Focus trap / focus restoration
   useEffect(() => {
@@ -98,14 +79,11 @@ export function Modal({
       aria-modal="true"
       aria-labelledby={title ? titleId : undefined}
       aria-describedby={description ? descId : undefined}
-      className={cn('fixed inset-0 flex items-center justify-center p-3 sm:p-5', zIndex)}
+      className={cn('fixed inset-0 flex items-center justify-center p-3 sm:p-5 overflow-hidden select-none', zIndex, isExiting && 'pointer-events-none')}
     >
       {/* Backdrop */}
       <div
-        className={cn(
-          'fixed inset-0 bg-[var(--color-ink)]/50 backdrop-blur-sm transition-opacity duration-200',
-          backdropClass
-        )}
+        className={cn(backdropClass)}
         onClick={closeOnBackdropClick ? onClose : undefined}
         aria-hidden="true"
       />
@@ -116,7 +94,7 @@ export function Modal({
         className={cn(
           'relative w-full bg-[var(--color-surface)] border border-[var(--color-paper-border)]',
           'rounded-2xl sm:rounded-3xl shadow-xl overflow-hidden flex flex-col',
-          'max-h-[90vh] transition-all duration-200',
+          'max-h-[90vh]',
           SIZE_MAP[size],
           windowClass,
           className
@@ -215,7 +193,10 @@ export const ModalContent = forwardRef<HTMLDivElement, React.HTMLAttributes<HTML
     return (
       <div
         ref={ref}
-        className={cn('px-5 sm:px-6 py-3 overflow-y-auto no-scrollbar space-y-4 flex-1', className)}
+        className={cn(
+          'px-5 sm:px-6 py-3 overflow-y-auto no-scrollbar space-y-4 flex-1 scroll-isolated modal-scroll-body overscroll-contain selectable-text',
+          className
+        )}
         {...props}
       >
         {children}

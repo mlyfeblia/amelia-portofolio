@@ -1,3 +1,5 @@
+import { seededShuffle } from '@/lib/prng';
+
 export type DimensionKey = 'pikiran' | 'emosi' | 'spiritual' | 'sosial';
 
 export interface AssessmentDimension {
@@ -90,6 +92,32 @@ export const assessmentQuestions: AssessmentQuestion[] = [
       { text: 'Lumpuh secara mental (analysis paralysis), panik berlebih, dan merasa tak sanggup menentukan arah.', score: 0 },
     ],
   },
+  {
+    id: 9,
+    dimensionKey: 'pikiran',
+    dimensionName: 'Ritme Pikiran & Beban Kognitif',
+    context: 'Kualitas Istirahat & Keheningan Malam',
+    question: 'Ketika tiba waktu istirahat malam hari, bagaimana kondisi alur pikiranmu menjelang tidur?',
+    options: [
+      { text: 'Pikiran tenang, mudah terlelap tanpa beban pikiran mengganggu, dan bangun dengan rasa segar.', score: 3 },
+      { text: 'Sesekali mengingat agenda esok hari sebentar, namun tetap bisa tidur cukup dan nyenyak.', score: 2 },
+      { text: 'Kerap terjaga lama karena overthinking, memikirkan kesalahan masa lalu atau rasa cemas.', score: 1 },
+      { text: 'Insomnia parah, pikiran berputar tanpa henti sepanjang malam, dan bangun dalam keadaan lelah luar biasa.', score: 0 },
+    ],
+  },
+  {
+    id: 10,
+    dimensionKey: 'pikiran',
+    dimensionName: 'Ritme Pikiran & Beban Kognitif',
+    context: 'Beban Multi-Tugas & Ekspektasi Diri',
+    question: 'Bagaimana caramu mengelola tumpukan ekspektasi dan target tanggung jawab yang datang bersamaan?',
+    options: [
+      { text: 'Mampu menyusun prioritas dengan realistis, mencicil satu per satu tanpa panik, dan menerima keterbatasan diri.', score: 3 },
+      { text: 'Cukup adaptif, walau kadang terasa agak kewalahan di awal sebelum menemukan ritme kerja.', score: 2 },
+      { text: 'Mudah panik, menumpuk semua beban di kepala sekaligus hingga bingung harus mulai dari mana.', score: 1 },
+      { text: 'Merasa lumpuh dan ingin melarikan diri dari kenyataan karena tekanan terasa menenggelamkan.', score: 0 },
+    ],
+  },
 
   // ── Dimensi 2: Emosi & Resiliensi ──────────────────────────────────────────
   {
@@ -116,6 +144,32 @@ export const assessmentQuestions: AssessmentQuestion[] = [
       { text: 'Fluktuatif secara wajar; rasa lelah di sore hari lekas pulih setelah istirahat sejenak.', score: 2 },
       { text: 'Sering mengalami kelelahan emosional (emotional exhaustion), hampa, atau kehilangan minat.', score: 1 },
       { text: 'Burnout berat, merasa tertekan sejak bangun tidur, dan merasa kehabisan daya emosional sama sekali.', score: 0 },
+    ],
+  },
+  {
+    id: 11,
+    dimensionKey: 'emosi',
+    dimensionName: 'Stabilitas Emosi & Resiliensi Diri',
+    context: 'Validasi Rasa Sedih & Kerentanan Diri',
+    question: 'Saat rasa sedih, lelah, atau kecewa hadir, bagaimana sikap batinmu terhadap perasaan tersebut?',
+    options: [
+      { text: 'Menerima dan memvalidasi perasaan itu dengan penuh welas asih (self-compassion) tanpa merasa bersalah.', score: 3 },
+      { text: 'Bisa merasakan kesedihan dengan wajar, lalu mencari ruang jeda yang menenangkan untuk memulihkan diri.', score: 2 },
+      { text: 'Kerap memendam atau memaksakan diri terlihat baik-baik saja (toxic positivity) hingga emosi menumpuk.', score: 1 },
+      { text: 'Membenci diri sendiri saat merasa lemah, menyalahkan diri, atau mematikan rasa secara total (numbness).', score: 0 },
+    ],
+  },
+  {
+    id: 12,
+    dimensionKey: 'emosi',
+    dimensionName: 'Stabilitas Emosi & Resiliensi Diri',
+    context: 'Kecemasan Terhadap Masa Depan',
+    question: 'Seberapa sering kamu merasakan kekhawatiran intens atau rasa takut berlebih akan hal-hal yang belum terjadi?',
+    options: [
+      { text: 'Sangat jarang; yakin bahwa ikhtiar terbaik hari ini adalah bekal terpenting untuk masa depan.', score: 3 },
+      { text: 'Kadang muncul kekhawatiran sesaat, namun bisa ditenangkan dengan afirmasi positif dan rencana terukur.', score: 2 },
+      { text: 'Sering merasa cemas dan tegang tiba-tiba, dada berdebar memikirkan ketidakpastian hari esok.', score: 1 },
+      { text: 'Kecemasan konstan mendominasi keseharian, membuat tubuh tegang terus-menerus dan sulit rileks.', score: 0 },
     ],
   },
 
@@ -146,6 +200,32 @@ export const assessmentQuestions: AssessmentQuestion[] = [
       { text: 'Menolak realitas dengan kemarahan batin, merasa tidak berharga, dan kehilangan makna arah hidup.', score: 0 },
     ],
   },
+  {
+    id: 13,
+    dimensionKey: 'spiritual',
+    dimensionName: "Kedamaian Batin & Spiritualitas (Thuma'ninah)",
+    context: 'Doa, Harapan & Kepasrahan (Tawakal)',
+    question: 'Ketika mengalami kebuntuan hidup, bagaimana hubungan batinmu dalam memanjatkan doa dan berserah diri?',
+    options: [
+      { text: 'Menjadikan doa sebagai tempat bersandar ternyaman, meyakini takdir Allah selalu menyimpan kebaikan.', score: 3 },
+      { text: 'Tetap berdoa dan berikhtiar dengan harapan baik, meski sesekali ada rasa gelisah yang wajar.', score: 2 },
+      { text: 'Merasa doa kurang bermakna atau mulai meragukan apakah pertolongan akan datang pada waktunya.', score: 1 },
+      { text: 'Merasa ditinggalkan, putus asa dari rahmat Allah, atau enggan meminta pertolongan karena batin hampa.', score: 0 },
+    ],
+  },
+  {
+    id: 14,
+    dimensionKey: 'spiritual',
+    dimensionName: "Kedamaian Batin & Spiritualitas (Thuma'ninah)",
+    context: 'Rasa Syukur & Keberkahan Hidup',
+    question: 'Di tengah rutinitas harian yang padat, seberapa mudah bagimu menemukan rasa syukur atas hal-hal sederhana?',
+    options: [
+      { text: 'Sangat mudah merasakan nikmat kecil (udara segar, nafas lega, kebaikan orang lain) yang menyejukkan hati.', score: 3 },
+      { text: 'Bisa bersyukur saat diingatkan atau saat memiliki waktu luang untuk merenung di penghujung hari.', score: 2 },
+      { text: 'Fokus lebih sering tertuju pada kekurangan dan rasa tidak puas dibanding apa yang sudah dimiliki.', score: 1 },
+      { text: 'Hati terasa keras dan kering; sulit merasakan getaran syukur sedikit pun karena tertutup kepedihan batin.', score: 0 },
+    ],
+  },
 
   // ── Dimensi 4: Sosial & Batasan Diri ───────────────────────────────────────
   {
@@ -172,6 +252,32 @@ export const assessmentQuestions: AssessmentQuestion[] = [
       { text: 'Bisa menetapkan batas dalam banyak situasi, walau sesekali masih sungkan atau memaksakan diri.', score: 2 },
       { text: 'Sangat sulit berkata tidak (people pleasing); kerap mengorbankan waktu dan ketenangan diri demi diterima orang lain.', score: 1 },
       { text: 'Selalu mendahulukan orang lain hingga mengorbankan kesehatan fisik dan jiwa sendiri secara terus-menerus.', score: 0 },
+    ],
+  },
+  {
+    id: 15,
+    dimensionKey: 'sosial',
+    dimensionName: 'Relasi Sosial & Batasan Diri (Boundaries)',
+    context: 'Perbandingan Sosial & Lingkungan Digital',
+    question: 'Bagaimana perasaanmu saat melihat pencapaian atau gaya hidup orang lain di media sosial maupun lingkungan sekitar?',
+    options: [
+      { text: 'Turut berbahagia (ghibthah) tanpa merasa rendah diri, sadar setiap orang memiliki garis waktu masing-masing.', score: 3 },
+      { text: 'Kadang terdistraksi membandingkan diri sebentar, namun lekas sadar dan kembali fokus pada proses sendiri.', score: 2 },
+      { text: 'Kerap merasa tertinggal (FOMO), minder, dan cemas bahwa diri ini berjalan terlalu lambat.', score: 1 },
+      { text: 'Tenggelam dalam inferioritas mendalam, membenci diri sendiri, dan menarik diri dari interaksi sosial.', score: 0 },
+    ],
+  },
+  {
+    id: 16,
+    dimensionKey: 'sosial',
+    dimensionName: 'Relasi Sosial & Batasan Diri (Boundaries)',
+    context: 'Kenyamanan Menjadi Diri Sendiri',
+    question: 'Sejauh mana kamu merasa aman dan nyaman mengekspresikan diri apa adanya di hadapan lingkaran pertemananmu?',
+    options: [
+      { text: 'Sangat nyaman dan dihargai apa adanya tanpa perlu memakai topeng atau pura-pura sempurna.', score: 3 },
+      { text: 'Cukup nyaman di lingkaran inti terdekat, walau masih menjaga jarak di lingkungan baru.', score: 2 },
+      { text: 'Kerap merasa harus selalu menyenangkan orang lain dan takut ditolak jika menunjukkan kelemahan.', score: 1 },
+      { text: 'Merasa tidak ada tempat yang aman, selalu berpura-pura, dan merasa terasing meski berada di kerumunan.', score: 0 },
     ],
   },
 ];
@@ -226,25 +332,54 @@ export interface DimensionScoreResult {
   advice: string;
 }
 
-export function computeDimensionScores(answers: number[]): DimensionScoreResult[] {
+/**
+ * Samples exactly 8 questions (2 per dimension) deterministically using seed
+ */
+export function sampleAssessmentQuestions(seed?: string | number): AssessmentQuestion[] {
+  const prngSeed = seed ?? 'default-assessment-seed';
+  const keys: DimensionKey[] = ['pikiran', 'emosi', 'spiritual', 'sosial'];
+  const sampled: AssessmentQuestion[] = [];
+
+  keys.forEach((key) => {
+    const dimQuestions = assessmentQuestions.filter((q) => q.dimensionKey === key);
+    const shuffled = seededShuffle(dimQuestions, `${prngSeed}_dim_${key}`);
+    sampled.push(...shuffled.slice(0, 2));
+  });
+
+  const finalQuestions = seededShuffle(sampled, `${prngSeed}_final`);
+
+  // Shuffle options inside each question deterministically to eliminate acquiescence/position bias
+  return finalQuestions.map((q) => ({
+    ...q,
+    options: seededShuffle(q.options, `${prngSeed}_q_${q.id}_opts`),
+  }));
+}
+
+/**
+ * Calculate dimension scores based on a map of question IDs to selected scores.
+ * Independent of question order.
+ */
+export function computeDimensionScoresById(
+  answersById: Record<number, number>,
+  activeQuestions: AssessmentQuestion[]
+): DimensionScoreResult[] {
   const dimensionKeys: DimensionKey[] = ['pikiran', 'emosi', 'spiritual', 'sosial'];
 
   return dimensionKeys.map((key) => {
     const meta = ASSESSMENT_DIMENSIONS[key];
-    const relatedQuestions = assessmentQuestions.filter((q) => q.dimensionKey === key);
+    const relatedQuestions = activeQuestions.filter((q) => q.dimensionKey === key);
     let score = 0;
     const maxScore = relatedQuestions.length * 3;
 
     relatedQuestions.forEach((q) => {
-      const qIndex = assessmentQuestions.findIndex((item) => item.id === q.id);
-      if (qIndex >= 0 && answers[qIndex] !== undefined) {
-        score += answers[qIndex];
+      const val = answersById[q.id];
+      if (typeof val === 'number') {
+        score += val;
       }
     });
 
     const percentage = maxScore > 0 ? Math.round((score / maxScore) * 100) : 0;
     let status: 'optimal' | 'moderate' | 'need_attention' = 'moderate';
-    let advice = '';
 
     if (percentage >= 75) {
       status = 'optimal';
@@ -254,7 +389,7 @@ export function computeDimensionScores(answers: number[]): DimensionScoreResult[
       status = 'need_attention';
     }
 
-    // Dimension-specific targeted advice
+    let advice = '';
     switch (key) {
       case 'pikiran':
         advice =
@@ -301,4 +436,143 @@ export function computeDimensionScores(answers: number[]): DimensionScoreResult[
       advice,
     };
   });
+}
+
+/**
+ * Backward compatibility wrapper for array-indexed answers
+ */
+export function computeDimensionScores(answers: number[]): DimensionScoreResult[] {
+  const answersById: Record<number, number> = {};
+  const first8 = assessmentQuestions.slice(0, 8);
+  first8.forEach((q, idx) => {
+    if (answers[idx] !== undefined) {
+      answersById[q.id] = answers[idx];
+    }
+  });
+  return computeDimensionScoresById(answersById, first8);
+}
+
+export interface AssessmentSuggestionResult {
+  lowestDimension: DimensionScoreResult;
+  recommendedTopic: string;
+  categoryFilter: string;
+  relatedArticles: Array<{ title: string; slug: string; category: string; readTime: string }>;
+  whatsappNote: string;
+  offeringHeadline: string;
+  offeringMessage: string;
+}
+
+export function getAssessmentSuggestions(
+  dimensions: DimensionScoreResult[]
+): AssessmentSuggestionResult {
+  const urgencyWeight: Record<DimensionKey, number> = {
+    emosi: 4,
+    pikiran: 3,
+    spiritual: 2,
+    sosial: 1,
+  };
+
+  const sorted = [...dimensions].sort((a, b) => {
+    if (a.percentage !== b.percentage) {
+      return a.percentage - b.percentage;
+    }
+    return (urgencyWeight[b.key] || 0) - (urgencyWeight[a.key] || 0);
+  });
+  const lowest = sorted[0] || dimensions[0];
+
+  switch (lowest.key) {
+    case 'pikiran':
+      return {
+        lowestDimension: lowest,
+        recommendedTopic: 'Kecemasan & Overthinking',
+        categoryFilter: 'Manajemen Emosi & Overthinking',
+        relatedArticles: [
+          {
+            title: "Terlalu Cemas Memikirkan Hari Esok? Melatih 'Mindful Action' untuk Meringankan Beban Kepala",
+            slug: 'easing-future-anxiety-with-mindful-action',
+            category: 'Manajemen Emosi & Overthinking',
+            readTime: '6 menit baca',
+          },
+          {
+            title: 'Menavigasi Quarter-Life Crisis dengan Perspektif Islam dan Refleksi Maqashid Hidup',
+            slug: 'navigating-quarter-life-crisis-islamic-perspective',
+            category: 'Quarter-Life Crisis & Self Growth',
+            readTime: '6 menit baca',
+          },
+        ],
+        whatsappNote: 'Halo Amel, saya telah menyelesaikan asesmen jiwa. Dimensi Pikiran & Kognitif saya membutuhkan perhatian khusus. Saya ingin konsultasi terkait manajemen overthinking.',
+        offeringHeadline: 'Urai Benang Kusut Pikiran Bersama Teman Sebaya',
+        offeringMessage: 'Saat pikiran terasa bising dan sulit dipilah sendiri, memiliki teman dengar yang objektif dan hangat dapat membantu menata kembali kejernihan mentalmu.',
+      };
+    case 'emosi':
+      return {
+        lowestDimension: lowest,
+        recommendedTopic: 'Manajemen Stres, Emosi & Burnout',
+        categoryFilter: 'Manajemen Emosi & Overthinking',
+        relatedArticles: [
+          {
+            title: 'Panduan Praktis Regulasi Emosi Saat Didera Tekanan Hidup: Menjinakkan Marah dan Sedih Secara Sehat',
+            slug: 'emotional-regulation-techniques-for-stress',
+            category: 'Manajemen Emosi & Overthinking',
+            readTime: '5 menit baca',
+          },
+          {
+            title: 'Langkah Praktis Mengatasi Academic Burnout dan Rasa Bersalah Saat Istirahat bagi Mahasiswa',
+            slug: 'overcoming-academic-burnout-student-guide',
+            category: 'Kesehatan Mental Islami',
+            readTime: '6 menit baca',
+          },
+        ],
+        whatsappNote: 'Halo Amel, hasil asesmen menunjukkan stabilitas emosi dan energi mental saya sedang di titik lelah. Saya butuh sesi konseling untuk memulihkan resiliensi diri.',
+        offeringHeadline: 'Beri Ruang Istirahat Bagi Hatimu yang Lelah',
+        offeringMessage: 'Kamu tidak harus selalu terlihat tegar setiap saat. Di ruang konseling Amelia, semua rasa sedih dan lelahmu diterima seutuhnya tanpa penghakiman.',
+      };
+    case 'spiritual':
+      return {
+        lowestDimension: lowest,
+        recommendedTopic: 'Pengembangan Diri & Spiritual Islami',
+        categoryFilter: 'Kesehatan Mental Islami',
+        relatedArticles: [
+          {
+            title: "Konsep Istirahat Berkualitas dan Thuma'ninah dalam Tradisi Kesehatan Mental Islam",
+            slug: 'rest-and-mindfulness-in-islamic-tradition',
+            category: 'Kesehatan Mental Islami',
+            readTime: '6 menit baca',
+          },
+          {
+            title: 'Menyembuhkan Luka Batin Masa Kecil (Inner Child) dengan Kehangatan Spiritualitas dan Belas Kasih Diri',
+            slug: 'reconciling-inner-child-islamic-healing',
+            category: 'Kesehatan Mental Islami',
+            readTime: '5 menit baca',
+          },
+        ],
+        whatsappNote: 'Halo Amel, hasil asesmen menunjukkan ruang spiritualitas dan kedamaian batin saya sedang hampa. Saya ingin berkonsultasi mengenai konseling islami.',
+        offeringHeadline: 'Sentuhan Kesejukan Batin & Islamic Healing',
+        offeringMessage: 'Pendekatan bimbingan islami Amelia berfokus merawat hati dengan dzikir, penerimaan takdir (ridha), dan membangun kembali harapan kepada Allah.',
+      };
+    case 'sosial':
+    default:
+      return {
+        lowestDimension: lowest,
+        recommendedTopic: 'Pertemanan, Sosial & People Pleaser',
+        categoryFilter: 'Hubungan, Pertemanan & Pasangan',
+        relatedArticles: [
+          {
+            title: 'Seni Menolak Tanpa Merasa Bersalah: Belajar Menetapkan Batasan Diri yang Sehat bagi People Pleaser',
+            slug: 'art-of-saying-no-people-pleaser-boundaries',
+            category: 'Hubungan, Pertemanan & Pasangan',
+            readTime: '5 menit baca',
+          },
+          {
+            title: 'Seni Menjinakkan Kecemasan Sosial dan Membangun Rasa Percaya Diri di Lingkungan Kampus',
+            slug: 'managing-social-anxiety-campus-life',
+            category: 'Hubungan, Pertemanan & Pasangan',
+            readTime: '5 menit baca',
+          },
+        ],
+        whatsappNote: 'Halo Amel, hasil asesmen menunjukkan dimensi sosial dan batasan diri saya butuh perhatian. Saya ingin berkonsultasi terkait relasi dan people pleasing.',
+        offeringHeadline: 'Bangun Relasi Sehat yang Menghargai Batasan Dirimu',
+        offeringMessage: 'Belajar menetapkan batas yang aman tanpa rasa bersalah berlebih adalah bentuk cinta pada diri sendiri. Mari urai dinamika relasimu di ruang privat bersama Amel.',
+      };
+  }
 }

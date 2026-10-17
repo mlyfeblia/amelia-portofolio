@@ -5,7 +5,7 @@ import { Calendar } from 'lucide-react';
 export function ServicesCta() {
   return (
     <section
-      className="p-8 bg-[var(--color-surface)] border border-[var(--color-paper-border)] rounded-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6 card-interactive"
+      className="p-8 bg-[var(--color-surface)] border border-[var(--color-paper-border)] rounded-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6"
       data-reveal
     >
       <div className="space-y-1">

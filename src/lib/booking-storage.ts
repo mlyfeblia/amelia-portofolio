@@ -96,6 +96,19 @@ export function saveDeviceBooking(entry: {
     if (!cleanCode) return;
 
     const existing = getDeviceBookings();
+    const first = existing[0];
+    if (
+      first &&
+      first.code.toUpperCase() === cleanCode &&
+      (first.name || '') === (entry.name || '') &&
+      (first.category || '') === (entry.category || '') &&
+      (first.date || '') === (entry.date || '') &&
+      (first.timeSlot || '') === (entry.timeSlot || '')
+    ) {
+      // Record is already at the top with identical data, skip writing and subscriber notifications
+      return;
+    }
+
     // Remove if already exists to move it to the top
     const filtered = existing.filter((b) => b.code.toUpperCase() !== cleanCode);
 

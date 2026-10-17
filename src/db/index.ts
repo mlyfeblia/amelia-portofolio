@@ -16,9 +16,10 @@ const globalForDb = globalThis as unknown as {
 // In Vercel Serverless, instances scale horizontally. Limiting each lambda to 1 connection
 // prevents exhausting pool limits on Supabase / Neon / PgBouncer.
 const isServerless = !!process.env.VERCEL;
+const isBuild = process.env.NEXT_PHASE === 'phase-production-build';
 const maxConnections = process.env.DB_MAX_CONNECTIONS
   ? parseInt(process.env.DB_MAX_CONNECTIONS, 10)
-  : (isServerless ? 1 : 10);
+  : (isServerless || isBuild ? 2 : 10);
 
 const connectionString = env.DATABASE_URL;
 
@@ -39,7 +40,7 @@ export const conn = isDatabaseConfigured
      }))
   : undefined;
 
-if (process.env.NODE_ENV !== 'production' && conn) {
+if (conn) {
   globalForDb.conn = conn;
 }
 

@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useRef } from 'react';
 import { BookOpen, Plus, SearchX, RotateCcw } from 'lucide-react';
 import { Article } from '@/types';
 import { ArticleCard } from './ArticleCard';
@@ -148,8 +148,17 @@ export function ArticleList({
     );
   }
 
+  const listTopRef = useRef<HTMLDivElement>(null);
+
+  const handlePageChange = (newPage: number) => {
+    onPageChange?.(newPage);
+    if (listTopRef.current) {
+      listTopRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
   return (
-    <div className="space-y-4">
+    <div ref={listTopRef} className="space-y-4 scroll-mt-24">
       <div key={currentPage} className="grid grid-cols-1 gap-3.5 sm:gap-4 pagination-slide-enter">
         {articles.map((art) => (
           <ArticleCard
@@ -172,7 +181,7 @@ export function ArticleList({
           totalItems={totalItems || articles.length}
           itemsPerPage={itemsPerPage || 6}
           itemLabel="artikel"
-          onPageChange={onPageChange}
+          onPageChange={handlePageChange}
         />
       )}
     </div>

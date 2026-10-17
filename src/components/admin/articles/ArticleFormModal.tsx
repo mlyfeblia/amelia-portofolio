@@ -25,6 +25,7 @@ import { ArticleMarkdownCheatsheet } from './ArticleMarkdownCheatsheet';
 import { ArticleDraftItem, saveDraft, useArticleDrafts } from '@/lib/draft-store';
 import { ArticleDraftsModal } from './ArticleDraftsModal';
 import { ConfirmDecisionModal } from '@/components/ui/ConfirmDecisionModal';
+import { FormErrorMessage } from '@/components/ui/FormErrorMessage';
 import {
   ArticleMetaFields,
   FormState,
@@ -712,7 +713,7 @@ function ArticleFormModalContent({
           onSubmit={handleSubmit}
           className="flex-1 flex flex-col min-h-0 overflow-hidden tab-content-enter"
         >
-          <div className="p-3 sm:p-6 overflow-y-auto space-y-3.5 sm:space-y-4 text-xs sm:text-sm flex-1 overscroll-contain">
+          <div className="p-3 sm:p-6 overflow-y-auto space-y-3.5 sm:space-y-4 text-xs sm:text-sm flex-1 overscroll-contain scroll-isolated modal-scroll-body">
             {draftToast && (
               <div className="p-3 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-xl text-xs font-medium flex items-center justify-between gap-2 shadow-2xs">
                 <div className="flex items-center gap-2">
@@ -736,12 +737,11 @@ function ArticleFormModalContent({
               </div>
             )}
 
-            {saveError && (
-              <div className="p-3 bg-[var(--color-error-soft)] text-[var(--color-error)] border border-[var(--color-error-border)] rounded-xl font-medium flex items-center gap-2 animate-shake">
-                <AlertCircle className="w-4 h-4 shrink-0" />
-                <span>{saveError}</span>
-              </div>
-            )}
+            <FormErrorMessage
+              message={saveError}
+              onClose={() => setSaveError('')}
+              autoDismissMs={6000}
+            />
 
             {/* Autosave Status Banner & Reset Draft */}
             <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 rounded-xl bg-[var(--color-paper)] border border-[var(--color-paper-border)] text-xs text-[var(--color-ink-muted)]">
@@ -819,7 +819,7 @@ function ArticleFormModalContent({
                 value={formData.content}
                 onChange={(e) => handleContentChange(e.target.value)}
                 placeholder="Tuliskan narasi lengkap artikel di sini... (tekan Enter untuk baris baru, gunakan tombol toolbar di atas untuk memformat teks)"
-                className="form-input font-sans text-xs sm:text-sm text-[var(--color-ink)] py-2.5 leading-relaxed resize-y min-h-[180px] sm:min-h-[250px] rounded-t-none border-t-[var(--color-paper-border)] focus:border-[var(--color-accent)]"
+                className="form-input font-sans text-xs sm:text-sm text-[var(--color-ink)] py-2.5 leading-relaxed resize-y min-h-[180px] sm:min-h-[250px] rounded-t-none border-t-[var(--color-paper-border)] focus:border-[var(--color-accent)] overscroll-contain scroll-isolated cursor-text select-text"
                 required
               />
             </div>
@@ -948,21 +948,26 @@ export function ArticleFormModal({
   onSuccess,
 }: ArticleFormModalProps) {
   const mounted = useMounted();
-  const { isRendered, backdropClass, windowClass } = useModalAnimation({ isOpen });
+  const { isRendered, isExiting, backdropClass, windowClass } = useModalAnimation({
+    isOpen,
+    onClose,
+    closeOnEscape: true,
+    lockScroll: true,
+  });
 
   if (!mounted || !isRendered) return null;
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center p-0 sm:p-4 overflow-hidden select-none"
+      className={cn(
+        'fixed inset-0 z-[9999] flex items-center justify-center p-0 sm:p-4 overflow-hidden select-none',
+        isExiting && 'pointer-events-none'
+      )}
       role="dialog"
       aria-modal="true"
     >
       <div
-        className={cn(
-          'fixed inset-0 bg-transparent backdrop-blur-md touch-none select-none pointer-events-auto',
-          backdropClass
-        )}
+        className={cn(backdropClass)}
         aria-hidden="true"
         onWheel={(e) => e.preventDefault()}
         onTouchMove={(e) => e.preventDefault()}
@@ -970,7 +975,7 @@ export function ArticleFormModal({
 
       <div
         className={cn(
-          'relative z-10 w-full sm:max-w-4xl h-full sm:h-[90vh] flex flex-col pointer-events-auto my-auto select-text',
+          'relative z-10 w-full sm:max-w-4xl h-full sm:h-[90vh] flex flex-col pointer-events-auto my-auto select-text modal-window-sheet-mobile',
           windowClass
         )}
       >

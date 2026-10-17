@@ -1,16 +1,28 @@
 'use client';
 
 import React, { useState, useEffect, useId, useRef } from 'react';
-import Image from 'next/image';
-import { Send, AlertCircle, CheckCircle2, Lock, Download, PenLine, Check, X } from 'lucide-react';
+import { Send, AlertCircle, CheckCircle2, Lock, PenLine, Check, X } from 'lucide-react';
 import { Spinner } from '@/components/ui/Spinner';
 import { ConfirmDecisionModal } from '@/components/ui/ConfirmDecisionModal';
-import { usePwa, triggerPwaInstall } from '@/lib/pwa-store';
+import { FormErrorMessage } from '@/components/ui/FormErrorMessage';
 import { CURHAT_CATEGORIES } from '@/types';
 import { formatPersonName, formatSentenceCase } from '@/lib/text-formatter';
 import { enqueueOfflineMutation } from '@/lib/offline-queue';
 
 const CATEGORIES = CURHAT_CATEGORIES;
+
+const ALIAS_PLACEHOLDERS = [
+  'Misal: Jiwa yang Lelah, Pejuang Skripsi',
+  'Misal: Pengembara Batin, Penanti Fajar',
+  'Misal: Sahabat yang Bingung, Pencari Ketenangan',
+  'Misal: Hati yang Gundah, Mahasiswa Akhir',
+];
+
+const MESSAGE_PLACEHOLDERS = [
+  'Tuliskan apa pun yang mengganjal di pikiran dan hatimu secara jujur...',
+  'Keluarkan rasa lelah, cemas, atau beban pikiran yang sulit kamu ceritakan pada orang lain...',
+  'Ceritakan fase hidup yang sedang kamu lalui, Amel ada di sini untuk mendengarkan...',
+];
 
 interface CurhatFormProps {
   onSuccess: () => void;
@@ -21,7 +33,6 @@ export function CurhatForm({ onSuccess }: CurhatFormProps) {
   const [submitting, setSubmitting] = useState(false);
   const [sent, setSent] = useState(false);
   const [sendError, setSendError] = useState('');
-  const { isInstalled } = usePwa();
 
   // Always initialize with SSR-safe defaults to avoid hydration mismatch
   const [alias, setAlias] = useState('');
@@ -30,7 +41,17 @@ export function CurhatForm({ onSuccess }: CurhatFormProps) {
   const [botTrap, setBotTrap] = useState('');
   const [isDraftSaved, setIsDraftSaved] = useState(false);
   const [showCurhatConfirmModal, setShowCurhatConfirmModal] = useState(false);
+  const [aliasPlaceholder, setAliasPlaceholder] = useState(ALIAS_PLACEHOLDERS[0]);
+  const [messagePlaceholder, setMessagePlaceholder] = useState(MESSAGE_PLACEHOLDERS[0]);
   const isRestoredRef = useRef(false);
+
+  // Rotate placeholders per visit post-hydration
+  useEffect(() => {
+    const aliasIdx = Math.floor(Math.random() * ALIAS_PLACEHOLDERS.length);
+    const msgIdx = Math.floor(Math.random() * MESSAGE_PLACEHOLDERS.length);
+    setAliasPlaceholder(ALIAS_PLACEHOLDERS[aliasIdx]);
+    setMessagePlaceholder(MESSAGE_PLACEHOLDERS[msgIdx]);
+  }, []);
 
   // Restore draft from sessionStorage on client mount after hydration
   useEffect(() => {
@@ -215,38 +236,6 @@ export function CurhatForm({ onSuccess }: CurhatFormProps) {
             <PenLine className="w-3.5 h-3.5 text-[var(--color-ink-soft)]" />
             <span>Tulis Pesan Lain</span>
           </button>
-
-          {!isInstalled && (
-            <div className="mt-4 pt-4 border-t border-[var(--color-paper-border)] bg-[var(--color-paper)] p-3 rounded-xl flex items-center justify-between gap-3 text-left">
-              <div className="flex items-center gap-2.5 min-w-0">
-                <div className="w-8 h-8 rounded-lg overflow-hidden shrink-0 border border-[var(--color-paper-border)] bg-[#f7f2eb]">
-                  <Image
-                    src="/icons/icon-192x192.png"
-                    alt="Logo Amelia"
-                    width={32}
-                    height={32}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-xs font-semibold text-[var(--color-ink)] truncate">
-                    Pasang Aplikasi Amelia
-                  </p>
-                  <p className="text-[11px] text-[var(--color-ink-muted)] line-clamp-1">
-                    Pantau balasan curhat dan materi konseling lebih mudah di HP.
-                  </p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => triggerPwaInstall()}
-                className="btn-primary btn-interactive !text-[11px] !py-1 !px-2.5 shrink-0 inline-flex items-center gap-1"
-              >
-                <Download className="w-3 h-3" />
-                <span>Pasang</span>
-              </button>
-            </div>
-          )}
         </div>
       ) : (
         <form
@@ -268,16 +257,11 @@ export function CurhatForm({ onSuccess }: CurhatFormProps) {
             />
           </div>
 
-          {sendError && (
-            <div
-              className="flex items-start gap-2 p-3 text-xs text-[var(--color-error)] bg-[var(--color-error-soft)] border border-[var(--color-error-border)] rounded-md animate-shake"
-              role="alert"
-              aria-live="assertive"
-            >
-              <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" aria-hidden="true" />
-              <span>{sendError}</span>
-            </div>
-          )}
+          <FormErrorMessage
+            message={sendError}
+            onClose={() => setSendError('')}
+            autoDismissMs={6000}
+          />
 
           <div>
             <label
@@ -292,8 +276,11 @@ export function CurhatForm({ onSuccess }: CurhatFormProps) {
                 type="text"
                 maxLength={50}
                 value={alias}
-                onChange={(e) => setAlias(formatPersonName(e.target.value))}
-                placeholder="Misal: Jiwa yang Lelah, Pejuang Skripsi"
+                onChange={(e) => {
+                  setAlias(formatPersonName(e.target.value));
+                  if (sendError) setSendError('');
+                }}
+                placeholder={aliasPlaceholder}
                 className="form-input text-sm py-2 pr-8 w-full"
               />
               {alias && (
@@ -350,14 +337,17 @@ export function CurhatForm({ onSuccess }: CurhatFormProps) {
               rows={4}
               maxLength={1000}
               value={message}
-              onChange={(e) => setMessage(e.target.value)}
+              onChange={(e) => {
+                setMessage(e.target.value);
+                if (sendError) setSendError('');
+              }}
               onBlur={() => {
                 if (message.trim()) {
                   setMessage(formatSentenceCase(message));
                 }
               }}
-              placeholder="Tuliskan apa pun yang mengganjal di pikiran dan hatimu secara jujur..."
-              className="form-input text-sm py-2 resize-y min-h-[108px] max-h-[320px] overflow-y-auto textarea-custom-scroll"
+              placeholder={messagePlaceholder}
+              className="form-input text-sm py-2 resize-y min-h-[108px] max-h-[320px] overflow-y-auto textarea-custom-scroll overscroll-contain scroll-isolated cursor-text select-text"
             />
             {isDraftSaved && (
               <div className="pt-1.5 flex items-center gap-1 text-[11px] text-emerald-700 font-medium">

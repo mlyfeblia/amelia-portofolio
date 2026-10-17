@@ -47,17 +47,52 @@ export function generateCurhatAdminAlertHtml(curhat: AnonymousMessage): string {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="color-scheme" content="light">
   <title>Curhat Anonim Baru - Amelia BKI</title>
+  <style>
+    @media only screen and (max-width: 600px) {
+      .email-wrapper {
+        padding: 16px 8px !important;
+      }
+      .email-card {
+        border-radius: 12px !important;
+      }
+      .email-header-cell {
+        padding: 24px 18px !important;
+      }
+      .email-body-cell {
+        padding: 24px 18px !important;
+      }
+      .email-footer-cell {
+        padding: 18px 16px !important;
+      }
+      .col-label {
+        width: 44% !important;
+        font-size: 12px !important;
+      }
+      .col-value {
+        width: 56% !important;
+        font-size: 13px !important;
+      }
+      .btn-block {
+        display: block !important;
+        width: 100% !important;
+        padding-left: 12px !important;
+        padding-right: 12px !important;
+        box-sizing: border-box !important;
+        font-size: 14px !important;
+      }
+    }
+  </style>
 </head>
 <body style="margin: 0; padding: 0; background-color: #F4F1EA; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; color: #192820;">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #F4F1EA; padding: 32px 12px;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="email-wrapper" style="background-color: #F4F1EA; padding: 32px 12px;">
     <tr>
       <td align="center">
         <!-- Main Card Container -->
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width: 600px; background-color: #FFFFFF; border: 1px solid #E5DFD5; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(25, 40, 32, 0.06);">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="email-card" style="max-width: 600px; background-color: #FFFFFF; border: 1px solid #E5DFD5; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(25, 40, 32, 0.06);">
           
           <!-- Header Banner -->
           <tr>
-            <td style="background-color: #1A563C; padding: 32px; text-align: left;">
+            <td class="email-header-cell" style="background-color: #1A563C; padding: 32px; text-align: left;">
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                 <tr>
                   <td>
@@ -78,7 +113,7 @@ export function generateCurhatAdminAlertHtml(curhat: AnonymousMessage): string {
 
           <!-- Main Content Body -->
           <tr>
-            <td style="padding: 32px;">
+            <td class="email-body-cell" style="padding: 32px;">
               <p style="margin: 0 0 20px 0; color: #42564C; font-size: 14px; line-height: 1.5;">
                 Halo Mel, ada pesan curhat anonim baru yang masuk dan menanti tanggapan empatikmu:
               </p>
@@ -89,16 +124,16 @@ export function generateCurhatAdminAlertHtml(curhat: AnonymousMessage): string {
                   <td style="padding: 16px 20px;">
                     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                       <tr>
-                        <td width="35%" style="padding: 5px 0; color: #60756B; font-size: 13px; font-weight: 500;">Nama Samaran</td>
-                        <td width="65%" style="padding: 5px 0; color: #192820; font-size: 14px; font-weight: 700;">${safeAlias}</td>
+                        <td width="35%" class="col-label" style="padding: 5px 0; color: #60756B; font-size: 13px; font-weight: 500;">Nama Samaran</td>
+                        <td width="65%" class="col-value" style="padding: 5px 0; color: #192820; font-size: 14px; font-weight: 700;">${safeAlias}</td>
                       </tr>
                       <tr>
-                        <td style="padding: 5px 0; color: #60756B; font-size: 13px; font-weight: 500; border-top: 1px dashed #E5DFD5;">Kategori Masalah</td>
-                        <td style="padding: 5px 0; color: #1A563C; font-size: 14px; font-weight: 600; border-top: 1px dashed #E5DFD5;">${safeCategory}</td>
+                        <td class="col-label" style="padding: 5px 0; color: #60756B; font-size: 13px; font-weight: 500; border-top: 1px dashed #E5DFD5;">Kategori Masalah</td>
+                        <td class="col-value" style="padding: 5px 0; color: #1A563C; font-size: 14px; font-weight: 600; border-top: 1px dashed #E5DFD5;">${safeCategory}</td>
                       </tr>
                       <tr>
-                        <td style="padding: 5px 0; color: #60756B; font-size: 13px; font-weight: 500; border-top: 1px dashed #E5DFD5;">Waktu Dikirim</td>
-                        <td style="padding: 5px 0; color: #60756B; font-size: 13px; border-top: 1px dashed #E5DFD5;">${safeTime}</td>
+                        <td class="col-label" style="padding: 5px 0; color: #60756B; font-size: 13px; font-weight: 500; border-top: 1px dashed #E5DFD5;">Waktu Dikirim</td>
+                        <td class="col-value" style="padding: 5px 0; color: #60756B; font-size: 13px; border-top: 1px dashed #E5DFD5;">${safeTime}</td>
                       </tr>
                     </table>
                   </td>
@@ -117,7 +152,7 @@ export function generateCurhatAdminAlertHtml(curhat: AnonymousMessage): string {
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 12px;">
                 <tr>
                   <td align="center">
-                    <a href="${adminUrl}" target="_blank" style="display: block; width: 100%; box-sizing: border-box; background-color: #1A563C; color: #FFFFFF; font-size: 15px; font-weight: 600; text-align: center; text-decoration: none; padding: 14px 24px; border-radius: 8px; box-shadow: 0 2px 8px rgba(26, 86, 60, 0.25);">
+                    <a href="${adminUrl}" target="_blank" class="btn-block" style="display: block; width: 100%; box-sizing: border-box; background-color: #1A563C; color: #FFFFFF; font-size: 15px; font-weight: 600; text-align: center; text-decoration: none; padding: 14px 24px; border-radius: 8px; box-shadow: 0 2px 8px rgba(26, 86, 60, 0.25);">
                       ✍️ Tanggapi di Panel Admin Curhat
                     </a>
                   </td>
@@ -129,7 +164,7 @@ export function generateCurhatAdminAlertHtml(curhat: AnonymousMessage): string {
 
           <!-- Footer -->
           <tr>
-            <td style="background-color: #FBF9F5; border-top: 1px solid #E5DFD5; padding: 20px 32px; text-align: center;">
+            <td class="email-footer-cell" style="background-color: #FBF9F5; border-top: 1px solid #E5DFD5; padding: 20px 32px; text-align: center;">
               <p style="margin: 0; color: #8C9E94; font-size: 12px;">
                 Notifikasi Otomatis Ruang Curhat Amelia BKI · UIN Siber Cirebon
               </p>

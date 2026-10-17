@@ -104,7 +104,7 @@ export function AssessmentHistory({ onStartNew }: AssessmentHistoryProps) {
           <button
             type="button"
             onClick={onStartNew}
-            className="btn-primary btn-interactive text-xs sm:text-sm py-2.5 px-6 rounded-xl cursor-pointer hover:-translate-y-0.5 hover:shadow-md transition-all duration-200"
+            className="btn-primary btn-interactive text-xs sm:text-sm py-2.5 px-6 rounded-xl cursor-pointer"
           >
             Mulai Asesmen Mandiri Sekarang
           </button>
@@ -131,41 +131,45 @@ export function AssessmentHistory({ onStartNew }: AssessmentHistoryProps) {
           return (
             <div
               key={record.id}
-              className="card-interactive group rounded-2xl sm:rounded-3xl border border-[var(--color-paper-border)] bg-white overflow-hidden shadow-2xs hover:border-[var(--color-accent)] hover:shadow-md transition-all duration-200 space-y-0"
+              className="group rounded-2xl sm:rounded-3xl border border-[var(--color-paper-border)] bg-white overflow-hidden shadow-2xs hover:border-[var(--color-accent-border)] transition-colors space-y-0"
             >
               {/* Card Summary Header: Title at top, metadata below */}
               <div className="p-4 sm:p-6 flex flex-col gap-3">
                 <div className="flex items-start justify-between gap-3">
                   <h4
-                    className="text-base sm:text-xl font-medium text-[var(--color-ink)] leading-snug"
+                    className="text-base sm:text-xl font-medium text-[var(--color-ink)] leading-snug min-w-0 flex-1 break-words"
                     style={{ fontFamily: 'var(--font-display)' }}
                   >
                     {record.level}
                   </h4>
 
-                  {/* Action buttons (Copy & Delete) */}
-                  <div className="flex items-center gap-1 shrink-0">
+                  {/* Action buttons (Copy & Delete): Text on desktop, icon-only on mobile */}
+                  <div className="flex items-center gap-1.5 shrink-0">
                     <button
                       type="button"
                       onClick={() => handleCopyHistory(record)}
-                      className="btn-icon-interactive p-1.5 sm:p-2 rounded-xl text-[var(--color-ink-soft)] hover:text-[var(--color-accent)] hover:bg-[var(--color-accent-soft)] transition-colors cursor-pointer"
+                      className="btn-interactive inline-flex items-center gap-1.5 p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl text-xs font-medium text-[var(--color-ink-soft)] hover:text-[var(--color-accent)] hover:bg-[var(--color-accent-soft)] transition-colors cursor-pointer"
                       title="Salin ringkasan evaluasi ini"
                       aria-label="Salin ringkasan riwayat"
                     >
                       {isCopied ? (
-                        <Check className="w-4 h-4 text-emerald-600 animate-pop-success" />
+                        <Check className="w-4 h-4 text-emerald-600 animate-pop-success shrink-0" />
                       ) : (
-                        <Copy className="w-4 h-4" />
+                        <Copy className="w-4 h-4 shrink-0" />
                       )}
+                      <span className="hidden sm:inline font-semibold">
+                        {isCopied ? 'Tersalin' : 'Salin'}
+                      </span>
                     </button>
                     <button
                       type="button"
                       onClick={() => setDeleteTargetRecord(record)}
-                      className="p-1.5 sm:p-2 rounded-xl text-[var(--color-ink-soft)] hover:text-rose-600 hover:bg-rose-50 active:scale-95 transition-all duration-200 cursor-pointer"
+                      className="btn-interactive inline-flex items-center gap-1.5 p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl text-xs font-medium text-[var(--color-ink-soft)] hover:text-rose-600 hover:bg-rose-50 active:scale-95 transition-all duration-200 cursor-pointer"
                       title="Hapus rekaman ini"
                       aria-label="Hapus rekaman ini"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="w-4 h-4 shrink-0" />
+                      <span className="hidden sm:inline font-medium">Hapus</span>
                     </button>
                   </div>
                 </div>
@@ -236,7 +240,7 @@ export function AssessmentHistory({ onStartNew }: AssessmentHistoryProps) {
                     })}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="btn-primary btn-interactive order-1 sm:order-2 w-full sm:w-auto px-3.5 py-1.5 text-xs font-semibold rounded-xl inline-flex items-center justify-center gap-1.5 shrink-0 shadow-2xs transition-all duration-200 whitespace-nowrap"
+                    className="btn-primary btn-interactive order-1 sm:order-2 w-full sm:w-auto px-3.5 py-1.5 text-xs font-semibold rounded-xl inline-flex items-center justify-center gap-1.5 shrink-0 shadow-2xs transition-all duration-200 text-center min-[380px]:whitespace-nowrap"
                   >
                     <MessageCircle className="w-3.5 h-3.5 shrink-0" />
                     <span>Konsultasikan via WhatsApp</span>

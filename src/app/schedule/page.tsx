@@ -7,19 +7,21 @@ import BreadcrumbJsonLd from '@/components/BreadcrumbJsonLd';
 import { safeJsonLd } from '@/lib/utils';
 import type { CounselingMode } from '@/types';
 
+import { resolveBookingCategory } from '@/data/booking-data';
+
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://mlyfeblia.vercel.app';
 
 export const metadata: Metadata = {
   title: 'Jadwalkan Sesi Konseling Privat',
   description:
-    'Jadwalkan sesi bimbingan konseling privat 60 menit bersama Amelia. Pilih format sesi daring (Google Meet/Chat) atau tatap muka di Cirebon.',
+    'Jadwalkan sesi bimbingan konseling privat 60 menit bersama Amelia. Pilih format sesi daring (Chat/Video Call WhatsApp) atau tatap muka di Cirebon.',
   alternates: {
     canonical: `${BASE_URL}/schedule`,
   },
   openGraph: {
     title: 'Jadwalkan Sesi Konseling | Amelia',
     description:
-      'Jadwalkan sesi bimbingan konseling privat 60 menit bersama Amelia. Pilih format sesi daring (Google Meet/Chat) atau tatap muka di Cirebon.',
+      'Jadwalkan sesi bimbingan konseling privat 60 menit bersama Amelia. Pilih format sesi daring (Chat/Video Call WhatsApp) atau tatap muka di Cirebon.',
     url: `${BASE_URL}/schedule`,
     type: 'website',
     images: [
@@ -72,20 +74,34 @@ interface SchedulePageProps {
   searchParams?: Promise<{
     tab?: string;
     code?: string;
+    kode?: string;
+    track?: string;
     format?: string;
     mode?: string;
+    kategori?: string;
+    category?: string;
+    topik?: string;
   }>;
 }
 
 export default async function SchedulePage({ searchParams }: SchedulePageProps) {
   const params = await searchParams;
-  const initialTab = params?.tab === 'tracker' ? 'tracker' : params?.tab === 'new' ? 'new' : undefined;
-  const initialCode = typeof params?.code === 'string' ? params.code : undefined;
+  const rawCode = params?.code || params?.kode || params?.track;
+  const initialCode = typeof rawCode === 'string' && rawCode.trim() ? rawCode.trim() : undefined;
+  const initialTab =
+    params?.tab === 'tracker' || Boolean(initialCode)
+      ? 'tracker'
+      : params?.tab === 'new'
+      ? 'new'
+      : undefined;
   const rawMode = params?.format || params?.mode;
   const initialMode: CounselingMode | undefined =
     rawMode && ['online_meet', 'online_chat', 'tatap_muka_cirebon'].includes(rawMode)
       ? (rawMode as CounselingMode)
       : undefined;
+
+  const rawCategory = params?.kategori || params?.category || params?.topik;
+  const initialCategory = rawCategory ? resolveBookingCategory(rawCategory) : undefined;
 
   return (
     <>
@@ -116,7 +132,12 @@ export default async function SchedulePage({ searchParams }: SchedulePageProps) 
             </div>
 
             <div className="pt-1 sm:pt-4">
-              <BookingSection initialTab={initialTab} initialCode={initialCode} initialMode={initialMode} />
+              <BookingSection
+                initialTab={initialTab}
+                initialCode={initialCode}
+                initialMode={initialMode}
+                initialCategory={initialCategory}
+              />
             </div>
           </div>
         </main>

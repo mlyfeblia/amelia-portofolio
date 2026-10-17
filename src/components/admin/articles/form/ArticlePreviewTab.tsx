@@ -21,7 +21,7 @@ export function ArticlePreviewTab({
 }: ArticlePreviewTabProps) {
   return (
     <div className="flex-1 flex flex-col min-h-0 overflow-hidden tab-content-enter">
-      <div className="p-3.5 sm:p-6 overflow-y-auto space-y-4 flex-1 overscroll-contain">
+      <div className="p-3.5 sm:p-6 overflow-y-auto space-y-4 flex-1 overscroll-contain scroll-isolated modal-scroll-body">
         {/* Cover Image in Preview */}
         {formData.coverImage && (
           <div className="relative aspect-video sm:aspect-21/9 w-full rounded-2xl overflow-hidden border border-[var(--color-paper-border)] shadow-xs bg-[var(--color-paper-muted)]/50">
@@ -45,7 +45,7 @@ export function ArticlePreviewTab({
           </h1>
           {formData.excerpt && (
             <p className="text-xs sm:text-sm text-[var(--color-ink-muted)] leading-relaxed">
-              {publishedAt || 'Hari ini'} — {formData.excerpt}
+              {publishedAt || 'Hari ini'} - {formData.excerpt}
             </p>
           )}
           <div className="flex flex-wrap items-center gap-2 pt-1 text-xs">

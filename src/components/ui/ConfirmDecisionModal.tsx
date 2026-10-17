@@ -38,57 +38,70 @@ export function ConfirmDecisionModal({
   zIndex = 'z-[11000]',
 }: ConfirmDecisionModalProps) {
   const mounted = useMounted();
-  const { isRendered, backdropClass, windowClass } = useModalAnimation({ isOpen });
   const [internalLoading, setInternalLoading] = useState(false);
-
   const isActionLoading = loading || internalLoading;
 
-  // Lock body & document scroll and handle Escape key
-  useEffect(() => {
-    if (!isOpen) return;
+  const { isRendered, isExiting, backdropClass, windowClass } = useModalAnimation({
+    isOpen,
+    onClose,
+    closeOnEscape: !isActionLoading,
+    lockScroll: true,
+  });
 
-    const originalBodyOverflow = document.body.style.overflow;
-    const originalHtmlOverflow = document.documentElement.style.overflow;
-    document.body.style.overflow = 'hidden';
-    document.documentElement.style.overflow = 'hidden';
+  // Retain props during exit animation to prevent content collapse or visual flicker
+  const cachedPropsRef = React.useRef({
+    title,
+    description,
+    confirmLabel,
+    cancelLabel,
+    variant,
+    icon,
+    itemDetail,
+  });
 
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && !isActionLoading) {
-        onClose();
-      }
+  if (isOpen) {
+    cachedPropsRef.current = {
+      title,
+      description,
+      confirmLabel,
+      cancelLabel,
+      variant,
+      icon,
+      itemDetail,
     };
-    window.addEventListener('keydown', handleKeyDown);
-
-    return () => {
-      document.body.style.overflow = originalBodyOverflow;
-      document.documentElement.style.overflow = originalHtmlOverflow;
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [isOpen, isActionLoading, onClose]);
+  }
 
   if (!mounted || !isRendered) return null;
+
+  const activeTitle = title || cachedPropsRef.current.title;
+  const activeDescription = description || cachedPropsRef.current.description;
+  const activeConfirmLabel = confirmLabel || cachedPropsRef.current.confirmLabel;
+  const activeCancelLabel = cancelLabel || cachedPropsRef.current.cancelLabel;
+  const activeVariant = isOpen ? variant : cachedPropsRef.current.variant;
+  const activeIcon = icon ?? cachedPropsRef.current.icon;
+  const activeItemDetail = itemDetail ?? cachedPropsRef.current.itemDetail;
 
   // Icon container variant styling
   let iconBoxClass = 'bg-[var(--color-accent-soft)] text-[var(--color-accent)] border border-[var(--color-accent)]/20';
   let defaultIcon = <HelpCircle className="w-5 h-5 shrink-0" />;
 
-  if (variant === 'danger') {
+  if (activeVariant === 'danger') {
     iconBoxClass = 'bg-rose-50 text-rose-600 border border-rose-100';
     defaultIcon = <AlertTriangle className="w-5 h-5 shrink-0" />;
-  } else if (variant === 'warning') {
+  } else if (activeVariant === 'warning') {
     iconBoxClass = 'bg-amber-50 text-amber-600 border border-amber-100';
     defaultIcon = <AlertCircle className="w-5 h-5 shrink-0" />;
-  } else if (variant === 'neutral') {
+  } else if (activeVariant === 'neutral') {
     iconBoxClass = 'bg-[var(--color-surface)] text-[var(--color-ink-muted)] border border-[var(--color-paper-border)]';
   }
 
   // Confirm button variant styling
   let confirmBtnClass = 'bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-white';
-  if (variant === 'danger') {
+  if (activeVariant === 'danger') {
     confirmBtnClass = 'bg-rose-600 hover:bg-rose-700 text-white';
-  } else if (variant === 'warning') {
+  } else if (activeVariant === 'warning') {
     confirmBtnClass = 'bg-amber-600 hover:bg-amber-700 text-white';
-  } else if (variant === 'neutral') {
+  } else if (activeVariant === 'neutral') {
     confirmBtnClass = 'bg-[var(--color-ink)] hover:bg-[var(--color-ink)]/90 text-white';
   }
 
@@ -107,8 +120,9 @@ export function ConfirmDecisionModal({
   return createPortal(
     <div
       className={cn(
-        'fixed inset-0 flex items-center justify-center p-2.5 min-[340px]:p-4 sm:p-6 overflow-y-auto',
-        zIndex || 'z-[11000]'
+        'fixed inset-0 flex items-center justify-center p-2.5 min-[340px]:p-4 sm:p-6 overflow-hidden select-none',
+        zIndex || 'z-[11000]',
+        isExiting && 'pointer-events-none'
       )}
       role="dialog"
       aria-modal="true"
@@ -117,10 +131,7 @@ export function ConfirmDecisionModal({
     >
       {/* Backdrop */}
       <div
-        className={cn(
-          'fixed inset-0 bg-transparent backdrop-blur-md touch-none select-none pointer-events-auto',
-          backdropClass
-        )}
+        className={cn(backdropClass)}
         aria-hidden="true"
         onClick={() => {
           if (!isActionLoading) onClose();
@@ -139,7 +150,7 @@ export function ConfirmDecisionModal({
         {/* Header with Icon and Text */}
         <div className="flex items-start gap-2.5 min-[340px]:gap-3 sm:gap-3.5">
           <div className={cn('w-9 h-9 min-[340px]:w-10 min-[340px]:h-10 sm:w-11 sm:h-11 rounded-xl min-[340px]:rounded-2xl flex items-center justify-center shrink-0 shadow-2xs', iconBoxClass)}>
-            {icon || defaultIcon}
+            {activeIcon || defaultIcon}
           </div>
           <div className="space-y-1 min-w-0 flex-1 pt-0.5">
             <h3
@@ -147,21 +158,21 @@ export function ConfirmDecisionModal({
               className="text-sm min-[340px]:text-base sm:text-lg font-medium text-[var(--color-ink)] leading-snug break-words"
               style={{ fontFamily: 'var(--font-display)' }}
             >
-              {title}
+              {activeTitle}
             </h3>
             <p
               id="confirm-decision-desc"
               className="text-xs sm:text-sm text-[var(--color-ink-muted)] leading-relaxed break-words"
             >
-              {description}
+              {activeDescription}
             </p>
           </div>
         </div>
 
         {/* Optional Item Detail */}
-        {itemDetail && (
+        {activeItemDetail && (
           <div className="bg-[var(--color-paper)] p-3 min-[340px]:p-3.5 sm:p-4 rounded-xl min-[340px]:rounded-2xl border border-[var(--color-paper-border)] text-xs text-[var(--color-ink-muted)] break-words">
-            {itemDetail}
+            {activeItemDetail}
           </div>
         )}
 
@@ -173,7 +184,7 @@ export function ConfirmDecisionModal({
             disabled={isActionLoading}
             className="w-full py-2.5 sm:py-3 rounded-xl btn-secondary min-w-0 px-2 sm:px-4 text-[11px] sm:text-xs font-medium cursor-pointer text-center active:scale-98 shadow-2xs inline-flex items-center justify-center whitespace-nowrap disabled:opacity-50"
           >
-            {cancelLabel}
+            {activeCancelLabel}
           </button>
 
           <button
@@ -191,7 +202,7 @@ export function ConfirmDecisionModal({
                 <span>Memproses...</span>
               </>
             ) : (
-              confirmLabel
+              activeConfirmLabel
             )}
           </button>
         </div>

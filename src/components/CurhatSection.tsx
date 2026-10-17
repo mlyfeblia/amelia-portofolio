@@ -30,7 +30,7 @@ export default function CurhatSection({ initialMessages = [] }: CurhatSectionPro
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
-      <div className="md:col-span-5">
+      <div className="md:col-span-5 md:sticky md:top-20 md:self-start">
         <CurhatForm onSuccess={fetchList} />
       </div>
       <div className="md:col-span-7">

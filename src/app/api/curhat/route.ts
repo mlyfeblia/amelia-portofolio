@@ -88,7 +88,7 @@ export async function POST(request: Request) {
     sendPushNotificationToRole('admin', {
       title: 'Pesan Teman Curhat Baru!',
       body: `Dari "${newCurhat.alias}" (Kategori: ${newCurhat.category})`,
-      url: '/admin/curhat',
+      url: '/admin/counseling',
       tag: `curhat-${newCurhat.id}`,
     }).catch(() => {});
 

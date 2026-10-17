@@ -15,14 +15,14 @@ const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://mlyfeblia.vercel.a
 export const metadata: Metadata = {
   title: 'Layanan Konseling Sebaya & Bimbingan',
   description:
-    'Layanan bimbingan konseling sebaya bersama Amelia. Pilihan sesi fleksibel via Google Meet, Chat terjadwal, dan tatap muka di Cirebon yang hangat dan rahasia.',
+    'Layanan bimbingan konseling sebaya bersama Amelia. Pilihan sesi fleksibel via Chat terjadwal, Video Call WhatsApp, dan tatap muka di Cirebon yang hangat dan rahasia.',
   alternates: {
     canonical: `${BASE_URL}/services`,
   },
   openGraph: {
     title: 'Layanan Konseling Sebaya | Amelia',
     description:
-      'Layanan bimbingan konseling sebaya bersama Amelia. Pilihan sesi fleksibel via Google Meet, Chat terjadwal, dan tatap muka di Cirebon yang hangat dan rahasia.',
+      'Layanan bimbingan konseling sebaya bersama Amelia. Pilihan sesi fleksibel via Chat terjadwal, Video Call WhatsApp, dan tatap muka di Cirebon yang hangat dan rahasia.',
     url: `${BASE_URL}/services`,
     type: 'website',
     images: [
@@ -38,7 +38,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Layanan Konseling Sebaya | Amelia',
     description:
-      'Pilihan sesi konseling fleksibel via Google Meet, Chat terjadwal, dan tatap muka di Cirebon yang hangat dan rahasia.',
+      'Pilihan sesi konseling fleksibel via Chat terjadwal, Video Call WhatsApp, dan tatap muka di Cirebon yang hangat dan rahasia.',
     images: [`${BASE_URL}/amelia.webp`],
   },
 };
@@ -49,7 +49,7 @@ const serviceJsonLd = {
   name: 'Layanan Bimbingan Konseling Sebaya Amelia',
   serviceType: 'Bimbingan Konseling Sebaya & Konseling Islam',
   description:
-    'Layanan bimbingan konseling sebaya bersama Amelia. Pilihan sesi fleksibel via Google Meet, Chat terjadwal, dan tatap muka di Cirebon yang hangat dan rahasia.',
+    'Layanan bimbingan konseling sebaya bersama Amelia. Pilihan sesi fleksibel via Chat terjadwal, Video Call WhatsApp, dan tatap muka di Cirebon yang hangat dan rahasia.',
   provider: {
     '@type': 'Person',
     name: 'Amelia',
@@ -68,23 +68,23 @@ const serviceJsonLd = {
         '@type': 'Offer',
         itemOffered: {
           '@type': 'Service',
-          name: 'Sesi Online Google Meet (60 Menit)',
-          description: 'Konseling tatap maya privat dengan suasana hangat dan reflektif.',
-        },
-      },
-      {
-        '@type': 'Offer',
-        itemOffered: {
-          '@type': 'Service',
           name: 'Sesi Online Chat Terjadwal (60 Menit)',
-          description: 'Diskusi berbasis teks intensif dan terarah bagi yang lebih nyaman menulis.',
+          description: 'Diskusi berbasis teks WhatsApp intensif dan terarah bagi yang lebih nyaman menulis.',
         },
       },
       {
         '@type': 'Offer',
         itemOffered: {
           '@type': 'Service',
-          name: 'Sesi Tatap Muka Langsung di Cirebon (60 Menit)',
+          name: 'Sesi Video Call via WhatsApp (60 Menit)',
+          description: 'Konseling tatap maya via WhatsApp privat dengan suasana hangat dan reflektif.',
+        },
+      },
+      {
+        '@type': 'Offer',
+        itemOffered: {
+          '@type': 'Service',
+          name: 'Sesi Tatap Muka Langsung di Kampus Cirebon (60 Menit)',
           description: 'Pertemuan langsung di lingkungan yang tenang dan kondusif di wilayah Cirebon.',
         },
       },

@@ -20,7 +20,7 @@ export function ServicesWorkflow() {
         {steps.map((s) => (
           <div
             key={s.step}
-            className="p-5 bg-[var(--color-surface)] border border-[var(--color-paper-border)] rounded-xl space-y-2 card-interactive flex flex-col justify-between"
+            className="p-5 bg-[var(--color-surface)] border border-[var(--color-paper-border)] rounded-xl space-y-2 transition-colors duration-200 hover:border-[var(--color-accent)]/30 flex flex-col justify-between"
           >
             <div className="space-y-1.5">
               <div className="flex items-center justify-between gap-2">
