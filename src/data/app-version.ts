@@ -6,9 +6,69 @@ export interface VersionRelease {
   highlights: string[];
 }
 
-export const CURRENT_APP_VERSION = '1.5.0';
+export const CURRENT_APP_VERSION = '2.0.0';
 
 export const APP_CHANGELOG: VersionRelease[] = [
+  {
+    version: '2.0.0',
+    releaseDate: '17 Oktober 2026',
+    title: 'Rilis Akbar v2.0: Stabilitas Formulir Menyeluruh, Akses Instan Tanpa Jeda & Penyempurnaan Visual Editorial',
+    badge: 'Rilis Akbar v2.0.0',
+    highlights: [
+      'Sistem Form Validation Error Message cerdas (FormErrorMessage) dengan penutupan otomatis 6 detik, bilah hitung mundur interaktif, jeda saat kursor diarahkan (hover-pause), dan eliminasi tuntas bug loop penutupan tombol silang.',
+      'Akses instan tanpa jeda: penghapusan layar pembuka (PWA splash screen) sehingga pengguna langsung masuk seketika ke halaman tujuan saat pertama kali mengunjungi situs.',
+      'Penyelarasan bingkai dan bayangan kartu potret editorial di Beranda (HeroSection) dan Halaman Tentang Saya (AboutHero) dengan border dan shadow terstandarisasi khas desain gaya kertas (paper design system).',
+      'Pengujian sistem komprehensif: 18 berkas test suite Vitest (168 pengujian unit dan integrasi) lulus 100% dan verifikasi kompilasi Next.js 16.3 sukses tanpa error.',
+    ],
+  },
+  {
+    version: '1.9.0',
+    releaseDate: '16 Oktober 2026',
+    title: 'Higienitas Interaksi Kursor, Isolasi Gulir Ganda & Kebebasan Seleksi Teks',
+    badge: 'UX & Interaktivitas',
+    highlights: [
+      'Standarisasi kursor kontekstual di seluruh situs: kursor teks (cursor: text) pada input dan textarea, kursor klik (cursor: pointer) pada seluruh kontrol interaktif, dan kursor dilarang (cursor: not-allowed) pada elemen nonaktif.',
+      'Sistem pencegahan gulir ganda (dual-scroll prevention) dengan isolasi roda tetikus (wheel interceptor) dan overscroll-behavior: contain pada area teks dan slider horizontal.',
+      'Higienitas seleksi teks: proteksi seleksi antarmuka (user-select: none) pada tombol, tab, dan navigasi untuk mencegah blok biru tak sengaja, serta kebebasan seleksi penuh (user-select: text) pada artikel bacaan dan jawaban curhat.',
+      'Penataan z-index modal dan backdrop: bilah navigasi (Navbar) publik dan admin tetap berada di posisinya di bawah backdrop gelap tanpa kedipan hilang-muncul saat dialog terbuka.',
+    ],
+  },
+  {
+    version: '1.8.0',
+    releaseDate: '15 Oktober 2026',
+    title: 'Arsitektur Slug Internasional (SEO Global), Respon Curhat & Triage Prioritas',
+    badge: 'SEO & Database',
+    highlights: [
+      'Migrasi seluruh 37 URL artikel dari Bahasa Indonesia ke slug Bahasa Inggris terstandarisasi SEO internasional dengan pengalihan otomatis 301 (permanent redirect) backward-compatible.',
+      'Penyelesaian kurasi dan pengiriman tanggapan empati Islami (Tazkiyatun Nafs) pada seluruh 11 curhat tertunda yang tersinkronisasi langsung ke basis data.',
+      'Sistem klasifikasi prioritas dan triage otomatis pada antrean janji temu dan curhat masuk di portal pengelola konselor.',
+      'Integrasi tombol pasang aplikasi web interaktif di footer publik (FooterInstallButton) terhubung langsung ke status instalasi PWA dan panduan sistem.',
+    ],
+  },
+  {
+    version: '1.7.0',
+    releaseDate: '12 Oktober 2026',
+    title: 'Mesin Pengacakan Deterministik (PRNG), Rotasi Konten & Kurasi Draf Artikel',
+    badge: 'Fitur Admin & Algoritma',
+    highlights: [
+      'Mesin algoritma pengacakan ter-seed (Pseudo-Random Number Generator / PRNG) untuk rotasi adil artikel terkait dan cuplikan curhat di beranda tanpa layout blink.',
+      'Penataan Kotak Draf Artikel pengelola (ArticleDraftsModal) dengan fitur pencarian instan, filter kategori, dan indikator status autosave.',
+      'Bilah alat penyunting teks markdown (ArticleEditorToolbar) dengan pintasan pemformatan cepat (bold, italic, kutipan, heading, list).',
+      'Galeri kurasi 9 tema visual sampul artikel (ArticleCoverPicker) dengan pratinjau langsung sebelum publikasi.',
+    ],
+  },
+  {
+    version: '1.6.0',
+    releaseDate: '09 Oktober 2026',
+    title: 'Sistem Primitif UI, Notifikasi Web Push & Resend Email Terpadu',
+    badge: 'Arsitektur & Komunikasi',
+    highlights: [
+      'Rilis komponen UI primitif terstandarisasi (Tabs, Textarea, Card, Modal, ConfirmDecisionModal, PaginationBar).',
+      'Integrasi email transaksional Resend otomatis dengan template responsif: notifikasi konfirmasi booking konseli, pembaruan status sesi, dan peringatan instan ke konselor.',
+      'Implementasi Web Push Notification server dengan modal persetujuan izin ramah privasi (NotificationPromptModal).',
+      'Antrean mutasi offline (Offline Queue Sync) untuk pengiriman curhat saat koneksi internet terputus.',
+    ],
+  },
   {
     version: '1.5.0',
     releaseDate: '06 Oktober 2026',

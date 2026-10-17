@@ -1,6 +1,6 @@
-# 🌿 Amelia (Amel) — Portofolio & Ruang Bimbingan Digital `v1.5.0`
+# 🌿 Amelia (Amel) : Portofolio & Ruang Bimbingan Digital `v2.0.0`
 
-[![Production Status](https://img.shields.io/badge/Production-Live%20v1.5.0-1A563C?style=for-the-badge&logo=vercel&logoColor=white)](https://mlyfeblia.vercel.app)
+[![Production Status](https://img.shields.io/badge/Production-Live%20v2.0.0-1A563C?style=for-the-badge&logo=vercel&logoColor=white)](https://mlyfeblia.vercel.app)
 [![Next.js](https://img.shields.io/badge/Next.js-16.3-black?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/React-19.3-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
@@ -10,7 +10,7 @@
 
 > *"Ruang aman untuk cerita yang belum sempat diucapkan, tempat hati berlabuh dalam Thuma'ninah."* 🕊️
 
-Selamat datang di repositori resmi **Amelia (Amel) — Versi 1.5.0**, platform portofolio profesional dan ruang bimbingan konseling digital dari mahasiswi Bimbingan Konseling Islam (BKI) **Universitas Islam Negeri Siber Syekh Nurjati Cirebon (UINSSC)**.
+Selamat datang di repositori resmi **Amelia (Amel) : Versi 2.0.0**, platform portofolio profesional dan ruang bimbingan konseling digital dari mahasiswi Bimbingan Konseling Islam (BKI) **Universitas Islam Negeri Siber Syekh Nurjati Cirebon (UINSSC)**.
 
 Platform ini mengintegrasikan profil profesional praktisi layanan pelanggan (berpengalaman sejak 2020), ruang konseling sebaya (*cyber counseling*), ruang curhat anonim yang aman, asesmen mandiri kesehatan jiwa 4 dimensi, serta artikel reflektif berbasis pendekatan psikologi Islam (*Tazkiyatun Nafs*).
 
@@ -27,18 +27,18 @@ Platform ini dibangun dengan prinsip keaslian (*human craft*) dan disiplin estet
 
 ---
 
-## ✨ Fitur Utama Versi 1.5.0
+## ✨ Fitur Utama Versi 2.0.0
 
 ### 📱 1. Progressive Web App (PWA) Resilien & Offline Article Reading
 - **Offline Article Reading:** Artikel yang pernah dibuka tersimpan otomatis dengan strategi Service Worker `NetworkFirst` (retensi 7 hari) via [Serwist](https://serwist.pages.dev/), sehingga tetap dapat dibaca tanpa sambungan internet.
-- **Sistem Pembaruan Terotomasi (v1.5.0):** Pengecekan versi periodik, banner notifikasi changelog terpusat, dan modal catatan pembaruan transparan (*frosted glass*).
+- **Sistem Pembaruan Terotomasi (v2.0.0):** Pengecekan versi periodik, banner notifikasi changelog terpusat, dan modal catatan pembaruan transparan (*frosted glass*).
 - **Fallback Offline Interaktif ([`src/app/~offline/page.tsx`](src/app/~offline/page.tsx)):** Menyediakan panduan latihan pernapasan grounding (*Tazkiyatun Nafs*), tombol muat ulang, dan akses darurat saat koneksi internet terputus.
 - **Standar Display Modern:** Mendukung `window-controls-overlay`, `standalone`, serta modal petunjuk visual khusus untuk pengguna Safari iOS (*Add to Home Screen*).
 
 ### 🗓️ 2. Reservasi Jadwal & Pelacakan Status di Perangkat
 - **Pelacakan Status Janji Temu di Perangkat:** Konseli dapat memantau status janji temu langsung di perangkat tanpa perlu registrasi/login akun (`amel_device_bookings_history`).
 - **Tiga Format Sesi Fleksibel:** *Google Meet Virtual*, *Chat Terjadwal*, dan *Tatap Muka di Lingkungan Kampus UIN Siber Cirebon*.
-- **Alur Mandiri & Validasi Berlapis:** Validasi nomor WhatsApp (9–15 digit), format email, 13 kategori bimbingan konseling spesifik, dan tiket reservasi instan ber-QR code.
+- **Alur Mandiri & Validasi Berlapis:** Validasi nomor WhatsApp (9-15 digit), format email, 13 kategori bimbingan konseling spesifik, dan tiket reservasi instan ber-QR code.
 
 ### 💌 3. Ruang Curhat Anonim (Dinding Interaktif)
 - **100% Rahasia & Aman:** Konseli dapat mencurahkan isi hati dan beban pikiran akademik maupun emosional tanpa mempublikasikan identitas pribadi.
@@ -66,7 +66,7 @@ Platform ini dibangun dengan prinsip keaslian (*human craft*) dan disiplin estet
 
 ### 🚀 Metrik Kinerja (Core Web Vitals)
 - **Largest Contentful Paint (LCP):** Gambar profil pahlawan dioptimasi ke WebP/AVIF dengan atribut `priority` dan `sizes` responsif untuk pemuatan sub-detik.
-- **Cumulative Layout Shift (CLS):** `0.000` — Dimensi elemen gambar dan font swap terkunci presisi tanpa pergeseran layout.
+- **Cumulative Layout Shift (CLS):** `0.000` : Dimensi elemen gambar dan font swap terkunci presisi tanpa pergeseran layout.
 - **First Input Delay / INP:** Interaksi instan didukung oleh React 19 concurrent features dan bundle JavaScript modular.
 
 ### 🔍 Search Engine Optimization (SEO) Terpadu
@@ -273,7 +273,42 @@ pnpm run test:integration
 
 ## 📜 Catatan Pembaruan Aplikasi (Changelog)
 
-### [1.5.0] — 06 Oktober 2026
+### [2.0.0] - 17 Oktober 2026
+> **Rilis Akbar v2.0: Stabilitas Formulir Menyeluruh, Akses Instan Tanpa Jeda & Penyempurnaan Visual Editorial**
+- **Validasi Formulir Interaktif & Efisien:** Implementasi komponen FormErrorMessage cerdas dengan penutupan otomatis 6 detik, visual bar hitung mundur, pause on hover, dan eliminasi tuntas bug loop penutupan tombol silang manual.
+- **Akses Instan Tanpa Jeda:** PWA splash screen dinonaktifkan sehingga pengguna langsung mengakses konten tanpa layar pembuka perantara saat pertama kali membuka situs.
+- **Penyelarasan Desain Editorial:** Pembaharuan bingkai foto kartu dan bayangan (border dan shadow) pada HeroSection dan Halaman Tentang Saya (AboutHero) dengan aksen paper design system yang elegan dan terarah.
+- **Pengujian Komprehensif:** 18 test suite Vitest (168 unit & integration tests) lulus 100% dan verifikasi build Next.js 16.3 tanpa catatan peringatan.
+
+### [1.9.0] - 16 Oktober 2026
+> **Higienitas Interaksi Kursor, Isolasi Gulir Ganda & Kebebasan Seleksi Teks**
+- **Standarisasi Kursor Kontekstual:** Penerapan `cursor: text` pada input dan textarea, `cursor: pointer` pada semua kontrol interaktif, dan `cursor: not-allowed` pada elemen disabled di seluruh antarmuka.
+- **Isolasi Gulir Ganda:** Interceptor event roda tetikus (wheel) dan aturan `overscroll-behavior: contain` pada textarea serta kontainer geser horizontal untuk mencegah scroll jumping pada kontainer utama.
+- **Higienitas Seleksi Teks:** Penerapan `user-select: none` pada elemen kontrol interaktif (tombol, tab, navigasi) untuk mencegah blok seleksi biru yang tidak disengaja, serta jaminan `user-select: text` penuh pada seluruh konten artikel dan respons curhat.
+- **Stabilitas Layering Modal & Navigasi:** Perbaikan z-index pada modal backdrop sehingga Navbar publik dan admin tetap stabil di bawah backdrop gelap tanpa efek kedip atau hilang-muncul.
+
+### [1.8.0] - 15 Oktober 2026
+> **Arsitektur Slug Internasional (SEO Global), Respon Curhat & Triage Prioritas**
+- **Migrasi Slug Artikel Global:** Standarisasi 37 slug artikel ke format Bahasa Inggris ramah SEO internasional dengan pengalihan otomatis 301 (permanent redirect) backward-compatible untuk menjaga backlink dan bookmark.
+- **Sinkronisasi Respons Curhat:** Kurasi dan publikasi tanggapan empati Islami (Tazkiyatun Nafs) untuk 11 curhat tertunda yang tersinkronisasi penuh ke basis data PostgreSQL.
+- **Triage Prioritas Admin:** Klasifikasi prioritas otomatis pada reservasi janji temu dan antrean curhat masuk di portal konselor.
+- **Tombol Pasang PWA Footer:** Penambahan tombol instalasi interaktif di footer publik dengan panduan sistem operasi (Android, iOS Safari, Desktop).
+
+### [1.7.0] - 12 Oktober 2026
+> **Mesin Pengacakan Deterministik (PRNG), Rotasi Konten & Kurasi Draf Artikel**
+- **Rotasi Konten Deterministik:** Implementasi algoritma PRNG (Pseudo-Random Number Generator) ter-seed untuk rotasi adil artikel terkait dan cuplikan curhat di beranda tanpa layout blink.
+- **Modal Draf Artikel:** Penambahan antarmuka ArticleDraftsModal untuk mengelola draf tulisan konselor dengan pencarian instan, filter kategori, dan status penyimpanan lokal.
+- **Bilah Alat Penyunting Markdown:** Penyediaan toolbar pemformatan cepat (bold, italic, kutipan, heading, list) untuk mempermudah penulisan artikel reflektif konselor.
+- **Galeri Sampul Kurasi:** Pemilih sampul visual 9 tema terkurasi (ArticleCoverPicker) dengan pratinjau langsung sebelum artikel diterbitkan.
+
+### [1.6.0] - 09 Oktober 2026
+> **Sistem Primitif UI, Notifikasi Web Push & Resend Email Terpadu**
+- **Standarisasi Komponen Primitif:** Rilis fondasi antarmuka modular (Tabs, Textarea, Card, Modal, ConfirmDecisionModal, PaginationBar).
+- **Email Transaksional Terpadu:** Integrasi Resend email dengan template responsif untuk konfirmasi reservasi sesi konseling, pembaruan status, dan notifikasi konselor.
+- **Server Notifikasi Web Push:** Dukungan pengiriman Web Push Notification dengan modal persetujuan izin ramah privasi (NotificationPromptModal).
+- **Sinkronisasi Mutasi Offline:** Antrean mutasi lokal (Offline Queue) untuk pengiriman curhat yang otomatis disinkronkan saat koneksi internet kembali pulih.
+
+### [1.5.0] - 06 Oktober 2026
 > **Integrasi Menyeluruh Database & API, SEO Maksimal, PWA Offline, & Desain Editorial Modern**
 - **Integrasi Penuh Database:** Sinkronisasi menyeluruh antara Frontend, Backend API, dan PostgreSQL (InsForge BaaS) via Drizzle ORM dengan verifikasi otomatis (`pnpm run db:verify`).
 - **Uji Integrasi End-to-End 21 Skenario:** Ditambahkan skrip uji otomatis (`pnpm run test:integration`) yang memvalidasi prerender halaman publik, sanitasi privasi konseli, proteksi 401 unauthenticated, alur login PIN HMAC, dan operasi CRUD live.
@@ -284,33 +319,33 @@ pnpm run test:integration
 - **Penyelarasan Toolbar Admin:** Penyeragaman seluruh filter admin di `/admin/bookings`, `/admin/counseling`, dan `/admin/articles` menggunakan dropdown `<select>` responsif, tombol pill "Semua (count)" yang rapi di layar ponsel, dan tombol aksi kartu artikel 2 baris penuh di mobile.
 - **Penyempurnaan Navigasi Mobile:** Eliminasi scroll jitter pada navbar mobile menggunakan lapisan GPU composite hardware-accelerated.
 
-### [1.4.0] — 28 September 2026
+### [1.4.0] - 28 September 2026
 > **Pelacakan Janji Temu di Perangkat & Keamanan Sesi 30 Menit**
 - Pelacakan status janji temu otomatis di perangkat tanpa perlu registrasi/login akun konseli (`amel_device_bookings_history`).
 - Perluasan topik bimbingan konseling menjadi 13 ranah spesifik.
 - Sistem keamanan pengelola dengan batas sesi 30 menit, penghitung mundur aktif, dan autosave draf otomatis.
 - Animasi transisi antartab dan navigasi halus 60fps tanpa pergeseran layout (*zero layout shift*).
 
-### [1.3.0] — 20 September 2026
+### [1.3.0] - 20 September 2026
 > **Paginasi Direktori, Kategori Baku & Optimasi SEO Google**
 - Paginasi dan pencarian instan pada ruang curhat anonim dan direktori artikel refleksi.
 - Penyelarasan seluruh kategori curhat & artikel menjadi 100% Bahasa Indonesia baku.
 - Fleksibilitas portal admin untuk mengatur penayangan artikel dan curhat yang disematkan ke beranda (`showOnLandingPage`).
 - Optimasi SEO teknis dengan Schema.org JSON-LD (`Person`, `WebApplication`, `BlogPosting`).
 
-### [1.2.0] — 14 September 2026
+### [1.2.0] - 14 September 2026
 > **Progressive Web App (PWA) Standalone & Dukungan Offline**
 - Dukungan pemasangan PWA standalone untuk Android, iOS Safari (*Add to Home Screen*), dan Desktop.
 - Halaman cadangan mode offline (`~offline`) dengan panduan latihan pernapasan grounding (*Tazkiyatun Nafs*).
 - Penyimpanan cache aset statis berbasis Serwist Service Worker yang resilien dan hemat kuota.
 
-### [1.1.0] — 08 September 2026
+### [1.1.0] - 08 September 2026
 > **Portal Admin Konselor & Arsitektur Database Relasional**
 - Portal administrasi konselor terlindungi untuk memoderasi curhat masuk dan mengelola janji temu konseling.
 - Integrasi basis data PostgreSQL terstruktur dengan skema Drizzle ORM.
 - Proteksi keamanan OWASP Top 10, sanitasi input XSS, dan rate limiter Upstash Redis.
 
-### [1.0.0] — 01 September 2026
+### [1.0.0] - 01 September 2026
 > **Rilis Perdana Portofolio & Ruang Bimbingan Digital Amelia**
 - Peluncuran platform resmi portofolio profesional dan ruang bimbingan konseling sebaya Amelia (BKI UIN Siber Cirebon).
 - Desain editorial human-craft bernuansa *Warm Paper* (`#FBF9F5`) dan *Forest Sage* (`#1A563C`).
@@ -329,5 +364,5 @@ pnpm run test:integration
 
 <div align="center">
   <p>Diciptakan dengan kehangatan dan dedikasi penuh untuk mendampingi jiwa-jiwa bertumbuh. 🤍🌿</p>
-  <p><sub>Versi 1.5.0 · © 2026 Amelia · Bimbingan Konseling Islam UIN Siber Syekh Nurjati Cirebon.</sub></p>
+  <p><sub>Versi 2.0.0 · © 2026 Amelia · Bimbingan Konseling Islam UIN Siber Syekh Nurjati Cirebon.</sub></p>
 </div>
