@@ -31,26 +31,19 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
   const [submitting, setSubmitting] = useState(false);
   const [remainingSeconds, setRemainingSeconds] = useState<number>(DEFAULT_SESSION_SECONDS);
   const [sessionNotice, setSessionNotice] = useState<string | null>(null);
-  const [isInputReady, setIsInputReady] = useState(false);
+  const [isInputReady, setIsInputReady] = useState(true);
 
   const submittingRef = useRef(false);
   const pinInputRef = useRef<HTMLInputElement>(null);
 
-  // Ensure PIN input is strictly cleared on mount and unauthenticated state
+  // Ensure PIN input is strictly cleared on mount and unauthenticated state while focusing
   useEffect(() => {
     if (!isAuthenticated) {
       setPin('');
       if (pinInputRef.current) {
         pinInputRef.current.value = '';
+        pinInputRef.current.focus();
       }
-      const timer = setTimeout(() => {
-        setPin('');
-        if (pinInputRef.current) {
-          pinInputRef.current.value = '';
-        }
-        setIsInputReady(true);
-      }, 350);
-      return () => clearTimeout(timer);
     }
   }, [isAuthenticated]);
 
@@ -358,11 +351,8 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
                   autoCorrect="off"
                   autoCapitalize="off"
                   disabled={submitting}
-                  readOnly={!isInputReady || submitting}
-                  onFocus={() => setIsInputReady(true)}
-                  onPointerDown={() => setIsInputReady(true)}
-                  onTouchStart={() => setIsInputReady(true)}
-                  onClick={() => setIsInputReady(true)}
+                  readOnly={submitting}
+                  autoFocus
                   value={pin}
                   onChange={(e) => {
                     const onlyNums = e.target.value.replace(/[^0-9]/g, '');
