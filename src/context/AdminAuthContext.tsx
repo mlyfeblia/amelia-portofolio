@@ -31,9 +31,28 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
   const [submitting, setSubmitting] = useState(false);
   const [remainingSeconds, setRemainingSeconds] = useState<number>(DEFAULT_SESSION_SECONDS);
   const [sessionNotice, setSessionNotice] = useState<string | null>(null);
+  const [isInputReady, setIsInputReady] = useState(false);
 
   const submittingRef = useRef(false);
   const pinInputRef = useRef<HTMLInputElement>(null);
+
+  // Ensure PIN input is strictly cleared on mount and unauthenticated state
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setPin('');
+      if (pinInputRef.current) {
+        pinInputRef.current.value = '';
+      }
+      const timer = setTimeout(() => {
+        setPin('');
+        if (pinInputRef.current) {
+          pinInputRef.current.value = '';
+        }
+        setIsInputReady(true);
+      }, 350);
+      return () => clearTimeout(timer);
+    }
+  }, [isAuthenticated]);
 
   useEffect(() => {
     let active = true;
@@ -309,25 +328,41 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
           )}
 
           <form onSubmit={handleFormSubmit} autoComplete="off" className="space-y-3.5 min-[340px]:space-y-4 text-left">
+            {/* Decoy inputs to absorb browser and password manager credential autofill */}
+            <div className="sr-only" aria-hidden="true">
+              <input type="text" name="decoy_username" tabIndex={-1} autoComplete="off" />
+              <input type="password" name="decoy_password" tabIndex={-1} autoComplete="new-password" />
+            </div>
+
             <div>
-              <label htmlFor="admin-pin" className="block text-xs font-semibold text-[var(--color-ink)] mb-1.5">
+              <label htmlFor="admin-access-code" className="block text-xs font-semibold text-[var(--color-ink)] mb-1.5">
                 PIN Akses Pengelola
               </label>
               
               <div className={`relative flex items-center ${pinError ? 'animate-shake' : ''}`}>
                 <input
                   ref={pinInputRef}
-                  id="admin-pin"
-                  name="counselor_auth_pin"
+                  id="admin-access-code"
+                  name="amel_access_code"
                   type={showPin ? 'text' : 'password'}
                   inputMode="numeric"
                   pattern="[0-9]*"
                   maxLength={6}
-                  autoComplete="off"
+                  autoComplete="one-time-code"
                   data-lpignore="true"
+                  data-1p-ignore="true"
+                  data-bwignore="true"
                   data-form-type="other"
+                  data-private="true"
+                  spellCheck={false}
+                  autoCorrect="off"
+                  autoCapitalize="off"
                   disabled={submitting}
-                  readOnly={submitting}
+                  readOnly={!isInputReady || submitting}
+                  onFocus={() => setIsInputReady(true)}
+                  onPointerDown={() => setIsInputReady(true)}
+                  onTouchStart={() => setIsInputReady(true)}
+                  onClick={() => setIsInputReady(true)}
                   value={pin}
                   onChange={(e) => {
                     const onlyNums = e.target.value.replace(/[^0-9]/g, '');
@@ -336,7 +371,7 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
                       setPinError(false);
                       setPinErrorMessage(null);
                     }
-                    if (onlyNums.length === 6 && !submitting && !submittingRef.current) {
+                    if (onlyNums.length === 6 && isInputReady && !submitting && !submittingRef.current) {
                       login(onlyNums);
                     }
                   }}
@@ -348,7 +383,6 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
                       ? 'border-red-400 focus:border-red-500 focus:ring-red-100'
                       : 'border-[var(--color-paper-border)] focus:border-[var(--color-accent)] focus:ring-[var(--color-accent-soft)]'
                   }`}
-                  autoFocus
                 />
 
                 <button
