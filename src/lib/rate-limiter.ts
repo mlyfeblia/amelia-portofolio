@@ -13,6 +13,7 @@ interface RateLimitRecord {
 }
 
 const memoryStore = new Map<string, RateLimitRecord>();
+const MAX_MEMORY_KEYS = 5000;
 
 // Clean up expired keys every 5 minutes
 const CLEANUP_INTERVAL_MS = 5 * 60 * 1000;
@@ -52,6 +53,15 @@ export function checkRateLimit(
   const record = memoryStore.get(key);
 
   if (!record || record.resetAt <= now) {
+    if (!record && memoryStore.size >= MAX_MEMORY_KEYS) {
+      for (const [k, v] of memoryStore.entries()) {
+        if (v.resetAt <= now) memoryStore.delete(k);
+      }
+      if (memoryStore.size >= MAX_MEMORY_KEYS) {
+        const oldestKey = memoryStore.keys().next().value;
+        if (oldestKey) memoryStore.delete(oldestKey);
+      }
+    }
     const newRecord: RateLimitRecord = {
       count: 1,
       resetAt: now + windowMs,

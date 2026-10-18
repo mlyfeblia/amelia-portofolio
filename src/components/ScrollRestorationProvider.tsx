@@ -27,9 +27,11 @@ export default function ScrollRestorationProvider() {
     const currentPath = window.location.pathname + window.location.search;
     const currentKey = SCROLL_PREFIX + currentPath;
 
-    // When navigating to a new route via Next.js Link, start at the top
+    // When navigating to a new route via Next.js Link, start at the top (unless navigating to a hash anchor)
     if (prevPathRef.current !== null && prevPathRef.current !== pathname) {
-      window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
+      if (!window.location.hash) {
+        window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
+      }
       try {
         sessionStorage.setItem(currentKey, '0');
       } catch {}
@@ -84,15 +86,19 @@ export default function ScrollRestorationProvider() {
     if (typeof window === 'undefined') return;
 
     const handleGlobalWheel = (e: WheelEvent) => {
+      if (e.ctrlKey || e.metaKey) return;
       const target = e.target as HTMLElement | null;
       if (!target) return;
+
+      const normalizeWheelDelta = (raw: number, mode: number) =>
+        mode === 1 ? raw * 24 : mode === 2 ? raw * 320 : raw;
 
       // 1. Textarea scroll isolation
       const textarea = target.closest('textarea');
       if (textarea) {
         const maxScroll = textarea.scrollHeight - textarea.clientHeight;
         if (maxScroll > 1) {
-          const delta = e.deltaY;
+          const delta = normalizeWheelDelta(e.deltaY, e.deltaMode);
           if (delta !== 0) {
             e.preventDefault();
             textarea.scrollTop += delta;
@@ -108,7 +114,7 @@ export default function ScrollRestorationProvider() {
       if (isolated) {
         const maxScroll = isolated.scrollHeight - isolated.clientHeight;
         if (maxScroll > 1) {
-          const delta = e.deltaY;
+          const delta = normalizeWheelDelta(e.deltaY, e.deltaMode);
           if (delta !== 0) {
             e.preventDefault();
             isolated.scrollTop += delta;

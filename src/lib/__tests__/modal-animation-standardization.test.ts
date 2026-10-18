@@ -100,5 +100,11 @@ describe('Modal Dialog and Animation Standardization', () => {
     expect(indexOfEarlyReturn).toBeGreaterThan(-1);
     expect(indexOfUseRef).toBeLessThan(indexOfEarlyReturn);
   });
+
+  it('PwaLifecycle iOS modal backdrop supports click-outside dismissal via onClick={closeIosModal}', () => {
+    const pwaLifecycleTsx = fs.readFileSync(path.resolve(process.cwd(), 'src/components/pwa/PwaLifecycle.tsx'), 'utf-8');
+    expect(pwaLifecycleTsx).toContain('iosBackdropClass');
+    expect(pwaLifecycleTsx).toMatch(/<div[\s\S]*?iosBackdropClass[\s\S]*?onClick=\{closeIosModal\}/);
+  });
 });
 

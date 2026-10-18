@@ -20,7 +20,16 @@ export async function GET(request: Request) {
       isNaN(limit) ? 100 : limit,
       isNaN(offset) ? 0 : offset
     );
-    return NextResponse.json({ success: true, data: list });
+    return NextResponse.json(
+      { success: true, data: list },
+      {
+        headers: {
+          'Cache-Control': isAuth
+            ? 'no-store, max-age=0'
+            : 'private, no-cache, must-revalidate',
+        },
+      }
+    );
   } catch (error) {
     telemetry.error('Error fetching curhat', error, { route: '/api/curhat', method: 'GET' });
     return NextResponse.json({ success: false, message: 'Gagal mengambil curhat' }, { status: 500 });

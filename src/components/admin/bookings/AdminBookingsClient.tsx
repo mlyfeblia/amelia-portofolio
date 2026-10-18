@@ -133,12 +133,16 @@ export function AdminBookingsClient() {
 
   const loadBookings = useCallback(async (signalArg?: unknown) => {
     const signal = signalArg instanceof AbortSignal ? signalArg : undefined;
-    const cached = adminCache.getBookings();
-    if (!cached || cached.length === 0) {
-      setLoading(true);
-    }
     try {
       const res = await fetch('/api/bookings', { signal });
+
+      if (res.status === 401) {
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('amelia:admin-session-expired'));
+        }
+        return;
+      }
+
       const data = await res.json();
       if (data.success && Array.isArray(data.data)) {
         setBookings(data.data);
@@ -154,12 +158,43 @@ export function AdminBookingsClient() {
   }, []);
 
   useEffect(() => {
+    let ignore = false;
     const controller = new AbortController();
-    loadBookings(controller.signal);
+
+    async function fetchData() {
+      try {
+        const res = await fetch('/api/bookings', { signal: controller.signal });
+
+        if (res.status === 401) {
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('amelia:admin-session-expired'));
+          }
+          return;
+        }
+
+        const data = await res.json();
+        if (!ignore && data.success && Array.isArray(data.data)) {
+          setBookings(data.data);
+          adminCache.setBookings(data.data);
+        }
+      } catch (e: unknown) {
+        if ((e as Error)?.name !== 'AbortError') {
+          console.error('Failed to load bookings:', e);
+        }
+      } finally {
+        if (!ignore) {
+          setLoading(false);
+        }
+      }
+    }
+
+    fetchData();
+
     return () => {
+      ignore = true;
       controller.abort();
     };
-  }, [loadBookings]);
+  }, []);
 
   // Automatic silent background revalidation on tab re-entry and cross-tab sync
   useAdminRevalidate('bookings', loadBookings);
@@ -363,6 +398,7 @@ export function AdminBookingsClient() {
         statusCounts={statusCounts}
         totalCount={bookings.length}
         hasActiveFilters={hasActiveFilters}
+        totalResults={filteredBookings.length}
         onResetFilters={handleResetFilters}
       />
 

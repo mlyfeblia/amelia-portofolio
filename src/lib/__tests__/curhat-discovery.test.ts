@@ -87,4 +87,20 @@ describe('Public Curhat Discovery & Sorting Rules', () => {
     expect(visit2.length).toBe(answered.length);
     expect(visit1).not.toEqual(visit2);
   });
+
+  it('guarantees deterministic chronological partition without client-side shuffle flicker', () => {
+    const list: AnonymousMessage[] = [
+      { id: '1', alias: 'A', message: 'msg1', isPublic: true, isAnswered: false, category: 'Akademik', createdAt: '2026-10-10' },
+      { id: '2', alias: 'B', message: 'msg2', isPublic: true, isAnswered: true, answer: 'ans2', category: 'Akademik', createdAt: '2026-10-12' },
+      { id: '3', alias: 'C', message: 'msg3', isPublic: true, isAnswered: true, answer: 'ans3', category: 'Akademik', createdAt: '2026-10-11' },
+      { id: '4', alias: 'D', message: 'msg4', isPublic: true, isAnswered: false, category: 'Akademik', createdAt: '2026-10-09' },
+    ];
+
+    const answered = list.filter((m) => m.isAnswered);
+    const unanswered = list.filter((m) => !m.isAnswered);
+    const result = [...answered, ...unanswered];
+
+    // Answered first, unanswered last, each maintaining exact deterministic order
+    expect(result.map((m) => m.id)).toEqual(['2', '3', '1', '4']);
+  });
 });

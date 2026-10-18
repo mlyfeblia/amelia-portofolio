@@ -6,9 +6,21 @@ export interface VersionRelease {
   highlights: string[];
 }
 
-export const CURRENT_APP_VERSION = '2.0.0';
+export const CURRENT_APP_VERSION = '2.1.0';
 
 export const APP_CHANGELOG: VersionRelease[] = [
+  {
+    version: '2.1.0',
+    releaseDate: '19 Oktober 2026',
+    title: 'Pematangan Sistem Menyeluruh: Sinkronisasi Multi-Tab, Aksesibilitas Modal, Antrean Offline & Keamanan API',
+    badge: 'Rilis Sistem v2.1.0',
+    highlights: [
+      'Sinkronisasi multi-tab real-time untuk sesi pengelola admin, cache lintas halaman, dan mekanisme cross-tab mutex lock pada antrean pengiriman curhat offline.',
+      'Penyempurnaan alur interaktif konseli: draf reservasi otomatis (sessionStorage), resolusi topik lintas halaman (Layanan, Asesmen, Artikel, Booking, Curhat), serta rekomendasi artikel reflektif pada hasil asesmen.',
+      'Standarisasi aksesibilitas WCAG 2.1 AA: focus trap penuh (containerRef) dan isolasi scroll (.modal-scroll-body) di seluruh 12 modal aplikasi, serta perbaikan sticky context pada transisi halaman.',
+      'Penguatan keamanan backend: proteksi CSRF Origin pada mutasi API, deduplikasi rate-limiter, invariant publikasi/landing page di data-store, serta 23 berkas test suite Vitest (218 pengujian) lulus 100%.',
+    ],
+  },
   {
     version: '2.0.0',
     releaseDate: '17 Oktober 2026',

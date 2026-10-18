@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Mail, ExternalLink, Copy, Check, X, Calendar, Clock, User, CheckCircle2 } from 'lucide-react';
+import { Mail, ExternalLink, Copy, Check, X, Calendar, Clock, User } from 'lucide-react';
 import { Booking } from '@/types';
 import { useMounted } from '@/lib/use-mounted';
 import { useModalAnimation } from '@/lib/use-modal-animation';
@@ -12,6 +12,7 @@ import {
   getAdminContactEmailUrl,
   getAdminContactGmailUrl,
 } from '@/lib/email-template';
+import { copyToClipboard } from '@/lib/clipboard';
 import { cn } from '@/lib/utils';
 
 export interface BookingContactEmailModalProps {
@@ -27,6 +28,7 @@ export function BookingContactEmailModal({
 }: BookingContactEmailModalProps) {
   const mounted = useMounted();
   const { toast } = useToast();
+  const windowRef = React.useRef<HTMLDivElement>(null);
 
   // Retain active booking during exit transition to prevent sudden unmount or crash
   const [cachedBooking, setCachedBooking] = useState<Booking | null>(booking);
@@ -43,6 +45,7 @@ export function BookingContactEmailModal({
     onClose,
     closeOnEscape: true,
     lockScroll: true,
+    containerRef: windowRef,
   });
 
   if (!mounted || !isRendered || !activeBooking) {
@@ -63,24 +66,24 @@ export function BookingContactEmailModal({
   const mailtoUrl = getAdminContactEmailUrl(emailParams);
 
   const handleCopyEmail = async () => {
-    try {
-      await navigator.clipboard.writeText(activeBooking.email);
+    const ok = await copyToClipboard(activeBooking.email);
+    if (ok) {
       setCopiedEmail(true);
       setTimeout(() => setCopiedEmail(false), 2000);
       toast.success(`Alamat email ${activeBooking.email} disalin!`);
-    } catch {
+    } else {
       toast.info(`Email: ${activeBooking.email}`);
     }
   };
 
   const handleCopyDraft = async () => {
-    try {
-      const fullText = `Subjek: ${subject}\n\n${body}`;
-      await navigator.clipboard.writeText(fullText);
+    const fullText = `Subjek: ${subject}\n\n${body}`;
+    const ok = await copyToClipboard(fullText);
+    if (ok) {
       setCopiedDraft(true);
       setTimeout(() => setCopiedDraft(false), 2000);
       toast.success('Draf pesan email lengkap disalin ke clipboard!');
-    } catch {
+    } else {
       toast.info('Gagal menyalin draf pesan ke clipboard.');
     }
   };
@@ -106,6 +109,7 @@ export function BookingContactEmailModal({
 
       {/* Modal Window */}
       <div
+        ref={windowRef}
         className={cn(
           'relative z-10 w-full max-w-lg sm:max-w-xl bg-white rounded-2xl min-[340px]:rounded-3xl p-4 min-[340px]:p-5 sm:p-6 shadow-2xl border border-[var(--color-paper-border)] flex flex-col gap-4 my-auto select-text pointer-events-auto max-h-[92vh] overflow-hidden',
           windowClass

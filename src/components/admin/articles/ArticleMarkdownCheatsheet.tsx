@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import {
   X,
@@ -251,11 +251,13 @@ export function ArticleMarkdownCheatsheet({
   onInsertExample,
 }: ArticleMarkdownCheatsheetProps) {
   const mounted = useMounted();
+  const windowRef = React.useRef<HTMLDivElement>(null);
   const { isRendered, isExiting, backdropClass, windowClass } = useModalAnimation({
     isOpen,
     onClose,
     closeOnEscape: true,
     lockScroll: true,
+    containerRef: windowRef,
   });
   const [copiedSyntax, setCopiedSyntax] = useState<string | null>(null);
 
@@ -290,6 +292,7 @@ export function ArticleMarkdownCheatsheet({
 
       {/* Modal Dialog Content */}
       <div
+        ref={windowRef}
         className={cn(
           'relative z-10 w-full h-[95dvh] sm:h-[85vh] sm:max-w-2xl bg-[var(--color-surface)] border border-[var(--color-paper-border)] sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden pointer-events-auto modal-window-sheet-mobile',
           windowClass

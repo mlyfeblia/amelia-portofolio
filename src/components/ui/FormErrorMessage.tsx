@@ -54,8 +54,20 @@ export function FormErrorMessage({
   const unmountTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const autoDismissTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const remainingTimeRef = useRef<number>(autoDismissMs);
-  const startTimeRef = useRef<number>(Date.now());
-  const prevMessageRef = useRef<string | null | undefined>(message);
+  const startTimeRef = useRef<number>(0);
+
+  // Synchronize state during render when message prop changes
+  const [prevMessage, setPrevMessage] = useState<string | null | undefined>(message);
+  if (message !== prevMessage) {
+    setPrevMessage(message);
+    if (message) {
+      setCachedMessage(message);
+      setIsRendered(true);
+      setIsExiting(false);
+    } else if (isRendered) {
+      setIsExiting(true);
+    }
+  }
 
   // Trigger graceful exit animation and notify parent
   const startExit = useCallback(
@@ -81,7 +93,7 @@ export function FormErrorMessage({
     [isExiting, onClose]
   );
 
-  // Synchronize when message prop changes from parent
+  // Handle timers and exit transitions when message prop transitions
   useEffect(() => {
     // Case 1: New or updated truthy message arrives from parent
     if (message) {
@@ -89,24 +101,18 @@ export function FormErrorMessage({
         clearTimeout(unmountTimerRef.current);
         unmountTimerRef.current = null;
       }
-      setCachedMessage(message);
-      setIsRendered(true);
-      setIsExiting(false);
       remainingTimeRef.current = autoDismissMs;
       startTimeRef.current = Date.now();
     }
-    // Case 2: Parent cleared the message (e.g. user started typing, or parent called setError(''))
-    else if (!message && prevMessageRef.current && isRendered && !isExiting) {
-      setIsExiting(true);
+    // Case 2: Parent cleared the message, wait for exit animation to complete unmount
+    else if (isExiting) {
       if (unmountTimerRef.current) clearTimeout(unmountTimerRef.current);
       unmountTimerRef.current = setTimeout(() => {
         setIsRendered(false);
         setIsExiting(false);
       }, 220);
     }
-
-    prevMessageRef.current = message;
-  }, [message, isRendered, isExiting, autoDismissMs]);
+  }, [message, isExiting, autoDismissMs]);
 
   // Auto-dismiss countdown with hover-pause
   useEffect(() => {
@@ -170,7 +176,7 @@ export function FormErrorMessage({
       <div className="flex items-start justify-between gap-2.5 p-3 sm:p-3.5">
         <div className="flex items-start gap-2.5 min-w-0 flex-1">
           <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-[var(--color-error)]" aria-hidden="true" />
-          <p className="font-medium text-[var(--color-error)] text-xs sm:text-sm leading-relaxed break-words flex-1">
+          <p className="font-medium text-[var(--color-error)] text-xs sm:text-sm leading-relaxed min-w-0 flex-1 break-words [overflow-wrap:anywhere] [word-break:break-word]">
             {cachedMessage}
           </p>
         </div>

@@ -6,8 +6,7 @@ import {
   Search, 
   Clock, 
   HeartHandshake,
-  X,
-  RotateCcw
+  X
 } from 'lucide-react';
 import { AnonymousMessage, CURHAT_CATEGORIES } from '@/types';
 import { parseIndonesianDate } from '@/lib/utils';
@@ -15,8 +14,8 @@ import { SkeletonCurhatCard } from '@/components/ui/Skeleton';
 import { PaginationBar } from '@/components/ui/PaginationBar';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { useSessionSeed, seededShuffle } from '@/lib/seeded-random';
 import { scrollContainerIntoViewIfAbove } from '@/lib/dom-utils';
+import { resolveCurhatCategory } from './CurhatForm';
 
 const ITEMS_PER_PAGE = 5;
 
@@ -47,7 +46,17 @@ export function CurhatWall({ messages, loading = false }: CurhatWallProps) {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [currentPage, setCurrentPage] = useState<number>(1);
   const wallTopRef = useRef<HTMLDivElement>(null);
-  const { seed, isReady } = useSessionSeed('curhat_wall');
+
+  // Derive dynamic list of all distinct categories in messages + predefined categories
+  const categories = useMemo(() => {
+    const set = new Set<string>(['Semua', ...CURHAT_CATEGORIES]);
+    messages.forEach((m) => {
+      if (m.category && m.category.trim()) {
+        set.add(m.category.trim());
+      }
+    });
+    return Array.from(set);
+  }, [messages]);
 
   // Clean up legacy sticky sessionStorage on mount and synchronize URL params safely
   useEffect(() => {
@@ -60,15 +69,31 @@ export function CurhatWall({ messages, loading = false }: CurhatWallProps) {
     const syncFromLocation = () => {
       try {
         const params = new URLSearchParams(window.location.search);
-        const cat = params.get('kategori');
+        const cat = params.get('kategori') || params.get('category');
         const q = params.get('q');
         const page = params.get('page');
 
-        if (cat) setActiveTab(cat);
-        if (q) setSearchQuery(q);
+        if (cat) {
+          if (cat === 'Semua' || categories.includes(cat)) {
+            setActiveTab(cat);
+          } else {
+            setActiveTab(resolveCurhatCategory(cat));
+          }
+        } else {
+          setActiveTab('Semua');
+        }
+
+        if (q) {
+          setSearchQuery(q);
+        } else {
+          setSearchQuery('');
+        }
+
         if (page) {
           const p = parseInt(page, 10);
-          if (!isNaN(p) && p > 0) setCurrentPage(p);
+          setCurrentPage(!isNaN(p) && p > 0 ? p : 1);
+        } else {
+          setCurrentPage(1);
         }
       } catch {}
     };
@@ -76,9 +101,9 @@ export function CurhatWall({ messages, loading = false }: CurhatWallProps) {
     syncFromLocation();
     window.addEventListener('popstate', syncFromLocation);
     return () => window.removeEventListener('popstate', syncFromLocation);
-  }, []);
+  }, [categories]);
 
-  const syncParams = (cat: string, q: string, page: number) => {
+  const syncParams = React.useCallback((cat: string, q: string, page: number) => {
     try {
       const url = new URL(window.location.href);
       if (cat && cat !== 'Semua') url.searchParams.set('kategori', cat);
@@ -92,18 +117,15 @@ export function CurhatWall({ messages, loading = false }: CurhatWallProps) {
 
       window.history.replaceState({}, '', url.toString());
     } catch {}
-  };
+  }, []);
 
-  // Derive dynamic list of all distinct categories in messages + predefined categories
-  const categories = useMemo(() => {
-    const set = new Set<string>(['Semua', ...CURHAT_CATEGORIES]);
-    messages.forEach((m) => {
-      if (m.category && m.category.trim()) {
-        set.add(m.category.trim());
-      }
-    });
-    return Array.from(set);
-  }, [messages]);
+  // Debounced URL param sync for search query (300ms)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      syncParams(activeTab, searchQuery, currentPage);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [activeTab, searchQuery, currentPage, syncParams]);
 
   // Filter messages based on category, search query, and 2-tier public discovery
   const filteredMessages = useMemo(() => {
@@ -124,15 +146,14 @@ export function CurhatWall({ messages, loading = false }: CurhatWallProps) {
       return matched;
     }
 
-    // 2-tier public discovery:
-    // Tier 1 (Front): Answered messages shuffled per session
-    // Tier 2 (Bottom): Unanswered messages placed at the end
+    // 2-tier public layout:
+    // Tier 1 (Front): Answered messages ordered chronologically (newest first)
+    // Tier 2 (Bottom): Unanswered messages placed at the end chronologically
     const answered = matched.filter((m) => m.isAnswered || Boolean(m.answer && m.answer.trim().length > 0));
     const unanswered = matched.filter((m) => !m.isAnswered && (!m.answer || m.answer.trim().length === 0));
 
-    const shuffledAnswered = seed && isReady ? seededShuffle(answered, `${seed}_${activeTab}`) : answered;
-    return [...shuffledAnswered, ...unanswered];
-  }, [messages, activeTab, searchQuery, seed, isReady]);
+    return [...answered, ...unanswered];
+  }, [messages, activeTab, searchQuery]);
 
   // Pagination calculation
   const totalItems = filteredMessages.length;
@@ -154,7 +175,6 @@ export function CurhatWall({ messages, loading = false }: CurhatWallProps) {
   const handleSearchChange = (val: string) => {
     setSearchQuery(val);
     setCurrentPage(1);
-    syncParams(activeTab, val, 1);
   };
 
   const handlePageChange = (newPage: number) => {
@@ -186,7 +206,7 @@ export function CurhatWall({ messages, loading = false }: CurhatWallProps) {
                 if (e.key === 'Escape') handleSearchChange('');
               }}
               placeholder="Cari unek-unek / topik..."
-              className="search-input w-full text-xs pl-8.5 pr-8.5 py-2 text-[var(--color-ink)] placeholder:text-[var(--color-ink-soft)]"
+              className="search-input w-full text-xs !pl-9 !pr-10 py-2 text-[var(--color-ink)] placeholder:text-[var(--color-ink-soft)]"
               aria-label="Cari curhat anonim"
             />
             {searchQuery && (
@@ -236,64 +256,11 @@ export function CurhatWall({ messages, loading = false }: CurhatWallProps) {
             </TabsList>
           </Tabs>
         </div>
-
-        {/* Active Filter Indicator & Reset */}
-        {(searchQuery.trim() || activeTab !== 'Semua') && (
-          <div className="flex flex-wrap items-center justify-between gap-2 pt-2 px-1 text-xs text-[var(--color-ink-muted)]">
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <span>Menampilkan:</span>
-              {activeTab !== 'Semua' && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[var(--color-paper-muted)] text-[var(--color-ink)] font-medium border border-[var(--color-paper-border)]">
-                  Kategori: {activeTab}
-                  <button
-                    type="button"
-                    onClick={() => handleTabChange('Semua')}
-                    className="hover:text-[var(--color-ink-soft)] cursor-pointer"
-                    title="Hapus filter kategori"
-                    aria-label="Hapus filter kategori"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                </span>
-              )}
-              {searchQuery.trim() && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[var(--color-paper-muted)] text-[var(--color-ink)] font-medium border border-[var(--color-paper-border)]">
-                  &ldquo;{searchQuery.trim()}&rdquo;
-                  <button
-                    type="button"
-                    onClick={() => handleSearchChange('')}
-                    className="hover:text-[var(--color-ink-soft)] cursor-pointer"
-                    title="Hapus kata kunci pencarian"
-                    aria-label="Hapus kata kunci pencarian"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                </span>
-              )}
-            </div>
-            <button
-              type="button"
-              onClick={() => {
-                setActiveTab('Semua');
-                setSearchQuery('');
-                setCurrentPage(1);
-                syncParams('Semua', '', 1);
-              }}
-              className="text-[11px] font-semibold text-[var(--color-accent)] hover:underline cursor-pointer inline-flex items-center gap-1"
-              title="Reset pencarian dan kategori ke Semua"
-            >
-              <RotateCcw className="w-3 h-3" />
-              <span>Reset Semua Filter</span>
-            </button>
-          </div>
-        )}
       </div>
 
       {/* List of Messages / Skeletons / Empty State */}
       <div
         id={`panel-${activeTab}`}
-        role="tabpanel"
-        aria-labelledby={`tab-${activeTab}`}
         className="space-y-4"
       >
         {loading ? (
@@ -308,24 +275,27 @@ export function CurhatWall({ messages, loading = false }: CurhatWallProps) {
             title={searchQuery ? 'Cerita Tidak Ditemukan' : 'Belum Ada Curhat di Bagian Ini'}
             description={
               searchQuery ? (
-                <>
-                  Tidak ada cerita yang cocok dengan kata kunci &ldquo;<strong className="text-[var(--color-ink)]">{searchQuery}</strong>&rdquo;
-                  {activeTab !== 'Semua' && <> pada kategori <strong>{activeTab}</strong></>}. Punya keresahan yang sama? Kamu bisa jadi yang pertama mencurahkan isi hati.
-                </>
+                activeTab !== 'Semua' ? (
+                  <>
+                    Tidak ada cerita yang cocok dengan kata kunci &ldquo;<strong className="text-[var(--color-ink)] break-all">{searchQuery}</strong>&rdquo; pada kategori <strong>{activeTab}</strong>. Coba cari di semua kategori atau tulis curhat baru.
+                  </>
+                ) : (
+                  <>
+                    Tidak ada cerita yang cocok dengan kata kunci &ldquo;<strong className="text-[var(--color-ink)] break-all">{searchQuery}</strong>&rdquo;. Punya keresahan yang sama? Kamu bisa jadi yang pertama mencurahkan isi hati.
+                  </>
+                )
               ) : (
-                'Jadilah orang pertama yang berbagi unek-unek di kategori ini secara anonim, aman, dan tanpa perlu login.'
+                activeTab !== 'Semua' ? (
+                  <>
+                    Jadilah orang pertama yang berbagi unek-unek di kategori <strong>{activeTab}</strong> secara anonim, aman, dan tanpa perlu login.
+                  </>
+                ) : (
+                  'Jadilah orang pertama yang berbagi unek-unek secara anonim, aman, dan tanpa perlu login.'
+                )
               )
             }
             action={
-              <a
-                href="#curhat-form"
-                className="btn-primary btn-interactive text-xs py-2 px-4.5 inline-flex items-center gap-1.5 cursor-pointer shadow-xs"
-              >
-                <span>Tulis Curhat Baru</span>
-              </a>
-            }
-            secondaryAction={
-              (activeTab !== 'Semua' || searchQuery) ? (
+              searchQuery ? (
                 <button
                   type="button"
                   onClick={() => {
@@ -335,9 +305,44 @@ export function CurhatWall({ messages, loading = false }: CurhatWallProps) {
                     syncParams('Semua', '', 1);
                     scrollContainerIntoViewIfAbove('curhat-wall-container', 90);
                   }}
-                  className="btn-secondary btn-interactive text-xs py-2 px-4 inline-flex items-center gap-1.5 cursor-pointer"
+                  className="btn-primary btn-interactive text-xs py-2 px-4.5 inline-flex items-center justify-center gap-1.5 cursor-pointer shadow-xs whitespace-nowrap"
                 >
-                  <span>Tampilkan Semua Kategori</span>
+                  <span className="sm:hidden">Semua Curhat</span>
+                  <span className="hidden sm:inline">Tampilkan Semua Curhat</span>
+                </button>
+              ) : (
+                <a
+                  href="#curhat-form"
+                  className="btn-primary btn-interactive text-xs py-2 px-4.5 inline-flex items-center justify-center gap-1.5 cursor-pointer shadow-xs whitespace-nowrap"
+                >
+                  <span className="sm:hidden">Tulis Curhat</span>
+                  <span className="hidden sm:inline">Tulis Curhat Baru</span>
+                </a>
+              )
+            }
+            secondaryAction={
+              searchQuery ? (
+                <a
+                  href="#curhat-form"
+                  className="btn-secondary btn-interactive text-xs py-2 px-4 inline-flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap"
+                >
+                  <span className="sm:hidden">Tulis Curhat</span>
+                  <span className="hidden sm:inline">Tulis Curhat Baru</span>
+                </a>
+              ) : activeTab !== 'Semua' ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveTab('Semua');
+                    setSearchQuery('');
+                    setCurrentPage(1);
+                    syncParams('Semua', '', 1);
+                    scrollContainerIntoViewIfAbove('curhat-wall-container', 90);
+                  }}
+                  className="btn-secondary btn-interactive text-xs py-2 px-4 inline-flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap"
+                >
+                  <span className="sm:hidden">Semua Kategori</span>
+                  <span className="hidden sm:inline">Tampilkan Semua Kategori</span>
                 </button>
               ) : undefined
             }

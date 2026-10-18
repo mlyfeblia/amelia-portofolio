@@ -46,7 +46,7 @@ export const formats: ServiceFormat[] = [
   {
     title: 'Chat Terjadwal',
     mode: 'online_chat',
-    dur: '60 Menit · Komunikasi Teks WhatsApp',
+    dur: '60 Menit · Teks WhatsApp',
     desc: 'Pilihan pas bagi kamu yang lebih leluasa dan tenang mengekspresikan isi hati lewat ketikan pesan chat WhatsApp.',
   },
   {

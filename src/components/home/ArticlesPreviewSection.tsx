@@ -13,7 +13,7 @@ export function ArticlesPreviewSection({ articles }: ArticlesPreviewSectionProps
 
   return (
     <section className="py-16 sm:py-24 border-b border-[var(--color-paper-border)]" data-reveal>
-      <div className="max-w-7xl mx-auto px-3.5 min-[340px]:px-5 sm:px-8 lg:px-10 space-y-8 lg:space-y-10">
+      <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-10 space-y-8 lg:space-y-10">
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
           <div className="min-w-0">
             <h2

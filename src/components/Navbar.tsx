@@ -38,39 +38,11 @@ export default function Navbar() {
 
   const { isRendered, isExiting } = useModalAnimation({
     isOpen: open,
+    onClose: () => setOpen(false),
     containerRef: mobileNavRef,
     durationMs: 240,
-    lockScroll: false,
+    lockScroll: true,
   });
-
-  // Freeze background scrolling & touch interactions while mobile menu is open (zero-jump)
-  useEffect(() => {
-    if (!open) return;
-
-    const originalBodyOverflow = document.body.style.overflow;
-    const originalHtmlOverflow = document.documentElement.style.overflow;
-    document.body.style.overflow = 'hidden';
-    document.documentElement.style.overflow = 'hidden';
-
-    // Non-passive touchmove listener to completely prevent mobile background scrolling
-    const handleTouchMove = (e: TouchEvent) => {
-      const mobileNav = document.getElementById('mobile-nav');
-      if (mobileNav && mobileNav.contains(e.target as Node)) {
-        return; // Allow smooth scrolling inside the mobile menu
-      }
-      if (e.cancelable) {
-        e.preventDefault(); // Strictly block any background drag / touch scroll
-      }
-    };
-
-    window.addEventListener('touchmove', handleTouchMove, { passive: false });
-
-    return () => {
-      document.body.style.overflow = originalBodyOverflow;
-      document.documentElement.style.overflow = originalHtmlOverflow;
-      window.removeEventListener('touchmove', handleTouchMove);
-    };
-  }, [open]);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
@@ -93,15 +65,6 @@ export default function Navbar() {
     return () => window.removeEventListener('popstate', onPopState);
   }, []);
 
-  // Close on Escape key press
-  useEffect(() => {
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setOpen(false);
-    };
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, []);
-
   // Helper to reliably check if a nav item is active
   const isItemActive = (href: string) => {
     if (!pathname) {
@@ -117,10 +80,7 @@ export default function Navbar() {
   return (
     <>
       <header
-        className={cn(
-          'z-50 bg-[var(--color-paper)]/95 backdrop-blur-md border-b border-[var(--color-paper-border)] overflow-visible',
-          open ? 'fixed top-0 inset-x-0' : 'sticky top-0'
-        )}
+        className="sticky top-0 z-50 bg-[var(--color-paper)]/95 backdrop-blur-md border-b border-[var(--color-paper-border)] overflow-visible"
         style={{
           WebkitBackdropFilter: 'blur(12px)',
         }}
@@ -287,10 +247,13 @@ export default function Navbar() {
               <Link
                 href="/schedule"
                 onClick={() => setOpen(false)}
-                className="w-full py-2.5 px-4 rounded-xl bg-[var(--color-accent)] text-white text-xs font-semibold hover:bg-[var(--color-accent-hover)] shadow-xs inline-flex items-center justify-center gap-2 active:scale-[0.98] transition-colors duration-150 select-none cursor-pointer"
+                className="w-full py-2.5 px-4 rounded-xl bg-[var(--color-accent)] text-white text-xs font-semibold hover:bg-[var(--color-accent-hover)] shadow-xs inline-flex items-center justify-center gap-2 active:scale-[0.98] transition-colors duration-150 select-none cursor-pointer whitespace-nowrap"
               >
                 <Calendar className="w-4 h-4" aria-hidden="true" />
-                <span>Janji Temu Konseling</span>
+                <span>
+                  <span className="sm:hidden">Janji Temu</span>
+                  <span className="hidden sm:inline">Janji Temu Konseling</span>
+                </span>
               </Link>
 
               <button
@@ -299,18 +262,15 @@ export default function Navbar() {
                   setOpen(false);
                   triggerPwaInstall();
                 }}
-                className="w-full py-2.5 px-4 rounded-xl bg-white border border-[var(--color-paper-border)] text-[var(--color-ink)] text-xs font-medium hover:text-[var(--color-accent)] hover:border-[var(--color-accent-border)] hover:bg-[var(--color-paper-muted)] active:scale-[0.98] transition-colors duration-150 flex items-center justify-center gap-2 select-none cursor-pointer"
+                className="w-full py-2.5 px-4 rounded-xl bg-white border border-[var(--color-paper-border)] text-[var(--color-ink)] text-xs font-medium hover:text-[var(--color-accent)] hover:border-[var(--color-accent-border)] hover:bg-[var(--color-paper-muted)] active:scale-[0.98] transition-colors duration-150 flex items-center justify-center gap-2 select-none cursor-pointer whitespace-nowrap"
               >
                 <Smartphone className="w-4 h-4 text-[var(--color-accent)]" aria-hidden="true" />
-                <span>{isInstalled ? 'Aplikasi Amelia (Terpasang)' : 'Pasang Aplikasi Amelia'}</span>
+                <span>{isInstalled ? 'Aplikasi Terpasang' : 'Pasang Aplikasi'}</span>
               </button>
             </div>
           </div>
         )}
       </header>
-
-      {/* Placeholder to prevent layout shift when header becomes fixed upon opening */}
-      {open && <div className="h-16 shrink-0 md:hidden" aria-hidden="true" />}
 
       {/* ── Pure Frosted Transparent Blur Backdrop (Zero Dark/Black Tint, Touch & Scroll Blocked) ── */}
       {isRendered && (

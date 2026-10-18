@@ -308,7 +308,6 @@ export const TabsList = forwardRef<HTMLDivElement, TabsListProps>(
         <div
           ref={listRef}
           role="tablist"
-          tabIndex={0}
           onScroll={checkScroll}
           onKeyDown={handleKeyDown}
           className={cn(

@@ -1,13 +1,12 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { Search, X, BookOpen, RotateCcw } from 'lucide-react';
+import { Search, X, BookOpen } from 'lucide-react';
 import { Article, ARTICLE_CATEGORIES } from '@/types';
 import { ArticleListItem } from './ArticleListItem';
 import { PaginationBar } from '@/components/ui/PaginationBar';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { useSessionSeed, seededShuffle } from '@/lib/seeded-random';
 import { scrollContainerIntoViewIfAbove } from '@/lib/dom-utils';
 
 const ARTICLES_PER_PAGE = 6;
@@ -23,7 +22,6 @@ export function ArticlesDirectory({ initialArticles }: ArticlesDirectoryProps) {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [currentPage, setCurrentPage] = useState<number>(1);
   const containerRef = useRef<HTMLDivElement>(null);
-  const { seed, isReady } = useSessionSeed('articles_directory');
 
   // Synchronize URL query parameters safely on client after hydration & on popstate
   useEffect(() => {
@@ -41,10 +39,16 @@ export function ArticlesDirectory({ initialArticles }: ArticlesDirectoryProps) {
         const page = params.get('page');
 
         if (cat) setActiveCategory(cat);
+        else setActiveCategory('Semua');
+
         if (q) setSearchQuery(q);
+        else setSearchQuery('');
+
         if (page) {
           const p = parseInt(page, 10);
-          if (!isNaN(p) && p > 0) setCurrentPage(p);
+          setCurrentPage(!isNaN(p) && p > 0 ? p : 1);
+        } else {
+          setCurrentPage(1);
         }
       } catch {}
     };
@@ -87,9 +91,9 @@ export function ArticlesDirectory({ initialArticles }: ArticlesDirectoryProps) {
     return Array.from(set);
   }, [initialArticles]);
 
-  // Filtered and discovery-shuffled articles
+  // Filtered articles with stable, deterministic chronological ordering (zero flicker & zero layout shift)
   const filteredArticles = useMemo(() => {
-    const matched = initialArticles.filter((art) => {
+    return initialArticles.filter((art) => {
       const matchCategory = activeCategory === 'Semua' || art.category === activeCategory;
       if (!matchCategory) return false;
 
@@ -101,16 +105,7 @@ export function ArticlesDirectory({ initialArticles }: ArticlesDirectoryProps) {
       const matchTags = (art.tags || []).some((t) => t.toLowerCase().includes(q));
       return matchTitle || matchExcerpt || matchCategoryText || matchTags;
     });
-
-    if (searchQuery.trim()) {
-      return matched;
-    }
-
-    if (seed && isReady) {
-      return seededShuffle(matched, `${seed}_${activeCategory}`);
-    }
-    return matched;
-  }, [initialArticles, activeCategory, searchQuery, seed, isReady]);
+  }, [initialArticles, activeCategory, searchQuery]);
 
   // Pagination calculation
   const totalItems = filteredArticles.length;
@@ -171,7 +166,7 @@ export function ArticlesDirectory({ initialArticles }: ArticlesDirectoryProps) {
                 if (e.key === 'Escape') handleSearchChange('');
               }}
               placeholder="Cari judul, topik, atau kata kunci..."
-              className="search-input text-xs sm:text-sm pl-9 pr-9"
+              className="search-input text-xs sm:text-sm !pl-9 !pr-10 w-full"
               aria-label="Cari artikel"
             />
             {searchQuery && (
@@ -221,57 +216,6 @@ export function ArticlesDirectory({ initialArticles }: ArticlesDirectoryProps) {
             </TabsList>
           </Tabs>
         </div>
-
-        {/* Active Filter Indicator & Reset */}
-        {(searchQuery.trim() || activeCategory !== 'Semua') && (
-          <div className="flex flex-wrap items-center justify-between gap-2 pt-2 px-1 text-xs text-[var(--color-ink-muted)]">
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <span>Menampilkan:</span>
-              {activeCategory !== 'Semua' && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[var(--color-paper-muted)] text-[var(--color-ink)] font-medium border border-[var(--color-paper-border)]">
-                  Topik: {activeCategory}
-                  <button
-                    type="button"
-                    onClick={() => handleCategoryChange('Semua')}
-                    className="hover:text-[var(--color-ink-soft)] cursor-pointer"
-                    title="Hapus filter topik"
-                    aria-label="Hapus filter topik"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                </span>
-              )}
-              {searchQuery.trim() && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[var(--color-paper-muted)] text-[var(--color-ink)] font-medium border border-[var(--color-paper-border)]">
-                  &ldquo;{searchQuery.trim()}&rdquo;
-                  <button
-                    type="button"
-                    onClick={() => handleSearchChange('')}
-                    className="hover:text-[var(--color-ink-soft)] cursor-pointer"
-                    title="Hapus kata kunci pencarian"
-                    aria-label="Hapus kata kunci pencarian"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                </span>
-              )}
-            </div>
-            <button
-              type="button"
-              onClick={() => {
-                setActiveCategory('Semua');
-                setSearchQuery('');
-                setCurrentPage(1);
-                syncParams('Semua', '', 1);
-              }}
-              className="text-[11px] font-semibold text-[var(--color-accent)] hover:underline cursor-pointer inline-flex items-center gap-1"
-              title="Reset pencarian dan topik ke Semua"
-            >
-              <RotateCcw className="w-3 h-3" />
-              <span>Reset Semua Filter</span>
-            </button>
-          </div>
-        )}
       </div>
 
       {/* Article List or Rich Empty State */}
@@ -281,12 +225,19 @@ export function ArticlesDirectory({ initialArticles }: ArticlesDirectoryProps) {
           title={searchQuery ? 'Artikel Tidak Ditemukan' : 'Belum Ada Artikel di Kategori Ini'}
           description={
             searchQuery ? (
-              <>
-                Tidak ditemukan tulisan dengan kata kunci &ldquo;<strong className="text-[var(--color-ink)]">{searchQuery}</strong>&rdquo;
-                {activeCategory !== 'Semua' && <> di kategori <strong>{activeCategory}</strong></>}. Coba periksa ejaan kata atau pilih topik populer di bawah.
-              </>
+              activeCategory !== 'Semua' ? (
+                <>
+                  Tidak ditemukan tulisan dengan kata kunci &ldquo;<strong className="text-[var(--color-ink)] break-all">{searchQuery}</strong>&rdquo; di kategori <strong>{activeCategory}</strong>. Coba cari di semua topik atau periksa ejaan kata.
+                </>
+              ) : (
+                <>
+                  Tidak ditemukan tulisan dengan kata kunci &ldquo;<strong className="text-[var(--color-ink)] break-all">{searchQuery}</strong>&rdquo;. Coba periksa ejaan kata atau pilih topik populer di bawah.
+                </>
+              )
             ) : (
-              'Belum ada artikel yang dipublikasikan pada kategori ini. Silakan cek kategori lainnya atau tampilkan seluruh artikel.'
+              <>
+                Belum ada artikel yang dipublikasikan pada kategori <strong>{activeCategory}</strong>. Silakan cek kategori lainnya atau tampilkan seluruh artikel.
+              </>
             )
           }
           suggestions={
@@ -307,19 +258,26 @@ export function ArticlesDirectory({ initialArticles }: ArticlesDirectoryProps) {
                 syncParams('Semua', '', 1);
                 scrollContainerIntoViewIfAbove('articles-directory-container', 90);
               }}
-              className="btn-primary btn-interactive text-xs py-2 px-4.5 inline-flex items-center gap-1.5 cursor-pointer shadow-xs"
+              className="btn-primary btn-interactive text-xs py-2 px-4.5 inline-flex items-center justify-center gap-1.5 cursor-pointer shadow-xs whitespace-nowrap"
             >
-              <span>Tampilkan Semua Artikel</span>
+              <span className="sm:hidden">Semua Artikel</span>
+              <span className="hidden sm:inline">Tampilkan Semua Artikel</span>
             </button>
           }
           secondaryAction={
-            searchQuery ? (
+            searchQuery && activeCategory !== 'Semua' ? (
               <button
                 type="button"
-                onClick={() => handleSearchChange('')}
-                className="btn-secondary btn-interactive text-xs py-2 px-4 inline-flex items-center gap-1.5 cursor-pointer"
+                onClick={() => {
+                  setActiveCategory('Semua');
+                  setCurrentPage(1);
+                  syncParams('Semua', searchQuery, 1);
+                  scrollContainerIntoViewIfAbove('articles-directory-container', 90);
+                }}
+                className="btn-secondary btn-interactive text-xs py-2 px-4 inline-flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap"
               >
-                <span>Hapus Kata Kunci</span>
+                <span className="sm:hidden">Semua Topik</span>
+                <span className="hidden sm:inline">Cari di Semua Topik</span>
               </button>
             ) : undefined
           }

@@ -154,7 +154,7 @@ export function BookingSessionDetailsStep({
         <button
           type="submit"
           disabled={loading || isCoolingDown}
-          className="btn-primary btn-interactive w-full text-sm py-2.5 disabled:opacity-60 cursor-pointer disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          className="btn-primary btn-interactive w-full text-sm py-2.5 disabled:opacity-60 cursor-pointer disabled:cursor-not-allowed flex items-center justify-center gap-2 whitespace-nowrap"
         >
           {loading ? (
             <>
@@ -169,7 +169,10 @@ export function BookingSessionDetailsStep({
           ) : (
             <>
               <Send className="w-4 h-4" />
-              <span>Kirim Permintaan Janji Temu</span>
+              <span>
+                <span className="sm:hidden">Kirim Permohonan</span>
+                <span className="hidden sm:inline">Kirim Permintaan Janji Temu</span>
+              </span>
             </>
           )}
         </button>

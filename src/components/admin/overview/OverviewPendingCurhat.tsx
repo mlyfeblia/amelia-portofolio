@@ -76,7 +76,7 @@ export function OverviewPendingCurhat({
 
                 <div>
                   <Link
-                    href="/admin/counseling"
+                    href={`/admin/counseling?reply=${encodeURIComponent(c.id)}`}
                     className="btn-primary btn-interactive !text-xs !py-1.5 !px-3 inline-flex items-center gap-1.5 shadow-xs"
                   >
                     <Send className="w-3.5 h-3.5" />

@@ -7,6 +7,37 @@ export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const requestId = crypto.randomUUID();
 
+  // 0. CSRF Origin Verification for State-Mutating API Requests
+  if (
+    pathname.startsWith('/api/') &&
+    ['POST', 'PATCH', 'PUT', 'DELETE'].includes(request.method)
+  ) {
+    const origin = request.headers.get('origin');
+    const host = request.headers.get('x-forwarded-host') || request.headers.get('host');
+    if (origin && host) {
+      try {
+        const originHost = new URL(origin).host;
+        if (originHost !== host) {
+          return NextResponse.json(
+            {
+              success: false,
+              message: 'Akses ditolak: Permintaan lintas domain (Cross-Origin) tidak diizinkan.',
+            },
+            { status: 403, headers: { 'X-Request-Id': requestId } }
+          );
+        }
+      } catch {
+        return NextResponse.json(
+          {
+            success: false,
+            message: 'Akses ditolak: Header Origin tidak valid.',
+          },
+          { status: 403, headers: { 'X-Request-Id': requestId } }
+        );
+      }
+    }
+  }
+
   // Extract admin session token from cookie or Authorization header
   const token =
     request.cookies.get(COOKIE_NAME)?.value ||
@@ -27,7 +58,13 @@ export async function proxy(request: NextRequest) {
     if (!isValid) {
       return NextResponse.json(
         { success: false, message: 'Sesi pengelola tidak valid atau telah berakhir.' },
-        { status: 401 }
+        {
+          status: 401,
+          headers: {
+            'Cache-Control': 'no-store, max-age=0',
+            'X-Request-Id': requestId,
+          },
+        }
       );
     }
   }
@@ -48,32 +85,17 @@ export async function proxy(request: NextRequest) {
   // Create response with tracing requestId
   const response = NextResponse.next();
   response.headers.set('X-Request-Id', requestId);
+  if (pathname.startsWith('/api/admin') || pathname.startsWith('/admin') || isAdminOnlyEndpoint) {
+    response.headers.set('Cache-Control', 'no-store, max-age=0');
+  }
 
-  // Apply Edge Rate Limiting to sensitive POST endpoints
+  // Apply Edge Rate Limiting ONLY to endpoints that do not already perform rate-limiting in their route handler
+  // (Endpoints like /api/admin/login, /api/bookings, /api/curhat, /api/translate, /api/notifications/subscribe,
+  // and /api/articles/view enforce rate-limiting directly inside their route handlers so they are counted once.)
   if (request.method === 'POST') {
     const ip = getClientIp(request);
 
-    // 1. Admin login: 5 attempts / 15 minutes
-    if (pathname === '/api/admin/login') {
-      const rateCheck = await checkDistributedRateLimit(`login:${ip}`, 5, 900);
-      if (!rateCheck.success) {
-        return NextResponse.json(
-          {
-            success: false,
-            message: `Terlalu banyak percobaan masuk portal. Coba kembali dalam ${rateCheck.retryAfterSeconds} detik.`,
-          },
-          {
-            status: 429,
-            headers: {
-              'Retry-After': rateCheck.retryAfterSeconds.toString(),
-              'X-Request-Id': requestId,
-            },
-          }
-        );
-      }
-    }
-
-    // 1b. Admin refresh: 10 attempts / 1 minute
+    // 1. Admin refresh: 10 attempts / 1 minute
     if (pathname === '/api/admin/refresh') {
       const rateCheck = await checkDistributedRateLimit(`refresh:${ip}`, 10, 60);
       if (!rateCheck.success) {
@@ -93,7 +115,7 @@ export async function proxy(request: NextRequest) {
       }
     }
 
-    // 1c. File Upload: 20 uploads / 5 minutes
+    // 2. File Upload: 20 uploads / 5 minutes (checked at edge before multipart body parsing)
     if (pathname === '/api/upload') {
       const rateCheck = await checkDistributedRateLimit(`upload:${ip}`, 20, 300);
       if (!rateCheck.success) {
@@ -101,106 +123,6 @@ export async function proxy(request: NextRequest) {
           {
             success: false,
             message: `Terlalu banyak unggahan berkas. Coba kembali dalam ${rateCheck.retryAfterSeconds} detik.`,
-          },
-          {
-            status: 429,
-            headers: {
-              'Retry-After': rateCheck.retryAfterSeconds.toString(),
-              'X-Request-Id': requestId,
-            },
-          }
-        );
-      }
-    }
-
-    // 2. Bookings submission: 10 requests / 10 minutes
-    if (pathname === '/api/bookings') {
-      const rateCheck = await checkDistributedRateLimit(`booking:${ip}`, 10, 600);
-      if (!rateCheck.success) {
-        return NextResponse.json(
-          {
-            success: false,
-            message: `Terlalu banyak pengajuan jadwal. Coba kembali dalam ${rateCheck.retryAfterSeconds} detik.`,
-          },
-          {
-            status: 429,
-            headers: {
-              'Retry-After': rateCheck.retryAfterSeconds.toString(),
-              'X-Request-Id': requestId,
-            },
-          }
-        );
-      }
-    }
-
-    // 3. Curhat submission: 10 requests / 10 minutes
-    if (pathname === '/api/curhat') {
-      const rateCheck = await checkDistributedRateLimit(`curhat:${ip}`, 10, 600);
-      if (!rateCheck.success) {
-        return NextResponse.json(
-          {
-            success: false,
-            message: `Terlalu banyak pengiriman pesan. Coba kembali dalam ${rateCheck.retryAfterSeconds} detik.`,
-          },
-          {
-            status: 429,
-            headers: {
-              'Retry-After': rateCheck.retryAfterSeconds.toString(),
-              'X-Request-Id': requestId,
-            },
-          }
-        );
-      }
-    }
-
-    // 4. Translate slug requests: 20 requests / 1 minute
-    if (pathname === '/api/translate') {
-      const rateCheck = await checkDistributedRateLimit(`translate:${ip}`, 20, 60);
-      if (!rateCheck.success) {
-        return NextResponse.json(
-          {
-            success: false,
-            message: `Terlalu banyak permintaan translasi otomatis. Coba kembali dalam ${rateCheck.retryAfterSeconds} detik.`,
-          },
-          {
-            status: 429,
-            headers: {
-              'Retry-After': rateCheck.retryAfterSeconds.toString(),
-              'X-Request-Id': requestId,
-            },
-          }
-        );
-      }
-    }
-
-    // 5. Web Push subscribe: 10 requests / 1 minute
-    if (pathname === '/api/notifications/subscribe') {
-      const rateCheck = await checkDistributedRateLimit(`push_sub:${ip}`, 10, 60);
-      if (!rateCheck.success) {
-        return NextResponse.json(
-          {
-            success: false,
-            message: `Terlalu banyak permintaan langganan notifikasi. Coba kembali dalam ${rateCheck.retryAfterSeconds} detik.`,
-          },
-          {
-            status: 429,
-            headers: {
-              'Retry-After': rateCheck.retryAfterSeconds.toString(),
-              'X-Request-Id': requestId,
-            },
-          }
-        );
-      }
-    }
-
-    // 6. Article view count: 30 requests / 1 minute
-    if (pathname === '/api/articles/view') {
-      const rateCheck = await checkDistributedRateLimit(`article_view:${ip}`, 30, 60);
-      if (!rateCheck.success) {
-        return NextResponse.json(
-          {
-            success: false,
-            message: `Terlalu banyak permintaan tampilan artikel. Coba kembali dalam ${rateCheck.retryAfterSeconds} detik.`,
           },
           {
             status: 429,

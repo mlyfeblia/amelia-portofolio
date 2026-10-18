@@ -159,6 +159,39 @@ describe('Validators Unit Test Suite', () => {
       expect(res.data?.title).toBe('Judul Baru yang Diperbarui');
       expect(res.data?.isPublished).toBe(false);
     });
+
+    it('rejects unsafe coverImage protocols (javascript:, http://) while allowing https:// and /images/', () => {
+      const badJs = validateArticleUpdateInput({
+        coverImage: 'javascript:alert(1)',
+      });
+      expect(badJs.success).toBe(false);
+
+      const badHttp = validateArticleUpdateInput({
+        coverImage: 'http://insecure.example.com/photo.jpg',
+      });
+      expect(badHttp.success).toBe(false);
+
+      const goodInternal = validateArticleUpdateInput({
+        coverImage: '/images/articles/sample.webp',
+      });
+      expect(goodInternal.success).toBe(true);
+      expect(goodInternal.data?.coverImage).toBe('/images/articles/sample.webp');
+
+      const goodHttps = validateArticleUpdateInput({
+        coverImage: 'https://y8ug7mrt.ap-southeast.insforge.app/storage/v1/articles/test.webp',
+      });
+      expect(goodHttps.success).toBe(true);
+    });
+
+    it('enforces showOnLandingPage=false when isPublished=false', () => {
+      const res = validateArticleUpdateInput({
+        isPublished: false,
+        showOnLandingPage: true,
+      });
+      expect(res.success).toBe(true);
+      expect(res.data?.isPublished).toBe(false);
+      expect(res.data?.showOnLandingPage).toBe(false);
+    });
   });
 
   describe('formatIndoPhoneNumber', () => {

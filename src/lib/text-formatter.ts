@@ -254,16 +254,25 @@ export function formatPersonName(name: string): string {
     const lower = token.toLowerCase();
 
     // Check special cases (exact prefix / title / degree match)
+    const preceding = fullString.slice(0, offset);
     if (PERSON_NAME_SPECIAL_CASES[lower]) {
       // If user typed uppercase Dr. with a dot, preserve Dr.
       if (lower === 'dr.' && token.startsWith('D')) {
         return 'Dr.';
       }
-      return PERSON_NAME_SPECIAL_CASES[lower];
+      const mapped = PERSON_NAME_SPECIAL_CASES[lower];
+      // Prevent dot-less prefixes (dr, drg, drh, prof, ust, lc) from injecting a period mid-word during live typing
+      if (!token.includes('.') && mapped.endsWith('.')) {
+        const isFollowedByChar = offset + token.length < fullString.length;
+        const isAfterComma = /,\s*$/.test(preceding);
+        if (!isFollowedByChar && !isAfterComma) {
+          return token.charAt(0).toUpperCase() + token.slice(1).toLowerCase();
+        }
+      }
+      return mapped;
     }
 
     // Check lowercase particles in middle of name (bin, binti, yang)
-    const preceding = fullString.slice(0, offset);
     const isFirstWord = !/[a-zA-Z0-9À-ÿ]/.test(preceding);
     if (!isFirstWord && NAME_LOWERCASE_PARTICLES.has(lower)) {
       return lower;

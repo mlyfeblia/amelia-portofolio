@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Search, X, Eye, Filter, Calendar, RotateCcw } from 'lucide-react';
+import { Search, X, Eye, Filter, Calendar } from 'lucide-react';
 import { useSearchShortcut } from '@/lib/use-search-shortcut';
 
 interface CounselingFiltersProps {
@@ -29,6 +29,7 @@ interface CounselingFiltersProps {
     landingCount: number;
   };
   hasActiveFilters?: boolean;
+  totalResults?: number;
   onResetFilters?: () => void;
 }
 
@@ -49,13 +50,11 @@ export function CounselingFilters({
   availableDates,
   categories,
   counts,
-  hasActiveFilters = false,
-  onResetFilters,
 }: CounselingFiltersProps) {
   const searchInputRef = useSearchShortcut();
 
   return (
-    <div className="bg-[var(--color-surface)] border border-[var(--color-paper-border)] rounded-2xl p-3.5 sm:p-5 space-y-3.5 shadow-xs">
+    <div className="bg-[var(--color-surface)] border border-[var(--color-paper-border)] rounded-2xl p-3.5 sm:p-5 space-y-3 shadow-xs">
       {/* Search Bar */}
       <div className="relative">
         <Search className="w-4 h-4 text-[var(--color-ink-muted)] search-icon" />
@@ -71,7 +70,7 @@ export function CounselingFilters({
             }
           }}
           placeholder="Cari nama/alias, kategori topik, isi curhat, atau tanggapan..."
-          className="search-input w-full pl-9 pr-9 py-2 text-xs sm:text-sm text-[var(--color-ink)] placeholder:text-[var(--color-ink-muted)]/70"
+          className="search-input w-full !pl-9 !pr-10 py-2 text-xs sm:text-sm text-[var(--color-ink)] placeholder:text-[var(--color-ink-muted)]/70"
         />
         {!search && (
           <div className="hidden sm:flex absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none items-center">
@@ -96,40 +95,8 @@ export function CounselingFilters({
         )}
       </div>
 
-      {/* Active Filters Toolbar Indicator & Quick Reset with Smooth Enter & Exit */}
-      <div
-        className={`grid transition-all duration-300 ease-out overflow-hidden ${
-          hasActiveFilters
-            ? 'grid-rows-[1fr] opacity-100 pt-2 border-t border-[var(--color-paper-border)]'
-            : 'grid-rows-[0fr] opacity-0 pt-0 border-t-0 pointer-events-none'
-        }`}
-        aria-hidden={!hasActiveFilters}
-      >
-        <div className="min-h-0 overflow-hidden flex flex-wrap items-center justify-between gap-2 text-xs">
-          <div className="flex items-center text-[var(--color-ink-muted)]">
-            <span className="font-medium text-[var(--color-ink)]">Filter Aktif Diterapkan</span>
-          </div>
-          {onResetFilters && (
-            <button
-              type="button"
-              tabIndex={hasActiveFilters ? 0 : -1}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                onResetFilters();
-              }}
-              className="btn-interactive inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold text-[var(--color-accent)] bg-[var(--color-accent-soft)] hover:bg-[var(--color-accent-border)]/50 transition-colors cursor-pointer shadow-2xs active:scale-95"
-              title="Reset semua kriteria filter dan pencarian ke bawaan"
-            >
-              <RotateCcw className="w-3.5 h-3.5" />
-              <span>Reset Semua Filter</span>
-            </button>
-          )}
-        </div>
-      </div>
-
       {/* Unified Filters Grid: 4 Dropdowns (Status Balasan, Visibilitas/Beranda, Topik, Tanggal) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 pt-2 border-t border-[var(--color-paper-border)] text-xs">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 pt-2.5 border-t border-[var(--color-paper-border)] text-xs">
         {/* 1. Status Balasan Dropdown */}
         <div className="flex items-center gap-2 bg-[var(--color-paper)] px-3 py-1.5 rounded-xl border border-[var(--color-paper-border)]">
           <Filter className="w-3.5 h-3.5 text-[var(--color-ink-muted)] shrink-0" />

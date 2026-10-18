@@ -42,7 +42,7 @@ function ToastCard({
 }) {
   const [isHovered, setIsHovered] = useState(false);
   const remainingTimeRef = useRef<number>(item.durationMs);
-  const startTimeRef = useRef<number>(Date.now());
+  const startTimeRef = useRef<number>(0);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -50,7 +50,7 @@ function ToastCard({
 
     if (isHovered) {
       if (timerRef.current) clearTimeout(timerRef.current);
-      const elapsed = Date.now() - startTimeRef.current;
+      const elapsed = startTimeRef.current > 0 ? Date.now() - startTimeRef.current : 0;
       remainingTimeRef.current = Math.max(500, remainingTimeRef.current - elapsed);
     } else {
       startTimeRef.current = Date.now();

@@ -27,8 +27,10 @@ import {
 } from '@/lib/assessment-storage';
 import dynamic from 'next/dynamic';
 import { getAssessmentWhatsAppUrl } from '@/lib/whatsapp';
-import type { DimensionKey } from '@/data/assessment-data';
+import { getAssessmentSuggestions, type DimensionKey } from '@/data/assessment-data';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { SkeletonDeviceBookingCard } from '@/components/ui/Skeleton';
+import { useMounted } from '@/lib/use-mounted';
 
 const AssessmentDeleteModal = dynamic(
   () => import('./AssessmentDeleteModal').then((m) => m.AssessmentDeleteModal),
@@ -55,6 +57,7 @@ function getDimensionIcon(key: DimensionKey) {
 }
 
 export function AssessmentHistory({ onStartNew }: AssessmentHistoryProps) {
+  const isHydrated = useMounted();
   const records = useDeviceAssessments();
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -83,6 +86,14 @@ export function AssessmentHistory({ onStartNew }: AssessmentHistoryProps) {
     }
   };
 
+  if (!isHydrated) {
+    return (
+      <div className="space-y-3 animate-fade-in">
+        <SkeletonDeviceBookingCard />
+      </div>
+    );
+  }
+
   if (records.length === 0) {
     return (
       <EmptyState
@@ -93,9 +104,10 @@ export function AssessmentHistory({ onStartNew }: AssessmentHistoryProps) {
           <button
             type="button"
             onClick={onStartNew}
-            className="btn-primary btn-interactive text-xs sm:text-sm py-2.5 px-6 rounded-xl cursor-pointer"
+            className="btn-primary btn-interactive text-xs sm:text-sm py-2.5 px-5 sm:px-6 rounded-xl cursor-pointer inline-flex items-center justify-center gap-2 whitespace-nowrap shadow-xs"
           >
-            <span>Mulai Asesmen Mandiri Sekarang</span>
+            <span className="sm:hidden">Mulai Asesmen</span>
+            <span className="hidden sm:inline">Mulai Asesmen Mandiri Sekarang</span>
           </button>
         }
       />
@@ -229,10 +241,13 @@ export function AssessmentHistory({ onStartNew }: AssessmentHistoryProps) {
                     })}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="btn-primary btn-interactive order-1 sm:order-2 w-full sm:w-auto px-3.5 py-1.5 text-xs font-semibold rounded-xl inline-flex items-center justify-center gap-1.5 shrink-0 shadow-2xs transition-all duration-200 text-center min-[380px]:whitespace-nowrap"
+                    className="btn-primary btn-interactive order-1 sm:order-2 w-full sm:w-auto px-3.5 py-1.5 text-xs font-semibold rounded-xl inline-flex items-center justify-center gap-1.5 shrink-0 shadow-2xs transition-all duration-200 text-center whitespace-nowrap"
                   >
                     <MessageCircle className="w-3.5 h-3.5 shrink-0" />
-                    <span>Konsultasikan via WhatsApp</span>
+                    <span>
+                      <span className="sm:hidden">Konsultasi WhatsApp</span>
+                      <span className="hidden sm:inline">Konsultasikan via WhatsApp</span>
+                    </span>
                   </a>
 
                   <button
@@ -290,7 +305,11 @@ export function AssessmentHistory({ onStartNew }: AssessmentHistoryProps) {
 
                     <div className="pt-2 flex flex-wrap items-center gap-3">
                       <Link
-                        href="/schedule"
+                        href={`/schedule?kategori=${encodeURIComponent(
+                          getAssessmentSuggestions(
+                            record.dimensions.map((d) => ({ ...d, advice: d.advice || '' }))
+                          ).recommendedTopic
+                        )}`}
                         className="btn-primary text-xs py-2 px-3.5 rounded-xl inline-flex items-center justify-center gap-1.5 w-full sm:w-auto hover:shadow-md transition-all duration-200"
                       >
                         <Calendar className="w-3.5 h-3.5" />

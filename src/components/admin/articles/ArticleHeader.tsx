@@ -6,6 +6,8 @@ import { Spinner } from '@/components/ui/Spinner';
 
 interface ArticleHeaderProps {
   totalCount: number;
+  publishedCount?: number;
+  draftArticleCount?: number;
   loading: boolean;
   onRefresh: () => void;
   onCreateNew: () => void;
@@ -15,6 +17,8 @@ interface ArticleHeaderProps {
 
 export function ArticleHeader({
   totalCount,
+  publishedCount,
+  draftArticleCount,
   loading,
   onRefresh,
   onCreateNew,
@@ -34,6 +38,11 @@ export function ArticleHeader({
           {loading && totalCount === 0 ? (
             <span className="inline-flex items-center gap-1 text-[var(--color-ink-soft)]">
               <span>Memuat koleksi artikel...</span>
+            </span>
+          ) : typeof publishedCount === 'number' && typeof draftArticleCount === 'number' ? (
+            <span>
+              Total {publishedCount} artikel terbit
+              {draftArticleCount > 0 ? ` • ${draftArticleCount} draf` : ''}
             </span>
           ) : (
             <span>Total {totalCount} artikel terbit</span>

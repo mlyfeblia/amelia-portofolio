@@ -12,6 +12,8 @@ import {
   HeartPulse,
   Compass,
   Users,
+  BookOpen,
+  ArrowUpRight,
 } from 'lucide-react';
 import { ConfirmDecisionModal } from '@/components/ui/ConfirmDecisionModal';
 import {
@@ -203,8 +205,56 @@ export function AssessmentResult({
         </ul>
       </div>
 
+      {/* ── Recommended Recovery Articles & Personalized Offering ──── */}
+      {suggestions.relatedArticles && suggestions.relatedArticles.length > 0 && (
+        <div className="space-y-3.5">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg bg-[var(--color-accent-soft)] text-[var(--color-accent)] flex items-center justify-center shrink-0">
+              <BookOpen className="w-4 h-4" />
+            </div>
+            <h3 className="text-sm sm:text-lg font-semibold text-[var(--color-ink)]">
+              Rekomendasi Bacaan untuk Pemulihan ({suggestions.lowestDimension.shortName})
+            </h3>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {suggestions.relatedArticles.map((art) => (
+              <Link
+                key={art.slug}
+                href={`/articles/${art.slug}`}
+                className="card-interactive group p-4 rounded-xl sm:rounded-2xl bg-white border border-[var(--color-paper-border)] hover:border-[var(--color-accent-border)] flex flex-col justify-between gap-2.5 shadow-2xs"
+              >
+                <div className="space-y-1.5">
+                  <span className="text-[11px] font-medium text-[var(--color-accent)]">
+                    {art.category}
+                  </span>
+                  <h4 className="text-xs sm:text-sm font-semibold text-[var(--color-ink)] group-hover:text-[var(--color-accent)] transition-colors leading-snug line-clamp-2">
+                    {art.title}
+                  </h4>
+                </div>
+                <div className="flex items-center justify-between text-[11px] text-[var(--color-ink-soft)] pt-2 border-t border-[var(--color-paper-border)]/60">
+                  <span>{art.readTime}</span>
+                  <span className="inline-flex items-center gap-1 font-medium text-[var(--color-accent)]">
+                    <span>Baca Artikel</span>
+                    <ArrowUpRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                  </span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* ── Actions & CTA Bar ──────────────────────────────────── */}
-      <div className="pt-2">
+      <div className="pt-2 space-y-4">
+        <div className="p-4 sm:p-5 rounded-2xl bg-[var(--color-accent-soft)]/50 border border-[var(--color-accent-border)] space-y-1">
+          <h4 className="text-xs sm:text-sm font-semibold text-[var(--color-ink)]">
+            {suggestions.offeringHeadline}
+          </h4>
+          <p className="text-xs text-[var(--color-ink-muted)] leading-relaxed">
+            {suggestions.offeringMessage}
+          </p>
+        </div>
+
         {/* CTA Consultation Buttons */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 pt-2 border-t border-[var(--color-paper-border)]/60">
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3 w-full sm:w-auto order-1 sm:order-2">

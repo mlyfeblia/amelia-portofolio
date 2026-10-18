@@ -84,11 +84,11 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
         {error ? (
           <p
             id={errorId}
-            className="mt-1.5 text-xs text-red-600 font-medium flex items-center gap-1"
+            className="mt-1.5 text-xs text-red-600 font-medium flex items-start gap-1.5 leading-snug"
             role="alert"
           >
-            <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-            <span>{error}</span>
+            <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+            <span className="min-w-0 break-words [overflow-wrap:anywhere] [word-break:break-word]">{error}</span>
           </p>
         ) : helperText ? (
           <p id={helperId} className="mt-1.5 text-xs text-[var(--color-ink-muted)]">

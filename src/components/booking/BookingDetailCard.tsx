@@ -12,11 +12,12 @@ import {
   Users, 
   FileText, 
   Trash2,
-  ExternalLink
+  ArrowLeft
 } from 'lucide-react';
 import { BookingStatus, CounselingMode } from '@/types';
 import { BookingTimelineStepper } from './BookingTimelineStepper';
 import { getBookingConfirmationWhatsAppUrl } from '@/lib/whatsapp';
+import { copyToClipboard } from '@/lib/clipboard';
 
 export interface BookingDetailData {
   id?: string;
@@ -36,21 +37,23 @@ interface BookingDetailCardProps {
   booking: BookingDetailData;
   onRemoveFromDevice?: (code: string) => void;
   onBack?: () => void;
+  isExiting?: boolean;
 }
 
 export function BookingDetailCard({
   booking,
   onRemoveFromDevice,
   onBack,
+  isExiting = false,
 }: BookingDetailCardProps) {
   const [copied, setCopied] = useState(false);
 
   const handleCopyCode = async () => {
-    try {
-      await navigator.clipboard.writeText(booking.code);
+    const ok = await copyToClipboard(booking.code);
+    if (ok) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch {}
+    }
   };
 
   const getModeDetails = (mode: CounselingMode) => {
@@ -79,58 +82,62 @@ export function BookingDetailCard({
   });
 
   return (
-    <div className="p-5 sm:p-6 rounded-xl bg-[var(--color-paper)]/50 border border-[var(--color-paper-border)] space-y-5">
-      {/* Header with Code & Status */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-[var(--color-paper-border)]">
-        <div className="grid grid-cols-[auto_1fr] items-center gap-x-3 gap-y-1.5 text-xs">
-          <span className="text-[var(--color-ink-muted)]">Kode Referensi:</span>
-          <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-[var(--color-paper)] border border-[var(--color-paper-border)] font-mono font-semibold text-xs text-[var(--color-accent)] w-fit">
-            <span>{booking.code}</span>
-            <button
-              onClick={handleCopyCode}
-              type="button"
-              className="p-0.5 rounded text-[var(--color-ink-muted)] hover:text-[var(--color-accent)] cursor-pointer inline-flex items-center justify-center transition-colors shrink-0"
-              title="Salin kode referensi"
-              aria-label="Salin kode referensi"
-            >
-              {copied ? (
-                <Check className="w-3 h-3 text-emerald-600 animate-pop-success" />
-              ) : (
-                <Copy className="w-3 h-3" />
-              )}
-            </button>
+    <div className={`p-4 sm:p-6 rounded-2xl bg-[var(--color-paper)]/60 border border-[var(--color-paper-border)] shadow-xs space-y-4 sm:space-y-5 transition-all ${
+      isExiting ? 'animate-detail-card-exit pointer-events-none' : 'animate-detail-card-enter'
+    }`}>
+      {/* Header with Code, Applicant & Actions */}
+      <div className="flex items-start justify-between gap-3 pb-3.5 sm:pb-4 border-b border-[var(--color-paper-border)]">
+        {/* Left: Metadata info (Kode Referensi & Diajukan Oleh) */}
+        <div className="min-w-0 flex-1 space-y-1.5 sm:space-y-0 sm:flex sm:items-center sm:gap-4 sm:flex-wrap">
+          {/* Kode Referensi */}
+          <div className="flex flex-wrap sm:flex-nowrap items-center gap-1.5 sm:gap-2">
+            <span className="text-xs text-[var(--color-ink-muted)] shrink-0 font-medium">
+              Kode Referensi:
+            </span>
+            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-[var(--color-surface)] border border-[var(--color-paper-border)] font-mono font-semibold text-xs text-[var(--color-accent)] shrink-0 shadow-2xs">
+              <span>{booking.code}</span>
+              <button
+                onClick={handleCopyCode}
+                type="button"
+                className="p-0.5 rounded text-[var(--color-ink-muted)] hover:text-[var(--color-accent)] cursor-pointer inline-flex items-center justify-center transition-colors shrink-0"
+                title="Salin kode referensi"
+                aria-label="Salin kode referensi"
+              >
+                {copied ? (
+                  <Check className="w-3.5 h-3.5 text-emerald-600 animate-pop-success" />
+                ) : (
+                  <Copy className="w-3.5 h-3.5" />
+                )}
+              </button>
+            </div>
           </div>
 
-          <span className="text-[var(--color-ink-muted)]">Diajukan oleh:</span>
-          <span className="font-semibold text-[var(--color-ink)] truncate">
-            {booking.alias || booking.name}
-          </span>
+          <span className="hidden sm:inline-block text-[var(--color-paper-border)]">•</span>
+
+          {/* Diajukan oleh */}
+          <div className="flex items-center gap-1.5 text-xs min-w-0">
+            <span className="text-xs text-[var(--color-ink-muted)] shrink-0 font-medium">
+              Diajukan oleh:
+            </span>
+            <span className="font-semibold text-xs sm:text-sm text-[var(--color-ink)] truncate">
+              {booking.alias || booking.name}
+            </span>
+          </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          {onRemoveFromDevice && (
-            <button
-              onClick={() => onRemoveFromDevice(booking.code)}
-              type="button"
-              className="btn-interactive text-xs text-[var(--color-ink-muted)] hover:text-rose-600 p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg border border-[var(--color-paper-border)] hover:border-rose-200 hover:bg-rose-50 transition-colors inline-flex items-center gap-1.5 cursor-pointer shadow-2xs"
-              title="Hapus dari histori perangkat ini"
-              aria-label="Hapus dari histori perangkat ini"
-            >
-              <Trash2 className="w-3.5 h-3.5 shrink-0" />
-              <span className="hidden sm:inline">Hapus Histori</span>
-            </button>
-          )}
-
-          {onBack && (
-            <button
-              onClick={onBack}
-              type="button"
-              className="btn-interactive text-xs font-semibold px-3 py-1.5 rounded-lg bg-[var(--color-paper)] border border-[var(--color-paper-border)] text-[var(--color-ink)] hover:bg-[var(--color-paper-muted)] cursor-pointer transition-colors"
-            >
-              Tutup Rincian
-            </button>
-          )}
-        </div>
+        {/* Right: Hapus dari histori perangkat */}
+        {onRemoveFromDevice && (
+          <button
+            onClick={() => onRemoveFromDevice(booking.code)}
+            type="button"
+            className="btn-interactive inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-rose-600 hover:text-rose-700 bg-rose-50/80 hover:bg-rose-100/80 border border-rose-200/70 transition-colors cursor-pointer shadow-2xs active:scale-95 shrink-0 self-start"
+            title="Hapus dari histori perangkat ini"
+            aria-label="Hapus dari histori perangkat ini"
+          >
+            <Trash2 className="w-3.5 h-3.5 shrink-0" />
+            <span className="hidden sm:inline">Hapus Histori</span>
+          </button>
+        )}
       </div>
 
       {/* Stepper Phase */}
@@ -142,41 +149,41 @@ export function BookingDetailCard({
 
       {/* Booking Details Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4 pt-1">
-        <div className="p-3.5 rounded-xl bg-[var(--color-paper)] border border-[var(--color-paper-border)] space-y-1">
+        <div className="p-3.5 rounded-xl bg-[var(--color-paper)] border border-[var(--color-paper-border)] space-y-1 shadow-2xs">
           <div className="flex items-center gap-1.5 text-xs text-[var(--color-ink-muted)]">
-            <Calendar className="w-3.5 h-3.5 text-[var(--color-accent)]" />
-            <span>Tanggal Sesi:</span>
+            <Calendar className="w-3.5 h-3.5 text-[var(--color-accent)] shrink-0" />
+            <span className="font-medium">Tanggal Sesi:</span>
           </div>
           <p className="text-xs sm:text-sm font-semibold text-[var(--color-ink)]">
             {booking.date}
           </p>
         </div>
 
-        <div className="p-3.5 rounded-xl bg-[var(--color-paper)] border border-[var(--color-paper-border)] space-y-1">
+        <div className="p-3.5 rounded-xl bg-[var(--color-paper)] border border-[var(--color-paper-border)] space-y-1 shadow-2xs">
           <div className="flex items-center gap-1.5 text-xs text-[var(--color-ink-muted)]">
-            <Clock className="w-3.5 h-3.5 text-[var(--color-accent)]" />
-            <span>Waktu / Sesi:</span>
+            <Clock className="w-3.5 h-3.5 text-[var(--color-accent)] shrink-0" />
+            <span className="font-medium">Waktu / Sesi:</span>
           </div>
           <p className="text-xs sm:text-sm font-semibold text-[var(--color-ink)]">
             {booking.timeSlot}
           </p>
         </div>
 
-        <div className="p-3.5 rounded-xl bg-[var(--color-paper)] border border-[var(--color-paper-border)] space-y-1">
+        <div className="p-3.5 rounded-xl bg-[var(--color-paper)] border border-[var(--color-paper-border)] space-y-1 shadow-2xs">
           <div className="flex items-center gap-1.5 text-xs text-[var(--color-ink-muted)]">
-            <ModeIcon className="w-3.5 h-3.5 text-[var(--color-accent)]" />
-            <span>Moda Konseling:</span>
+            <ModeIcon className="w-3.5 h-3.5 text-[var(--color-accent)] shrink-0" />
+            <span className="font-medium">Moda Konseling:</span>
           </div>
           <p className="text-xs sm:text-sm font-semibold text-[var(--color-ink)]">
             {modeInfo.label}
           </p>
-          <p className="text-[11px] text-[var(--color-ink-muted)]">{modeInfo.desc}</p>
+          <p className="text-[11px] text-[var(--color-ink-muted)] leading-relaxed">{modeInfo.desc}</p>
         </div>
 
-        <div className="p-3.5 rounded-xl bg-[var(--color-paper)] border border-[var(--color-paper-border)] space-y-1">
+        <div className="p-3.5 rounded-xl bg-[var(--color-paper)] border border-[var(--color-paper-border)] space-y-1 shadow-2xs">
           <div className="flex items-center gap-1.5 text-xs text-[var(--color-ink-muted)]">
-            <FileText className="w-3.5 h-3.5 text-[var(--color-accent)]" />
-            <span>Topik Konseling:</span>
+            <FileText className="w-3.5 h-3.5 text-[var(--color-accent)] shrink-0" />
+            <span className="font-medium">Topik Konseling:</span>
           </div>
           <p className="text-xs sm:text-sm font-semibold text-[var(--color-ink)]">
             {booking.category}
@@ -186,7 +193,7 @@ export function BookingDetailCard({
 
       {/* Notes if available */}
       {booking.notes && (
-        <div className="p-3.5 rounded-xl bg-[var(--color-paper)] border border-[var(--color-paper-border)] space-y-1">
+        <div className="p-3.5 rounded-xl bg-[var(--color-paper)] border border-[var(--color-paper-border)] space-y-1 shadow-2xs">
           <span className="text-xs font-semibold text-[var(--color-ink-muted)] block">
             Catatan / Ekspektasi Konseli:
           </span>
@@ -197,21 +204,36 @@ export function BookingDetailCard({
       )}
 
       {/* Action Footer */}
-      <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <p className="text-[11px] text-[var(--color-ink-muted)]">
+      <div className="pt-3 border-t border-[var(--color-paper-border)] flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+        <p className="text-[11px] text-[var(--color-ink-muted)] sm:max-w-xs md:max-w-sm leading-relaxed">
           Butuh konfirmasi langsung atau ingin mengubah jadwal? Silakan hubungi Amel melalui WhatsApp.
         </p>
 
-        <a
-          href={waUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="btn-primary btn-interactive px-4 py-2.5 rounded-xl text-xs font-semibold shadow-xs inline-flex items-center justify-center gap-2 transition-colors cursor-pointer shrink-0"
-        >
-          <MessageCircle className="w-4 h-4" />
-          <span>Tanya Amel via WhatsApp</span>
-          <ExternalLink className="w-3 h-3 opacity-90" />
-        </a>
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-2.5 shrink-0">
+          <a
+            href={waUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn-primary btn-interactive px-4 py-2.5 rounded-xl text-xs font-semibold shadow-xs inline-flex items-center justify-center gap-2 transition-colors cursor-pointer shrink-0 whitespace-nowrap order-1 sm:order-2"
+          >
+            <MessageCircle className="w-4 h-4 shrink-0" />
+            <span>
+              <span className="sm:hidden">Tanya via WhatsApp</span>
+              <span className="hidden sm:inline">Tanya Amel via WhatsApp</span>
+            </span>
+          </a>
+
+          {onBack && (
+            <button
+              onClick={onBack}
+              type="button"
+              className="btn-secondary btn-interactive px-4 py-2.5 rounded-xl text-xs font-semibold shadow-2xs inline-flex items-center justify-center gap-2 cursor-pointer shrink-0 whitespace-nowrap order-2 sm:order-1 active:scale-98"
+            >
+              <ArrowLeft className="w-4 h-4 shrink-0 transition-transform group-hover:-translate-x-0.5" />
+              <span>Tutup Rincian</span>
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

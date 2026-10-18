@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { Send, Eye, EyeOff, Star, Check, X } from 'lucide-react';
+import { Send, Eye, EyeOff, Star, Check, X, ChevronDown, ChevronUp } from 'lucide-react';
 import { useMounted } from '@/lib/use-mounted';
 import { useModalAnimation } from '@/lib/use-modal-animation';
 import { cn } from '@/lib/utils';
@@ -43,6 +43,7 @@ export function CounselingReplyBox({
   const [saving, setSaving] = useState(false);
   const [showSendConfirm, setShowSendConfirm] = useState(false);
   const [lastSavedTime, setLastSavedTime] = useState<string | null>(null);
+  const [isStoryExpanded, setIsStoryExpanded] = useState(true);
   const isRestoredRef = useRef(false);
   const windowRef = useRef<HTMLDivElement>(null);
 
@@ -60,14 +61,18 @@ export function CounselingReplyBox({
     containerRef: windowRef,
   });
 
-  // Synchronize state when modal is opened or item changes
-  useEffect(() => {
+  // Synchronize state during render when modal is opened or item changes
+  const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
+  const [prevItemId, setPrevItemId] = useState(itemId);
+  if (isOpen !== prevIsOpen || itemId !== prevItemId) {
+    setPrevIsOpen(isOpen);
+    setPrevItemId(itemId);
     if (isOpen) {
       setReplyText(initialText);
       setReplyPublic(initialPublic);
       setReplyLanding(initialLanding);
     }
-  }, [isOpen, initialText, initialPublic, initialLanding, itemId]);
+  }
 
   // Restore saved draft safely on mount post-hydration
   useEffect(() => {
@@ -169,7 +174,7 @@ export function CounselingReplyBox({
             <div className="min-w-0 pr-3">
               <h3
                 id="counseling-reply-modal-title"
-                className="text-base sm:text-lg font-semibold text-[var(--color-ink)] truncate"
+                className="text-xs min-[360px]:text-sm sm:text-base font-semibold text-[var(--color-ink)] truncate"
               >
                 {initialText ? 'Ubah Tanggapan' : 'Beri Tanggapan'} untuk {itemAlias ? <span className="text-[var(--color-accent)]">{itemAlias}</span> : 'Konseli'}
               </h3>
@@ -197,10 +202,33 @@ export function CounselingReplyBox({
             {/* Conseli message quote preview */}
             {originalMessage && (
               <div className="bg-[var(--color-paper)] p-3.5 sm:p-4 rounded-xl border border-[var(--color-paper-border)] space-y-1.5">
-                <span className="text-[11px] font-semibold text-[var(--color-ink-soft)] uppercase tracking-wider block">
-                  Cerita dari Konseli:
-                </span>
-                <p className="text-xs sm:text-sm text-[var(--color-ink)] italic line-clamp-4 leading-relaxed">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[11px] font-semibold text-[var(--color-ink-soft)] uppercase tracking-wider block">
+                    Cerita dari Konseli:
+                  </span>
+                  {originalMessage.length > 200 && (
+                    <button
+                      type="button"
+                      onClick={() => setIsStoryExpanded((prev) => !prev)}
+                      className="btn-interactive inline-flex items-center gap-1 text-[11px] font-semibold text-[var(--color-accent)] hover:text-[var(--color-accent-hover)] cursor-pointer shrink-0 transition-colors"
+                      aria-expanded={isStoryExpanded}
+                      aria-label={isStoryExpanded ? 'Ciutkan cerita konseli' : 'Baca cerita konseli selengkapnya'}
+                    >
+                      <span>{isStoryExpanded ? 'Ciutkan Cerita' : 'Baca Cerita Lengkap'}</span>
+                      {isStoryExpanded ? (
+                        <ChevronUp className="w-3.5 h-3.5 shrink-0" />
+                      ) : (
+                        <ChevronDown className="w-3.5 h-3.5 shrink-0" />
+                      )}
+                    </button>
+                  )}
+                </div>
+                <p
+                  className={cn(
+                    'text-xs sm:text-sm text-[var(--color-ink)] italic leading-relaxed whitespace-pre-wrap break-words select-text',
+                    !isStoryExpanded && 'line-clamp-3'
+                  )}
+                >
                   &ldquo;{originalMessage}&rdquo;
                 </p>
               </div>
@@ -228,11 +256,6 @@ export function CounselingReplyBox({
             {/* Visibility Options */}
             <div className="space-y-2.5 pt-1">
               <label
-                onClick={() => {
-                  const next = !replyPublic;
-                  setReplyPublic(next);
-                  if (!next) setReplyLanding(false);
-                }}
                 className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer select-none transition-all ${
                   replyPublic
                     ? 'bg-[var(--color-accent-soft)] border-[var(--color-accent-border)] text-[var(--color-ink)]'
@@ -267,7 +290,6 @@ export function CounselingReplyBox({
 
               {replyPublic && (
                 <label
-                  onClick={() => setReplyLanding(!replyLanding)}
                   className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer select-none transition-all ${
                     replyLanding
                       ? 'bg-amber-50 border-amber-300 text-amber-900'

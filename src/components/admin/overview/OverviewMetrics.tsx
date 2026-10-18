@@ -41,7 +41,7 @@ export function OverviewMetrics({
     <div className="grid grid-cols-1 min-[340px]:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
       {/* Card 1: Perlu Konfirmasi */}
       <Link
-        href="/admin/bookings"
+        href="/admin/bookings?status=menunggu"
         className="card-interactive p-3 sm:p-5 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-paper-border)] hover:border-[var(--color-accent-border)] transition-all shadow-xs group flex flex-col justify-between"
       >
         <div className="flex items-center justify-between text-xs text-[var(--color-ink-muted)] mb-2 sm:mb-3">
@@ -63,7 +63,7 @@ export function OverviewMetrics({
 
       {/* Card 2: Sesi Terkonfirmasi */}
       <Link
-        href="/admin/bookings"
+        href="/admin/bookings?status=terkonfirmasi"
         className="card-interactive p-3 sm:p-5 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-paper-border)] hover:border-[var(--color-accent-border)] transition-all shadow-xs group flex flex-col justify-between"
       >
         <div className="flex items-center justify-between text-xs text-[var(--color-ink-muted)] mb-2 sm:mb-3">
@@ -85,7 +85,7 @@ export function OverviewMetrics({
 
       {/* Card 3: Curhat Menunggu */}
       <Link
-        href="/admin/counseling"
+        href="/admin/counseling?status=unanswered"
         className="card-interactive p-3 sm:p-5 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-paper-border)] hover:border-[var(--color-accent-border)] transition-all shadow-xs group flex flex-col justify-between"
       >
         <div className="flex items-center justify-between text-xs text-[var(--color-ink-muted)] mb-2 sm:mb-3">
@@ -107,7 +107,7 @@ export function OverviewMetrics({
 
       {/* Card 4: Artikel Terpublikasi */}
       <Link
-        href="/admin/articles"
+        href="/admin/articles?status=published"
         className="card-interactive p-3 sm:p-5 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-paper-border)] hover:border-[var(--color-accent-border)] transition-all shadow-xs group flex flex-col justify-between"
       >
         <div className="flex items-center justify-between text-xs text-[var(--color-ink-muted)] mb-2 sm:mb-3">

@@ -45,6 +45,15 @@ describe('Text Formatter Unit Test Suite (PUEBI/EYD)', () => {
     it('handles honorific prefixes like Kak and Ustazah', () => {
       expect(formatPersonName('kak amel')).toBe('Kak Amel');
     });
+
+    it('does not inject premature periods on partial prefix tokens during live typing', () => {
+      expect(formatPersonName('dr')).toBe('Dr');
+      expect(formatPersonName('drupadi')).toBe('Drupadi');
+      expect(formatPersonName('prof')).toBe('Prof');
+      expect(formatPersonName('dr ahmad')).toBe('Dr. Ahmad');
+      expect(formatPersonName('dr. ahmad')).toBe('dr. Ahmad');
+      expect(formatPersonName('prof. budi')).toBe('Prof. Budi');
+    });
   });
 
   describe('formatSentenceCase', () => {

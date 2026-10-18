@@ -64,7 +64,7 @@ export function BookingClientInfoStep({
             value={form.name}
             onChange={(e) => onChange('name', e.target.value)}
             placeholder="Nama lengkapmu"
-            className="form-input text-sm py-2 pr-8 w-full"
+            className="form-input text-sm py-2 !pr-10 w-full"
           />
           {form.name && (
             <button
@@ -95,7 +95,7 @@ export function BookingClientInfoStep({
             value={form.alias}
             onChange={(e) => onChange('alias', e.target.value)}
             placeholder="Nama sapaan saat sesi berlangsung"
-            className="form-input text-sm py-2 pr-8 w-full"
+            className="form-input text-sm py-2 !pr-10 w-full"
           />
           {form.alias && (
             <button
@@ -130,7 +130,7 @@ export function BookingClientInfoStep({
               onChange('phone', formatted);
             }}
             placeholder="0812-3456-7890"
-            className="form-input text-sm py-2 pr-8 w-full font-mono tracking-wide"
+            className="form-input text-sm py-2 !pr-10 w-full font-mono tracking-wide"
           />
           {form.phone && (
             <button
@@ -162,7 +162,7 @@ export function BookingClientInfoStep({
             value={form.email}
             onChange={(e) => onChange('email', e.target.value)}
             placeholder="nama@email.com"
-            className="form-input text-sm py-2 pr-8 w-full"
+            className="form-input text-sm py-2 !pr-10 w-full"
           />
           {form.email && (
             <button

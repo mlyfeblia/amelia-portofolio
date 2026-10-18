@@ -1,6 +1,6 @@
-# 🌿 Amelia (Amel) : Portofolio & Ruang Bimbingan Digital `v2.0.0`
+# 🌿 Amelia (Amel) : Portofolio & Ruang Bimbingan Digital `v2.1.0`
 
-[![Production Status](https://img.shields.io/badge/Production-Live%20v2.0.0-1A563C?style=for-the-badge&logo=vercel&logoColor=white)](https://mlyfeblia.vercel.app)
+[![Production Status](https://img.shields.io/badge/Production-Live%20v2.1.0-1A563C?style=for-the-badge&logo=vercel&logoColor=white)](https://mlyfeblia.vercel.app)
 [![Next.js](https://img.shields.io/badge/Next.js-16.3-black?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/React-19.3-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
@@ -10,7 +10,7 @@
 
 > *"Ruang aman untuk cerita yang belum sempat diucapkan, tempat hati berlabuh dalam Thuma'ninah."* 🕊️
 
-Selamat datang di repositori resmi **Amelia (Amel) : Versi 2.0.0**, platform portofolio profesional dan ruang bimbingan konseling digital dari mahasiswi Bimbingan Konseling Islam (BKI) **Universitas Islam Negeri Siber Syekh Nurjati Cirebon (UINSSC)**.
+Selamat datang di repositori resmi **Amelia (Amel) : Versi 2.1.0**, platform portofolio profesional dan ruang bimbingan konseling digital dari mahasiswi Bimbingan Konseling Islam (BKI) **Universitas Islam Negeri Siber Syekh Nurjati Cirebon (UINSSC)**.
 
 Platform ini mengintegrasikan profil profesional praktisi layanan pelanggan (berpengalaman sejak 2020), ruang konseling sebaya (*cyber counseling*), ruang curhat anonim yang aman, asesmen mandiri kesehatan jiwa 4 dimensi, serta artikel reflektif berbasis pendekatan psikologi Islam (*Tazkiyatun Nafs*).
 
@@ -27,11 +27,11 @@ Platform ini dibangun dengan prinsip keaslian (*human craft*) dan disiplin estet
 
 ---
 
-## ✨ Fitur Utama Versi 2.0.0
+## ✨ Fitur Utama Versi 2.1.0
 
 ### 📱 1. Progressive Web App (PWA) Resilien & Offline Article Reading
 - **Offline Article Reading:** Artikel yang pernah dibuka tersimpan otomatis dengan strategi Service Worker `NetworkFirst` (retensi 7 hari) via [Serwist](https://serwist.pages.dev/), sehingga tetap dapat dibaca tanpa sambungan internet.
-- **Sistem Pembaruan Terotomasi (v2.0.0):** Pengecekan versi periodik, banner notifikasi changelog terpusat, dan modal catatan pembaruan transparan (*frosted glass*).
+- **Sistem Pembaruan Terotomasi (v2.1.0):** Pengecekan versi periodik, banner notifikasi changelog terpusat, dan modal catatan pembaruan transparan (*frosted glass*).
 - **Fallback Offline Interaktif ([`src/app/~offline/page.tsx`](src/app/~offline/page.tsx)):** Menyediakan panduan latihan pernapasan grounding (*Tazkiyatun Nafs*), tombol muat ulang, dan akses darurat saat koneksi internet terputus.
 - **Standar Display Modern:** Mendukung `window-controls-overlay`, `standalone`, serta modal petunjuk visual khusus untuk pengguna Safari iOS (*Add to Home Screen*).
 
@@ -273,6 +273,13 @@ pnpm run test:integration
 
 ## 📜 Catatan Pembaruan Aplikasi (Changelog)
 
+### [2.1.0] - 19 Oktober 2026
+> **Pematangan Sistem Menyeluruh: Sinkronisasi Multi-Tab, Aksesibilitas Modal, Antrean Offline & Keamanan API**
+- **Sinkronisasi Multi-Tab & Cache Cerdas:** Sinkronisasi otomatis sesi login/logout/refresh admin lintas tab browser (`storage` + `visibilitychange`), dukungan caching array kosong pada `adminCache`, serta cross-tab mutex lock (`amelia_offline_sync_lock_v1`) pada antrean curhat offline agar tidak terjadi pengiriman ganda.
+- **Kematangan Alur Interaktif Publik:** Persistensi draf formulir reservasi di `sessionStorage`, resolusi kategori bimbingan otomatis lintas halaman (Layanan, Artikel, Asesmen, Booking, Curhat), serta tampilan rekomendasi artikel reflektif pada hasil asesmen mandiri.
+- **Standarisasi Modal, Sticky Context & Scroll:** Focus trap penuh (`containerRef`) dan isolasi scroll (`.modal-scroll-body`) di seluruh 12 modal aplikasi (Publik, Admin, dan PWA), unifikasi scroll-lock drawer mobile, serta perbaikan `transform: none` pada akhir animasi halaman agar elemen `sticky` berfungsi sempurna.
+- **Keamanan Backend & Pengujian 218 Skenario:** Validasi CSRF `Origin` pada mutasi API, penghapusan perhitungan ganda rate-limiter, penegakan invariant publikasi/landing page di `data-store`, serta 23 berkas test suite Vitest (218 pengujian) lulus 100%.
+
 ### [2.0.0] - 17 Oktober 2026
 > **Rilis Akbar v2.0: Stabilitas Formulir Menyeluruh, Akses Instan Tanpa Jeda & Penyempurnaan Visual Editorial**
 - **Validasi Formulir Interaktif & Efisien:** Implementasi komponen FormErrorMessage cerdas dengan penutupan otomatis 6 detik, visual bar hitung mundur, pause on hover, dan eliminasi tuntas bug loop penutupan tombol silang manual.
@@ -364,5 +371,5 @@ pnpm run test:integration
 
 <div align="center">
   <p>Diciptakan dengan kehangatan dan dedikasi penuh untuk mendampingi jiwa-jiwa bertumbuh. 🤍🌿</p>
-  <p><sub>Versi 2.0.0 · © 2026 Amelia · Bimbingan Konseling Islam UIN Siber Syekh Nurjati Cirebon.</sub></p>
+  <p><sub>Versi 2.1.0 · © 2026 Amelia · Bimbingan Konseling Islam UIN Siber Syekh Nurjati Cirebon.</sub></p>
 </div>

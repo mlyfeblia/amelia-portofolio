@@ -64,6 +64,16 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
+  const broadcastAuthSync = useCallback((action: 'login' | 'logout' | 'refresh', remaining?: number) => {
+    if (typeof window === 'undefined') return;
+    try {
+      localStorage.setItem(
+        'amelia_admin_auth_sync',
+        JSON.stringify({ action, remaining, timestamp: Date.now() })
+      );
+    } catch {}
+  }, []);
+
   const logout = useCallback(async () => {
     try {
       await fetch('/api/admin/logout', { method: 'POST' });
@@ -78,7 +88,8 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
       pinInputRef.current.value = '';
     }
     setShowPin(false);
-  }, []);
+    broadcastAuthSync('logout', 0);
+  }, [broadcastAuthSync]);
 
   // 30-minute countdown ticker when authenticated
   useEffect(() => {
@@ -105,19 +116,80 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
     return () => clearInterval(interval);
   }, [isAuthenticated, logout]);
 
+  // Resync session remainingSeconds when returning to tab (handles mobile background tab throttling)
+  // and synchronize login/logout/refresh across multiple open admin tabs
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const handleSessionExpired = () => {
+      logout();
+      setSessionNotice(
+        'Sesi login telah berakhir demi keamanan. Draf tulisanmu tetap tersimpan aman di browser.'
+      );
+    };
+
+    const handleVisibilityChange = async () => {
+      if (document.visibilityState === 'visible' && isAuthenticated) {
+        try {
+          const res = await fetch('/api/admin/verify');
+          const data = await res.json();
+          if (data.authenticated) {
+            if (typeof data.remainingSeconds === 'number' && data.remainingSeconds > 0) {
+              setRemainingSeconds(data.remainingSeconds);
+            }
+          } else {
+            handleSessionExpired();
+          }
+        } catch {}
+      }
+    };
+
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === 'amelia_admin_auth_sync' && e.newValue) {
+        try {
+          const parsed = JSON.parse(e.newValue);
+          if (parsed.action === 'logout') {
+            adminCache.clearAll();
+            setIsAuthenticated(false);
+            setRemainingSeconds(0);
+            setPin('');
+            setShowPin(false);
+          } else if (parsed.action === 'login') {
+            setIsAuthenticated(true);
+            setRemainingSeconds(parsed.remaining || DEFAULT_SESSION_SECONDS);
+            setSessionNotice(null);
+          } else if (parsed.action === 'refresh' && typeof parsed.remaining === 'number') {
+            setRemainingSeconds(parsed.remaining);
+          }
+        } catch {}
+      }
+    };
+
+    window.addEventListener('amelia:admin-session-expired', handleSessionExpired);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('storage', handleStorage);
+    return () => {
+      window.removeEventListener('amelia:admin-session-expired', handleSessionExpired);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('storage', handleStorage);
+    };
+  }, [isAuthenticated, logout]);
+
   const refreshSession = useCallback(async (): Promise<boolean> => {
     try {
       const res = await fetch('/api/admin/refresh', { method: 'POST' });
       const data = await res.json();
       if (res.ok && data.success) {
-        setRemainingSeconds(data.remainingSeconds || DEFAULT_SESSION_SECONDS);
+        const nextRemaining = data.remainingSeconds || DEFAULT_SESSION_SECONDS;
+        setRemainingSeconds(nextRemaining);
+        broadcastAuthSync('refresh', nextRemaining);
         return true;
       }
     } catch {
       // network/fetch error
     }
     return false;
-  }, []);
+  }, [broadcastAuthSync]);
 
   const login = async (inputPin: string): Promise<boolean> => {
     if (submittingRef.current) return false;
@@ -140,6 +212,7 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
         setPinError(false);
         setRemainingSeconds(DEFAULT_SESSION_SECONDS);
         setSessionNotice(null);
+        broadcastAuthSync('login', DEFAULT_SESSION_SECONDS);
         return true;
       }
     } catch {

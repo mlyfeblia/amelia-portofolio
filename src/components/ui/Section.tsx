@@ -48,7 +48,7 @@ export const Section = forwardRef<HTMLElement, SectionProps>(
         {...props}
       >
         {container ? (
-          <div className={cn('max-w-7xl mx-auto px-4 sm:px-8 lg:px-10', containerClassName)}>
+          <div className={cn('max-w-7xl mx-auto px-5 sm:px-8 lg:px-10', containerClassName)}>
             {children}
           </div>
         ) : (

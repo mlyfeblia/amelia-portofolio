@@ -34,10 +34,13 @@ export function ArticleCta({ category }: ArticleCtaProps) {
       </div>
       <Link
         href={scheduleHref}
-        className="btn-primary btn-interactive min-h-[46px] px-6 sm:px-8 text-sm font-semibold shrink-0 inline-flex items-center gap-2 rounded-xl shadow-xs"
+        className="btn-primary btn-interactive min-h-[46px] px-6 sm:px-8 text-sm font-semibold shrink-0 inline-flex items-center justify-center gap-2 rounded-xl shadow-xs whitespace-nowrap w-full sm:w-auto"
       >
         <Calendar className="w-4 h-4" aria-hidden="true" />
-        <span>Jadwalkan Konsultasi</span>
+        <span>
+          <span className="sm:hidden">Jadwalkan Sesi</span>
+          <span className="hidden sm:inline">Jadwalkan Konsultasi</span>
+        </span>
       </Link>
     </div>
   );

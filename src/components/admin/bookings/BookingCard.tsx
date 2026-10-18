@@ -19,7 +19,6 @@ import { Booking, BookingStatus, CounselingMode } from '@/types';
 import { getAdminContactWhatsAppUrl } from '@/lib/whatsapp';
 import { BookingContactEmailModal } from './BookingContactEmailModal';
 import { Spinner } from '@/components/ui/Spinner';
-import { Tooltip } from '@/components/ui/Tooltip';
 import { useToast } from '@/components/ui/Toast';
 import { ConfirmDecisionModal } from '@/components/ui/ConfirmDecisionModal';
 import { copyToClipboard } from '@/lib/clipboard';
@@ -267,7 +266,10 @@ export function BookingCard({
             className="btn-primary btn-interactive inline-flex items-center justify-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold shadow-2xs transition-all shrink-0 cursor-pointer whitespace-nowrap w-full min-[340px]:w-auto"
           >
             <Phone className="w-3.5 h-3.5" />
-            <span>Kirim Kabar WhatsApp</span>
+            <span>
+              <span className="sm:hidden">Kirim Kabar</span>
+              <span className="hidden sm:inline">Kirim Kabar WhatsApp</span>
+            </span>
           </a>
         </div>
       )}

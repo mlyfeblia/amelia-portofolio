@@ -106,10 +106,13 @@ export function AppShowcaseSection() {
                 <button
                   type="button"
                   onClick={() => openInstalledInfoModal()}
-                  className="btn-interactive inline-flex items-center gap-2.5 px-5 py-3 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 text-sm font-medium transition-colors cursor-pointer group shadow-2xs"
+                  className="btn-interactive inline-flex items-center gap-2.5 px-5 py-3 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 text-sm font-medium transition-colors cursor-pointer group shadow-2xs whitespace-nowrap"
                 >
                   <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
-                  <span>Aplikasi Telah Terpasang di Perangkat Ini</span>
+                  <span>
+                    <span className="sm:hidden">Aplikasi Terpasang</span>
+                    <span className="hidden sm:inline">Aplikasi Telah Terpasang di Perangkat Ini</span>
+                  </span>
                   <span className="text-xs bg-emerald-200/80 group-hover:bg-emerald-200 text-emerald-900 font-semibold px-2 py-0.5 rounded-md transition-colors ml-1">
                     Lihat Info &rarr;
                   </span>
@@ -119,19 +122,25 @@ export function AppShowcaseSection() {
                   <button
                     type="button"
                     onClick={() => triggerPwaInstall()}
-                    className="btn-primary btn-interactive min-h-[44px] px-5 sm:px-6 text-sm inline-flex items-center justify-center gap-2 shadow-xs cursor-pointer w-full min-[360px]:w-auto"
+                    className="btn-primary btn-interactive min-h-[44px] px-5 sm:px-6 text-sm inline-flex items-center justify-center gap-2 shadow-xs cursor-pointer w-full min-[360px]:w-auto whitespace-nowrap"
                   >
                     <Download className="w-4 h-4" aria-hidden="true" />
-                    <span>Pasang Aplikasi Sekarang</span>
+                    <span>
+                      <span className="sm:hidden">Pasang Aplikasi</span>
+                      <span className="hidden sm:inline">Pasang Aplikasi Sekarang</span>
+                    </span>
                   </button>
 
                   <button
                     type="button"
                     onClick={openIosModal}
-                    className="btn-secondary btn-interactive min-h-[44px] px-5 text-sm inline-flex items-center justify-center gap-2 cursor-pointer w-full min-[360px]:w-auto"
+                    className="btn-secondary btn-interactive min-h-[44px] px-5 text-sm inline-flex items-center justify-center gap-2 cursor-pointer w-full min-[360px]:w-auto whitespace-nowrap"
                   >
                     <Share2 className="w-4 h-4 text-[var(--color-ink-soft)]" aria-hidden="true" />
-                    <span suppressHydrationWarning>{isIosDevice ? 'Cara Pasang di iOS (Safari)' : 'Panduan Pasang iPhone'}</span>
+                    <span suppressHydrationWarning>
+                      <span className="sm:hidden">{isIosDevice ? 'Cara Pasang iOS' : 'Panduan iPhone'}</span>
+                      <span className="hidden sm:inline">{isIosDevice ? 'Cara Pasang di iOS (Safari)' : 'Panduan Pasang iPhone'}</span>
+                    </span>
                   </button>
                 </div>
               )}

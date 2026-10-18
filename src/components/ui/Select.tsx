@@ -276,14 +276,21 @@ export function Select({
 
         <span className="flex items-center gap-1.5 ml-2 shrink-0">
           {clearable && currentValue && !disabled && (
-            <button
-              type="button"
+            <span
+              role="button"
+              tabIndex={0}
               onClick={handleClear}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  handleClear(e as unknown as React.MouseEvent);
+                }
+              }}
               className="p-1 rounded-md text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] hover:bg-[var(--color-paper-muted)] cursor-pointer"
               aria-label="Bersihkan pilihan"
             >
               <X className="w-3.5 h-3.5" />
-            </button>
+            </span>
           )}
           <ChevronDown
             className={cn(
@@ -362,7 +369,7 @@ export function Select({
 
       {/* Error or Helper text */}
       {error ? (
-        <p className="mt-1.5 text-xs text-red-600 font-medium" role="alert">
+        <p className="mt-1.5 text-xs text-red-600 font-medium min-w-0 break-words [overflow-wrap:anywhere] [word-break:break-word] leading-snug" role="alert">
           {error}
         </p>
       ) : helperText ? (

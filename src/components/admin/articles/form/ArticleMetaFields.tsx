@@ -40,8 +40,7 @@ export function ArticleMetaFields({
       {/* Visibility & Landing Page Toggle Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {/* Visibility Toggle Card */}
-        <div
-          onClick={() => setFormData((prev) => ({ ...prev, isPublished: !prev.isPublished }))}
+        <label
           className={`p-3 rounded-xl border cursor-pointer select-none transition-all flex items-center justify-between gap-3 ${
             formData.isPublished
               ? 'bg-[var(--color-accent-soft)] border-[var(--color-accent-border)] text-[var(--color-ink)]'
@@ -66,16 +65,20 @@ export function ArticleMetaFields({
           <input
             type="checkbox"
             checked={formData.isPublished}
-            onChange={(e) => setFormData((prev) => ({ ...prev, isPublished: e.target.checked }))}
+            onChange={(e) => {
+              const nextPublished = e.target.checked;
+              setFormData((prev) => ({
+                ...prev,
+                isPublished: nextPublished,
+                showOnLandingPage: nextPublished ? prev.showOnLandingPage : false,
+              }));
+            }}
             className="w-4 h-4 rounded text-[var(--color-accent)] focus:ring-[var(--color-accent)] shrink-0 cursor-pointer"
           />
-        </div>
+        </label>
 
         {/* Landing Page Showcase Toggle Card */}
-        <div
-          onClick={() =>
-            setFormData((prev) => ({ ...prev, showOnLandingPage: !prev.showOnLandingPage }))
-          }
+        <label
           className={`p-3 rounded-xl border cursor-pointer select-none transition-all flex items-center justify-between gap-3 ${
             formData.showOnLandingPage
               ? 'bg-amber-50 border-amber-300 text-amber-950'
@@ -102,12 +105,17 @@ export function ArticleMetaFields({
           <input
             type="checkbox"
             checked={formData.showOnLandingPage}
-            onChange={(e) =>
-              setFormData((prev) => ({ ...prev, showOnLandingPage: e.target.checked }))
-            }
+            onChange={(e) => {
+              const nextLanding = e.target.checked;
+              setFormData((prev) => ({
+                ...prev,
+                showOnLandingPage: nextLanding,
+                isPublished: nextLanding ? true : prev.isPublished,
+              }));
+            }}
             className="w-4 h-4 rounded text-amber-600 focus:ring-amber-500 shrink-0 cursor-pointer"
           />
-        </div>
+        </label>
       </div>
 
       {/* Title */}

@@ -40,9 +40,9 @@ export default function ScrollRevealProvider() {
     );
 
     const elements = document.querySelectorAll('[data-reveal], .reveal-init');
-    // Generous safe viewport buffer (250% of window height) so any content within the initial mobile reading experience
-    // is immediately marked revealed and NEVER hidden or tagged with .reveal-pending on mount / refresh.
-    const initialThreshold = window.innerHeight * 2.5;
+    // Safe viewport buffer (115% of window height) so content within the initial reading viewport
+    // is immediately marked revealed and never hidden on mount / refresh, while below-the-fold sections smoothly reveal on scroll.
+    const initialThreshold = window.innerHeight * 1.15;
 
     let savedScroll = 0;
     try {
@@ -83,22 +83,30 @@ export default function ScrollRevealProvider() {
       }
     });
 
+    let rafId: number | null = null;
     const mutationObserver = new MutationObserver(() => {
-      const dynamicElements = document.querySelectorAll('[data-reveal]:not(.revealed):not(.reveal-pending)');
-      dynamicElements.forEach((el) => {
-        const rect = el.getBoundingClientRect();
-        if (rect.top <= window.innerHeight * 1.25) {
-          el.classList.add('revealed');
-        } else {
-          el.classList.add('reveal-pending');
-          observer.observe(el);
-        }
+      if (rafId !== null) return;
+      rafId = requestAnimationFrame(() => {
+        rafId = null;
+        const dynamicElements = document.querySelectorAll(
+          '[data-reveal]:not(.revealed):not(.reveal-pending), .reveal-init:not(.revealed):not(.reveal-pending)'
+        );
+        dynamicElements.forEach((el) => {
+          const rect = el.getBoundingClientRect();
+          if (rect.top <= window.innerHeight * 1.15) {
+            el.classList.add('revealed');
+          } else {
+            el.classList.add('reveal-pending');
+            observer.observe(el);
+          }
+        });
       });
     });
 
     mutationObserver.observe(document.body, { childList: true, subtree: true });
 
     return () => {
+      if (rafId !== null) cancelAnimationFrame(rafId);
       mutationObserver.disconnect();
       observer.disconnect();
     };

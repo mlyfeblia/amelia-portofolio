@@ -52,7 +52,10 @@ export async function GET(request: Request) {
         createdAt: b.createdAt,
       }));
 
-      return NextResponse.json({ success: true, data: sanitized });
+      return NextResponse.json(
+        { success: true, data: sanitized },
+        { headers: { 'Cache-Control': 'no-store, max-age=0' } }
+      );
     }
 
     // Case 2: Single code lookup
@@ -71,7 +74,7 @@ export async function GET(request: Request) {
           success: false,
           message: `Janji temu dengan kode referensi "${cleanSingleCode}" tidak ditemukan. Pastikan kodenya sesuai (contoh: BKI-2610-XXXXXX).`,
         },
-        { status: 404 }
+        { status: 404, headers: { 'Cache-Control': 'no-store, max-age=0' } }
       );
     }
 
@@ -89,7 +92,10 @@ export async function GET(request: Request) {
       createdAt: booking.createdAt,
     };
 
-    return NextResponse.json({ success: true, data: sanitized });
+    return NextResponse.json(
+      { success: true, data: sanitized },
+      { headers: { 'Cache-Control': 'no-store, max-age=0' } }
+    );
   } catch (error) {
     telemetry.error('Error tracking booking by code', error, {
       route: '/api/bookings/track',

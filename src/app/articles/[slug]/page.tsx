@@ -5,7 +5,7 @@ import { notFound, redirect } from 'next/navigation';
 import type { Metadata } from 'next';
 import { ArrowLeft, ChevronRight, Clock, Eye, BookOpen } from 'lucide-react';
 import { getArticleBySlug, getArticles } from '@/lib/data-store';
-import { getIsoDateString } from '@/lib/utils';
+import { getIsoDateString, formatIndonesianDate } from '@/lib/utils';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import BreadcrumbJsonLd from '@/components/BreadcrumbJsonLd';
@@ -165,7 +165,7 @@ export default async function ArticleDetailPage(props: {
         items={[
           { name: 'Beranda', url: BASE_URL },
           { name: 'Artikel', url: `${BASE_URL}/articles` },
-          { name: article.category, url: `${BASE_URL}/articles` },
+          { name: article.category, url: `${BASE_URL}/articles?kategori=${encodeURIComponent(article.category)}` },
           { name: article.title, url: articleFullUrl },
         ]}
       />
@@ -174,7 +174,7 @@ export default async function ArticleDetailPage(props: {
         <ArticleReadingProgress />
         <main
           id="main-content"
-          className="flex-1 page-enter"
+          className="flex-1 page-enter outline-none"
           tabIndex={-1}
           style={{ backgroundColor: 'var(--color-paper)' }}
         >
@@ -279,7 +279,7 @@ export default async function ArticleDetailPage(props: {
                           </Link>
                         </h4>
                         <p className="text-xs sm:text-sm text-[var(--color-ink-muted)] line-clamp-3 leading-relaxed">
-                          {rel.publishedAt ? `${rel.publishedAt} - ` : ''}{rel.excerpt}
+                          {rel.publishedAt ? `${formatIndonesianDate(rel.publishedAt)} - ` : ''}{rel.excerpt}
                         </p>
                       </div>
 

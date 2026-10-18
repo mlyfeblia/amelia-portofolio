@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useId, useCallback } from 'react';
-import { AlertCircle, CalendarPlus, Search } from 'lucide-react';
+import { CalendarPlus, Search } from 'lucide-react';
 import {
   BookingFormState,
   DEFAULT_BOOKING_FORM,
@@ -27,7 +27,7 @@ import {
 } from '@/lib/notifications';
 import { CounselingMode } from '@/types';
 import { formatPersonName } from '@/lib/text-formatter';
-import { focusAndScrollToField } from '@/lib/dom-utils';
+import { focusAndScrollToField, getPreferredScrollBehavior } from '@/lib/dom-utils';
 import { useCooldownTimer } from '@/lib/use-cooldown';
 
 interface BookingSectionProps {
@@ -44,6 +44,8 @@ export default function BookingSection({
   initialCategory,
 }: BookingSectionProps = {}) {
   const formId = useId();
+  const containerRef = React.useRef<HTMLDivElement>(null);
+  const isDraftRestoredRef = React.useRef(false);
   // Always initialize with SSR-safe defaults based on props
   const [form, setForm] = useState<BookingFormState>(() => {
     let mode = DEFAULT_BOOKING_FORM.mode;
@@ -91,6 +93,30 @@ export default function BookingSection({
     }
   }
 
+  // Restore booking form draft from sessionStorage post-hydration
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      try {
+        const raw = sessionStorage.getItem('amelia_booking_draft_v1');
+        if (raw) {
+          const parsed = JSON.parse(raw) as Partial<BookingFormState>;
+          setForm((prev) => ({
+            ...prev,
+            name: parsed.name || prev.name,
+            alias: parsed.alias || prev.alias,
+            phone: parsed.phone || prev.phone,
+            email: parsed.email || prev.email,
+            date: parsed.date && parsed.date >= getTodayDateString() ? parsed.date : prev.date,
+            timeSlot: parsed.timeSlot || prev.timeSlot,
+            notes: parsed.notes || prev.notes,
+          }));
+        }
+      } catch {}
+      isDraftRestoredRef.current = true;
+    }, 0);
+    return () => clearTimeout(timer);
+  }, []);
+
   // Listen to browser back/forward and hash changes, sync on mount post-hydration
   React.useEffect(() => {
     const handlePopState = () => {
@@ -108,8 +134,10 @@ export default function BookingSection({
           setTrackCode(codeParam);
           setActiveTab('tracker');
         } else if (tabParam === 'tracker' || hash === '#tracker' || hash === '#lacak') {
+          setTrackCode('');
           setActiveTab('tracker');
-        } else if (tabParam === 'new') {
+        } else {
+          setTrackCode('');
           setActiveTab('new');
         }
 
@@ -193,6 +221,43 @@ export default function BookingSection({
     mode?: CounselingMode;
   } | null>(null);
 
+  // Autosave booking draft to sessionStorage (debounced)
+  React.useEffect(() => {
+    if (!isDraftRestoredRef.current || success) return;
+    const hasInput = Boolean(
+      form.name.trim() ||
+        form.alias.trim() ||
+        form.phone.trim() ||
+        form.email.trim() ||
+        form.date ||
+        form.notes.trim()
+    );
+    if (!hasInput) {
+      try {
+        sessionStorage.removeItem('amelia_booking_draft_v1');
+      } catch {}
+      return;
+    }
+    const timer = setTimeout(() => {
+      try {
+        sessionStorage.setItem('amelia_booking_draft_v1', JSON.stringify(form));
+      } catch {}
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [form, success]);
+
+  const scrollBookingTopIntoView = useCallback(() => {
+    if (containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect();
+      if (rect.top < 72) {
+        containerRef.current.scrollIntoView({
+          behavior: getPreferredScrollBehavior(),
+          block: 'start',
+        });
+      }
+    }
+  }, []);
+
   const handleChange = (key: keyof BookingFormState, value: string) => {
     const formattedValue = key === 'name' || key === 'alias' ? formatPersonName(value) : value;
     setForm((prev) => ({ ...prev, [key]: formattedValue }));
@@ -214,6 +279,7 @@ export default function BookingSection({
           slot: form.timeSlot,
           mode: form.mode,
         });
+        scrollBookingTopIntoView();
       }, 500);
       return;
     }
@@ -286,6 +352,9 @@ export default function BookingSection({
         date: form.date,
         timeSlot: form.timeSlot,
       });
+      try {
+        sessionStorage.removeItem('amelia_booking_draft_v1');
+      } catch {}
       setSuccess({
         code: offlineTempCode,
         name: form.name,
@@ -297,6 +366,7 @@ export default function BookingSection({
       setForm(DEFAULT_BOOKING_FORM);
       setShowBookingConfirmModal(false);
       setLoading(false);
+      scrollBookingTopIntoView();
       return;
     }
 
@@ -326,6 +396,9 @@ export default function BookingSection({
         date: newBooking.date,
         timeSlot: newBooking.timeSlot,
       });
+      try {
+        sessionStorage.removeItem('amelia_booking_draft_v1');
+      } catch {}
 
       // Dispatch local notification if permission is granted, or politely prompt if default
       if (isNotificationSupported()) {
@@ -352,6 +425,7 @@ export default function BookingSection({
       });
       setForm(DEFAULT_BOOKING_FORM);
       setShowBookingConfirmModal(false);
+      scrollBookingTopIntoView();
     } catch (err: unknown) {
       // If sudden connection failure occurred during submit, fallback to offline queue
       if (typeof window !== 'undefined' && !navigator.onLine) {
@@ -364,6 +438,9 @@ export default function BookingSection({
           date: form.date,
           timeSlot: form.timeSlot,
         });
+        try {
+          sessionStorage.removeItem('amelia_booking_draft_v1');
+        } catch {}
         setSuccess({
           code: offlineTempCode,
           name: form.name,
@@ -374,6 +451,7 @@ export default function BookingSection({
         });
         setForm(DEFAULT_BOOKING_FORM);
         setShowBookingConfirmModal(false);
+        scrollBookingTopIntoView();
         return;
       }
       setError(err instanceof Error ? err.message : 'Terjadi kendala sistem. Silakan ulangi sesaat lagi.');
@@ -384,13 +462,23 @@ export default function BookingSection({
   };
 
   const handleTrackFromSuccess = (code: string) => {
-    handleTrackCodeChange(code);
-    handleTabChange('tracker');
+    setActiveTab('tracker');
+    setTrackCode(code);
+    try {
+      sessionStorage.setItem('booking_track_code', code);
+      const url = new URL(window.location.href);
+      url.searchParams.set('tab', 'tracker');
+      url.searchParams.set('code', code);
+      window.history.replaceState({}, '', url.toString());
+    } catch {}
     setSuccess(null);
   };
 
   return (
-    <div className="bg-[var(--color-surface)] border border-[var(--color-paper-border)] rounded-2xl sm:rounded-3xl shadow-xs overflow-hidden">
+    <div
+      ref={containerRef}
+      className="bg-[var(--color-surface)] border border-[var(--color-paper-border)] rounded-2xl sm:rounded-3xl shadow-xs overflow-hidden scroll-mt-20 sm:scroll-mt-24"
+    >
       {/* Top Header with Unified Segmented Navigation Bar */}
       <div className="relative px-4 py-3.5 sm:px-8 sm:py-5 border-b border-[var(--color-paper-border)] bg-[var(--color-paper)]/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         {/* Segmented Tab Controls: Anchored at top on mobile (order-1) so position NEVER shifts */}

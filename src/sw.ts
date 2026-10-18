@@ -91,7 +91,7 @@ const serwist = new Serwist({
         ],
       }),
     },
-    // 5. Serwist default Next.js App Router caching strategies (RSC, chunks, Google fonts)
+    // 6. Serwist default Next.js App Router caching strategies (RSC, chunks, Google fonts)
     ...defaultCache,
   ],
   fallbacks: {

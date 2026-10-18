@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useId, forwardRef } from 'react';
+import React, { useRef, useId, forwardRef } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { useMounted } from '@/lib/use-mounted';
@@ -55,19 +55,8 @@ export function Modal({
     onClose,
     closeOnEscape,
     lockScroll: true,
+    containerRef: windowRef,
   });
-
-  // Focus trap / focus restoration
-  useEffect(() => {
-    if (isOpen && windowRef.current) {
-      const focusableElements = windowRef.current.querySelectorAll<HTMLElement>(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-      );
-      if (focusableElements.length > 0) {
-        focusableElements[0].focus();
-      }
-    }
-  }, [isOpen]);
 
   if (!mounted || !isRendered) {
     return null;

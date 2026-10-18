@@ -73,7 +73,7 @@ export async function POST(req: NextRequest) {
     const filename = `${cleanBaseName}-${safeId}.webp`;
 
     let processedBuffer = rawBuffer;
-    let mimeType = 'image/webp';
+    const mimeType = 'image/webp';
 
     const isWebp = file.type === 'image/webp' || file.name.toLowerCase().endsWith('.webp');
     const isSmallWebp = isWebp && file.size <= 500 * 1024; // <= 500 KB
@@ -86,8 +86,14 @@ export async function POST(req: NextRequest) {
           .webp({ quality: 85, effort: 4 })
           .toBuffer();
       } catch (sharpErr) {
-        console.warn('Sharp conversion fallback, using original buffer:', sharpErr);
-        mimeType = file.type || 'image/jpeg';
+        console.warn('Sharp image decoding failed:', sharpErr);
+        return NextResponse.json(
+          {
+            success: false,
+            message: 'Berkas gambar tidak dapat diproses (rusak atau format tidak valid).',
+          },
+          { status: 400 }
+        );
       }
     }
 

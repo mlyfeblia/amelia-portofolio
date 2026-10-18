@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { checkRateLimit, checkDistributedRateLimit, getClientIp } from '../rate-limiter';
 
 describe('Rate Limiter Unit Test Suite', () => {

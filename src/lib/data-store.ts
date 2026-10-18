@@ -7,6 +7,7 @@ import { articles, bookings, curhat, pushSubscriptions } from '@/db/schema';
 import { desc, eq, and, inArray, sql } from 'drizzle-orm';
 import { Booking, AnonymousMessage, Article } from '@/types';
 import { ensureValidIsoTimestamp } from '@/lib/utils';
+import { LEGACY_SLUG_REDIRECTS } from '@/lib/article-redirects';
 
 // Fallback articles in case of offline/build-time isolation
 const fallbackArticles: Article[] = [
@@ -780,6 +781,8 @@ function revalidateDataPaths(types: ('bookings' | 'curhat' | 'articles')[]) {
       revalidatePath('/articles');
       revalidatePath('/admin/articles');
       revalidatePath('/admin');
+      revalidatePath('/services');
+      revalidatePath('/about');
       revalidatePath('/');
       revalidatePath('/sitemap.xml');
     }
@@ -790,10 +793,11 @@ function revalidateDataPaths(types: ('bookings' | 'curhat' | 'articles')[]) {
 
 // Bookings
 export async function getBookings(limit: number = 100, offset: number = 0): Promise<Booking[]> {
+  const safeLimit = Math.min(Math.max(1, limit), 500);
+  const safeOffset = Math.max(0, offset);
+
   if (isDatabaseConfigured && db) {
     try {
-      const safeLimit = Math.min(Math.max(1, limit), 200);
-      const safeOffset = Math.max(0, offset);
       const rows = await db
         .select()
         .from(bookings)
@@ -810,7 +814,7 @@ export async function getBookings(limit: number = 100, offset: number = 0): Prom
       console.error('Error in getBookings from db, falling back to in-memory store:', error);
     }
   }
-  return fallbackBookings.slice(offset, offset + limit);
+  return fallbackBookings.slice(safeOffset, safeOffset + safeLimit);
 }
 
 export async function createBooking(
@@ -1042,11 +1046,11 @@ export async function getCurhatList(
   limit: number = 100,
   offset: number = 0
 ): Promise<AnonymousMessage[]> {
+  const safeLimit = Math.min(Math.max(1, limit), 500);
+  const safeOffset = Math.max(0, offset);
+
   if (isDatabaseConfigured && db) {
     try {
-      const safeLimit = Math.min(Math.max(1, limit), 200);
-      const safeOffset = Math.max(0, offset);
-
       const rows = onlyPublic
         ? await db
             .select()
@@ -1074,7 +1078,7 @@ export async function getCurhatList(
   }
 
   const filtered = onlyPublic ? fallbackCurhat.filter((c) => c.isPublic) : fallbackCurhat;
-  return filtered.slice(offset, offset + limit);
+  return filtered.slice(safeOffset, safeOffset + safeLimit);
 }
 
 export async function createCurhat(data: {
@@ -1154,14 +1158,25 @@ export async function updateCurhat(
         updateData.answer = cleanAnswer.length > 0 ? cleanAnswer : null;
         updateData.isAnswered = cleanAnswer.length > 0;
         updateData.answeredAt = cleanAnswer.length > 0 ? new Date().toISOString() : null;
+        if (cleanAnswer.length === 0) {
+          updateData.isPublic = false;
+          updateData.showOnLandingPage = false;
+        }
       }
 
       if (typeof options.isPublic === 'boolean') {
         updateData.isPublic = options.isPublic;
+        if (!options.isPublic) {
+          updateData.showOnLandingPage = false;
+        }
       }
 
       if (typeof options.showOnLandingPage === 'boolean') {
         updateData.showOnLandingPage = options.showOnLandingPage;
+      }
+
+      if (updateData.isPublic === false || updateData.isAnswered === false) {
+        updateData.showOnLandingPage = false;
       }
 
       const [updated] = await db
@@ -1171,11 +1186,14 @@ export async function updateCurhat(
         .returning();
 
       if (updated) {
+        const finalIsPublic = Boolean(updated.isPublic && updated.isAnswered);
+        const finalShowOnLanding = finalIsPublic && Boolean(updated.showOnLandingPage);
         updatedCurhat = {
           ...updated,
+          isPublic: finalIsPublic,
           answer: updated.answer ?? undefined,
           answeredAt: updated.answeredAt ?? undefined,
-          showOnLandingPage: updated.showOnLandingPage ?? false,
+          showOnLandingPage: finalShowOnLanding,
         } as AnonymousMessage;
       }
     } catch (error) {
@@ -1190,12 +1208,22 @@ export async function updateCurhat(
       fallbackCurhat[idx].answer = cleanAnswer.length > 0 ? cleanAnswer : undefined;
       fallbackCurhat[idx].isAnswered = cleanAnswer.length > 0;
       fallbackCurhat[idx].answeredAt = cleanAnswer.length > 0 ? new Date().toISOString() : undefined;
+      if (cleanAnswer.length === 0) {
+        fallbackCurhat[idx].isPublic = false;
+        fallbackCurhat[idx].showOnLandingPage = false;
+      }
     }
     if (typeof options.isPublic === 'boolean') {
       fallbackCurhat[idx].isPublic = options.isPublic;
+      if (!options.isPublic) {
+        fallbackCurhat[idx].showOnLandingPage = false;
+      }
     }
     if (typeof options.showOnLandingPage === 'boolean') {
       fallbackCurhat[idx].showOnLandingPage = options.showOnLandingPage;
+    }
+    if (!fallbackCurhat[idx].isPublic || !fallbackCurhat[idx].isAnswered) {
+      fallbackCurhat[idx].showOnLandingPage = false;
     }
     if (!updatedCurhat) {
       updatedCurhat = fallbackCurhat[idx];
@@ -1339,19 +1367,75 @@ export async function updateArticle(
   data: Partial<Omit<Article, 'id'>>
 ): Promise<Article | null> {
   try {
+    const existingFallback = fallbackArticles.find((a) => a.id === id);
+    let oldSlug = existingFallback?.slug;
+
+    if (!oldSlug && isDatabaseConfigured && db) {
+      try {
+        const [existingDb] = await db
+          .select({ slug: articles.slug })
+          .from(articles)
+          .where(eq(articles.id, id))
+          .limit(1);
+        if (existingDb?.slug) {
+          oldSlug = existingDb.slug;
+        }
+      } catch {
+        // Ignore lookup error
+      }
+    }
+
+    const normalizedData = { ...data };
+    if (normalizedData.isPublished === false) {
+      normalizedData.showOnLandingPage = false;
+    } else if (normalizedData.showOnLandingPage === true && normalizedData.isPublished === undefined) {
+      normalizedData.isPublished = true;
+    }
+
+    if (normalizedData.slug !== undefined) {
+      let candidateSlug = normalizedData.slug;
+      let isSlugTaken = fallbackArticles.some(
+        (a) => a.id !== id && a.slug === candidateSlug
+      );
+
+      if (!isSlugTaken && isDatabaseConfigured && db) {
+        try {
+          const [takenInDb] = await db
+            .select({ id: articles.id })
+            .from(articles)
+            .where(eq(articles.slug, candidateSlug))
+            .limit(1);
+          if (takenInDb && takenInDb.id !== id) {
+            isSlugTaken = true;
+          }
+        } catch {
+          // Ignore lookup error
+        }
+      }
+
+      if (isSlugTaken) {
+        candidateSlug = `${candidateSlug}-${crypto.randomBytes(2).toString('hex')}`;
+      }
+      normalizedData.slug = candidateSlug;
+    }
+
     const updateData: Partial<typeof articles.$inferInsert> = {};
-    if (data.title !== undefined) updateData.title = data.title;
-    if (data.slug !== undefined) updateData.slug = data.slug;
-    if (data.excerpt !== undefined) updateData.excerpt = data.excerpt;
-    if (data.content !== undefined) updateData.content = data.content;
-    if (data.category !== undefined) updateData.category = data.category;
-    if (data.readTime !== undefined) updateData.readTime = data.readTime;
-    if (data.tags !== undefined) updateData.tags = data.tags;
-    if (data.isPublished !== undefined) updateData.isPublished = data.isPublished;
-    if (data.showOnLandingPage !== undefined) updateData.showOnLandingPage = data.showOnLandingPage;
-    if (data.views !== undefined) updateData.views = data.views;
-    if (data.coverImage !== undefined) updateData.coverImage = data.coverImage || null;
-    if (data.publishedAt !== undefined) updateData.publishedAt = ensureValidIsoTimestamp(data.publishedAt);
+    if (normalizedData.title !== undefined) updateData.title = normalizedData.title;
+    if (normalizedData.slug !== undefined) updateData.slug = normalizedData.slug;
+    if (normalizedData.excerpt !== undefined) updateData.excerpt = normalizedData.excerpt;
+    if (normalizedData.content !== undefined) updateData.content = normalizedData.content;
+    if (normalizedData.category !== undefined) updateData.category = normalizedData.category;
+    if (normalizedData.readTime !== undefined) updateData.readTime = normalizedData.readTime;
+    if (normalizedData.tags !== undefined) updateData.tags = normalizedData.tags;
+    if (normalizedData.isPublished !== undefined) updateData.isPublished = normalizedData.isPublished;
+    if (normalizedData.showOnLandingPage !== undefined) {
+      updateData.showOnLandingPage = normalizedData.showOnLandingPage;
+    }
+    if (normalizedData.views !== undefined) updateData.views = normalizedData.views;
+    if (normalizedData.coverImage !== undefined) updateData.coverImage = normalizedData.coverImage || null;
+    if (normalizedData.publishedAt !== undefined) {
+      updateData.publishedAt = ensureValidIsoTimestamp(normalizedData.publishedAt);
+    }
 
     let updatedArticle: Article | null = null;
 
@@ -1369,7 +1453,7 @@ export async function updateArticle(
             ...updated,
             tags: Array.isArray(updated.tags) ? updated.tags : [],
             isPublished: updated.isPublished ?? true,
-            showOnLandingPage: updated.showOnLandingPage ?? false,
+            showOnLandingPage: (updated.isPublished ?? true) ? (updated.showOnLandingPage ?? false) : false,
             views: updated.views ?? 0,
             coverImage: updated.coverImage || undefined,
           } as Article;
@@ -1382,14 +1466,31 @@ export async function updateArticle(
     // 2. Sync to in-memory fallback cache
     const fallbackIdx = fallbackArticles.findIndex((a) => a.id === id);
     if (fallbackIdx !== -1) {
-      fallbackArticles[fallbackIdx] = { ...fallbackArticles[fallbackIdx], ...data };
+      const merged = { ...fallbackArticles[fallbackIdx], ...normalizedData };
+      if (merged.isPublished === false) {
+        merged.showOnLandingPage = false;
+      }
+      fallbackArticles[fallbackIdx] = merged;
       if (!updatedArticle) {
         updatedArticle = fallbackArticles[fallbackIdx];
       }
     }
 
-    // 3. Invalidate Next.js cache so the update is immediately live
+    // 3. Register redirect if slug changed and invalidate Next.js cache
     if (updatedArticle) {
+      if (oldSlug && updatedArticle.slug && oldSlug !== updatedArticle.slug) {
+        LEGACY_SLUG_REDIRECTS[oldSlug] = updatedArticle.slug;
+        try {
+          revalidatePath(`/articles/${oldSlug}`);
+        } catch {
+          // Ignore outside request context
+        }
+      }
+      try {
+        revalidatePath(`/articles/${updatedArticle.slug}`);
+      } catch {
+        // Ignore outside request context
+      }
       revalidateDataPaths(['articles']);
     }
 
@@ -1403,11 +1504,35 @@ export async function updateArticle(
 export async function createArticle(
   data: Omit<Article, 'id' | 'publishedAt'> & { publishedAt?: string }
 ): Promise<Article> {
-  const id = `art-${Date.now()}`;
+  const id = `art-${Date.now()}-${crypto.randomBytes(2).toString('hex')}`;
   const publishedAt = ensureValidIsoTimestamp(data.publishedAt);
+  const isPublished = data.isPublished !== undefined ? data.isPublished : true;
+  const showOnLandingPage =
+    isPublished && data.showOnLandingPage !== undefined ? data.showOnLandingPage : false;
+
+  let finalSlug = data.slug;
+  let isSlugTaken = fallbackArticles.some((a) => a.slug === finalSlug);
+  if (!isSlugTaken && isDatabaseConfigured && db) {
+    try {
+      const [takenInDb] = await db
+        .select({ id: articles.id })
+        .from(articles)
+        .where(eq(articles.slug, finalSlug))
+        .limit(1);
+      if (takenInDb) {
+        isSlugTaken = true;
+      }
+    } catch {
+      // Ignore lookup error
+    }
+  }
+  if (isSlugTaken) {
+    finalSlug = `${finalSlug}-${crypto.randomBytes(2).toString('hex')}`;
+  }
+
   const insertData = {
     id,
-    slug: data.slug,
+    slug: finalSlug,
     title: data.title,
     excerpt: data.excerpt,
     content: data.content,
@@ -1415,8 +1540,8 @@ export async function createArticle(
     readTime: data.readTime || '5 menit baca',
     publishedAt,
     tags: Array.isArray(data.tags) ? data.tags : [],
-    isPublished: data.isPublished !== undefined ? data.isPublished : true,
-    showOnLandingPage: data.showOnLandingPage !== undefined ? data.showOnLandingPage : false,
+    isPublished,
+    showOnLandingPage,
     views: data.views !== undefined ? data.views : 0,
     coverImage: data.coverImage || null,
   };
@@ -1429,7 +1554,7 @@ export async function createArticle(
           ...inserted,
           tags: Array.isArray(inserted.tags) ? inserted.tags : [],
           isPublished: inserted.isPublished ?? true,
-          showOnLandingPage: inserted.showOnLandingPage ?? false,
+          showOnLandingPage: (inserted.isPublished ?? true) ? (inserted.showOnLandingPage ?? false) : false,
           views: inserted.views ?? 0,
           coverImage: inserted.coverImage || undefined,
         } as Article;
@@ -1459,10 +1584,14 @@ export async function createArticle(
 
 export async function deleteArticle(id: string): Promise<boolean> {
   let deleted = false;
+  let deletedSlug: string | undefined;
   if (isDatabaseConfigured && db) {
     try {
       const [res] = await db.delete(articles).where(eq(articles.id, id)).returning();
-      if (res) deleted = true;
+      if (res) {
+        deleted = true;
+        deletedSlug = res.slug;
+      }
     } catch (error) {
       console.error('Error in deleteArticle:', error);
     }
@@ -1470,11 +1599,19 @@ export async function deleteArticle(id: string): Promise<boolean> {
 
   const idx = fallbackArticles.findIndex((a) => a.id === id);
   if (idx !== -1) {
+    if (!deletedSlug) deletedSlug = fallbackArticles[idx].slug;
     fallbackArticles.splice(idx, 1);
     deleted = true;
   }
 
   if (deleted) {
+    if (deletedSlug) {
+      try {
+        revalidatePath(`/articles/${deletedSlug}`);
+      } catch {
+        // Ignore outside request context
+      }
+    }
     revalidateDataPaths(['articles']);
   }
 

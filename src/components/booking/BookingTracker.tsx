@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { 
   Search, 
   History, 
@@ -35,8 +35,9 @@ import { Spinner } from '@/components/ui/Spinner';
 
 import { FormErrorMessage } from '@/components/ui/FormErrorMessage';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { focusAndScrollToField } from '@/lib/dom-utils';
+import { focusAndScrollToField, getPreferredScrollBehavior } from '@/lib/dom-utils';
 import { copyToClipboard } from '@/lib/clipboard';
+import { useMounted } from '@/lib/use-mounted';
 
 const BookingDeviceDeleteModal = dynamic(
   () => import('./BookingDeviceDeleteModal').then((m) => m.BookingDeviceDeleteModal),
@@ -56,22 +57,80 @@ export function BookingTracker({ initialCode, onCodeChange, onNavigateToNewBooki
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [activeBooking, setActiveBooking] = useState<BookingDetailData | null>(null);
+  const isHydrated = useMounted();
+  const [isResolvingInitialCode, setIsResolvingInitialCode] = useState(() => Boolean(initialCode));
 
-  const scrollToTrackerTop = useCallback(() => {
+  const scrollToTrackerTop = useCallback((behavior: ScrollBehavior = getPreferredScrollBehavior()) => {
     if (typeof window !== 'undefined' && trackerContainerRef.current) {
       const rect = trackerContainerRef.current.getBoundingClientRect();
-      // Jika bagian atas tracker sudah berada dalam batas pandang yang nyaman (antara 60px dan 220px dari atas viewport),
+      // Jika bagian atas tracker sudah berada dalam batas pandang yang nyaman (antara 60px dan 200px dari atas viewport),
       // tidak perlu scroll paksa agar tidak terjadi sentakan / mantul ke atas saat user sedang melihat atau men-scroll.
-      if (rect.top >= 60 && rect.top <= 220) {
+      if (rect.top >= 60 && rect.top <= 200) {
         return;
       }
       const yOffset = -90;
       const y = rect.top + (window.scrollY || window.pageYOffset) + yOffset;
-      window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+      window.scrollTo({ top: Math.max(0, y), behavior });
     }
   }, []);
 
+  const [isClosingDetail, setIsClosingDetail] = useState(false);
+  const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const unlockHeightTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (closeTimeoutRef.current) {
+        clearTimeout(closeTimeoutRef.current);
+      }
+      if (unlockHeightTimeoutRef.current) {
+        clearTimeout(unlockHeightTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const handleCloseDetail = useCallback(() => {
+    if (isClosingDetail) return;
+    setIsClosingDetail(true);
+
+    // Kunci tinggi kontainer saat ini agar saat detail unmount, tinggi dokumen tidak anjlok ke footer
+    if (trackerContainerRef.current) {
+      trackerContainerRef.current.style.minHeight = `${trackerContainerRef.current.offsetHeight}px`;
+    }
+
+    // Mulai scroll ke posisi atas tracker segera
+    scrollToTrackerTop();
+
+    closeTimeoutRef.current = setTimeout(() => {
+      lastTrackedCodeRef.current = null;
+      setActiveBooking(null);
+      setIsClosingDetail(false);
+      setSearchInput('');
+      setError('');
+      onCodeChange?.('');
+
+      // Lepaskan kunci minHeight setelah view riwayat ter-render dengan stabil
+      unlockHeightTimeoutRef.current = setTimeout(() => {
+        if (trackerContainerRef.current) {
+          trackerContainerRef.current.style.minHeight = '';
+        }
+      }, 200);
+    }, 180);
+  }, [isClosingDetail, onCodeChange, scrollToTrackerTop]);
+
   const handleSelectBooking = useCallback((booking: BookingDetailData) => {
+    if (closeTimeoutRef.current) {
+      clearTimeout(closeTimeoutRef.current);
+      closeTimeoutRef.current = null;
+    }
+    if (unlockHeightTimeoutRef.current) {
+      clearTimeout(unlockHeightTimeoutRef.current);
+      unlockHeightTimeoutRef.current = null;
+    }
+    if (trackerContainerRef.current) {
+      trackerContainerRef.current.style.minHeight = '';
+    }
+    setIsClosingDetail(false);
     lastTrackedCodeRef.current = booking.code.toUpperCase();
     setActiveBooking(booking);
     onCodeChange?.(booking.code);
@@ -99,9 +158,15 @@ export function BookingTracker({ initialCode, onCodeChange, onNavigateToNewBooki
 
   // Track code callback defined before effects that use it
   const handleTrackCode = useCallback(async (codeToSearch: string, shouldScroll = true) => {
+    if (closeTimeoutRef.current) {
+      clearTimeout(closeTimeoutRef.current);
+      closeTimeoutRef.current = null;
+    }
+    setIsClosingDetail(false);
     const cleanCode = codeToSearch.trim().toUpperCase().replace(/\s+/g, '');
     if (!cleanCode) {
       setError('Masukkan kode referensi janji temu kamu ya.');
+      setIsResolvingInitialCode(false);
       return;
     }
 
@@ -120,6 +185,7 @@ export function BookingTracker({ initialCode, onCodeChange, onNavigateToNewBooki
         createdAt: new Date().toISOString(),
         notes: 'Pengajuan ini disimpan saat perangkat offline dan akan otomatis disinkronkan ke server segera setelah perangkat kembali terhubung ke internet.',
       };
+      setIsResolvingInitialCode(false);
       setActiveBooking(offlineDetail);
       onCodeChange?.(cleanCode);
       if (shouldScroll) {
@@ -160,6 +226,7 @@ export function BookingTracker({ initialCode, onCodeChange, onNavigateToNewBooki
       focusAndScrollToField('booking-track-input');
     } finally {
       setLoading(false);
+      setIsResolvingInitialCode(false);
     }
   }, [deviceRecords, onCodeChange, scrollToTrackerTop]);
 
@@ -169,11 +236,19 @@ export function BookingTracker({ initialCode, onCodeChange, onNavigateToNewBooki
     setPrevInitialCode(initialCode);
     setSearchInput(initialCode || '');
     if (!initialCode) {
-      lastTrackedCodeRef.current = null;
       setActiveBooking(null);
       setError('');
+      setIsResolvingInitialCode(false);
+    } else {
+      setIsResolvingInitialCode(true);
     }
   }
+
+  useEffect(() => {
+    if (!initialCode) {
+      lastTrackedCodeRef.current = null;
+    }
+  }, [initialCode]);
 
   // Fetch live statuses for all stored device bookings
   useEffect(() => {
@@ -380,24 +455,31 @@ export function BookingTracker({ initialCode, onCodeChange, onNavigateToNewBooki
     }
   };
 
+  if (isResolvingInitialCode && !activeBooking) {
+    return (
+      <div ref={trackerContainerRef} className="space-y-4 animate-fade-in p-4 sm:p-6 rounded-2xl bg-[var(--color-paper)]/60 border border-[var(--color-paper-border)] shadow-xs">
+        <div className="flex items-center gap-2 text-xs text-[var(--color-ink-muted)]">
+          <Spinner size="xs" variant="accent" />
+          <span>Memuat rincian janji temu {initialCode}...</span>
+        </div>
+        <SkeletonBookingCard />
+      </div>
+    );
+  }
+
   return (
-    <div ref={trackerContainerRef} key={activeBooking ? `detail-${activeBooking.code}` : 'history-list'} className="space-y-8 tab-content-enter">
-      {/* If active booking is viewed, display the detail card */}
+    <div ref={trackerContainerRef} className="space-y-8">
+      {/* If active booking is viewed, display the detail card with enter & exit transitions */}
       {activeBooking ? (
         <BookingDetailCard
+          key={`detail-${activeBooking.code}`}
           booking={activeBooking}
+          isExiting={isClosingDetail}
           onRemoveFromDevice={(code) => handleOpenRemoveSingle(code, activeBooking.alias || activeBooking.name)}
-          onBack={() => {
-            lastTrackedCodeRef.current = null;
-            setActiveBooking(null);
-            setSearchInput('');
-            setError('');
-            onCodeChange?.('');
-            scrollToTrackerTop();
-          }}
+          onBack={handleCloseDetail}
         />
       ) : (
-        <>
+        <div key="history-and-search" className="space-y-8 animate-detail-card-enter">
           {/* Section 1: Search Form */}
           <div className="p-3.5 sm:p-5 rounded-2xl bg-[var(--color-paper)]/70 border border-[var(--color-paper-border)] space-y-3.5 shadow-2xs">
             <div>
@@ -429,11 +511,11 @@ export function BookingTracker({ initialCode, onCodeChange, onNavigateToNewBooki
                       }
                     }}
                     placeholder="Contoh: BKI-2610-A7C12D"
-                    className={`search-input w-full pl-9.5 pr-28 font-mono text-xs sm:text-sm tracking-wider uppercase placeholder:font-sans placeholder:normal-case placeholder:tracking-normal placeholder:text-[var(--color-ink-muted)]/70 shadow-2xs ${
+                    className={`search-input w-full !pl-9.5 !pr-[70px] font-mono text-xs sm:text-sm tracking-wider uppercase placeholder:font-sans placeholder:normal-case placeholder:tracking-normal placeholder:text-[var(--color-ink-muted)]/70 shadow-2xs ${
                       error ? 'form-input-error' : ''
                     }`}
                   />
-                  <div className="absolute inset-y-0 right-0 pr-2 flex items-center gap-1.5">
+                  <div className="absolute inset-y-0 right-0 pr-2 flex items-center gap-1">
                     {searchInput ? (
                       <button
                         type="button"
@@ -442,7 +524,7 @@ export function BookingTracker({ initialCode, onCodeChange, onNavigateToNewBooki
                           setError('');
                           onCodeChange?.('');
                         }}
-                        className="btn-icon-interactive p-1 rounded-md text-[var(--color-ink-soft)] hover:text-[var(--color-ink)] hover:bg-[var(--color-paper)] transition-colors cursor-pointer"
+                        className="btn-icon-interactive p-1.5 rounded-lg text-[var(--color-ink-soft)] hover:text-[var(--color-ink)] hover:bg-[var(--color-paper-muted)] transition-colors cursor-pointer shrink-0"
                         title="Hapus ketikan kode"
                         aria-label="Hapus ketikan kode referensi"
                       >
@@ -452,12 +534,11 @@ export function BookingTracker({ initialCode, onCodeChange, onNavigateToNewBooki
                     <button
                       type="button"
                       onClick={handlePasteCode}
-                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-sans font-medium text-[var(--color-accent)] bg-[var(--color-accent-soft)] hover:bg-[var(--color-accent-border)]/60 transition-all cursor-pointer active:scale-95 shrink-0"
+                      className="p-1.5 rounded-lg text-[var(--color-accent)] bg-[var(--color-accent-soft)] hover:bg-[var(--color-accent-border)]/60 transition-all cursor-pointer active:scale-95 shrink-0 inline-flex items-center justify-center shadow-2xs"
                       title="Tempel kode dari papan klip (clipboard)"
                       aria-label="Tempel kode referensi dari clipboard"
                     >
                       <ClipboardPaste className="w-3.5 h-3.5 shrink-0" />
-                      <span className="text-[11px] font-semibold">Tempel</span>
                     </button>
                   </div>
                 </div>
@@ -508,24 +589,36 @@ export function BookingTracker({ initialCode, onCodeChange, onNavigateToNewBooki
                 <h3 className="text-sm sm:text-base font-semibold text-[var(--color-ink)] truncate">
                   Riwayat di Perangkat Ini
                 </h3>
-                {deviceRecords.length > 0 && (
+                {isHydrated && deviceRecords.length > 0 && (
                   <span className="text-[11px] px-2 py-0.5 rounded-full bg-[var(--color-accent-soft)] text-[var(--color-accent)] font-bold shrink-0">
                     {deviceRecords.length}
                   </span>
                 )}
+                {isHydrated && loadingHistory && (
+                  <span className="inline-flex items-center gap-1.5 text-[11px] text-[var(--color-ink-muted)] animate-fade-in pl-1">
+                    <Spinner size="xs" variant="accent" />
+                    <span className="hidden sm:inline">Menyinkronkan status terkini...</span>
+                  </span>
+                )}
               </div>
+
+              {isHydrated && deviceRecords.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setDeleteModalState({ isOpen: true, mode: 'all' })}
+                  className="btn-interactive inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] sm:text-xs font-medium text-[var(--color-ink-muted)] hover:text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-200 transition-colors cursor-pointer shrink-0"
+                  title="Bersihkan seluruh riwayat janji temu di perangkat ini"
+                  aria-label="Hapus semua riwayat janji temu di perangkat"
+                >
+                  <Trash2 className="w-3.5 h-3.5 shrink-0" />
+                  <span>Hapus Semua</span>
+                </button>
+              )}
             </div>
 
-            {loadingHistory ? (
-              <div className="space-y-3">
-                <div className="flex items-center gap-2 text-xs text-[var(--color-ink-muted)]">
-                  <Spinner size="xs" variant="accent" />
-                  <span>Menyinkronkan status terkini...</span>
-                </div>
-                <div className="grid grid-cols-1 gap-3.5">
-                  <SkeletonDeviceBookingCard />
-                  <SkeletonDeviceBookingCard />
-                </div>
+            {!isHydrated ? (
+              <div className="space-y-3 animate-fade-in">
+                <SkeletonDeviceBookingCard />
               </div>
             ) : deviceRecords.length === 0 ? (
               <EmptyState
@@ -537,10 +630,11 @@ export function BookingTracker({ initialCode, onCodeChange, onNavigateToNewBooki
                     <button
                       onClick={onNavigateToNewBooking}
                       type="button"
-                      className="btn-primary btn-interactive text-xs sm:text-sm py-2.5 px-6 rounded-xl cursor-pointer inline-flex items-center gap-2"
+                      className="btn-primary btn-interactive text-xs sm:text-sm py-2.5 px-5 sm:px-6 rounded-xl cursor-pointer inline-flex items-center justify-center gap-2 whitespace-nowrap shadow-xs"
                     >
-                      <CalendarPlus className="w-4 h-4" />
-                      <span>Ajukan Janji Temu Sekarang</span>
+                      <CalendarPlus className="w-4 h-4 shrink-0" />
+                      <span className="sm:hidden">Ajukan Janji Temu</span>
+                      <span className="hidden sm:inline">Ajukan Janji Temu Sekarang</span>
                     </button>
                   ) : undefined
                 }
@@ -574,7 +668,11 @@ export function BookingTracker({ initialCode, onCodeChange, onNavigateToNewBooki
                   <EmptyState
                     size="sm"
                     icon={<Search className="w-5 h-5 text-[var(--color-ink-muted)]" />}
-                    title={`Tidak Ada Rekaman "${searchInput}" di Perangkat`}
+                    title={
+                      <span>
+                        Tidak Ada Rekaman &ldquo;<span className="break-all">{searchInput}</span>&rdquo; di Perangkat
+                      </span>
+                    }
                     description={
                       error
                         ? 'Tidak ditemukan janji temu dengan kode tersebut baik di histori perangkat ini maupun di database sistem.'
@@ -601,10 +699,13 @@ export function BookingTracker({ initialCode, onCodeChange, onNavigateToNewBooki
                           setError('');
                           onCodeChange?.('');
                         }}
-                        className="btn-secondary btn-interactive inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold cursor-pointer shadow-xs"
+                        className="btn-secondary btn-interactive inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold cursor-pointer shadow-xs whitespace-nowrap"
                       >
                         <X className="w-3.5 h-3.5" />
-                        <span>Tampilkan Semua Riwayat</span>
+                        <span>
+                          <span className="sm:hidden">Semua Riwayat</span>
+                          <span className="hidden sm:inline">Tampilkan Semua Riwayat</span>
+                        </span>
                       </button>
                     }
                   />
@@ -655,7 +756,7 @@ export function BookingTracker({ initialCode, onCodeChange, onNavigateToNewBooki
                           <div className="shrink-0">
                             {record.code.toUpperCase().startsWith('BKI-OFFLINE-') ? (
                               <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">
-                                <Clock className="w-3.5 h-3.5 text-amber-600 animate-pulse" aria-hidden="true" />
+                                <Clock className="w-3.5 h-3.5 text-amber-600 pulse-dot" aria-hidden="true" />
                                 <span>Sinkronisasi Tertunda</span>
                               </span>
                             ) : (
@@ -667,7 +768,7 @@ export function BookingTracker({ initialCode, onCodeChange, onNavigateToNewBooki
                         <button
                           type="button"
                           onClick={(e) => handleOpenRemoveSingle(record.code, nameText, e)}
-                          className="btn-interactive inline-flex items-center gap-1.5 p-1.5 sm:px-2.5 sm:py-1 rounded-lg text-xs font-medium text-[var(--color-ink-muted)] hover:text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-200 transition-colors cursor-pointer shrink-0"
+                          className="btn-interactive hidden sm:inline-flex items-center gap-1.5 p-1.5 sm:px-2.5 sm:py-1 rounded-lg text-xs font-medium text-[var(--color-ink-muted)] hover:text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-200 transition-colors cursor-pointer shrink-0"
                           title="Hapus riwayat kode ini dari perangkat"
                           aria-label={`Hapus riwayat ${record.code}`}
                         >
@@ -731,7 +832,7 @@ export function BookingTracker({ initialCode, onCodeChange, onNavigateToNewBooki
           </div>
         )}
       </div>
-    </>
+    </div>
   )}
 
       {/* Standardized Verification Modal for Device Booking History Deletion */}

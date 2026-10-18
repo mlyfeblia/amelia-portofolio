@@ -28,6 +28,7 @@ describe('Assessment Randomization & Suggestion Architecture', () => {
 
     expect(sampleA.length).toBe(8);
     expect(sampleA).toEqual(sampleB);
+    expect(sampleA).not.toEqual(sampleC);
 
     // Ensure 2 questions per dimension
     const counts: Record<string, number> = {};

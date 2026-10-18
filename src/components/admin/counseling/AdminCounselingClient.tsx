@@ -6,6 +6,7 @@ import dynamic from 'next/dynamic';
 import { CounselingHeader } from '@/components/admin/counseling/CounselingHeader';
 import { CounselingFilters } from '@/components/admin/counseling/CounselingFilters';
 import { CounselingList } from '@/components/admin/counseling/CounselingList';
+import { useToast } from '@/context/ToastContext';
 import { adminCache, useAdminRevalidate } from '@/lib/admin-cache';
 import { scrollContainerIntoViewIfAbove } from '@/lib/dom-utils';
 
@@ -17,6 +18,7 @@ const CounselingDeleteModal = dynamic(
 const ITEMS_PER_PAGE = 6;
 
 export function AdminCounselingClient() {
+  const { toast } = useToast();
   const [curhatList, setCurhatList] = useState<AnonymousMessage[]>(() => adminCache.getCurhat() || []);
   const [loading, setLoading] = useState(() => !adminCache.getCurhat());
   const [currentPage, setCurrentPage] = useState(1);
@@ -29,6 +31,11 @@ export function AdminCounselingClient() {
   const [landingFilter, setLandingFilter] = useState<'semua' | 'landing'>('semua');
   const [dateFilter, setDateFilter] = useState('');
 
+  // Replying & Action States
+  const [replyingId, setReplyingId] = useState<string | null>(null);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
+  const [togglingLandingId, setTogglingLandingId] = useState<string | null>(null);
+
   // Synchronize query parameters and session storage safely post-hydration
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -40,6 +47,7 @@ export function AdminCounselingClient() {
         const v = params.get('vis') || sessionStorage.getItem('admin_counseling_vis');
         const l = params.get('landing') || sessionStorage.getItem('admin_counseling_landing');
         const d = params.get('tgl') || sessionStorage.getItem('admin_counseling_tgl');
+        const replyParam = params.get('reply');
 
         if (q) setSearch(q);
         if (k) setCategoryFilter(k);
@@ -47,6 +55,7 @@ export function AdminCounselingClient() {
         if (v === 'public' || v === 'private') setVisibilityFilter(v);
         if (l === 'landing') setLandingFilter('landing');
         if (d) setDateFilter(d);
+        if (replyParam) setReplyingId(replyParam);
       } catch {}
     }, 0);
 
@@ -150,23 +159,22 @@ export function AdminCounselingClient() {
     scrollContainerIntoViewIfAbove('admin-counseling-list-container');
   };
 
-  // Replying & Action States
-  const [replyingId, setReplyingId] = useState<string | null>(null);
-  const [togglingId, setTogglingId] = useState<string | null>(null);
-  const [togglingLandingId, setTogglingLandingId] = useState<string | null>(null);
-
   // Delete State
   const [deleteItem, setDeleteItem] = useState<AnonymousMessage | null>(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 
   const loadCurhat = useCallback(async (signalArg?: unknown) => {
     const signal = signalArg instanceof AbortSignal ? signalArg : undefined;
-    const cached = adminCache.getCurhat();
-    if (!cached || cached.length === 0) {
-      setLoading(true);
-    }
     try {
       const res = await fetch('/api/curhat', { signal });
+
+      if (res.status === 401) {
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('amelia:admin-session-expired'));
+        }
+        return;
+      }
+
       const data = await res.json();
       if (data.success && Array.isArray(data.data)) {
         setCurhatList(data.data);
@@ -182,12 +190,43 @@ export function AdminCounselingClient() {
   }, []);
 
   useEffect(() => {
+    let ignore = false;
     const controller = new AbortController();
-    loadCurhat(controller.signal);
+
+    async function fetchData() {
+      try {
+        const res = await fetch('/api/curhat', { signal: controller.signal });
+
+        if (res.status === 401) {
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('amelia:admin-session-expired'));
+          }
+          return;
+        }
+
+        const data = await res.json();
+        if (!ignore && data.success && Array.isArray(data.data)) {
+          setCurhatList(data.data);
+          adminCache.setCurhat(data.data);
+        }
+      } catch (e: unknown) {
+        if ((e as Error)?.name !== 'AbortError') {
+          console.error('Failed to load curhat:', e);
+        }
+      } finally {
+        if (!ignore) {
+          setLoading(false);
+        }
+      }
+    }
+
+    fetchData();
+
     return () => {
+      ignore = true;
       controller.abort();
     };
-  }, [loadCurhat]);
+  }, []);
 
   // Automatic silent background revalidation on tab re-entry and cross-tab sync
   useAdminRevalidate('curhat', loadCurhat);
@@ -207,16 +246,18 @@ export function AdminCounselingClient() {
       });
       const data = await res.json();
       if (data.success) {
+        const trimmedText = text.trim();
+        const isNowAnswered = trimmedText.length > 0;
         setCurhatList((prev) => {
           const next = prev.map((c) =>
             c.id === id
-              ? {
+              ? data.data || {
                   ...c,
-                  answer: text,
-                  isAnswered: true,
-                  isPublic,
-                  showOnLandingPage,
-                  answeredAt: new Date().toISOString(),
+                  answer: trimmedText,
+                  isAnswered: isNowAnswered,
+                  isPublic: isNowAnswered ? isPublic : false,
+                  showOnLandingPage: isNowAnswered ? showOnLandingPage : false,
+                  answeredAt: isNowAnswered ? new Date().toISOString() : undefined,
                 }
               : c
           );
@@ -224,9 +265,17 @@ export function AdminCounselingClient() {
           return next;
         });
         setReplyingId(null);
+        toast.success(
+          isNowAnswered
+            ? 'Tanggapan penguatan berhasil disimpan.'
+            : 'Tanggapan dihapus dan status curhat dikembalikan menjadi belum ditanggapi.'
+        );
+      } else {
+        toast.error('Gagal menyimpan tanggapan curhat.');
       }
     } catch (e) {
       console.error('Failed to answer curhat:', e);
+      toast.error('Gagal menyimpan tanggapan curhat.');
     }
   };
 
@@ -252,9 +301,17 @@ export function AdminCounselingClient() {
           adminCache.setCurhat(next);
           return next;
         });
+        toast.success(
+          nextPublic
+            ? 'Curhat kini ditampilkan di Dinding Curhat publik.'
+            : 'Curhat disimpan sebagai catatan privat.'
+        );
+      } else {
+        toast.error('Gagal mengubah visibilitas curhat.');
       }
     } catch (e) {
       console.error('Failed to toggle curhat privacy:', e);
+      toast.error('Gagal mengubah visibilitas curhat.');
     } finally {
       setTogglingId(null);
     }
@@ -282,9 +339,17 @@ export function AdminCounselingClient() {
           adminCache.setCurhat(next);
           return next;
         });
+        toast.success(
+          nextLanding
+            ? 'Curhat disorot di beranda utama.'
+            : 'Sorotan beranda curhat dinonaktifkan.'
+        );
+      } else {
+        toast.error('Gagal mengubah status sorotan beranda.');
       }
     } catch (e) {
       console.error('Failed to toggle landing page showcase:', e);
+      toast.error('Gagal mengubah status sorotan beranda.');
     } finally {
       setTogglingLandingId(null);
     }
@@ -303,9 +368,13 @@ export function AdminCounselingClient() {
         });
         setDeleteModalOpen(false);
         setTimeout(() => setDeleteItem(null), 300);
+        toast.info(`Pesan curhat dari ${item.alias || 'Teman Anonim'} berhasil dihapus.`);
+      } else {
+        toast.error('Gagal menghapus pesan curhat.');
       }
     } catch (e) {
       console.error('Failed to delete curhat:', e);
+      toast.error('Gagal menghapus pesan curhat.');
     }
   };
 
@@ -488,6 +557,7 @@ export function AdminCounselingClient() {
           landingCount,
         }}
         hasActiveFilters={hasActiveFilters}
+        totalResults={filteredMessages.length}
         onResetFilters={handleResetFilters}
       />
 

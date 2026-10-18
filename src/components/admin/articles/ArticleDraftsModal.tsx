@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import Image from 'next/image';
 import {
@@ -50,12 +50,14 @@ export function ArticleDraftsModal({
     setCachedDraftToDelete(draftToDelete);
   }
   const activeDraftToDelete = draftToDelete ?? cachedDraftToDelete;
+  const windowRef = React.useRef<HTMLDivElement>(null);
 
   const { isRendered, isExiting, backdropClass, windowClass } = useModalAnimation({
     isOpen,
     onClose,
     closeOnEscape: !draftToDelete,
     lockScroll: true,
+    containerRef: windowRef,
   });
 
   // Filter drafts by search query
@@ -96,6 +98,7 @@ export function ArticleDraftsModal({
 
       {/* Dialog Window */}
       <div
+        ref={windowRef}
         className={cn(
           'relative z-10 w-full max-w-lg sm:max-w-xl bg-white rounded-2xl min-[340px]:rounded-3xl p-3 min-[340px]:p-4 sm:p-6 shadow-2xl border border-[var(--color-paper-border)] flex flex-col gap-3 min-[340px]:gap-4 max-h-[90vh] sm:max-h-[85vh] pointer-events-auto',
           windowClass
@@ -154,7 +157,7 @@ export function ArticleDraftsModal({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Cari judul draf atau kategori..."
-              className="w-full pl-9 pr-8 py-2 rounded-xl bg-[var(--color-paper)] border border-[var(--color-paper-border)] text-xs text-[var(--color-ink)] placeholder:text-[var(--color-ink-muted)] focus:outline-none focus:border-[var(--color-accent)] transition-colors"
+              className="w-full !pl-9 !pr-10 py-2 rounded-xl bg-[var(--color-paper)] border border-[var(--color-paper-border)] text-xs text-[var(--color-ink)] placeholder:text-[var(--color-ink-muted)] focus:outline-none focus:border-[var(--color-accent)] transition-colors"
             />
             {searchQuery && (
               <button
@@ -185,10 +188,11 @@ export function ArticleDraftsModal({
                     onNewDraft();
                     onClose();
                   }}
-                  className="btn-interactive inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-[var(--color-accent)] text-white hover:bg-[var(--color-accent-hover)] transition-all cursor-pointer shadow-xs"
+                  className="btn-interactive inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-[var(--color-accent)] text-white hover:bg-[var(--color-accent-hover)] transition-all cursor-pointer shadow-xs whitespace-nowrap"
                 >
-                  <Plus className="w-4 h-4" />
-                  <span>Mulai Menulis Draf Pertama</span>
+                  <Plus className="w-4 h-4 shrink-0" />
+                  <span className="sm:hidden">Tulis Draf</span>
+                  <span className="hidden sm:inline">Mulai Menulis Draf Pertama</span>
                 </button>
               }
             />
@@ -200,16 +204,19 @@ export function ArticleDraftsModal({
               title="Draf Tidak Ditemukan"
               description={
                 <>
-                  Tidak ditemukan draf dengan kata kunci &ldquo;<strong className="text-[var(--color-ink)]">{searchQuery}</strong>&rdquo;.
+                  Tidak ditemukan draf dengan kata kunci &ldquo;<strong className="text-[var(--color-ink)] break-all">{searchQuery}</strong>&rdquo;.
                 </>
               }
               action={
                 <button
                   type="button"
                   onClick={() => setSearchQuery('')}
-                  className="btn-secondary btn-interactive inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold cursor-pointer shadow-xs"
+                  className="btn-secondary btn-interactive inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold cursor-pointer shadow-xs whitespace-nowrap"
                 >
-                  <span>Tampilkan Semua Draf</span>
+                  <span>
+                    <span className="sm:hidden">Semua Draf</span>
+                    <span className="hidden sm:inline">Tampilkan Semua Draf</span>
+                  </span>
                 </button>
               }
             />

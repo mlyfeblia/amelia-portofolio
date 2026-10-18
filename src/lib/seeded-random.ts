@@ -21,9 +21,12 @@ export function useVisitSeed(keyPrefix: string = 'visit'): {
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    const freshSeed = `${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-    setSeed(freshSeed);
-    setIsReady(true);
+    const timer = setTimeout(() => {
+      const freshSeed = `${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+      setSeed(freshSeed);
+      setIsReady(true);
+    }, 0);
+    return () => clearTimeout(timer);
   }, [keyPrefix]);
 
   const refreshSeed = useCallback(() => {

@@ -20,11 +20,21 @@ export default function TabVisibilityManager() {
         document.title = PAUSE_TITLE;
         lastLeftTimeRef.current = Date.now();
       } else if (document.visibilityState === 'visible') {
-        document.title = originalTitleRef.current || document.title;
+        if (document.title === PAUSE_TITLE && originalTitleRef.current) {
+          document.title = originalTitleRef.current;
+        }
 
         if (lastLeftTimeRef.current !== null) {
           const elapsed = Date.now() - lastLeftTimeRef.current;
-          if (elapsed > INACTIVITY_THRESHOLD_MS) {
+          const path = window.location.pathname;
+          const isOnline = typeof navigator === 'undefined' || navigator.onLine !== false;
+          const isSkipRoute =
+            path.startsWith('/admin') ||
+            path.startsWith('/~offline') ||
+            path === '/about' ||
+            path === '/services';
+
+          if (elapsed > INACTIVITY_THRESHOLD_MS && isOnline && !isSkipRoute) {
             router.refresh();
           }
           lastLeftTimeRef.current = null;

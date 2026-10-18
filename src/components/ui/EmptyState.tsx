@@ -12,9 +12,9 @@ export interface SuggestionItem {
   onClick: () => void;
 }
 
-export interface EmptyStateProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface EmptyStateProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'title'> {
   icon?: React.ReactNode;
-  title: string;
+  title: React.ReactNode;
   description?: React.ReactNode;
   activeFilters?: ActiveFilterItem[];
   suggestions?: SuggestionItem[];
@@ -70,7 +70,7 @@ export const EmptyState = forwardRef<HTMLDivElement, EmptyStateProps>(
         role="status"
         aria-live="polite"
         className={cn(
-          'flex flex-col items-center justify-center text-center rounded-2xl sm:rounded-3xl w-full mx-auto select-none transition-all tab-content-enter',
+          'flex flex-col items-center justify-center text-center rounded-2xl sm:rounded-3xl w-full max-w-full min-w-0 overflow-hidden mx-auto select-none transition-all tab-content-enter',
           VARIANT_MAP[variant],
           SIZE_MAP[size],
           className
@@ -91,7 +91,7 @@ export const EmptyState = forwardRef<HTMLDivElement, EmptyStateProps>(
         {/* Empathetic Display Title */}
         <HeadingTag
           className={cn(
-            'font-medium text-[var(--color-ink)] tracking-tight max-w-lg mx-auto leading-snug',
+            'font-medium text-[var(--color-ink)] tracking-tight w-full max-w-lg min-w-0 mx-auto leading-snug break-words [overflow-wrap:anywhere] [word-break:break-word]',
             size === 'sm' && 'text-sm sm:text-base',
             size === 'md' && 'text-base sm:text-lg',
             size === 'lg' && 'text-lg sm:text-2xl'
@@ -105,7 +105,7 @@ export const EmptyState = forwardRef<HTMLDivElement, EmptyStateProps>(
         {description && (
           <div
             className={cn(
-              'mt-2 text-[var(--color-ink-muted)] max-w-md sm:max-w-lg mx-auto leading-relaxed',
+              'mt-2 text-[var(--color-ink-muted)] w-full max-w-md sm:max-w-lg min-w-0 mx-auto leading-relaxed break-words [overflow-wrap:anywhere] [word-break:break-word]',
               size === 'sm' ? 'text-xs' : 'text-xs sm:text-sm'
             )}
           >

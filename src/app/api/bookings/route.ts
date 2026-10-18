@@ -25,7 +25,10 @@ export async function GET(request: Request) {
       isNaN(limit) ? 100 : limit,
       isNaN(offset) ? 0 : offset
     );
-    return NextResponse.json({ success: true, data: bookings });
+    return NextResponse.json(
+      { success: true, data: bookings },
+      { headers: { 'Cache-Control': 'no-store, max-age=0' } }
+    );
   } catch (error) {
     telemetry.error('Failed to fetch bookings', error, { route: '/api/bookings', method: 'GET' });
     return NextResponse.json({ success: false, message: 'Gagal mengambil data janji temu' }, { status: 500 });

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useId } from 'react';
 
 export interface UseModalAnimationOptions {
   isOpen: boolean;
@@ -35,9 +35,16 @@ let cleanupScrollLock: (() => void) | null = null;
 function isInsideScrollable(target: EventTarget | null): boolean {
   let el = target as HTMLElement | null;
   while (el && el !== document.body && el !== document.documentElement) {
+    const style = window.getComputedStyle(el);
     if (el.scrollHeight > el.clientHeight) {
-      const overflowY = window.getComputedStyle(el).overflowY;
+      const overflowY = style.overflowY;
       if (overflowY === 'auto' || overflowY === 'scroll') {
+        return true;
+      }
+    }
+    if (el.scrollWidth > el.clientWidth) {
+      const overflowX = style.overflowX;
+      if (overflowX === 'auto' || overflowX === 'scroll') {
         return true;
       }
     }
@@ -189,10 +196,8 @@ export function useModalAnimation({
   const [isRendered, setIsRendered] = useState(isOpen);
   const [isExiting, setIsExiting] = useState(false);
 
-  const modalIdRef = useRef<string>('');
-  if (!modalIdRef.current) {
-    modalIdRef.current = `modal_${Math.random().toString(36).slice(2, 9)}`;
-  }
+  const uniqueId = useId();
+  const modalId = `modal_${uniqueId.replace(/:/g, '')}`;
 
   const triggerElementRef = useRef<HTMLElement | null>(null);
 
@@ -218,7 +223,7 @@ export function useModalAnimation({
   useEffect(() => {
     if (!isRendered || isExiting) return;
 
-    const id = modalIdRef.current;
+    const id = modalId;
     if (!modalStack.includes(id)) {
       modalStack.push(id);
     }
@@ -229,7 +234,7 @@ export function useModalAnimation({
         modalStack.splice(idx, 1);
       }
     };
-  }, [isRendered, isExiting]);
+  }, [isRendered, isExiting, modalId]);
 
   // Handle timed unmount and return focus when exit transition completes
   useEffect(() => {
@@ -268,7 +273,7 @@ export function useModalAnimation({
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         // Only trigger onClose if this modal is at the top of the stack
-        if (modalStack.length > 0 && modalStack[modalStack.length - 1] === modalIdRef.current) {
+        if (modalStack.length > 0 && modalStack[modalStack.length - 1] === modalId) {
           event.stopPropagation();
           onClose();
         }
@@ -277,7 +282,7 @@ export function useModalAnimation({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [closeOnEscape, isOpen, onClose]);
+  }, [closeOnEscape, isOpen, onClose, modalId]);
 
   // Focus trap if containerRef is provided
   useFocusTrap(

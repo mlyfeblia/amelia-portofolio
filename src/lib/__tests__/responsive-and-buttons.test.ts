@@ -35,6 +35,10 @@ describe('Responsive Layout & Button Label Standardization Verification', () => 
       expect(content).toContain('<span className="hidden sm:inline">Hapus</span>');
     });
 
+    it('hides the single device record Hapus button on mobile (hidden sm:inline-flex)', () => {
+      expect(content).toContain('hidden sm:inline-flex items-center gap-1.5');
+    });
+
     it('ensures top row of record card uses flex-wrap sm:flex-nowrap for small mobile viewports', () => {
       expect(content).toContain('flex flex-wrap sm:flex-nowrap items-center justify-between gap-2');
     });

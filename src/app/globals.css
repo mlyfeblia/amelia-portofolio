@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+@theme inline {
+  --font-display: var(--font-display);
+  --font-sans: var(--font-body);
+}
 
 /*
  * ═══════════════════════════════════════════════════════════════
@@ -63,6 +67,14 @@
   --shadow-focus-error: 0 0 0 3px rgba(168, 36, 36, 0.14), 0 1px 2px rgba(168, 36, 36, 0.05);
 }
 
+.font-display {
+  font-family: var(--font-display);
+}
+
+.font-sans {
+  font-family: var(--font-body);
+}
+
 @layer base {
   *,
   *::before,
@@ -115,6 +127,7 @@
    */
   textarea,
   .scroll-isolated,
+  .modal-scroll-body,
   [data-scroll-isolated="true"] {
     overscroll-behavior: contain;
     overscroll-behavior-y: contain;
@@ -435,7 +448,10 @@
   max-width: 100%;
   min-width: 0;
   box-sizing: border-box;
-  padding: 0.65rem 0.875rem;
+  padding-top: 0.65rem;
+  padding-bottom: 0.65rem;
+  padding-left: 0.875rem;
+  padding-right: 0.875rem;
   font-size: 1rem; /* 16px to prevent iOS Safari auto-zoom */
   line-height: 1.4;
   border: 1px solid var(--color-paper-border);
@@ -477,7 +493,10 @@
 /* Dedicated Search Input Utility (High-contrast, Soft Elevation, Tactile Hover) */
 .search-input {
   width: 100%;
-  padding: 0.55rem 2.25rem 0.55rem 2.25rem;
+  padding-top: 0.55rem;
+  padding-bottom: 0.55rem;
+  padding-left: 2.25rem;
+  padding-right: 2.25rem;
   font-size: 0.875rem;
   line-height: 1.4;
   border: 1px solid var(--color-paper-border);
@@ -671,7 +690,7 @@ select.form-input {
   }
 }
 
-/* Page Entrance - Silky smooth, eliminates vertical layout shift & blink */
+/* Page Entrance - Silky smooth, eliminates vertical layout shift & blink without trapping fixed descendants */
 @keyframes pageEnter {
   from {
     opacity: 0.85;
@@ -679,35 +698,15 @@ select.form-input {
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: none;
   }
 }
 
 .page-enter {
-  animation: pageEnter var(--dur-fast) var(--ease-smooth) both;
-  will-change: opacity, transform;
-  backface-visibility: hidden;
+  animation: pageEnter var(--dur-fast) var(--ease-smooth);
 }
 
 /* Modal Transitions (Fluid Desktop Scale + Mobile Sheet Slide) */
-@keyframes modalBackdropFadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes modalBackdropFadeOut {
-  from {
-    opacity: 1;
-  }
-  to {
-    opacity: 0;
-  }
-}
-
 @keyframes modalCardScaleIn {
   from {
     opacity: 0;
@@ -727,18 +726,6 @@ select.form-input {
   to {
     opacity: 0;
     transform: scale(0.96) translateY(6px);
-  }
-}
-
-/* Backward-compatibility alias */
-@keyframes modalCardScale {
-  from {
-    opacity: 0;
-    transform: scale(0.96) translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1) translateY(0);
   }
 }
 
@@ -1190,6 +1177,39 @@ select.form-input {
   will-change: opacity, transform;
 }
 
+/* Booking Detail Card Smooth Transitions */
+@keyframes detailCardEnter {
+  from {
+    opacity: 0;
+    transform: scale(0.992);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes detailCardExit {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.992);
+  }
+}
+
+.animate-detail-card-enter {
+  animation: detailCardEnter 220ms var(--ease-smooth) both;
+  will-change: opacity, transform;
+}
+
+.animate-detail-card-exit {
+  animation: detailCardExit 180ms var(--ease-smooth) both;
+  will-change: opacity, transform;
+}
+
 /* Unified Accordion Collapse Animation */
 .accordion-collapse {
   display: grid;
@@ -1463,6 +1483,8 @@ select.form-input {
   .modal-sheet-exit,
   .modal-backdrop-enter,
   .modal-backdrop-exit,
+  .animate-detail-card-enter,
+  .animate-detail-card-exit,
   .pagination-slide-enter {
     animation: none !important;
   }
@@ -1477,11 +1499,6 @@ select.form-input {
 @media (max-width: 320px) {
   html, body {
     font-size: 15px; /* Disciplined scale for micro-screens */
-  }
-
-  .card-interactive {
-    padding-left: 0.75rem !important;
-    padding-right: 0.75rem !important;
   }
 }
 

@@ -8,7 +8,6 @@ import {
   FileEdit,
   Eye,
   CheckCircle2,
-  AlertCircle,
   FolderArchive,
   RotateCcw,
 } from 'lucide-react';
@@ -22,7 +21,7 @@ import { useModalAnimation } from '@/lib/use-modal-animation';
 import { Spinner } from '@/components/ui/Spinner';
 import { cn } from '@/lib/utils';
 import { ArticleMarkdownCheatsheet } from './ArticleMarkdownCheatsheet';
-import { ArticleDraftItem, saveDraft, useArticleDrafts } from '@/lib/draft-store';
+import { ArticleDraftItem, saveDraft, deleteDraft, useArticleDrafts } from '@/lib/draft-store';
 import { ArticleDraftsModal } from './ArticleDraftsModal';
 import { ConfirmDecisionModal } from '@/components/ui/ConfirmDecisionModal';
 import { FormErrorMessage } from '@/components/ui/FormErrorMessage';
@@ -137,7 +136,10 @@ function ArticleFormModalContent({
   initialDraft,
   onClose,
   onSuccess,
-}: Omit<ArticleFormModalProps, 'isOpen'>) {
+  requestCloseRef,
+}: Omit<ArticleFormModalProps, 'isOpen'> & {
+  requestCloseRef?: React.MutableRefObject<(() => void) | null>;
+}) {
   const [activeTab, setActiveTab] = useState<'edit' | 'preview'>('edit');
   const [activeDraftId, setActiveDraftId] = useState<string | null>(initialDraft?.id || null);
   const [isDraftsModalOpen, setIsDraftsModalOpen] = useState(false);
@@ -169,16 +171,33 @@ function ArticleFormModalContent({
   const [lastSavedTime, setLastSavedTime] = useState<string | null>(null);
   const isRestoredRef = useRef(false);
 
-  const isDirty = Boolean(
-    formData.title.trim() ||
-    formData.content.trim() ||
-    formData.excerpt.trim()
-  );
+  const initialBaseline = getInitialFormState(mode, initialArticle, initialDraft);
+  const isDirty =
+    mode === 'edit' || initialDraft
+      ? formData.title.trim() !== initialBaseline.title.trim() ||
+        formData.content.trim() !== initialBaseline.content.trim() ||
+        formData.excerpt.trim() !== initialBaseline.excerpt.trim() ||
+        formData.category !== initialBaseline.category ||
+        formData.tags.trim() !== initialBaseline.tags.trim() ||
+        formData.coverImage !== initialBaseline.coverImage ||
+        formData.isPublished !== initialBaseline.isPublished ||
+        formData.showOnLandingPage !== initialBaseline.showOnLandingPage
+      : Boolean(
+          formData.title.trim() ||
+          formData.content.trim() ||
+          formData.excerpt.trim()
+        );
 
   const { confirmDiscard } = useUnsavedChangesWarning(
     isDirty && !saveSuccess,
     'Draf artikel Anda memiliki perubahan yang belum disimpan. Yakin ingin menutup editor?'
   );
+
+  useEffect(() => {
+    if (requestCloseRef) {
+      requestCloseRef.current = () => confirmDiscard(onClose);
+    }
+  }, [requestCloseRef, confirmDiscard, onClose]);
 
   // Restore saved draft safely on mount post-hydration
   useEffect(() => {
@@ -446,22 +465,18 @@ function ArticleFormModalContent({
       });
 
       setActiveDraftId(saved.id);
+      try {
+        localStorage.setItem(storageKey, JSON.stringify(formData));
+      } catch {}
 
       const now = new Intl.DateTimeFormat('id-ID', {
         hour: '2-digit',
         minute: '2-digit',
         timeZone: 'Asia/Jakarta',
       }).format(new Date());
+      setLastSavedTime(now);
       setDraftToast(`Draf tersimpan di Kotak Draf pk ${now}`);
       setTimeout(() => setDraftToast(null), 3500);
-
-      if (formData.title.trim() && formData.content.trim()) {
-        try {
-          await handleSaveArticle(false);
-        } catch {
-          // Local draft is safely preserved
-        }
-      }
     } catch {
       setDraftToast('Gagal menyimpan ke Kotak Draf.');
     }
@@ -541,7 +556,7 @@ function ArticleFormModalContent({
       content: formData.content.trim(),
       tags: tagsArray,
       isPublished: isPublish,
-      showOnLandingPage: formData.showOnLandingPage,
+      showOnLandingPage: isPublish ? formData.showOnLandingPage : false,
       coverImage: formData.coverImage,
     };
 
@@ -558,6 +573,9 @@ function ArticleFormModalContent({
         }
         try {
           localStorage.removeItem(storageKey);
+          if (activeDraftId && isPublish) {
+            deleteDraft(activeDraftId);
+          }
         } catch {}
         setSaveSuccess(true);
         setTimeout(() => {
@@ -576,6 +594,9 @@ function ArticleFormModalContent({
         }
         try {
           localStorage.removeItem(storageKey);
+          if (activeDraftId && isPublish) {
+            deleteDraft(activeDraftId);
+          }
         } catch {}
         setSaveSuccess(true);
         setTimeout(() => {
@@ -758,7 +779,7 @@ function ArticleFormModalContent({
             {/* Autosave Status Banner & Reset Draft */}
             <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 rounded-xl bg-[var(--color-paper)] border border-[var(--color-paper-border)] text-xs text-[var(--color-ink-muted)]">
               <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="w-2 h-2 rounded-full bg-emerald-500 pulse-dot" />
                 <span>
                   {lastSavedTime ? (
                     <span className="text-emerald-700 font-medium">
@@ -840,7 +861,7 @@ function ArticleFormModalContent({
           {/* Sticky Form Actions Footer */}
           <div className="p-2.5 min-[340px]:p-3 sm:p-4 border-t border-[var(--color-paper-border)] flex flex-wrap items-center justify-end gap-1.5 min-[340px]:gap-2 sm:gap-3 bg-[var(--color-surface)] shrink-0 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] sm:pb-4">
             <button
-              onClick={onClose}
+              onClick={() => confirmDiscard(onClose)}
               type="button"
               className="btn-interactive h-9 px-3 sm:px-4 rounded-xl text-xs font-semibold bg-[var(--color-paper)] border border-[var(--color-paper-border)] text-[var(--color-ink)] hover:bg-[var(--color-paper-muted)] transition-all cursor-pointer inline-flex items-center justify-center whitespace-nowrap flex-1 min-[340px]:flex-initial"
             >
@@ -863,7 +884,7 @@ function ArticleFormModalContent({
             <button
               type="submit"
               disabled={saving}
-              className="btn-interactive h-9 px-3.5 sm:px-5 rounded-xl bg-[var(--color-accent)] text-white text-xs font-semibold hover:bg-[var(--color-accent-hover)] transition-all cursor-pointer inline-flex items-center justify-center gap-1.5 disabled:opacity-50 shadow-xs active:scale-98 flex-1 min-[340px]:flex-initial"
+              className="btn-interactive h-9 px-3.5 sm:px-5 rounded-xl bg-[var(--color-accent)] text-white text-xs font-semibold hover:bg-[var(--color-accent-hover)] transition-all cursor-pointer inline-flex items-center justify-center gap-1.5 disabled:opacity-50 shadow-xs active:scale-98 flex-1 min-[340px]:flex-initial whitespace-nowrap"
             >
               {saving ? (
                 <>
@@ -873,7 +894,10 @@ function ArticleFormModalContent({
               ) : (
                 <>
                   <Save className="w-3.5 h-3.5 shrink-0" />
-                  <span>{mode === 'create' ? 'Terbitkan Artikel' : 'Simpan Perubahan'}</span>
+                  <span>
+                    <span className="sm:hidden">{mode === 'create' ? 'Terbitkan' : 'Simpan'}</span>
+                    <span className="hidden sm:inline">{mode === 'create' ? 'Terbitkan Artikel' : 'Simpan Perubahan'}</span>
+                  </span>
                 </>
               )}
             </button>
@@ -884,7 +908,7 @@ function ArticleFormModalContent({
         <ArticlePreviewTab
           formData={formData}
           publishedAt={initialArticle?.publishedAt}
-          onClose={onClose}
+          onClose={() => confirmDiscard(onClose)}
           onBackToEdit={() => setActiveTab('edit')}
         />
       )}
@@ -961,9 +985,16 @@ export function ArticleFormModal({
 }: ArticleFormModalProps) {
   const mounted = useMounted();
   const windowRef = React.useRef<HTMLDivElement>(null);
+  const requestCloseRef = React.useRef<(() => void) | null>(null);
   const { isRendered, isExiting, backdropClass, windowClass } = useModalAnimation({
     isOpen,
-    onClose,
+    onClose: () => {
+      if (requestCloseRef.current) {
+        requestCloseRef.current();
+      } else {
+        onClose();
+      }
+    },
     closeOnEscape: true,
     lockScroll: true,
     containerRef: windowRef,
@@ -1000,6 +1031,7 @@ export function ArticleFormModal({
           initialDraft={initialDraft}
           onClose={onClose}
           onSuccess={onSuccess}
+          requestCloseRef={requestCloseRef}
         />
       </div>
     </div>,

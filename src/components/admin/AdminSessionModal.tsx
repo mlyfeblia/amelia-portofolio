@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { createPortal } from 'react-dom';
 import { X, Clock, RotateCw, ShieldCheck, CheckCircle2, Lock } from 'lucide-react';
 import { useModalAnimation } from '@/lib/use-modal-animation';
@@ -27,11 +27,13 @@ export function AdminSessionModal({
   onRefresh,
   refreshing,
 }: AdminSessionModalProps) {
+  const windowRef = React.useRef<HTMLDivElement>(null);
   const { isRendered, isExiting, backdropClass, windowClass } = useModalAnimation({
     isOpen,
     onClose,
     closeOnEscape: true,
     lockScroll: true,
+    containerRef: windowRef,
   });
 
   if (!isRendered || typeof document === 'undefined') return null;
@@ -71,6 +73,7 @@ export function AdminSessionModal({
 
       {/* Modal Dialog */}
       <div
+        ref={windowRef}
         className={cn(
           'relative w-full max-w-md bg-[var(--color-surface)] text-[var(--color-ink)] rounded-3xl shadow-2xl border border-[var(--color-paper-border)] overflow-hidden flex flex-col z-10 my-auto select-text',
           windowClass

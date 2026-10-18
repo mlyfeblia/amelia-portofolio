@@ -166,6 +166,15 @@ export function resolveBookingCategory(query?: string | null): ConsultationCateg
     return 'Persiapan Menikah (Pra-Nikah)';
   }
   if (
+    lower.includes('cyber') ||
+    lower.includes('edukasi') ||
+    lower.includes('sebaya') ||
+    lower.includes('bebas') ||
+    lower.includes('lainnya')
+  ) {
+    return 'Konsultasi Bebas & Topik Lainnya';
+  }
+  if (
     lower.includes('duka') ||
     lower.includes('kehilangan') ||
     lower.includes('trauma') ||

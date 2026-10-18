@@ -8,16 +8,19 @@ import { getAdminContactWhatsAppUrl } from '@/lib/whatsapp';
 import { SkeletonBookingCard } from '@/components/ui/Skeleton';
 import { Badge } from '@/components/ui/Badge';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { Spinner } from '@/components/ui/Spinner';
 
 interface OverviewRecentBookingsProps {
   bookings: Booking[];
   loading: boolean;
+  confirmingId?: string | null;
   onConfirm: (id: string) => void;
 }
 
 export function OverviewRecentBookings({
   bookings,
   loading,
+  confirmingId,
   onConfirm,
 }: OverviewRecentBookingsProps) {
   const waitingBookings = bookings.filter((b) => b.status === 'menunggu');
@@ -60,64 +63,77 @@ export function OverviewRecentBookings({
         />
       ) : (
         <div className="space-y-3">
-          {waitingBookings.slice(0, 3).map((item) => (
-            <div
-              key={item.id}
-              className="p-3.5 sm:p-5 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-paper-border)] shadow-xs space-y-3 transition-all"
-            >
-              <div className="flex items-center justify-between text-xs">
-                <span className="font-mono font-semibold px-2 py-0.5 rounded bg-[var(--color-paper)] border border-[var(--color-paper-border)] text-[var(--color-accent)] text-[11px]">
-                  {item.code}
-                </span>
-                <Badge variant="warning" size="xs" dot>
-                  Menunggu
-                </Badge>
+          {waitingBookings.slice(0, 3).map((item) => {
+            const isConfirming = confirmingId === item.id;
+            return (
+              <div
+                key={item.id}
+                className="p-3.5 sm:p-5 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-paper-border)] shadow-xs space-y-3 transition-all"
+              >
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-mono font-semibold px-2 py-0.5 rounded bg-[var(--color-paper)] border border-[var(--color-paper-border)] text-[var(--color-accent)] text-[11px]">
+                    {item.code}
+                  </span>
+                  <Badge variant="warning" size="xs" dot>
+                    Menunggu
+                  </Badge>
+                </div>
+
+                <div>
+                  <h3 className="text-sm sm:text-base font-semibold text-[var(--color-ink)]">
+                    {item.name} {item.alias && item.alias !== item.name ? `(${item.alias})` : ''}
+                  </h3>
+                  <p className="text-xs text-[var(--color-ink-muted)] mt-0.5">
+                    {item.category} &bull; {item.date} ({item.timeSlot})
+                  </p>
+                </div>
+
+                {item.notes && (
+                  <p className="text-xs text-[var(--color-ink-muted)] italic bg-[var(--color-paper)] p-2.5 rounded-lg border border-[var(--color-paper-border)] line-clamp-2">
+                    &ldquo;{item.notes}&rdquo;
+                  </p>
+                )}
+
+                <div className="pt-2 border-t border-[var(--color-paper-border)] flex flex-wrap items-center justify-between gap-2">
+                  <a
+                    href={getAdminContactWhatsAppUrl({
+                      clientPhone: item.phone,
+                      clientName: item.alias || item.name,
+                      code: item.code,
+                      date: item.date,
+                      slot: item.timeSlot,
+                      mode: item.mode,
+                    })}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 text-xs font-medium text-[var(--color-accent)] hover:underline"
+                  >
+                    <Phone className="w-3.5 h-3.5" />
+                    <span>WhatsApp</span>
+                  </a>
+
+                  <button
+                    onClick={() => onConfirm(item.id)}
+                    disabled={isConfirming}
+                    type="button"
+                    className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-[var(--color-accent)] text-white text-xs font-semibold hover:bg-[var(--color-accent-hover)] transition-all cursor-pointer shadow-xs disabled:opacity-60"
+                  >
+                    {isConfirming ? (
+                      <>
+                        <Spinner size="xs" variant="white" label="Memproses..." />
+                        <span>Memproses...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Check className="w-3.5 h-3.5" />
+                        <span>Konfirmasi</span>
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
-
-              <div>
-                <h3 className="text-sm sm:text-base font-semibold text-[var(--color-ink)]">
-                  {item.name} {item.alias && item.alias !== item.name ? `(${item.alias})` : ''}
-                </h3>
-                <p className="text-xs text-[var(--color-ink-muted)] mt-0.5">
-                  {item.category} &bull; {item.date} ({item.timeSlot})
-                </p>
-              </div>
-
-              {item.notes && (
-                <p className="text-xs text-[var(--color-ink-muted)] italic bg-[var(--color-paper)] p-2.5 rounded-lg border border-[var(--color-paper-border)] line-clamp-2">
-                  &ldquo;{item.notes}&rdquo;
-                </p>
-              )}
-
-              <div className="pt-2 border-t border-[var(--color-paper-border)] flex flex-wrap items-center justify-between gap-2">
-                <a
-                  href={getAdminContactWhatsAppUrl({
-                    clientPhone: item.phone,
-                    clientName: item.alias || item.name,
-                    code: item.code,
-                    date: item.date,
-                    slot: item.timeSlot,
-                    mode: item.mode,
-                  })}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-xs font-medium text-[var(--color-accent)] hover:underline"
-                >
-                  <Phone className="w-3.5 h-3.5" />
-                  <span>WhatsApp</span>
-                </a>
-
-                <button
-                  onClick={() => onConfirm(item.id)}
-                  type="button"
-                  className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-[var(--color-accent)] text-white text-xs font-semibold hover:bg-[var(--color-accent-hover)] transition-all cursor-pointer shadow-xs"
-                >
-                  <Check className="w-3.5 h-3.5" />
-                  <span>Konfirmasi</span>
-                </button>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import Image from 'next/image';
 import {
@@ -27,6 +27,7 @@ interface PwaInstalledInfoModalProps {
 export function PwaInstalledInfoModal({ isOpen, onClose }: PwaInstalledInfoModalProps) {
   const [isChecking, setIsChecking] = useState(false);
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
+  const windowRef = useRef<HTMLDivElement>(null);
 
   const handleClose = useCallback(() => {
     setIsChecking(false);
@@ -39,6 +40,7 @@ export function PwaInstalledInfoModal({ isOpen, onClose }: PwaInstalledInfoModal
     onClose: handleClose,
     closeOnEscape: true,
     lockScroll: true,
+    containerRef: windowRef,
   });
 
   const handleCheckUpdate = async () => {
@@ -88,14 +90,13 @@ export function PwaInstalledInfoModal({ isOpen, onClose }: PwaInstalledInfoModal
         className={cn(backdropClass)}
         aria-hidden="true"
         onClick={handleClose}
-        onWheel={(e) => e.preventDefault()}
-        onTouchMove={(e) => e.preventDefault()}
       />
 
       {/* Modal Dialog Card */}
       <div
+        ref={windowRef}
         className={cn(
-          'relative z-10 bg-white rounded-3xl max-w-sm sm:max-w-md w-full p-6 shadow-2xl border border-[var(--color-paper-border)] flex flex-col gap-5 max-h-[90dvh] overflow-y-auto my-auto',
+          'relative z-10 bg-white rounded-3xl max-w-sm sm:max-w-md w-full p-6 shadow-2xl border border-[var(--color-paper-border)] flex flex-col gap-5 max-h-[90dvh] overflow-y-auto modal-scroll-body my-auto',
           windowClass
         )}
         onClick={(e) => e.stopPropagation()}

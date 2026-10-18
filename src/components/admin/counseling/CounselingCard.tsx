@@ -12,9 +12,7 @@ import {
 } from 'lucide-react';
 import { AnonymousMessage } from '@/types';
 import { CounselingReplyBox } from './CounselingReplyBox';
-import { Badge } from '@/components/ui/Badge';
 import { Spinner } from '@/components/ui/Spinner';
-import { Tooltip } from '@/components/ui/Tooltip';
 import { ConfirmDecisionModal } from '@/components/ui/ConfirmDecisionModal';
 
 function formatDate(isoString?: string) {

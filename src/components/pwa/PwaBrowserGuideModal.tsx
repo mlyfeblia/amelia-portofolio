@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useRef } from 'react';
 import { createPortal } from 'react-dom';
 import Image from 'next/image';
 import { X, MoreVertical, PlusSquare, CheckCircle2 } from 'lucide-react';
@@ -13,11 +13,13 @@ interface PwaBrowserGuideModalProps {
 }
 
 export function PwaBrowserGuideModal({ isOpen, onClose }: PwaBrowserGuideModalProps) {
+  const windowRef = useRef<HTMLDivElement>(null);
   const { isRendered, isExiting, backdropClass, windowClass } = useModalAnimation({
     isOpen,
     onClose,
     closeOnEscape: true,
     lockScroll: true,
+    containerRef: windowRef,
   });
 
   if (!isRendered || typeof document === 'undefined') return null;
@@ -37,14 +39,13 @@ export function PwaBrowserGuideModal({ isOpen, onClose }: PwaBrowserGuideModalPr
         className={cn(backdropClass)}
         aria-hidden="true"
         onClick={onClose}
-        onWheel={(e) => e.preventDefault()}
-        onTouchMove={(e) => e.preventDefault()}
       />
 
       {/* Modal Dialog Card */}
       <div
+        ref={windowRef}
         className={cn(
-          'relative z-10 bg-white rounded-3xl max-w-sm sm:max-w-md w-full p-6 shadow-2xl border border-[var(--color-paper-border)] flex flex-col gap-5 max-h-[90dvh] overflow-y-auto my-auto',
+          'relative z-10 bg-white rounded-3xl max-w-sm sm:max-w-md w-full p-6 shadow-2xl border border-[var(--color-paper-border)] flex flex-col gap-5 max-h-[90dvh] overflow-y-auto modal-scroll-body my-auto',
           windowClass
         )}
         onClick={(e) => e.stopPropagation()}

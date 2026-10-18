@@ -54,6 +54,8 @@ export function AssessmentQuiz({
                 disabled={isTransitioning}
                 onClick={() => onSelect(opt.score)}
                 type="button"
+                role="radio"
+                aria-checked={isSelected}
                 className={cn(
                   'card-interactive group w-full text-left p-3.5 sm:p-5 rounded-xl sm:rounded-2xl border flex items-start gap-3 sm:gap-4 cursor-pointer active:scale-[0.98] transition-all duration-150',
                   isSelected

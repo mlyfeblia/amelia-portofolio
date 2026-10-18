@@ -24,12 +24,14 @@ const ArticleDraftsModal = dynamic(
 );
 
 import { ArticleDraftItem, useArticleDrafts } from '@/lib/draft-store';
+import { useToast } from '@/context/ToastContext';
 import { adminCache, useAdminRevalidate } from '@/lib/admin-cache';
 import { scrollContainerIntoViewIfAbove } from '@/lib/dom-utils';
 
 const ITEMS_PER_PAGE = 6;
 
 export function AdminArticlesClient() {
+  const { toast } = useToast();
   const [articles, setArticles] = useState<Article[]>(() => adminCache.getArticles() || []);
   const [loading, setLoading] = useState(() => !adminCache.getArticles());
   const [currentPage, setCurrentPage] = useState(1);
@@ -164,12 +166,16 @@ export function AdminArticlesClient() {
 
   const loadArticles = useCallback(async (signalArg?: unknown) => {
     const signal = signalArg instanceof AbortSignal ? signalArg : undefined;
-    const cached = adminCache.getArticles();
-    if (!cached || cached.length === 0) {
-      setLoading(true);
-    }
     try {
       const res = await fetch('/api/articles', { signal });
+
+      if (res.status === 401) {
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('amelia:admin-session-expired'));
+        }
+        return;
+      }
+
       const data = await res.json();
       if (data.success && Array.isArray(data.data)) {
         setArticles(data.data);
@@ -185,12 +191,43 @@ export function AdminArticlesClient() {
   }, []);
 
   useEffect(() => {
+    let ignore = false;
     const controller = new AbortController();
-    loadArticles(controller.signal);
+
+    async function fetchData() {
+      try {
+        const res = await fetch('/api/articles', { signal: controller.signal });
+
+        if (res.status === 401) {
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('amelia:admin-session-expired'));
+          }
+          return;
+        }
+
+        const data = await res.json();
+        if (!ignore && data.success && Array.isArray(data.data)) {
+          setArticles(data.data);
+          adminCache.setArticles(data.data);
+        }
+      } catch (e: unknown) {
+        if ((e as Error)?.name !== 'AbortError') {
+          console.error('Failed to load articles:', e);
+        }
+      } finally {
+        if (!ignore) {
+          setLoading(false);
+        }
+      }
+    }
+
+    fetchData();
+
     return () => {
+      ignore = true;
       controller.abort();
     };
-  }, [loadArticles]);
+  }, []);
 
   // Automatic silent background revalidation on tab re-entry and cross-tab sync
   useAdminRevalidate('articles', loadArticles);
@@ -233,16 +270,25 @@ export function AdminArticlesClient() {
       adminCache.setArticles(next);
       return next;
     });
+    toast.success(
+      mode === 'create'
+        ? 'Artikel baru berhasil disimpan.'
+        : 'Perubahan artikel berhasil disimpan.'
+    );
   };
 
   const handleTogglePublish = async (art: Article) => {
     const nextStatus = !(art.isPublished ?? true);
+    const patchBody: Record<string, unknown> = { isPublished: nextStatus };
+    if (!nextStatus) {
+      patchBody.showOnLandingPage = false;
+    }
     setTogglingId(art.id);
     try {
       const res = await fetch(`/api/articles/${art.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ isPublished: nextStatus }),
+        body: JSON.stringify(patchBody),
       });
       const data = await res.json();
       if (data.success && data.data) {
@@ -251,9 +297,17 @@ export function AdminArticlesClient() {
           adminCache.setArticles(next);
           return next;
         });
+        toast.success(
+          nextStatus
+            ? 'Artikel berhasil diterbitkan ke publik.'
+            : 'Artikel dikembalikan menjadi status draf.'
+        );
+      } else {
+        toast.error('Gagal mengubah status publikasi artikel.');
       }
     } catch (e) {
       console.error('Failed to toggle article publish status:', e);
+      toast.error('Gagal mengubah status publikasi artikel.');
     } finally {
       setTogglingId(null);
     }
@@ -261,12 +315,16 @@ export function AdminArticlesClient() {
 
   const handleToggleLanding = async (art: Article) => {
     const nextVal = !art.showOnLandingPage;
+    const patchBody: Record<string, unknown> = { showOnLandingPage: nextVal };
+    if (nextVal) {
+      patchBody.isPublished = true;
+    }
     setTogglingLandingId(art.id);
     try {
       const res = await fetch(`/api/articles/${art.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ showOnLandingPage: nextVal }),
+        body: JSON.stringify(patchBody),
       });
       const data = await res.json();
       if (data.success && data.data) {
@@ -275,9 +333,17 @@ export function AdminArticlesClient() {
           adminCache.setArticles(next);
           return next;
         });
+        toast.success(
+          nextVal
+            ? 'Artikel disorot di beranda utama.'
+            : 'Sorotan beranda artikel dinonaktifkan.'
+        );
+      } else {
+        toast.error('Gagal mengubah status sorotan beranda.');
       }
     } catch (e) {
       console.error('Failed to toggle article landing showcase:', e);
+      toast.error('Gagal mengubah status sorotan beranda.');
     } finally {
       setTogglingLandingId(null);
     }
@@ -300,9 +366,13 @@ export function AdminArticlesClient() {
         });
         setDeleteModalOpen(false);
         setTimeout(() => setDeletingArticle(null), 300);
+        toast.info(`Artikel "${art.title}" berhasil dihapus.`);
+      } else {
+        toast.error('Gagal menghapus artikel.');
       }
     } catch (e) {
       console.error('Failed to delete article:', e);
+      toast.error('Gagal menghapus artikel.');
     }
   };
 
@@ -477,6 +547,8 @@ export function AdminArticlesClient() {
     <div className="space-y-5 sm:space-y-6">
       <ArticleHeader
         totalCount={articles.length}
+        publishedCount={statusCounts.published}
+        draftArticleCount={statusCounts.draft}
         loading={loading}
         onRefresh={loadArticles}
         onCreateNew={handleOpenCreate}
@@ -500,6 +572,7 @@ export function AdminArticlesClient() {
         categories={categoriesList}
         counts={statusCounts}
         hasActiveFilters={hasActiveFilters}
+        totalResults={filteredArticles.length}
         onResetFilters={handleResetFilters}
       />
 

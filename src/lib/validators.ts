@@ -198,6 +198,17 @@ export function validateCurhatInput(body: unknown): ValidationResult<ValidatedCu
   };
 }
 
+function isValidCoverImageUrl(url: string): boolean {
+  if (!url) return true;
+  if (url.startsWith('/') && !url.startsWith('//')) return true;
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
 export interface ValidatedArticleUpdateInput {
   title?: string;
   slug?: string;
@@ -223,7 +234,14 @@ export function validateArticleUpdateInput(body: unknown): ValidationResult<Vali
     if (b.coverImage === null || b.coverImage === '') {
       result.coverImage = undefined;
     } else if (typeof b.coverImage === 'string') {
-      result.coverImage = sanitizeString(b.coverImage).slice(0, 500);
+      const cleanCover = sanitizeString(b.coverImage).slice(0, 500);
+      if (cleanCover && !isValidCoverImageUrl(cleanCover)) {
+        return {
+          success: false,
+          error: 'Foto sampul harus menggunakan URL HTTPS atau path internal (/...).',
+        };
+      }
+      result.coverImage = cleanCover || undefined;
     } else {
       return { success: false, error: 'Foto sampul harus berupa URL teks yang valid.' };
     }
@@ -241,6 +259,10 @@ export function validateArticleUpdateInput(body: unknown): ValidationResult<Vali
       return { success: false, error: 'Status beranda harus bernilai boolean.' };
     }
     result.showOnLandingPage = b.showOnLandingPage;
+  }
+
+  if (result.isPublished === false) {
+    result.showOnLandingPage = false;
   }
 
   if (b.title !== undefined) {
@@ -339,12 +361,19 @@ export function validateArticleCreateInput(body: unknown): ValidationResult<Vali
 
   // isPublished & showOnLandingPage
   const isPublished = typeof b.isPublished === 'boolean' ? b.isPublished : true;
-  const showOnLandingPage = typeof b.showOnLandingPage === 'boolean' ? b.showOnLandingPage : false;
+  const showOnLandingPage =
+    isPublished && typeof b.showOnLandingPage === 'boolean' ? b.showOnLandingPage : false;
 
   // coverImage (optional)
   let coverImage: string | undefined = undefined;
   if (typeof b.coverImage === 'string' && b.coverImage.trim()) {
     coverImage = sanitizeString(b.coverImage.trim()).slice(0, 500);
+    if (coverImage && !isValidCoverImageUrl(coverImage)) {
+      return {
+        success: false,
+        error: 'Foto sampul harus menggunakan URL HTTPS atau path internal (/...).',
+      };
+    }
   }
 
   // Title

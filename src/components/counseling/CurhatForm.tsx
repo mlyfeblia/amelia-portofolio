@@ -1,17 +1,60 @@
 'use client';
 
 import React, { useState, useEffect, useId, useRef } from 'react';
-import { Send, AlertCircle, CheckCircle2, Lock, PenLine, Check, X, Clock } from 'lucide-react';
+import { Send, CheckCircle2, Lock, PenLine, Check, X, Clock } from 'lucide-react';
 import { Spinner } from '@/components/ui/Spinner';
 import { ConfirmDecisionModal } from '@/components/ui/ConfirmDecisionModal';
 import { FormErrorMessage } from '@/components/ui/FormErrorMessage';
-import { CURHAT_CATEGORIES } from '@/types';
+import { CURHAT_CATEGORIES, CurhatCategory } from '@/types';
 import { formatPersonName, formatSentenceCase } from '@/lib/text-formatter';
 import { enqueueOfflineMutation } from '@/lib/offline-queue';
 import { focusAndScrollToField } from '@/lib/dom-utils';
 import { useCooldownTimer } from '@/lib/use-cooldown';
 
 const CATEGORIES = CURHAT_CATEGORIES;
+
+export function resolveCurhatCategory(query?: string | null): CurhatCategory {
+  if (!query || typeof query !== 'string') return CATEGORIES[0];
+  const clean = query.trim();
+  if (!clean) return CATEGORIES[0];
+
+  const exact = CATEGORIES.find((c) => c.toLowerCase() === clean.toLowerCase());
+  if (exact) return exact;
+
+  const lower = clean.toLowerCase();
+  if (lower.includes('mental') || lower.includes('emosi') || lower.includes('overthinking') || lower.includes('stres') || lower.includes('burnout')) {
+    return 'Kesehatan Mental & Emosi';
+  }
+  if (lower.includes('spiritual') || lower.includes('ibadah') || lower.includes('islam')) {
+    return 'Spiritualitas & Ibadah';
+  }
+  if (lower.includes('quarter') || lower.includes('crisis') || lower.includes('arah hidup') || lower.includes('self growth')) {
+    return 'Quarter-Life Crisis & Arah Hidup';
+  }
+  if (lower.includes('akademik') || lower.includes('skripsi') || lower.includes('kuliah')) {
+    return 'Akademik, Skripsi & Kuliah';
+  }
+  if (lower.includes('karier') || lower.includes('kerja') || lower.includes('finansial') || lower.includes('produktivitas')) {
+    return 'Karier, Kerja & Finansial';
+  }
+  if (lower.includes('percintaan') || lower.includes('pasangan') || lower.includes('cinta')) {
+    return 'Percintaan & Pasangan';
+  }
+  if (lower.includes('keluarga') || lower.includes('rumah') || lower.includes('orang tua')) {
+    return 'Keluarga & Rumah';
+  }
+  if (lower.includes('percaya diri') || lower.includes('citra diri') || lower.includes('insecure')) {
+    return 'Kepercayaan Diri & Citra Diri';
+  }
+  if (lower.includes('teman') || lower.includes('sosial') || lower.includes('hubungan')) {
+    return 'Pertemanan & Sosial';
+  }
+  if (lower.includes('cyber') || lower.includes('edukasi') || lower.includes('sebaya') || lower.includes('bebas') || lower.includes('lainnya')) {
+    return 'Kisah Bebas & Lainnya';
+  }
+
+  return CATEGORIES[0];
+}
 
 const ALIAS_PLACEHOLDERS = [
   'Misal: Jiwa yang Lelah, Pejuang Skripsi',
@@ -34,6 +77,7 @@ export function CurhatForm({ onSuccess }: CurhatFormProps) {
   const formId = useId();
   const [submitting, setSubmitting] = useState(false);
   const [sent, setSent] = useState(false);
+  const [sentOffline, setSentOffline] = useState(false);
   const [sendError, setSendError] = useState('');
   const { cooldownSeconds, isCoolingDown, startCooldown } = useCooldownTimer();
 
@@ -48,27 +92,45 @@ export function CurhatForm({ onSuccess }: CurhatFormProps) {
   const [messagePlaceholder, setMessagePlaceholder] = useState(MESSAGE_PLACEHOLDERS[0]);
   const isRestoredRef = useRef(false);
 
-  // Rotate placeholders per visit post-hydration
-  useEffect(() => {
-    const aliasIdx = Math.floor(Math.random() * ALIAS_PLACEHOLDERS.length);
-    const msgIdx = Math.floor(Math.random() * MESSAGE_PLACEHOLDERS.length);
-    setAliasPlaceholder(ALIAS_PLACEHOLDERS[aliasIdx]);
-    setMessagePlaceholder(MESSAGE_PLACEHOLDERS[msgIdx]);
-  }, []);
-
-  // Restore draft from sessionStorage on client mount after hydration
+  // Rotate placeholders per visit post-hydration asynchronously
   useEffect(() => {
     const timer = setTimeout(() => {
+      const aliasIdx = Math.floor(Math.random() * ALIAS_PLACEHOLDERS.length);
+      const msgIdx = Math.floor(Math.random() * MESSAGE_PLACEHOLDERS.length);
+      setAliasPlaceholder(ALIAS_PLACEHOLDERS[aliasIdx]);
+      setMessagePlaceholder(MESSAGE_PLACEHOLDERS[msgIdx]);
+    }, 0);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Restore draft from sessionStorage or prefill category from URL on client mount after hydration
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      let hasDraftCategory = false;
       try {
         const saved = sessionStorage.getItem('curhat_draft_v1');
         if (saved) {
           const parsed = JSON.parse(saved);
           if (parsed.alias) setAlias(parsed.alias);
-          if (parsed.category && CATEGORIES.includes(parsed.category)) setCategory(parsed.category);
+          if (parsed.category && (CATEGORIES as readonly string[]).includes(parsed.category)) {
+            setCategory(parsed.category);
+            hasDraftCategory = true;
+          }
           if (parsed.message) setMessage(parsed.message);
           setIsDraftSaved(true);
         }
       } catch {}
+
+      if (!hasDraftCategory) {
+        try {
+          const params = new URLSearchParams(window.location.search);
+          const catParam = params.get('kategori') || params.get('category') || params.get('topik');
+          if (catParam && catParam !== 'Semua') {
+            setCategory(resolveCurhatCategory(catParam));
+          }
+        } catch {}
+      }
+
       isRestoredRef.current = true;
     }, 0);
 
@@ -111,6 +173,7 @@ export function CurhatForm({ onSuccess }: CurhatFormProps) {
       setSubmitting(true);
       setTimeout(() => {
         setSubmitting(false);
+        setSentOffline(false);
         setSent(true);
         setMessage('');
         setAlias('');
@@ -152,6 +215,7 @@ export function CurhatForm({ onSuccess }: CurhatFormProps) {
 
     if (typeof window !== 'undefined' && !navigator.onLine) {
       enqueueOfflineMutation('curhat', '/api/curhat', payload);
+      setSentOffline(true);
       setSent(true);
       setMessage('');
       setAlias('');
@@ -179,6 +243,7 @@ export function CurhatForm({ onSuccess }: CurhatFormProps) {
         }
         throw new Error(data.message || 'Gagal mengirim pesan.');
       }
+      setSentOffline(false);
       setSent(true);
       setMessage('');
       setAlias('');
@@ -192,6 +257,7 @@ export function CurhatForm({ onSuccess }: CurhatFormProps) {
       // Jika error karena jaringan terputus tiba-tiba, simpan ke antrean offline
       if (typeof window !== 'undefined' && !navigator.onLine) {
         enqueueOfflineMutation('curhat', '/api/curhat', payload);
+        setSentOffline(true);
         setSent(true);
         setMessage('');
         setAlias('');
@@ -211,7 +277,7 @@ export function CurhatForm({ onSuccess }: CurhatFormProps) {
 
 
   return (
-    <div className="bg-[var(--color-surface)] border border-[var(--color-paper-border)] rounded-xl p-6 shadow-xs space-y-4">
+    <div id="curhat-form" className="bg-[var(--color-surface)] border border-[var(--color-paper-border)] rounded-xl p-6 shadow-xs space-y-4 scroll-mt-24">
       <div className="flex items-center gap-3 pb-3 border-b border-[var(--color-paper-border)]">
         <Lock className="w-4 h-4 text-[var(--color-accent)]" aria-hidden="true" />
         <div>
@@ -234,13 +300,18 @@ export function CurhatForm({ onSuccess }: CurhatFormProps) {
             <CheckCircle2 className="w-5 h-5" aria-hidden="true" />
           </div>
           <h3 className="text-base font-semibold text-[var(--color-ink)]">
-            Pesanmu Telah Terkirim
+            {sentOffline ? 'Pesanmu Disimpan di Antrean Offline' : 'Pesanmu Telah Terkirim'}
           </h3>
           <p className="text-xs sm:text-sm text-[var(--color-ink-muted)] leading-relaxed">
-            Terima kasih telah berbagi. Amel akan membaca dan memberikan tanggapan yang menenteramkan di dinding curhat ini.
+            {sentOffline
+              ? 'Perangkatmu sedang tidak terhubung ke internet. Ceritamu telah diamankan di perangkat ini dan akan dikirimkan secara otomatis saat koneksi kembali stabil.'
+              : 'Terima kasih telah berbagi. Amel akan membaca dan memberikan tanggapan yang menenteramkan di dinding curhat ini.'}
           </p>
           <button
-            onClick={() => setSent(false)}
+            onClick={() => {
+              setSent(false);
+              setSentOffline(false);
+            }}
             type="button"
             className="btn-secondary btn-interactive text-xs py-1.5 px-3 mt-2 inline-flex items-center gap-1.5 cursor-pointer"
           >
@@ -292,7 +363,7 @@ export function CurhatForm({ onSuccess }: CurhatFormProps) {
                   if (sendError) setSendError('');
                 }}
                 placeholder={aliasPlaceholder}
-                className="form-input text-sm py-2 pr-8 w-full"
+                className="form-input text-sm py-2 !pr-10 w-full"
               />
               {alias && (
                 <button

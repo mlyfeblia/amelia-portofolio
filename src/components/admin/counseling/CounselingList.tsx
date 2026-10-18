@@ -62,6 +62,8 @@ export function CounselingList({
   itemsPerPage,
   onPageChange,
 }: CounselingListProps) {
+  const listTopRef = useRef<HTMLDivElement>(null);
+
   if (loading) {
     return (
       <div className="space-y-3.5 sm:space-y-4">
@@ -97,10 +99,11 @@ export function CounselingList({
                   e.stopPropagation();
                   onResetFilters();
                 }}
-                className="btn-secondary btn-interactive inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold cursor-pointer shadow-xs"
+                className="btn-secondary btn-interactive inline-flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-semibold cursor-pointer shadow-xs whitespace-nowrap"
               >
-                <RotateCcw className="w-3.5 h-3.5" />
-                <span>Reset Semua Filter &amp; Pencarian</span>
+                <RotateCcw className="w-3.5 h-3.5 shrink-0" />
+                <span className="sm:hidden">Reset Filter</span>
+                <span className="hidden sm:inline">Reset Semua Filter &amp; Pencarian</span>
               </button>
             ) : undefined
           }
@@ -118,17 +121,16 @@ export function CounselingList({
             href="/counseling"
             target="_blank"
             rel="noopener noreferrer"
-            className="btn-secondary btn-interactive inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold cursor-pointer shadow-xs"
+            className="btn-secondary btn-interactive inline-flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-semibold cursor-pointer shadow-xs whitespace-nowrap"
           >
-            <span>Buka Ruang Curhat Publik</span>
-            <ExternalLink className="w-3.5 h-3.5" />
+            <span className="sm:hidden">Ruang Curhat</span>
+            <span className="hidden sm:inline">Buka Ruang Curhat Publik</span>
+            <ExternalLink className="w-3.5 h-3.5 shrink-0" />
           </a>
         }
       />
     );
   }
-
-  const listTopRef = useRef<HTMLDivElement>(null);
 
   const handlePageChange = (newPage: number) => {
     onPageChange?.(newPage);

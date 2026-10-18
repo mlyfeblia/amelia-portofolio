@@ -8,7 +8,16 @@ export async function GET(request: Request) {
   try {
     const isAuth = await isAuthenticatedAdmin(request);
     const articles = await getArticles(!isAuth);
-    return NextResponse.json({ success: true, data: articles });
+    return NextResponse.json(
+      { success: true, data: articles },
+      {
+        headers: {
+          'Cache-Control': isAuth
+            ? 'no-store, max-age=0'
+            : 'private, no-cache, must-revalidate',
+        },
+      }
+    );
   } catch (error) {
     telemetry.error('Error fetching articles', error, { route: '/api/articles', method: 'GET' });
     return NextResponse.json({ success: false, message: 'Gagal mengambil artikel' }, { status: 500 });

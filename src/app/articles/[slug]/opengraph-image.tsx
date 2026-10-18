@@ -1,5 +1,6 @@
 import { ImageResponse } from 'next/og';
 import { getArticleBySlug } from '@/lib/data-store';
+import { LEGACY_SLUG_REDIRECTS } from '@/lib/article-redirects';
 
 export const alt = 'Artikel Amelia | Bimbingan Konseling Islam';
 export const size = {
@@ -14,7 +15,8 @@ interface Props {
 
 export default async function Image({ params }: Props) {
   const { slug } = await params;
-  const article = await getArticleBySlug(slug, true);
+  const targetSlug = LEGACY_SLUG_REDIRECTS[slug] || slug;
+  const article = await getArticleBySlug(targetSlug, true);
 
   const title = article ? article.title : 'Artikel Refleksi Kesehatan Mental & Konseling';
   const category = article ? article.category : 'Bimbingan Konseling Islam';

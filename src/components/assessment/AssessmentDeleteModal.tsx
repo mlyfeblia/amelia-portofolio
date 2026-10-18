@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { createPortal } from 'react-dom';
 import { AlertTriangle, Trash2, X } from 'lucide-react';
 import { DeviceAssessmentRecord } from '@/lib/assessment-storage';
@@ -22,11 +22,13 @@ export function AssessmentDeleteModal({
   onConfirm,
 }: AssessmentDeleteModalProps) {
   const mounted = useMounted();
+  const windowRef = React.useRef<HTMLDivElement>(null);
   const { isRendered, isExiting, backdropClass, windowClass } = useModalAnimation({
     isOpen,
     onClose,
     closeOnEscape: true,
     lockScroll: true,
+    containerRef: windowRef,
   });
 
   // Retain active record during exit transition without flickering
@@ -47,6 +49,7 @@ export function AssessmentDeleteModal({
       role="dialog"
       aria-modal="true"
       aria-labelledby="device-delete-assessment-title"
+      aria-describedby="device-delete-assessment-desc"
     >
       {/* Dedicated Full-Screen Backdrop Layer */}
       <div
@@ -58,6 +61,7 @@ export function AssessmentDeleteModal({
       />
 
       <div
+        ref={windowRef}
         className={cn(
           'relative z-10 w-full max-w-sm sm:max-w-md bg-white rounded-3xl p-4 min-[340px]:p-5 sm:p-6 shadow-2xl border border-[var(--color-paper-border)] flex flex-col gap-4 sm:gap-5 my-auto select-text',
           windowClass
@@ -91,7 +95,10 @@ export function AssessmentDeleteModal({
           </button>
         </div>
 
-        <div className="bg-[var(--color-paper)] p-3.5 sm:p-4 rounded-2xl border border-[var(--color-paper-border)] space-y-2 text-xs text-[var(--color-ink-muted)]">
+        <div
+          id="device-delete-assessment-desc"
+          className="bg-[var(--color-paper)] p-3.5 sm:p-4 rounded-2xl border border-[var(--color-paper-border)] space-y-2 text-xs text-[var(--color-ink-muted)]"
+        >
           <div className="flex items-center justify-between gap-2">
             <span className="text-[var(--color-ink-soft)] shrink-0">Tanggal:</span>
             <span className="font-medium text-[var(--color-ink)]">{activeRecord.dateFormatted}</span>

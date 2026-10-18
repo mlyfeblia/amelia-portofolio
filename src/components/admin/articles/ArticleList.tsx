@@ -56,6 +56,8 @@ export function ArticleList({
   itemsPerPage,
   onPageChange,
 }: ArticleListProps) {
+  const listTopRef = useRef<HTMLDivElement>(null);
+
   if (loading) {
     return (
       <div className="grid grid-cols-1 gap-3.5 sm:gap-4">
@@ -82,16 +84,6 @@ export function ArticleList({
           description="Tidak ditemukan artikel atau draf publikasi yang memenuhi kata kunci dan kriteria filter saat ini."
           activeFilters={activeFiltersList}
           action={
-            <button
-              onClick={onCreateNew}
-              type="button"
-              className="btn-primary btn-interactive inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold cursor-pointer shadow-xs"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>Tulis Artikel Baru</span>
-            </button>
-          }
-          secondaryAction={
             onResetFilters ? (
               <button
                 type="button"
@@ -100,12 +92,24 @@ export function ArticleList({
                   e.stopPropagation();
                   onResetFilters();
                 }}
-                className="btn-secondary btn-interactive inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold cursor-pointer shadow-xs"
+                className="btn-primary btn-interactive inline-flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-semibold cursor-pointer shadow-xs whitespace-nowrap"
               >
-                <RotateCcw className="w-3.5 h-3.5" />
-                <span>Reset Semua Filter &amp; Pencarian</span>
+                <RotateCcw className="w-3.5 h-3.5 shrink-0" />
+                <span className="sm:hidden">Reset Filter</span>
+                <span className="hidden sm:inline">Reset Semua Filter &amp; Pencarian</span>
               </button>
             ) : undefined
+          }
+          secondaryAction={
+            <button
+              onClick={onCreateNew}
+              type="button"
+              className="btn-secondary btn-interactive inline-flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-semibold cursor-pointer shadow-xs whitespace-nowrap"
+            >
+              <Plus className="w-3.5 h-3.5 shrink-0" />
+              <span className="sm:hidden">Tulis Baru</span>
+              <span className="hidden sm:inline">Tulis Artikel Baru</span>
+            </button>
           }
         />
       );
@@ -120,17 +124,16 @@ export function ArticleList({
           <button
             onClick={onCreateNew}
             type="button"
-            className="btn-primary btn-interactive inline-flex items-center gap-1.5 px-5 py-2.5 text-xs font-semibold cursor-pointer shadow-xs"
+            className="btn-primary btn-interactive inline-flex items-center justify-center gap-1.5 px-5 py-2.5 text-xs font-semibold cursor-pointer shadow-xs whitespace-nowrap"
           >
-            <Plus className="w-4 h-4" />
-            <span>Tulis Artikel Sekarang</span>
+            <Plus className="w-4 h-4 shrink-0" />
+            <span className="sm:hidden">Tulis Artikel</span>
+            <span className="hidden sm:inline">Tulis Artikel Sekarang</span>
           </button>
         }
       />
     );
   }
-
-  const listTopRef = useRef<HTMLDivElement>(null);
 
   const handlePageChange = (newPage: number) => {
     onPageChange?.(newPage);

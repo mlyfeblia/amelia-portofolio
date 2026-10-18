@@ -85,7 +85,11 @@ export default async function CounselingPage() {
       )}
       <div className="min-h-screen flex flex-col">
         <Navbar />
-        <main id="main-content" className="flex-1 pt-8 sm:pt-10 md:pt-12 pb-12 sm:pb-16 page-enter">
+        <main
+          id="main-content"
+          tabIndex={-1}
+          className="flex-1 pt-8 sm:pt-10 md:pt-12 pb-12 sm:pb-16 page-enter outline-none"
+        >
           <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-10 space-y-8">
             <CurhatHeader />
             <div className="pt-4">

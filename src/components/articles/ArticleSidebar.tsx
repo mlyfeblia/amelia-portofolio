@@ -62,7 +62,14 @@ export function ArticleSidebar({ currentCategory }: ArticleSidebarProps) {
           <span>Fokus Topik</span>
         </div>
         <p className="text-xs text-[var(--color-ink-muted)] leading-relaxed">
-          Tulisan ini berada di bawah kategori <strong className="text-[var(--color-ink)]">{currentCategory}</strong>. Seluruh materi disusun secara mandiri dengan rujukan literatur psikologi dan nilai tazkiyatun nafs.
+          Tulisan ini berada di bawah kategori{' '}
+          <Link
+            href={`/articles?category=${encodeURIComponent(currentCategory)}`}
+            className="font-semibold text-[var(--color-ink)] hover:text-[var(--color-accent)] underline decoration-[var(--color-paper-border)] hover:decoration-[var(--color-accent)] underline-offset-2 transition-colors"
+          >
+            {currentCategory}
+          </Link>
+          . Seluruh materi disusun secara mandiri dengan rujukan literatur psikologi dan nilai tazkiyatun nafs.
         </p>
         <div className="pt-1">
           <Link

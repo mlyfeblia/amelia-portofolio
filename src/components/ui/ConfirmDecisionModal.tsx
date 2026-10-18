@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { AlertTriangle, AlertCircle, HelpCircle } from 'lucide-react';
 import { useMounted } from '@/lib/use-mounted';
@@ -42,6 +42,10 @@ export function ConfirmDecisionModal({
   const isActionLoading = loading || internalLoading;
   const dialogWindowRef = React.useRef<HTMLDivElement>(null);
 
+  const baseId = React.useId();
+  const titleId = `confirm-decision-title-${baseId.replace(/:/g, '')}`;
+  const descId = `confirm-decision-desc-${baseId.replace(/:/g, '')}`;
+
   const { isRendered, isExiting, backdropClass, windowClass } = useModalAnimation({
     isOpen,
     onClose,
@@ -61,8 +65,35 @@ export function ConfirmDecisionModal({
     itemDetail,
   });
 
-  if (isOpen) {
-    cachedPropsRef.current = {
+  useEffect(() => {
+    if (isOpen) {
+      cachedPropsRef.current = {
+        title,
+        description,
+        confirmLabel,
+        cancelLabel,
+        variant,
+        icon,
+        itemDetail,
+      };
+    }
+  }, [isOpen, title, description, confirmLabel, cancelLabel, variant, icon, itemDetail]);
+
+  // Retain props during exit animation using React state to prevent content collapse
+  const [cachedProps, setCachedProps] = useState({
+    title,
+    description,
+    confirmLabel,
+    cancelLabel,
+    variant,
+    icon,
+    itemDetail,
+  });
+
+  const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
+  if (isOpen && !prevIsOpen) {
+    setPrevIsOpen(true);
+    setCachedProps({
       title,
       description,
       confirmLabel,
@@ -70,18 +101,20 @@ export function ConfirmDecisionModal({
       variant,
       icon,
       itemDetail,
-    };
+    });
+  } else if (!isOpen && prevIsOpen) {
+    setPrevIsOpen(false);
   }
 
   if (!mounted || !isRendered) return null;
 
-  const activeTitle = title || cachedPropsRef.current.title;
-  const activeDescription = description || cachedPropsRef.current.description;
-  const activeConfirmLabel = confirmLabel || cachedPropsRef.current.confirmLabel;
-  const activeCancelLabel = cancelLabel || cachedPropsRef.current.cancelLabel;
-  const activeVariant = isOpen ? variant : cachedPropsRef.current.variant;
-  const activeIcon = icon ?? cachedPropsRef.current.icon;
-  const activeItemDetail = itemDetail ?? cachedPropsRef.current.itemDetail;
+  const activeTitle = (isOpen ? title : cachedProps.title) || cachedProps.title;
+  const activeDescription = (isOpen ? description : cachedProps.description) || cachedProps.description;
+  const activeConfirmLabel = (isOpen ? confirmLabel : cachedProps.confirmLabel) || cachedProps.confirmLabel;
+  const activeCancelLabel = (isOpen ? cancelLabel : cachedProps.cancelLabel) || cachedProps.cancelLabel;
+  const activeVariant = isOpen ? variant : cachedProps.variant;
+  const activeIcon = (isOpen ? icon : cachedProps.icon) ?? cachedProps.icon;
+  const activeItemDetail = (isOpen ? itemDetail : cachedProps.itemDetail) ?? cachedProps.itemDetail;
 
   // Icon container variant styling
   let iconBoxClass = 'bg-[var(--color-accent-soft)] text-[var(--color-accent)] border border-[var(--color-accent)]/20';
@@ -128,8 +161,8 @@ export function ConfirmDecisionModal({
       )}
       role="dialog"
       aria-modal="true"
-      aria-labelledby="confirm-decision-title"
-      aria-describedby="confirm-decision-desc"
+      aria-labelledby={titleId}
+      aria-describedby={descId}
     >
       {/* Backdrop */}
       <div
@@ -157,14 +190,14 @@ export function ConfirmDecisionModal({
           </div>
           <div className="space-y-1 min-w-0 flex-1 pt-0.5">
             <h3
-              id="confirm-decision-title"
+              id={titleId}
               className="text-sm min-[340px]:text-base sm:text-lg font-medium text-[var(--color-ink)] leading-snug break-words"
               style={{ fontFamily: 'var(--font-display)' }}
             >
               {activeTitle}
             </h3>
             <p
-              id="confirm-decision-desc"
+              id={descId}
               className="text-xs sm:text-sm text-[var(--color-ink-muted)] leading-relaxed break-words"
             >
               {activeDescription}

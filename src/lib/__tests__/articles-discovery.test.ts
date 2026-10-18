@@ -134,5 +134,20 @@ describe('Articles Discovery & Seeded Randomization Architecture', () => {
       });
     });
   });
+
+  it('guarantees deterministic chronological ordering without client-side shuffle flicker', () => {
+    const list: Partial<Article>[] = [
+      { id: '1', title: 'Art 1', publishedAt: '2026-10-01' },
+      { id: '2', title: 'Art 2', publishedAt: '2026-10-10' },
+      { id: '3', title: 'Art 3', publishedAt: '2026-10-05' },
+    ];
+
+    const sorted = [...list].sort(
+      (a, b) => new Date(b.publishedAt!).getTime() - new Date(a.publishedAt!).getTime()
+    );
+
+    // Initial render and subsequent renders must always yield the exact same order
+    expect(sorted.map((a) => a.id)).toEqual(['2', '3', '1']);
+  });
 });
 

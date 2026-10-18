@@ -27,7 +27,7 @@ export default function ErrorBoundary({
         className="min-h-[calc(100vh-4rem)] bg-[var(--color-paper)] text-[var(--color-ink)] flex flex-col justify-center py-12 sm:py-16 md:py-20 page-enter"
         tabIndex={-1}
       >
-        <div className="max-w-xl mx-auto px-5 sm:px-8 w-full text-center space-y-6">
+        <div className="max-w-xl mx-auto px-5 sm:px-8 lg:px-10 w-full text-center space-y-6">
           {/* Heading */}
           <div className="space-y-3">
             <h1

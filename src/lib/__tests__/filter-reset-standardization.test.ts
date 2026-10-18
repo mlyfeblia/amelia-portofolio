@@ -1,4 +1,6 @@
 import { describe, it, expect } from 'vitest';
+import fs from 'fs';
+import path from 'path';
 
 describe('Filter Reset Standardization & Atomic Handlers', () => {
   it('correctly determines hasActiveFilters for admin bookings', () => {
@@ -104,4 +106,29 @@ describe('Filter Reset Standardization & Atomic Handlers', () => {
     expect(storage.admin_articles_status).toBeUndefined();
     expect(storage.admin_articles_landing).toBeUndefined();
   });
+
+  it('admin filter cards do not render redundant toolbar banners to keep filter bar minimal and clean', () => {
+    // Verify component files retired redundant Filter Aktif Diterapkan toolbar banners
+    const articleFilters = fs.readFileSync(path.resolve(process.cwd(), 'src/components/admin/articles/ArticleFilters.tsx'), 'utf-8');
+    const bookingFilters = fs.readFileSync(path.resolve(process.cwd(), 'src/components/admin/bookings/BookingFilters.tsx'), 'utf-8');
+    const counselingFilters = fs.readFileSync(path.resolve(process.cwd(), 'src/components/admin/counseling/CounselingFilters.tsx'), 'utf-8');
+
+    expect(articleFilters).not.toContain('Filter Aktif Diterapkan');
+    expect(bookingFilters).not.toContain('Filter Aktif Diterapkan');
+    expect(counselingFilters).not.toContain('Filter Aktif Diterapkan');
+  });
+
+  it('public directory views (ArticlesDirectory and CurhatWall) do not render redundant Menampilkan filter strips', () => {
+    const articlesDir = fs.readFileSync(path.resolve(process.cwd(), 'src/components/articles/ArticlesDirectory.tsx'), 'utf-8');
+    const curhatWall = fs.readFileSync(path.resolve(process.cwd(), 'src/components/counseling/CurhatWall.tsx'), 'utf-8');
+
+    // No redundant "Menampilkan:" strip above list
+    expect(articlesDir).not.toContain('<span>Menampilkan:</span>');
+    expect(curhatWall).not.toContain('<span>Menampilkan:</span>');
+
+    // EmptyState provides comprehensive recovery action
+    expect(articlesDir).toContain('Tampilkan Semua Artikel');
+    expect(curhatWall).toContain('Tampilkan Semua Curhat');
+  });
 });
+

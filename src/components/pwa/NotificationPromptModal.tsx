@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { Bell, ShieldCheck, X, Clock, HeartHandshake, BookOpen } from 'lucide-react';
 import {
@@ -17,6 +17,7 @@ interface NotificationPromptModalProps {
 
 export function NotificationPromptModal({ isOpen, onClose }: NotificationPromptModalProps) {
   const [isRequesting, setIsRequesting] = useState(false);
+  const windowRef = useRef<HTMLDivElement>(null);
 
   const handleDismiss = useCallback(() => {
     try {
@@ -32,6 +33,7 @@ export function NotificationPromptModal({ isOpen, onClose }: NotificationPromptM
     onClose: handleDismiss,
     closeOnEscape: true,
     lockScroll: true,
+    containerRef: windowRef,
   });
 
   const handleEnable = async () => {
@@ -76,14 +78,13 @@ export function NotificationPromptModal({ isOpen, onClose }: NotificationPromptM
         className={cn(backdropClass)}
         aria-hidden="true"
         onClick={handleDismiss}
-        onWheel={(e) => e.preventDefault()}
-        onTouchMove={(e) => e.preventDefault()}
       />
 
       {/* Modal Dialog Card */}
       <div
+        ref={windowRef}
         className={cn(
-          'relative z-10 bg-white rounded-3xl max-w-sm sm:max-w-md w-full p-6 shadow-2xl border border-[var(--color-paper-border)] flex flex-col gap-5 max-h-[90dvh] overflow-y-auto my-auto',
+          'relative z-10 bg-white rounded-3xl max-w-sm sm:max-w-md w-full p-6 shadow-2xl border border-[var(--color-paper-border)] flex flex-col gap-5 max-h-[90dvh] overflow-y-auto modal-scroll-body my-auto',
           windowClass
         )}
         onClick={(e) => e.stopPropagation()}
@@ -92,7 +93,7 @@ export function NotificationPromptModal({ isOpen, onClose }: NotificationPromptM
         <div className="flex items-start justify-between">
           {/* Bell Icon with Soft Glow Ring */}
           <div className="relative w-12 h-12 rounded-2xl bg-[var(--color-accent-soft)] text-[var(--color-accent)] flex items-center justify-center shadow-xs ring-4 ring-[var(--color-accent-soft)]/50">
-            <Bell className="w-6 h-6 animate-pulse" aria-hidden="true" />
+            <Bell className="w-6 h-6 pulse-dot" aria-hidden="true" />
             <span className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white ring-1 ring-emerald-200" />
           </div>
 

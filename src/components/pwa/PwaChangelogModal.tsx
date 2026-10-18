@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { X, CheckCircle2, History } from 'lucide-react';
 import { APP_CHANGELOG, CURRENT_APP_VERSION } from '@/data/app-version';
@@ -13,11 +13,13 @@ interface PwaChangelogModalProps {
 }
 
 export function PwaChangelogModal({ isOpen, onClose }: PwaChangelogModalProps) {
+  const windowRef = useRef<HTMLDivElement>(null);
   const { isRendered, isExiting, backdropClass, windowClass } = useModalAnimation({
     isOpen,
     onClose,
     closeOnEscape: true,
     lockScroll: true,
+    containerRef: windowRef,
   });
 
   if (!isRendered || typeof document === 'undefined') return null;
@@ -37,12 +39,11 @@ export function PwaChangelogModal({ isOpen, onClose }: PwaChangelogModalProps) {
         className={cn(backdropClass)}
         aria-hidden="true"
         onClick={onClose}
-        onWheel={(e) => e.preventDefault()}
-        onTouchMove={(e) => e.preventDefault()}
       />
 
       {/* Modal Dialog Box */}
       <div
+        ref={windowRef}
         className={cn(
           'relative w-full max-w-xl max-h-[85vh] bg-[var(--color-surface)] text-[var(--color-ink)] rounded-3xl shadow-2xl border border-[var(--color-paper-border)] overflow-hidden flex flex-col z-10 my-auto select-text',
           windowClass
@@ -74,7 +75,7 @@ export function PwaChangelogModal({ isOpen, onClose }: PwaChangelogModalProps) {
         </div>
 
         {/* Scrollable Timeline Content */}
-        <div className="p-5 sm:p-6 overflow-y-auto space-y-6 flex-1 text-sm">
+        <div className="p-5 sm:p-6 overflow-y-auto modal-scroll-body space-y-6 flex-1 text-sm">
           {APP_CHANGELOG.map((release, idx) => {
             const isLatest = idx === 0;
             return (

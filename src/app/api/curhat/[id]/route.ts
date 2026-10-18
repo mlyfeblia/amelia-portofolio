@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { updateCurhat, deleteCurhat } from '@/lib/data-store';
 import { isAuthenticatedAdmin } from '@/lib/admin-auth';
+import { sanitizeString } from '@/lib/validators';
 import { telemetry } from '@/lib/telemetry';
 
 export async function PATCH(
@@ -33,13 +34,13 @@ export async function PATCH(
       return NextResponse.json({ success: false, message: 'Data update tidak valid' }, { status: 400 });
     }
 
-    if (answer && (typeof answer !== 'string' || answer.length > 2500)) {
+    if (answer !== undefined && (typeof answer !== 'string' || answer.length > 2500)) {
       return NextResponse.json({ success: false, message: 'Jawaban pengelola maksimal 2500 karakter' }, { status: 400 });
     }
 
     const updateOptions: { answer?: string; isPublic?: boolean; showOnLandingPage?: boolean } = {};
     if (typeof answer === 'string') {
-      updateOptions.answer = answer.trim();
+      updateOptions.answer = sanitizeString(answer);
     }
     if (typeof isPublic === 'boolean') {
       updateOptions.isPublic = isPublic;

@@ -73,7 +73,24 @@ export async function POST(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+  const ip = getClientIp(request);
   try {
+    const rateCheck = await checkDistributedRateLimit(`push_unsub:${ip}`, 10, 60);
+    if (!rateCheck.success) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: `Terlalu banyak permintaan pembatalan notifikasi. Silakan coba kembali dalam ${rateCheck.retryAfterSeconds} detik.`,
+        },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': String(rateCheck.retryAfterSeconds),
+          },
+        }
+      );
+    }
+
     const body = await request.json();
     const { endpoint } = body;
 

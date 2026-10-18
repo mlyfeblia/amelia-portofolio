@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { createPortal } from 'react-dom';
 import { AlertTriangle, Trash2, X } from 'lucide-react';
 import { useMounted } from '@/lib/use-mounted';
@@ -25,6 +25,7 @@ export function BookingDeviceDeleteModal({
   onConfirm,
 }: BookingDeviceDeleteModalProps) {
   const mounted = useMounted();
+  const windowRef = React.useRef<HTMLDivElement>(null);
   const [cachedTargetCode, setCachedTargetCode] = React.useState(targetCode);
   const [cachedTargetName, setCachedTargetName] = React.useState(targetName);
   if (targetCode && targetCode !== cachedTargetCode) setCachedTargetCode(targetCode);
@@ -37,6 +38,7 @@ export function BookingDeviceDeleteModal({
     onClose,
     closeOnEscape: true,
     lockScroll: true,
+    containerRef: windowRef,
   });
 
   if (!mounted || !isRendered) return null;
@@ -52,6 +54,7 @@ export function BookingDeviceDeleteModal({
       role="dialog"
       aria-modal="true"
       aria-labelledby="device-delete-booking-title"
+      aria-describedby="device-delete-booking-desc"
     >
       {/* Dedicated Full-Screen Backdrop Layer */}
       <div
@@ -63,6 +66,7 @@ export function BookingDeviceDeleteModal({
       />
 
       <div
+        ref={windowRef}
         className={cn(
           'relative z-10 w-full max-w-sm sm:max-w-md bg-white rounded-3xl p-4 min-[340px]:p-5 sm:p-6 shadow-2xl border border-[var(--color-paper-border)] flex flex-col gap-4 sm:gap-5 my-auto select-text',
           windowClass
@@ -98,7 +102,10 @@ export function BookingDeviceDeleteModal({
           </button>
         </div>
 
-        <div className="bg-[var(--color-paper)] p-3.5 sm:p-4 rounded-2xl border border-[var(--color-paper-border)] text-xs text-[var(--color-ink-muted)] leading-relaxed space-y-2">
+        <div
+          id="device-delete-booking-desc"
+          className="bg-[var(--color-paper)] p-3.5 sm:p-4 rounded-2xl border border-[var(--color-paper-border)] text-xs text-[var(--color-ink-muted)] leading-relaxed space-y-2"
+        >
           {isAll ? (
             <p className="break-words">
               Semua riwayat janji temu akan dihapus dari peramban perangkat ini. Tenang, data janji temu kamu <strong className="text-[var(--color-ink)] font-medium">tetap aman di sistem</strong> dan bisa dilacak kembali kapan pun dengan kodenya.

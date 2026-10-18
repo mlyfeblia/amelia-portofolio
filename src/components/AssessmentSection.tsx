@@ -50,7 +50,7 @@ export default function AssessmentSection({ initialTab }: AssessmentSectionProps
 
         if (tabParam === 'history' || hash === '#history' || hash === '#riwayat') {
           setActiveTab('history');
-        } else if (tabParam === 'quiz') {
+        } else {
           setActiveTab('quiz');
         }
       } catch {}
@@ -179,7 +179,7 @@ export default function AssessmentSection({ initialTab }: AssessmentSectionProps
           setStep((prev) => prev + 1);
           if (containerRef.current) {
             const rect = containerRef.current.getBoundingClientRect();
-            if (rect.top < 0) {
+            if (rect.top < 72) {
               containerRef.current.scrollIntoView({ behavior: getPreferredScrollBehavior(), block: 'start' });
             }
           }
@@ -216,6 +216,12 @@ export default function AssessmentSection({ initialTab }: AssessmentSectionProps
     setAnswersById({});
     setDone(false);
     setIsTransitioning(false);
+    if (containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect();
+      if (rect.top < 72) {
+        containerRef.current.scrollIntoView({ behavior: getPreferredScrollBehavior(), block: 'start' });
+      }
+    }
   }, []);
 
   const progress = Math.round(((step + (done ? 1 : 0)) / questions.length) * 100);
@@ -223,7 +229,7 @@ export default function AssessmentSection({ initialTab }: AssessmentSectionProps
   return (
     <div
       ref={containerRef}
-      className="bg-[var(--color-surface)] border border-[var(--color-paper-border)] rounded-2xl sm:rounded-3xl shadow-xs overflow-hidden"
+      className="bg-[var(--color-surface)] border border-[var(--color-paper-border)] rounded-2xl sm:rounded-3xl shadow-xs overflow-hidden scroll-mt-20 sm:scroll-mt-24"
       role="region"
       aria-label="Asesmen Kesejahteraan Jiwa Amelia"
     >

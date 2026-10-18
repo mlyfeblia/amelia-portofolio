@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useSyncExternalStore } from 'react';
+import { useState, useEffect, useCallback, useRef, useSyncExternalStore } from 'react';
 import { createPortal } from 'react-dom';
 import Image from 'next/image';
 import { Download, RefreshCw, WifiOff, Wifi, X, Share2, PlusSquare, CheckCircle2 } from 'lucide-react';
@@ -49,6 +49,7 @@ function getOnlineServerSnapshot() {
 export default function PwaLifecycle() {
   const isOnline = useSyncExternalStore(subscribeOnline, getOnlineSnapshot, getOnlineServerSnapshot);
   const isOffline = !isOnline;
+  const iosModalRef = useRef<HTMLDivElement>(null);
 
   const {
     showBanner,
@@ -69,12 +70,14 @@ export default function PwaLifecycle() {
     onClose: closeIosModal,
     closeOnEscape: true,
     lockScroll: true,
+    containerRef: iosModalRef,
   });
 
   const [updateWaiting, setUpdateWaiting] = useState(false);
   const [waitingWorker, setWaitingWorker] = useState<ServiceWorker | null>(null);
   const [updateDismissed, setUpdateDismissed] = useState(false);
   const [showOnlineToast, setShowOnlineToast] = useState(false);
+  const [onlineToastMessage, setOnlineToastMessage] = useState<string | null>(null);
   const [isSuppressed, setIsSuppressed] = useState(false);
   const [showNotificationPromptModal, setShowNotificationPromptModal] = useState(false);
   const latestRelease = getLatestRelease();
@@ -143,15 +146,27 @@ export default function PwaLifecycle() {
 
 
 
-  // Show a temporary "Back Online" toast when the 'online' event fires
+  // Show a temporary "Back Online" toast when the 'online' event or offline-queue sync fires
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
     let timer: NodeJS.Timeout;
 
     const handleOnlineEvent = () => {
+      setOnlineToastMessage(null);
       setShowOnlineToast(true);
+      clearTimeout(timer);
       timer = setTimeout(() => setShowOnlineToast(false), 4000);
+    };
+
+    const handleCustomToast = (e: Event) => {
+      const customEvent = e as CustomEvent<{ message?: string }>;
+      if (customEvent.detail?.message) {
+        setOnlineToastMessage(customEvent.detail.message);
+        setShowOnlineToast(true);
+        clearTimeout(timer);
+        timer = setTimeout(() => setShowOnlineToast(false), 5000);
+      }
     };
 
     const handleOfflineEvent = () => {
@@ -160,11 +175,13 @@ export default function PwaLifecycle() {
 
     window.addEventListener('online', handleOnlineEvent);
     window.addEventListener('offline', handleOfflineEvent);
+    window.addEventListener('amelia:show-toast', handleCustomToast);
 
     return () => {
       clearTimeout(timer);
       window.removeEventListener('online', handleOnlineEvent);
       window.removeEventListener('offline', handleOfflineEvent);
+      window.removeEventListener('amelia:show-toast', handleCustomToast);
     };
   }, []);
 
@@ -217,11 +234,25 @@ export default function PwaLifecycle() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
+    const checkRemoteVersion = () => {
+      if (typeof navigator !== 'undefined' && navigator.onLine === false) return;
+      fetch('/api/version', { cache: 'no-store' })
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (data?.version && typeof data.version === 'string' && data.version !== CURRENT_APP_VERSION) {
+            setUpdateWaiting(true);
+          }
+        })
+        .catch(() => {});
+    };
+
     // Check localStorage version against CURRENT_APP_VERSION asynchronously
     const versionCheckTimer = setTimeout(() => {
       try {
         const storedVersion = localStorage.getItem('amel_app_version');
-        if (storedVersion && storedVersion !== CURRENT_APP_VERSION) {
+        if (!storedVersion) {
+          localStorage.setItem('amel_app_version', CURRENT_APP_VERSION);
+        } else if (storedVersion !== CURRENT_APP_VERSION) {
           setUpdateWaiting(true);
         }
       } catch {
@@ -253,9 +284,10 @@ export default function PwaLifecycle() {
         });
       });
 
-      // Periodically check for SW updates every 20 minutes
+      // Periodically check for SW updates and remote version every 20 minutes
       updateInterval = setInterval(() => {
         registration.update().catch(() => {});
+        checkRemoteVersion();
       }, 20 * 60 * 1000);
     });
 
@@ -267,10 +299,13 @@ export default function PwaLifecycle() {
 
     // Automatically check for updates when returning to the tab
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible' && 'serviceWorker' in navigator) {
-        navigator.serviceWorker.ready.then((reg) => {
-          reg.update().catch(() => {});
-        });
+      if (document.visibilityState === 'visible') {
+        checkRemoteVersion();
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.ready.then((reg) => {
+            reg.update().catch(() => {});
+          });
+        }
       }
     };
 
@@ -374,7 +409,7 @@ export default function PwaLifecycle() {
           <div className="flex-1 min-w-0">
             <p className="text-xs font-semibold uppercase tracking-wider text-emerald-100">Kembali Terhubung</p>
             <p className="text-xs text-white/90 mt-0.5">
-              Koneksi internetmu sudah pulih. Halaman dan data tersinkronisasi rapi.
+              {onlineToastMessage || 'Koneksi internetmu sudah pulih. Halaman dan data tersinkronisasi rapi.'}
             </p>
           </div>
         </aside>
@@ -421,7 +456,14 @@ export default function PwaLifecycle() {
             </div>
             <button
               type="button"
-              onClick={() => setUpdateDismissed(true)}
+              onClick={() => {
+                setUpdateDismissed(true);
+                try {
+                  localStorage.setItem('amel_app_version', CURRENT_APP_VERSION);
+                } catch {
+                  // Ignore
+                }
+              }}
               className="p-1 rounded-lg text-[var(--color-ink-soft)] hover:text-[var(--color-ink)] hover:bg-[var(--color-paper)] transition-colors cursor-pointer"
               aria-label="Tutup pemberitahuan pembaruan"
             >
@@ -546,14 +588,14 @@ export default function PwaLifecycle() {
           <div
             className={cn(iosBackdropClass)}
             aria-hidden="true"
-            onWheel={(e) => e.preventDefault()}
-            onTouchMove={(e) => e.preventDefault()}
+            onClick={closeIosModal}
           />
 
           {/* Modal Container: Centered on all devices */}
           <div
+            ref={iosModalRef}
             className={cn(
-              'relative z-10 bg-white rounded-3xl max-w-sm sm:max-w-md w-full p-6 shadow-2xl border border-[var(--color-paper-border)] flex flex-col gap-5 max-h-[90dvh] overflow-y-auto my-auto',
+              'relative z-10 bg-white rounded-3xl max-w-sm sm:max-w-md w-full p-6 shadow-2xl border border-[var(--color-paper-border)] flex flex-col gap-5 max-h-[90dvh] overflow-y-auto modal-scroll-body my-auto',
               iosWindowClass
             )}
             onClick={(e) => e.stopPropagation()}

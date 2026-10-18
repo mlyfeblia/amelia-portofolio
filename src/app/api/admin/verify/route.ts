@@ -10,9 +10,16 @@ export async function GET(request: Request) {
   const isValid = isValidAdminSessionToken(token);
   const remainingSeconds = isValid ? getAdminSessionRemainingSeconds(token) : 0;
 
-  return NextResponse.json({
-    success: isValid,
-    authenticated: isValid,
-    remainingSeconds,
-  });
+  return NextResponse.json(
+    {
+      success: isValid,
+      authenticated: isValid,
+      remainingSeconds,
+    },
+    {
+      headers: {
+        'Cache-Control': 'no-store, max-age=0',
+      },
+    }
+  );
 }

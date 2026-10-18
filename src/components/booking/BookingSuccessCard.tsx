@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
-import { CheckCircle, MessageCircle, RotateCcw, Copy, Check } from 'lucide-react';
+import { CheckCircle, MessageCircle, RotateCcw, Copy, Check, Search } from 'lucide-react';
 import { getBookingConfirmationWhatsAppUrl } from '@/lib/whatsapp';
+import { copyToClipboard } from '@/lib/clipboard';
 
 interface BookingSuccessCardProps {
   success: {
@@ -21,11 +22,11 @@ export function BookingSuccessCard({ success, onReset, onTrack }: BookingSuccess
   const [copied, setCopied] = useState(false);
 
   const handleCopyCode = async () => {
-    try {
-      await navigator.clipboard.writeText(success.code);
+    const ok = await copyToClipboard(success.code);
+    if (ok) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch {}
+    }
   };
 
   return (
@@ -92,18 +93,34 @@ export function BookingSuccessCard({ success, onReset, onTrack }: BookingSuccess
           })}
           target="_blank"
           rel="noopener noreferrer"
-          className="btn-primary btn-interactive text-sm inline-flex items-center justify-center gap-2 w-full sm:w-auto shadow-xs"
+          className="btn-primary btn-interactive text-sm inline-flex items-center justify-center gap-2 w-full sm:w-auto shadow-xs whitespace-nowrap"
         >
           <MessageCircle className="w-4 h-4 text-white" />
-          <span>Konfirmasi via WhatsApp</span>
+          <span>
+            <span className="sm:hidden">Konfirmasi WhatsApp</span>
+            <span className="hidden sm:inline">Konfirmasi via WhatsApp</span>
+          </span>
         </a>
+        {onTrack && (
+          <button
+            onClick={() => onTrack(success.code)}
+            type="button"
+            className="btn-secondary btn-interactive text-sm cursor-pointer inline-flex items-center justify-center gap-2 w-full sm:w-auto whitespace-nowrap"
+          >
+            <Search className="w-4 h-4 text-[var(--color-ink-soft)]" />
+            <span>Lacak Status</span>
+          </button>
+        )}
         <button
           onClick={onReset}
           type="button"
-          className="btn-secondary btn-interactive text-sm cursor-pointer inline-flex items-center justify-center gap-2 w-full sm:w-auto"
+          className="btn-secondary btn-interactive text-sm cursor-pointer inline-flex items-center justify-center gap-2 w-full sm:w-auto whitespace-nowrap"
         >
           <RotateCcw className="w-4 h-4 text-[var(--color-ink-soft)]" />
-          <span>Ajukan Jadwal Lain</span>
+          <span>
+            <span className="sm:hidden">Jadwal Lain</span>
+            <span className="hidden sm:inline">Ajukan Jadwal Lain</span>
+          </span>
         </button>
       </div>
     </div>

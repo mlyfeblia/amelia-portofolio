@@ -12,6 +12,10 @@ export function useSearchShortcut() {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && document.activeElement === inputRef.current) {
+        inputRef.current?.blur();
+        return;
+      }
       if (
         e.key === '/' &&
         !(

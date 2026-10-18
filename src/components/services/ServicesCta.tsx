@@ -19,9 +19,12 @@ export function ServicesCta() {
           Seluruh percakapan, data pribadi, dan topik konseling dilindungi sepenuhnya sesuai kode etik Bimbingan Konseling.
         </p>
       </div>
-      <Link href="/schedule" className="btn-primary btn-interactive text-sm shrink-0 inline-flex items-center justify-center gap-2 w-full md:w-auto">
+      <Link href="/schedule" className="btn-primary btn-interactive text-sm shrink-0 inline-flex items-center justify-center gap-2 w-full md:w-auto whitespace-nowrap">
         <Calendar className="w-4 h-4" />
-        <span>Jadwalkan Sesi Sekarang</span>
+        <span>
+          <span className="sm:hidden">Jadwalkan Sesi</span>
+          <span className="hidden sm:inline">Jadwalkan Sesi Sekarang</span>
+        </span>
       </Link>
     </section>
   );

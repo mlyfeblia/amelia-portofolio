@@ -47,7 +47,7 @@ export const adminCache = {
 
   // Articles
   getArticles(): Article[] | null {
-    if (memoryStore.articles && memoryStore.articles.length > 0) {
+    if (memoryStore.articles !== null) {
       return memoryStore.articles;
     }
     if (typeof window !== 'undefined') {
@@ -55,7 +55,7 @@ export const adminCache = {
         const raw = sessionStorage.getItem('admin_cached_articles');
         if (raw) {
           const parsed = JSON.parse(raw);
-          if (Array.isArray(parsed) && parsed.length > 0) {
+          if (Array.isArray(parsed)) {
             memoryStore.articles = parsed;
             return parsed;
           }
@@ -80,7 +80,7 @@ export const adminCache = {
 
   // Bookings
   getBookings(): Booking[] | null {
-    if (memoryStore.bookings && memoryStore.bookings.length > 0) {
+    if (memoryStore.bookings !== null) {
       return memoryStore.bookings;
     }
     if (typeof window !== 'undefined') {
@@ -88,7 +88,7 @@ export const adminCache = {
         const raw = sessionStorage.getItem('admin_cached_bookings');
         if (raw) {
           const parsed = JSON.parse(raw);
-          if (Array.isArray(parsed) && parsed.length > 0) {
+          if (Array.isArray(parsed)) {
             memoryStore.bookings = parsed;
             return parsed;
           }
@@ -113,7 +113,7 @@ export const adminCache = {
 
   // Curhat
   getCurhat(): AnonymousMessage[] | null {
-    if (memoryStore.curhat && memoryStore.curhat.length > 0) {
+    if (memoryStore.curhat !== null) {
       return memoryStore.curhat;
     }
     if (typeof window !== 'undefined') {
@@ -121,7 +121,7 @@ export const adminCache = {
         const raw = sessionStorage.getItem('admin_cached_curhat');
         if (raw) {
           const parsed = JSON.parse(raw);
-          if (Array.isArray(parsed) && parsed.length > 0) {
+          if (Array.isArray(parsed)) {
             memoryStore.curhat = parsed;
             return parsed;
           }
@@ -171,7 +171,10 @@ export function useAdminRevalidate(
   revalidateFn: () => void | Promise<void>
 ) {
   const revalidateRef = useRef(revalidateFn);
-  revalidateRef.current = revalidateFn;
+
+  useEffect(() => {
+    revalidateRef.current = revalidateFn;
+  });
 
   useEffect(() => {
     if (typeof window === 'undefined') return;

@@ -15,7 +15,8 @@ export default function OfflinePage() {
   return (
     <main
       id="main-content"
-      className="min-h-screen bg-[var(--color-paper)] text-[var(--color-ink)] flex flex-col justify-between px-4 sm:px-6 lg:px-8 py-12 selection:bg-[var(--color-accent-soft)] selection:text-[var(--color-accent)]"
+      tabIndex={-1}
+      className="min-h-screen bg-[var(--color-paper)] text-[var(--color-ink)] flex flex-col justify-between px-4 sm:px-6 lg:px-8 py-12 selection:bg-[var(--color-accent-soft)] selection:text-[var(--color-accent)] outline-none"
     >
       <div className="max-w-xl mx-auto w-full my-auto py-8">
         {/* Hero Title */}

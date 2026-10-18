@@ -160,5 +160,23 @@ describe('Offline Queue Unit Test Suite', () => {
     expect(result.processed).toBe(1);
     expect(getOfflineQueue()).toEqual([]);
   });
+
+  it('retains items in queue when server responds with HTTP 429 rate limit instead of dropping them', async () => {
+    (globalThis.navigator as { onLine: boolean }).onLine = true;
+
+    enqueueOfflineMutation('curhat', '/api/curhat', { message: 'Pesan saat rate limit 429' });
+    enqueueOfflineMutation('curhat', '/api/curhat', { message: 'Pesan berikutnya dalam antrean' });
+
+    vi.spyOn(global, 'fetch').mockResolvedValue({
+      ok: false,
+      status: 429,
+      json: async () => ({ error: 'Too Many Requests' }),
+    } as Response);
+
+    const result = await processOfflineQueue();
+    expect(result.processed).toBe(0);
+    expect(result.failed).toBe(0);
+    expect(getOfflineQueue().length).toBe(2);
+  });
 });
 

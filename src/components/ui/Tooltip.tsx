@@ -52,6 +52,7 @@ export function Tooltip({
   return (
     <span
       className={cn("relative inline-flex items-center", wrapperClassName)}
+      aria-describedby={isVisible && content ? id : undefined}
       onMouseEnter={show}
       onMouseLeave={hide}
       onFocus={show}
