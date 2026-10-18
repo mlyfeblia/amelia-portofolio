@@ -15,7 +15,7 @@
 **Tech Stack:** Next.js 16.3 (App Router), React 19, TypeScript, Resend API (`resend`), Serwist PWA, Tailwind CSS v4, Lucide React icons.
 
 **Spec / Persyaratan Pengguna:**
-- Resend API Key: `re_ScpEigcE_JcR5RF3Awo7uWbRvBXkSLZiQ` (disimpan aman di `.env.local`).
+- Resend API Key: `re_REDACTED_RESEND_API_KEY` (disimpan aman di `.env.local`).
 - Template email berdesain rapi dan islami modern untuk user dan Amelia.
 - Notifikasi di Web publik, PWA, dan admin.
 - Tab browser keluar: judul tab berubah santun + caching sinkronisasi saat kembali.
@@ -55,7 +55,7 @@
 
 - [x] **Step 1: Install package `resend` dan konfigurasi environment variable**
   - Jalankan `pnpm add resend`.
-  - Tambahkan `RESEND_API_KEY=re_ScpEigcE_JcR5RF3Awo7uWbRvBXkSLZiQ` dan `ADMIN_NOTIFICATION_EMAIL=mlyfeblia@gmail.com` ke `.env.local`.
+  - Tambahkan `RESEND_API_KEY=re_REDACTED_RESEND_API_KEY` dan `ADMIN_NOTIFICATION_EMAIL=mlyfeblia@gmail.com` ke `.env.local`.
 
 - [x] **Step 2: Buat modul client Resend di `src/lib/resend.ts`**
   - Inisialisasi client `new Resend(process.env.RESEND_API_KEY)`.
