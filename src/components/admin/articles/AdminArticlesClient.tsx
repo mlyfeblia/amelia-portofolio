@@ -24,12 +24,14 @@ const ArticleDraftsModal = dynamic(
 );
 
 import { ArticleDraftItem, useArticleDrafts } from '@/lib/draft-store';
+import { adminCache, useAdminRevalidate } from '@/lib/admin-cache';
+import { scrollContainerIntoViewIfAbove } from '@/lib/dom-utils';
 
 const ITEMS_PER_PAGE = 6;
 
 export function AdminArticlesClient() {
-  const [articles, setArticles] = useState<Article[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [articles, setArticles] = useState<Article[]>(() => adminCache.getArticles() || []);
+  const [loading, setLoading] = useState(() => !adminCache.getArticles());
   const [currentPage, setCurrentPage] = useState(1);
 
   // Filter States - Always initialize with SSR-safe defaults to avoid hydration mismatch
@@ -108,26 +110,41 @@ export function AdminArticlesClient() {
     setSearch(val);
     setCurrentPage(1);
     syncFilterParams(statusFilter, landingFilter, selectedCategory, dateFilter, val);
+    scrollContainerIntoViewIfAbove('admin-articles-list-container');
   };
   const handleStatusChange = (val: 'semua' | 'published' | 'draft') => {
     setStatusFilter(val);
     setCurrentPage(1);
     syncFilterParams(val, landingFilter, selectedCategory, dateFilter, search);
+    scrollContainerIntoViewIfAbove('admin-articles-list-container');
   };
   const handleLandingChange = (val: 'semua' | 'landing') => {
     setLandingFilter(val);
     setCurrentPage(1);
     syncFilterParams(statusFilter, val, selectedCategory, dateFilter, search);
+    scrollContainerIntoViewIfAbove('admin-articles-list-container');
+  };
+  const handleStatusAndLandingChange = (
+    status: 'semua' | 'published' | 'draft',
+    landing: 'semua' | 'landing'
+  ) => {
+    setStatusFilter(status);
+    setLandingFilter(landing);
+    setCurrentPage(1);
+    syncFilterParams(status, landing, selectedCategory, dateFilter, search);
+    scrollContainerIntoViewIfAbove('admin-articles-list-container');
   };
   const handleCategoryChange = (val: string) => {
     setSelectedCategory(val);
     setCurrentPage(1);
     syncFilterParams(statusFilter, landingFilter, val, dateFilter, search);
+    scrollContainerIntoViewIfAbove('admin-articles-list-container');
   };
   const handleDateChange = (val: string) => {
     setDateFilter(val);
     setCurrentPage(1);
     syncFilterParams(statusFilter, landingFilter, selectedCategory, val, search);
+    scrollContainerIntoViewIfAbove('admin-articles-list-container');
   };
 
   // Modal States
@@ -145,41 +162,38 @@ export function AdminArticlesClient() {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deletingArticle, setDeletingArticle] = useState<Article | null>(null);
 
-  const loadArticles = useCallback(async () => {
-    setLoading(true);
+  const loadArticles = useCallback(async (signalArg?: unknown) => {
+    const signal = signalArg instanceof AbortSignal ? signalArg : undefined;
+    const cached = adminCache.getArticles();
+    if (!cached || cached.length === 0) {
+      setLoading(true);
+    }
     try {
-      const res = await fetch('/api/articles');
+      const res = await fetch('/api/articles', { signal });
       const data = await res.json();
-      if (data.success) {
+      if (data.success && Array.isArray(data.data)) {
         setArticles(data.data);
+        adminCache.setArticles(data.data);
       }
-    } catch (e) {
-      console.error('Failed to load articles:', e);
+    } catch (e: unknown) {
+      if ((e as Error)?.name !== 'AbortError') {
+        console.error('Failed to load articles:', e);
+      }
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    let ignore = false;
-    fetch('/api/articles')
-      .then((res) => res.json())
-      .then((data) => {
-        if (!ignore && data.success) {
-          setArticles(data.data);
-        }
-      })
-      .catch((e) => {
-        console.error('Failed to load articles:', e);
-      })
-      .finally(() => {
-        if (!ignore) setLoading(false);
-      });
-
+    const controller = new AbortController();
+    loadArticles(controller.signal);
     return () => {
-      ignore = true;
+      controller.abort();
     };
-  }, []);
+  }, [loadArticles]);
+
+  // Automatic silent background revalidation on tab re-entry and cross-tab sync
+  useAdminRevalidate('articles', loadArticles);
 
   const handleOpenCreate = () => {
     setFormMode('create');
@@ -212,13 +226,13 @@ export function AdminArticlesClient() {
   };
 
   const handleFormSuccess = (savedArticle: Article, mode: 'create' | 'edit') => {
-    if (mode === 'create') {
-      setArticles((prev) => [savedArticle, ...prev]);
-    } else {
-      setArticles((prev) =>
-        prev.map((a) => (a.id === savedArticle.id ? savedArticle : a))
-      );
-    }
+    setArticles((prev) => {
+      const next = mode === 'create'
+        ? [savedArticle, ...prev]
+        : prev.map((a) => (a.id === savedArticle.id ? savedArticle : a));
+      adminCache.setArticles(next);
+      return next;
+    });
   };
 
   const handleTogglePublish = async (art: Article) => {
@@ -232,9 +246,11 @@ export function AdminArticlesClient() {
       });
       const data = await res.json();
       if (data.success && data.data) {
-        setArticles((prev) =>
-          prev.map((a) => (a.id === art.id ? data.data : a))
-        );
+        setArticles((prev) => {
+          const next = prev.map((a) => (a.id === art.id ? data.data : a));
+          adminCache.setArticles(next);
+          return next;
+        });
       }
     } catch (e) {
       console.error('Failed to toggle article publish status:', e);
@@ -254,9 +270,11 @@ export function AdminArticlesClient() {
       });
       const data = await res.json();
       if (data.success && data.data) {
-        setArticles((prev) =>
-          prev.map((a) => (a.id === art.id ? data.data : a))
-        );
+        setArticles((prev) => {
+          const next = prev.map((a) => (a.id === art.id ? data.data : a));
+          adminCache.setArticles(next);
+          return next;
+        });
       }
     } catch (e) {
       console.error('Failed to toggle article landing showcase:', e);
@@ -275,7 +293,11 @@ export function AdminArticlesClient() {
       const res = await fetch(`/api/articles/${art.id}`, { method: 'DELETE' });
       const data = await res.json();
       if (data.success) {
-        setArticles((prev) => prev.filter((a) => a.id !== art.id));
+        setArticles((prev) => {
+          const next = prev.filter((a) => a.id !== art.id);
+          adminCache.setArticles(next);
+          return next;
+        });
         setDeleteModalOpen(false);
         setTimeout(() => setDeletingArticle(null), 300);
       }
@@ -415,13 +437,21 @@ export function AdminArticlesClient() {
   }, [articles, statusFilter, landingFilter, selectedCategory, dateFilter, search]);
 
   const handleResetFilters = () => {
+    try {
+      sessionStorage.removeItem('admin_articles_status');
+      sessionStorage.removeItem('admin_articles_landing');
+      sessionStorage.removeItem('admin_articles_kategori');
+      sessionStorage.removeItem('admin_articles_tgl');
+      sessionStorage.removeItem('admin_articles_q');
+      window.history.replaceState({}, '', window.location.pathname);
+    } catch {}
     setSearch('');
     setStatusFilter('semua');
     setLandingFilter('semua');
     setSelectedCategory('Semua');
     setDateFilter('');
     setCurrentPage(1);
-    syncFilterParams('semua', 'semua', 'Semua', '', '');
+    scrollContainerIntoViewIfAbove('admin-articles-list-container');
   };
 
   const hasActiveFilters = Boolean(
@@ -461,6 +491,7 @@ export function AdminArticlesClient() {
         onStatusChange={handleStatusChange}
         landingFilter={landingFilter}
         onLandingFilterChange={handleLandingChange}
+        onStatusAndLandingChange={handleStatusAndLandingChange}
         selectedCategory={selectedCategory}
         onSelectCategory={handleCategoryChange}
         dateFilter={dateFilter}
@@ -468,6 +499,8 @@ export function AdminArticlesClient() {
         availableDates={availableDates}
         categories={categoriesList}
         counts={statusCounts}
+        hasActiveFilters={hasActiveFilters}
+        onResetFilters={handleResetFilters}
       />
 
       <ArticleList

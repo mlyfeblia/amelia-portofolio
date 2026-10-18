@@ -66,13 +66,14 @@ export default function Footer() {
             <p className="text-xs font-semibold uppercase tracking-wider text-white/50">
               Kontak &amp; Informasi
             </p>
-            <address className="not-italic text-sm text-white/75 space-y-2">
+            <address className="not-italic text-sm text-white/80 space-y-2">
               <p>
                 WhatsApp:{' '}
                 <a
                   href={getGeneralWhatsAppUrl()}
                   target="_blank"
                   rel="noopener noreferrer"
+                  aria-label="Hubungi Amelia melalui WhatsApp di +62 822-1044-5785"
                   className="text-white hover:underline underline-offset-2"
                 >
                   +62 822-1044-5785
@@ -82,6 +83,7 @@ export default function Footer() {
                 Email:{' '}
                 <a
                   href="mailto:mlyfeblia150207@gmail.com"
+                  aria-label="Kirim pesan email ke Amelia di mlyfeblia150207@gmail.com"
                   className="text-white hover:underline underline-offset-2"
                 >
                   mlyfeblia150207@gmail.com
@@ -93,12 +95,13 @@ export default function Footer() {
                   href="https://www.instagram.com/mlyfeb.lia"
                   target="_blank"
                   rel="noopener noreferrer"
+                  aria-label="Buka profil Instagram resmi Amelia (@mlyfeb.lia)"
                   className="text-white hover:underline underline-offset-2"
                 >
                   @mlyfeb.lia
                 </a>
               </p>
-              <p className="text-xs text-white/70 pt-1">
+              <p className="text-xs text-white/75 pt-1">
                 Cirebon, Jawa Barat, Indonesia
               </p>
             </address>
@@ -106,7 +109,8 @@ export default function Footer() {
             <div className="pt-2">
               <Link
                 href="/admin"
-                className="text-xs text-white/60 hover:text-white transition-colors"
+                aria-label="Akses portal masuk pengelola konselor"
+                className="text-xs text-white/75 hover:text-white transition-colors"
               >
                 Portal Admin Konselor &rarr;
               </Link>

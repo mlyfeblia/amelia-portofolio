@@ -12,17 +12,23 @@ export async function proxy(request: NextRequest) {
     request.cookies.get(COOKIE_NAME)?.value ||
     request.headers.get('authorization')?.replace(/^Bearer\s+/i, '').trim();
 
-  // 1. Admin API route protection: /api/admin/*
-  if (pathname.startsWith('/api/admin')) {
-    // Exempt login and verify endpoints
-    if (pathname !== '/api/admin/login' && pathname !== '/api/admin/verify') {
-      const isValid = await isValidAdminSessionTokenEdge(token);
-      if (!isValid) {
-        return NextResponse.json(
-          { success: false, message: 'Sesi pengelola tidak valid atau telah berakhir.' },
-          { status: 401 }
-        );
-      }
+  // 1. Admin API route protection
+  const isAdminOnlyEndpoint =
+    (pathname.startsWith('/api/admin') && pathname !== '/api/admin/login' && pathname !== '/api/admin/verify') ||
+    pathname === '/api/upload' ||
+    pathname === '/api/translate' ||
+    (pathname === '/api/bookings' && request.method === 'GET') ||
+    (pathname.startsWith('/api/bookings/') && pathname !== '/api/bookings/track') ||
+    pathname.startsWith('/api/curhat/') ||
+    (pathname.startsWith('/api/articles') && ['POST', 'PUT', 'PATCH', 'DELETE'].includes(request.method));
+
+  if (isAdminOnlyEndpoint) {
+    const isValid = await isValidAdminSessionTokenEdge(token);
+    if (!isValid) {
+      return NextResponse.json(
+        { success: false, message: 'Sesi pengelola tidak valid atau telah berakhir.' },
+        { status: 401 }
+      );
     }
   }
 
@@ -55,6 +61,46 @@ export async function proxy(request: NextRequest) {
           {
             success: false,
             message: `Terlalu banyak percobaan masuk portal. Coba kembali dalam ${rateCheck.retryAfterSeconds} detik.`,
+          },
+          {
+            status: 429,
+            headers: {
+              'Retry-After': rateCheck.retryAfterSeconds.toString(),
+              'X-Request-Id': requestId,
+            },
+          }
+        );
+      }
+    }
+
+    // 1b. Admin refresh: 10 attempts / 1 minute
+    if (pathname === '/api/admin/refresh') {
+      const rateCheck = await checkDistributedRateLimit(`refresh:${ip}`, 10, 60);
+      if (!rateCheck.success) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: `Terlalu banyak permintaan perpanjangan sesi. Coba kembali dalam ${rateCheck.retryAfterSeconds} detik.`,
+          },
+          {
+            status: 429,
+            headers: {
+              'Retry-After': rateCheck.retryAfterSeconds.toString(),
+              'X-Request-Id': requestId,
+            },
+          }
+        );
+      }
+    }
+
+    // 1c. File Upload: 20 uploads / 5 minutes
+    if (pathname === '/api/upload') {
+      const rateCheck = await checkDistributedRateLimit(`upload:${ip}`, 20, 300);
+      if (!rateCheck.success) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: `Terlalu banyak unggahan berkas. Coba kembali dalam ${rateCheck.retryAfterSeconds} detik.`,
           },
           {
             status: 429,
@@ -115,6 +161,46 @@ export async function proxy(request: NextRequest) {
           {
             success: false,
             message: `Terlalu banyak permintaan translasi otomatis. Coba kembali dalam ${rateCheck.retryAfterSeconds} detik.`,
+          },
+          {
+            status: 429,
+            headers: {
+              'Retry-After': rateCheck.retryAfterSeconds.toString(),
+              'X-Request-Id': requestId,
+            },
+          }
+        );
+      }
+    }
+
+    // 5. Web Push subscribe: 10 requests / 1 minute
+    if (pathname === '/api/notifications/subscribe') {
+      const rateCheck = await checkDistributedRateLimit(`push_sub:${ip}`, 10, 60);
+      if (!rateCheck.success) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: `Terlalu banyak permintaan langganan notifikasi. Coba kembali dalam ${rateCheck.retryAfterSeconds} detik.`,
+          },
+          {
+            status: 429,
+            headers: {
+              'Retry-After': rateCheck.retryAfterSeconds.toString(),
+              'X-Request-Id': requestId,
+            },
+          }
+        );
+      }
+    }
+
+    // 6. Article view count: 30 requests / 1 minute
+    if (pathname === '/api/articles/view') {
+      const rateCheck = await checkDistributedRateLimit(`article_view:${ip}`, 30, 60);
+      if (!rateCheck.success) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: `Terlalu banyak permintaan tampilan artikel. Coba kembali dalam ${rateCheck.retryAfterSeconds} detik.`,
           },
           {
             status: 429,

@@ -182,7 +182,11 @@ export function AdminLayoutClient({
     <AdminAuthProvider>
       <div className="min-h-screen flex flex-col bg-[var(--color-paper)] text-[var(--color-ink)]">
         <AdminHeader />
-        <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-8 lg:px-10 py-5 sm:py-8 space-y-5 sm:space-y-8 page-enter">
+        <main
+          id="main-content"
+          tabIndex={-1}
+          className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-8 lg:px-10 py-5 sm:py-8 space-y-5 sm:space-y-8 page-enter outline-none"
+        >
           {children}
         </main>
       </div>

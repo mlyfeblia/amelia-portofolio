@@ -29,14 +29,14 @@ export function HeroSection() {
                 href="/schedule"
                 className="btn-primary btn-interactive min-h-[44px] px-5 sm:px-6 text-sm sm:text-[15px] inline-flex items-center justify-center gap-2 w-full min-[360px]:w-auto"
               >
-                <Calendar className="w-4 h-4" />
+                <Calendar className="w-4 h-4" aria-hidden="true" />
                 <span>Jadwalkan Konsultasi</span>
               </Link>
               <Link
                 href="/about"
                 className="btn-secondary btn-interactive min-h-[44px] px-5 sm:px-6 text-sm sm:text-[15px] inline-flex items-center justify-center gap-2 w-full min-[360px]:w-auto"
               >
-                <User className="w-4 h-4 text-[var(--color-ink-soft)]" />
+                <User className="w-4 h-4 text-[var(--color-ink-soft)]" aria-hidden="true" />
                 <span>Kenali Profil Amel</span>
               </Link>
             </div>

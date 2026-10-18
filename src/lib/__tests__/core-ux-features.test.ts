@@ -113,7 +113,7 @@ describe('Core UX & Interactive Features Verification', () => {
 
     it('includes auto-scroll and focus to message input when message length < 10', () => {
       expect(curhatFormContent).toMatch(
-        /if\s*\(trimmed\.length\s*<\s*10\)\s*\{[\s\S]*?scrollIntoView\(\{[\s\S]*?behavior:\s*['"]smooth['"][\s\S]*?\}\)[\s\S]*?focus\(\)/
+        /if\s*\(trimmed\.length\s*<\s*10\)\s*\{[\s\S]*?(?:scrollIntoView\(\{[\s\S]*?behavior:\s*['"]smooth['"][\s\S]*?\}\)[\s\S]*?focus\(\)|focusAndScrollToField)/
       );
     });
   });
@@ -287,10 +287,15 @@ describe('Core UX & Interactive Features Verification', () => {
       expect(formErrorContent).toContain('formErrorProgress');
     });
 
-    it('FormErrorMessage supports autoDismissMs timer with pause on hover', () => {
+    it('FormErrorMessage supports autoDismissMs timer with pause on hover only on fine pointer devices', () => {
       expect(formErrorContent).toContain('autoDismissMs = 6000');
       expect(formErrorContent).toContain('onMouseEnter={() => setIsHovered(true)}');
       expect(formErrorContent).toContain('onMouseLeave={() => setIsHovered(false)}');
+      expect(formErrorContent).toContain('(hover: hover) and (pointer: fine)');
+      expect(formErrorContent).toContain('onTouchStart={() => _setIsHovered(false)}');
+      expect(formErrorContent).toContain('onTouchMove={() => _setIsHovered(false)}');
+      expect(formErrorContent).toContain("window.addEventListener('scroll', handleScrollOrTouch");
+      expect(formErrorContent).toContain("window.addEventListener('touchmove', handleScrollOrTouch");
       expect(formErrorContent).toContain('setTimeout');
       expect(formErrorContent).toContain('clearTimeout');
     });
@@ -310,6 +315,24 @@ describe('Core UX & Interactive Features Verification', () => {
     it('BookingTracker.tsx uses FormErrorMessage for consistent dismissible alerts', () => {
       expect(bookingTrackerContent).toContain('import { FormErrorMessage } from');
       expect(bookingTrackerContent).toContain('<FormErrorMessage');
+    });
+  });
+
+  describe('EmptyState Universal Standardization (No Badge across web)', () => {
+    const emptyStateContent = fs.readFileSync(
+      path.resolve(process.cwd(), 'src/components/ui/EmptyState.tsx'),
+      'utf-8'
+    );
+
+    it('EmptyStateProps and component do not render or accept badge', () => {
+      expect(emptyStateContent).not.toContain('badge?:');
+      expect(emptyStateContent).not.toContain('{badge &&');
+      expect(emptyStateContent).not.toContain('{badge}');
+    });
+
+    it('EmptyState maintains accessible role="status" and polite live region', () => {
+      expect(emptyStateContent).toContain('role="status"');
+      expect(emptyStateContent).toContain('aria-live="polite"');
     });
   });
 });

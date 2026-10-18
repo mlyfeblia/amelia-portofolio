@@ -6,6 +6,8 @@ import dynamic from 'next/dynamic';
 import { CounselingHeader } from '@/components/admin/counseling/CounselingHeader';
 import { CounselingFilters } from '@/components/admin/counseling/CounselingFilters';
 import { CounselingList } from '@/components/admin/counseling/CounselingList';
+import { adminCache, useAdminRevalidate } from '@/lib/admin-cache';
+import { scrollContainerIntoViewIfAbove } from '@/lib/dom-utils';
 
 const CounselingDeleteModal = dynamic(
   () => import('@/components/admin/counseling/CounselingDeleteModal').then((m) => m.CounselingDeleteModal),
@@ -15,8 +17,8 @@ const CounselingDeleteModal = dynamic(
 const ITEMS_PER_PAGE = 6;
 
 export function AdminCounselingClient() {
-  const [curhatList, setCurhatList] = useState<AnonymousMessage[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [curhatList, setCurhatList] = useState<AnonymousMessage[]>(() => adminCache.getCurhat() || []);
+  const [loading, setLoading] = useState(() => !adminCache.getCurhat());
   const [currentPage, setCurrentPage] = useState(1);
 
   // Filters - Always initialize with SSR-safe defaults to avoid hydration mismatch
@@ -105,31 +107,47 @@ export function AdminCounselingClient() {
     setSearch(val);
     setCurrentPage(1);
     syncFilterParams(statusFilter, categoryFilter, visibilityFilter, landingFilter, dateFilter, val);
+    scrollContainerIntoViewIfAbove('admin-counseling-list-container');
   };
   const handleStatusChange = (val: 'semua' | 'unanswered' | 'answered') => {
     setStatusFilter(val);
     setCurrentPage(1);
     syncFilterParams(val, categoryFilter, visibilityFilter, landingFilter, dateFilter, search);
+    scrollContainerIntoViewIfAbove('admin-counseling-list-container');
   };
   const handleCategoryChange = (val: string) => {
     setCategoryFilter(val);
     setCurrentPage(1);
     syncFilterParams(statusFilter, val, visibilityFilter, landingFilter, dateFilter, search);
+    scrollContainerIntoViewIfAbove('admin-counseling-list-container');
   };
   const handleVisibilityChange = (val: 'semua' | 'public' | 'private') => {
     setVisibilityFilter(val);
     setCurrentPage(1);
     syncFilterParams(statusFilter, categoryFilter, val, landingFilter, dateFilter, search);
+    scrollContainerIntoViewIfAbove('admin-counseling-list-container');
   };
   const handleLandingChange = (val: 'semua' | 'landing') => {
     setLandingFilter(val);
     setCurrentPage(1);
     syncFilterParams(statusFilter, categoryFilter, visibilityFilter, val, dateFilter, search);
+    scrollContainerIntoViewIfAbove('admin-counseling-list-container');
+  };
+  const handleVisibilityAndLandingChange = (
+    vis: 'semua' | 'public' | 'private',
+    landing: 'semua' | 'landing'
+  ) => {
+    setVisibilityFilter(vis);
+    setLandingFilter(landing);
+    setCurrentPage(1);
+    syncFilterParams(statusFilter, categoryFilter, vis, landing, dateFilter, search);
+    scrollContainerIntoViewIfAbove('admin-counseling-list-container');
   };
   const handleDateChange = (val: string) => {
     setDateFilter(val);
     setCurrentPage(1);
     syncFilterParams(statusFilter, categoryFilter, visibilityFilter, landingFilter, val, search);
+    scrollContainerIntoViewIfAbove('admin-counseling-list-container');
   };
 
   // Replying & Action States
@@ -141,41 +159,38 @@ export function AdminCounselingClient() {
   const [deleteItem, setDeleteItem] = useState<AnonymousMessage | null>(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 
-  const loadCurhat = useCallback(async () => {
-    setLoading(true);
+  const loadCurhat = useCallback(async (signalArg?: unknown) => {
+    const signal = signalArg instanceof AbortSignal ? signalArg : undefined;
+    const cached = adminCache.getCurhat();
+    if (!cached || cached.length === 0) {
+      setLoading(true);
+    }
     try {
-      const res = await fetch('/api/curhat');
+      const res = await fetch('/api/curhat', { signal });
       const data = await res.json();
-      if (data.success) {
+      if (data.success && Array.isArray(data.data)) {
         setCurhatList(data.data);
+        adminCache.setCurhat(data.data);
       }
-    } catch (e) {
-      console.error('Failed to load curhat:', e);
+    } catch (e: unknown) {
+      if ((e as Error)?.name !== 'AbortError') {
+        console.error('Failed to load curhat:', e);
+      }
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    let ignore = false;
-    fetch('/api/curhat')
-      .then((res) => res.json())
-      .then((data) => {
-        if (!ignore && data.success) {
-          setCurhatList(data.data);
-        }
-      })
-      .catch((e) => {
-        console.error('Failed to load curhat:', e);
-      })
-      .finally(() => {
-        if (!ignore) setLoading(false);
-      });
-
+    const controller = new AbortController();
+    loadCurhat(controller.signal);
     return () => {
-      ignore = true;
+      controller.abort();
     };
-  }, []);
+  }, [loadCurhat]);
+
+  // Automatic silent background revalidation on tab re-entry and cross-tab sync
+  useAdminRevalidate('curhat', loadCurhat);
 
   // Reply submit
   const handleSaveReply = async (
@@ -192,8 +207,8 @@ export function AdminCounselingClient() {
       });
       const data = await res.json();
       if (data.success) {
-        setCurhatList((prev) =>
-          prev.map((c) =>
+        setCurhatList((prev) => {
+          const next = prev.map((c) =>
             c.id === id
               ? {
                   ...c,
@@ -204,8 +219,10 @@ export function AdminCounselingClient() {
                   answeredAt: new Date().toISOString(),
                 }
               : c
-          )
-        );
+          );
+          adminCache.setCurhat(next);
+          return next;
+        });
         setReplyingId(null);
       }
     } catch (e) {
@@ -228,11 +245,13 @@ export function AdminCounselingClient() {
       });
       const data = await res.json();
       if (data.success) {
-        setCurhatList((prev) =>
-          prev.map((c) =>
+        setCurhatList((prev) => {
+          const next = prev.map((c) =>
             c.id === item.id ? { ...c, isPublic: nextPublic, showOnLandingPage: nextLanding } : c
-          )
-        );
+          );
+          adminCache.setCurhat(next);
+          return next;
+        });
       }
     } catch (e) {
       console.error('Failed to toggle curhat privacy:', e);
@@ -256,11 +275,13 @@ export function AdminCounselingClient() {
       });
       const data = await res.json();
       if (data.success) {
-        setCurhatList((prev) =>
-          prev.map((c) =>
+        setCurhatList((prev) => {
+          const next = prev.map((c) =>
             c.id === item.id ? { ...c, showOnLandingPage: nextLanding, isPublic: nextPublic } : c
-          )
-        );
+          );
+          adminCache.setCurhat(next);
+          return next;
+        });
       }
     } catch (e) {
       console.error('Failed to toggle landing page showcase:', e);
@@ -275,7 +296,11 @@ export function AdminCounselingClient() {
       const res = await fetch(`/api/curhat/${item.id}`, { method: 'DELETE' });
       const data = await res.json();
       if (data.success) {
-        setCurhatList((prev) => prev.filter((c) => c.id !== item.id));
+        setCurhatList((prev) => {
+          const next = prev.filter((c) => c.id !== item.id);
+          adminCache.setCurhat(next);
+          return next;
+        });
         setDeleteModalOpen(false);
         setTimeout(() => setDeleteItem(null), 300);
       }
@@ -389,6 +414,15 @@ export function AdminCounselingClient() {
   const landingCount = curhatList.filter((c) => c.showOnLandingPage).length;
 
   const handleResetFilters = () => {
+    try {
+      sessionStorage.removeItem('admin_counseling_status');
+      sessionStorage.removeItem('admin_counseling_kategori');
+      sessionStorage.removeItem('admin_counseling_vis');
+      sessionStorage.removeItem('admin_counseling_landing');
+      sessionStorage.removeItem('admin_counseling_tgl');
+      sessionStorage.removeItem('admin_counseling_q');
+      window.history.replaceState({}, '', window.location.pathname);
+    } catch {}
     setSearch('');
     setStatusFilter('semua');
     setVisibilityFilter('semua');
@@ -396,7 +430,7 @@ export function AdminCounselingClient() {
     setCategoryFilter('Semua');
     setDateFilter('');
     setCurrentPage(1);
-    syncFilterParams('semua', 'Semua', 'semua', 'semua', '', '');
+    scrollContainerIntoViewIfAbove('admin-counseling-list-container');
   };
 
   const hasActiveFilters = Boolean(
@@ -438,6 +472,7 @@ export function AdminCounselingClient() {
         onVisibilityChange={handleVisibilityChange}
         landingFilter={landingFilter}
         onLandingFilterChange={handleLandingChange}
+        onVisibilityAndLandingChange={handleVisibilityAndLandingChange}
         categoryFilter={categoryFilter}
         onCategoryChange={handleCategoryChange}
         dateFilter={dateFilter}
@@ -452,6 +487,8 @@ export function AdminCounselingClient() {
           privateCount,
           landingCount,
         }}
+        hasActiveFilters={hasActiveFilters}
+        onResetFilters={handleResetFilters}
       />
 
       <CounselingList
@@ -468,12 +505,12 @@ export function AdminCounselingClient() {
         dateFilter={dateFilter}
         hasActiveFilters={hasActiveFilters}
         onResetFilters={handleResetFilters}
-        onStartReply={(item) => setReplyingId(item.id)}
+        onStartReply={(item: AnonymousMessage) => setReplyingId(item.id)}
         onCancelReply={() => setReplyingId(null)}
         onSaveReply={handleSaveReply}
         onTogglePrivacy={handleTogglePrivacy}
         onToggleLanding={handleToggleLanding}
-        onDelete={(item) => {
+        onDelete={(item: AnonymousMessage) => {
           setDeleteItem(item);
           setDeleteModalOpen(true);
         }}

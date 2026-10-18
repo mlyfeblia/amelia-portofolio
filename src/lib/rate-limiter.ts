@@ -149,6 +149,12 @@ export async function checkDistributedRateLimit(
  * Extracts client IP address safely from Request headers.
  */
 export function getClientIp(request: Request): string {
+  // 0. NextRequest parsed platform IP (Vercel / Next.js Edge)
+  if ('ip' in request && typeof (request as { ip?: string }).ip === 'string') {
+    const rawIp = (request as { ip: string }).ip.trim();
+    if (rawIp) return rawIp;
+  }
+
   // 1. Cloudflare connecting IP (trusted edge)
   const cfConnectingIp = request.headers.get('cf-connecting-ip');
   if (cfConnectingIp && cfConnectingIp.trim()) {

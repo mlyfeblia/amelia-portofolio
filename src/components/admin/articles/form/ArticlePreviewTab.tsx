@@ -2,9 +2,10 @@
 
 import React from 'react';
 import Image from 'next/image';
-import { Star, FileEdit } from 'lucide-react';
+import { Star, FileEdit, BookOpen } from 'lucide-react';
 import { FormState } from './ArticleMetaFields';
 import { ArticleMarkdownRenderer } from '@/components/articles/ArticleMarkdownRenderer';
+import { EmptyState } from '@/components/ui/EmptyState';
 
 export interface ArticlePreviewTabProps {
   formData: FormState;
@@ -81,9 +82,13 @@ export function ArticlePreviewTab({
           {formData.content.trim() ? (
             <ArticleMarkdownRenderer content={formData.content} />
           ) : (
-            <p className="text-xs sm:text-sm text-[var(--color-ink-muted)] italic">
-              Belum ada konten artikel untuk ditampilkan di pratinjau.
-            </p>
+            <EmptyState
+              size="sm"
+              variant="paper"
+              icon={<BookOpen className="w-5 h-5 text-[var(--color-ink-muted)]" />}
+              title="Pratinjau Belum Tersedia"
+              description="Ketik atau tempel draf artikel pada tab formulir untuk melihat hasil tampilan format bacaan secara langsung di sini."
+            />
           )}
         </div>
       </div>

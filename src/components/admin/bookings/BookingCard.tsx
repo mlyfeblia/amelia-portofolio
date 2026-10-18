@@ -12,16 +12,17 @@ import {
   Copy,
   Check,
   CheckCircle2,
+  CheckCheck,
   XCircle
 } from 'lucide-react';
 import { Booking, BookingStatus, CounselingMode } from '@/types';
 import { getAdminContactWhatsAppUrl } from '@/lib/whatsapp';
-import { getAdminContactEmailUrl } from '@/lib/email-template';
-import { Badge } from '@/components/ui/Badge';
+import { BookingContactEmailModal } from './BookingContactEmailModal';
 import { Spinner } from '@/components/ui/Spinner';
 import { Tooltip } from '@/components/ui/Tooltip';
 import { useToast } from '@/components/ui/Toast';
 import { ConfirmDecisionModal } from '@/components/ui/ConfirmDecisionModal';
+import { copyToClipboard } from '@/lib/clipboard';
 
 function getModeInfo(mode: CounselingMode) {
   switch (mode) {
@@ -55,15 +56,39 @@ export function BookingCard({
   const getStatusBadgeElement = () => {
     switch (item.status) {
       case 'terkonfirmasi':
-        return <Badge variant="accent" size="xs" dot>Terkonfirmasi</Badge>;
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg border border-emerald-300 bg-emerald-50 text-emerald-800 shrink-0 select-none">
+            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
+            <span>Terkonfirmasi</span>
+          </span>
+        );
       case 'menunggu':
-        return <Badge variant="warning" size="xs" dot>Menunggu</Badge>;
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg border border-amber-300 bg-amber-50 text-amber-800 shrink-0 select-none">
+            <Clock className="w-3.5 h-3.5 text-amber-700 shrink-0" />
+            <span>Menunggu</span>
+          </span>
+        );
       case 'selesai':
-        return <Badge variant="info" size="xs">Selesai</Badge>;
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg border border-sky-300 bg-sky-50 text-sky-800 shrink-0 select-none">
+            <CheckCheck className="w-3.5 h-3.5 text-sky-700 shrink-0" />
+            <span>Selesai</span>
+          </span>
+        );
       case 'dibatalkan':
-        return <Badge variant="danger" size="xs">Dibatalkan</Badge>;
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg border border-rose-300 bg-rose-50 text-rose-800 shrink-0 select-none">
+            <XCircle className="w-3.5 h-3.5 text-rose-700 shrink-0" />
+            <span>Dibatalkan</span>
+          </span>
+        );
       default:
-        return <Badge variant="neutral" size="xs">{item.status}</Badge>;
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg border border-[var(--color-paper-border)] bg-[var(--color-paper-muted)] text-[var(--color-ink-muted)] shrink-0 select-none capitalize">
+            <span>{item.status}</span>
+          </span>
+        );
     }
   };
 
@@ -78,15 +103,25 @@ export function BookingCard({
 
   const activeStatus = pendingStatus ?? cachedStatus;
 
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
+
   const handleCopyCode = async () => {
-    try {
-      await navigator.clipboard.writeText(item.code);
+    const success = await copyToClipboard(item.code);
+    if (success) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
       toast.success(`Kode ${item.code} disalin ke clipboard!`);
-    } catch {
+    } else {
       toast.info(`Kode: ${item.code}`);
     }
+  };
+
+  const handleOpenEmailModal = () => {
+    if (!item.email || !item.email.trim()) {
+      toast.error('Konseli tidak mencantumkan alamat email saat reservasi.');
+      return;
+    }
+    setIsEmailModalOpen(true);
   };
 
   const getModalConfig = (status: BookingStatus | null) => {
@@ -259,19 +294,15 @@ export function BookingCard({
             <span>WhatsApp</span>
           </a>
 
-          <a
-            href={getAdminContactEmailUrl({
-              clientEmail: item.email,
-              clientName: item.alias || item.name,
-              code: item.code,
-              date: item.date,
-              slot: item.timeSlot,
-            })}
-            className="btn-interactive h-8 px-2.5 sm:px-3 rounded-lg bg-[var(--color-paper)] border border-[var(--color-paper-border)] text-xs font-medium text-[var(--color-ink)] hover:text-[var(--color-accent)] inline-flex items-center justify-center gap-1.5 whitespace-nowrap flex-1 sm:flex-initial"
+          <button
+            type="button"
+            onClick={handleOpenEmailModal}
+            className="btn-interactive h-8 px-2.5 sm:px-3 rounded-lg bg-[var(--color-paper)] border border-[var(--color-paper-border)] text-xs font-medium text-[var(--color-ink)] hover:text-[var(--color-accent)] inline-flex items-center justify-center gap-1.5 whitespace-nowrap flex-1 sm:flex-initial cursor-pointer"
+            aria-label={`Hubungi konseli ${item.name} via email`}
           >
             <Mail className="w-3.5 h-3.5" />
             <span>Email</span>
-          </a>
+          </button>
         </div>
 
         {/* Right: Status Change Actions */}
@@ -380,6 +411,13 @@ export function BookingCard({
             )}
           </div>
         }
+      />
+
+      {/* Contact Email Modal */}
+      <BookingContactEmailModal
+        isOpen={isEmailModalOpen}
+        onClose={() => setIsEmailModalOpen(false)}
+        booking={item}
       />
     </div>
   );

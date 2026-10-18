@@ -24,8 +24,16 @@ export function BookingHeader({
         >
           Kelola Janji Temu Konseling
         </h1>
-        <p className="text-xs sm:text-sm text-[var(--color-ink-muted)] mt-1">
-          Total {totalCount} reservasi terdaftar &bull; Pantau kepastian jadwal konseli.
+        <p className="text-xs sm:text-sm text-[var(--color-ink-muted)] mt-1 flex items-center gap-1.5 flex-wrap">
+          {loading && totalCount === 0 ? (
+            <span className="inline-flex items-center gap-1 text-[var(--color-ink-soft)]">
+              <span>Memuat data reservasi...</span>
+            </span>
+          ) : (
+            <span>Total {totalCount} reservasi terdaftar</span>
+          )}
+          <span>&bull;</span>
+          <span>Pantau kepastian jadwal konseli.</span>
         </p>
       </div>
 

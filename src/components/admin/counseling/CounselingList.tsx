@@ -1,11 +1,13 @@
 'use client';
 
 import React, { useRef } from 'react';
-import { MessageSquareText, SearchX, RotateCcw } from 'lucide-react';
+import { MessageSquareText, SearchX, RotateCcw, ExternalLink } from 'lucide-react';
 import { AnonymousMessage } from '@/types';
 import { CounselingCard } from './CounselingCard';
 import { SkeletonCurhatCard } from '@/components/ui/Skeleton';
 import { PaginationBar } from '@/components/ui/PaginationBar';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { scrollContainerIntoViewIfAbove } from '@/lib/dom-utils';
 
 interface CounselingListProps {
   curhatList: AnonymousMessage[];
@@ -71,73 +73,58 @@ export function CounselingList({
   }
 
   if (curhatList.length === 0) {
+    if (hasActiveFilters) {
+      const activeFiltersList: { label: string; value: string }[] = [];
+      if (search) activeFiltersList.push({ label: 'Kata Kunci', value: search });
+      if (statusFilter !== 'semua') activeFiltersList.push({ label: 'Status', value: statusFilter === 'unanswered' ? 'Belum Dibalas' : 'Sudah Dibalas' });
+      if (categoryFilter !== 'Semua') activeFiltersList.push({ label: 'Kategori', value: categoryFilter });
+      if (visibilityFilter !== 'semua') activeFiltersList.push({ label: 'Visibilitas', value: visibilityFilter });
+      if (landingFilter === 'landing') activeFiltersList.push({ label: 'Tampilan', value: 'Hanya di Beranda' });
+      if (dateFilter) activeFiltersList.push({ label: 'Tanggal', value: dateFilter });
+
+      return (
+        <EmptyState
+          icon={<SearchX className="w-6 h-6 stroke-[1.75]" />}
+          title="Tidak Ada Pesan Curhat yang Cocok"
+          description="Tidak ditemukan rekaman curhat anonim yang sesuai dengan kombinasi filter dan kata kunci pencarian aktif saat ini."
+          activeFilters={activeFiltersList}
+          action={
+            onResetFilters ? (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onResetFilters();
+                }}
+                className="btn-secondary btn-interactive inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold cursor-pointer shadow-xs"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Reset Semua Filter &amp; Pencarian</span>
+              </button>
+            ) : undefined
+          }
+        />
+      );
+    }
+
     return (
-      <div className="p-8 sm:p-12 text-center bg-[var(--color-surface)] border border-[var(--color-paper-border)] rounded-2xl text-xs text-[var(--color-ink-muted)] space-y-3 tab-content-enter">
-        {hasActiveFilters ? (
-          <>
-            <div className="w-12 h-12 rounded-full bg-[var(--color-paper-muted)] text-[var(--color-ink-muted)] mx-auto flex items-center justify-center">
-              <SearchX className="w-6 h-6" />
-            </div>
-            <div className="space-y-1">
-              <p className="font-semibold text-sm text-[var(--color-ink)]">
-                Tidak ada pesan curhat yang cocok
-              </p>
-              <p className="max-w-md mx-auto leading-relaxed">
-                {search ? (
-                  <>
-                    Tidak ditemukan hasil untuk kata kunci <span className="font-semibold text-[var(--color-ink)]">&ldquo;{search}&rdquo;</span>.
-                  </>
-                ) : (
-                  'Tidak ada pesan curhat yang sesuai dengan kombinasi filter saat ini.'
-                )}
-                {statusFilter !== 'semua' && (
-                  <span className="block mt-0.5 text-[11px] text-[var(--color-ink-soft)]">
-                    Filter status: &ldquo;{statusFilter === 'unanswered' ? 'Belum Dibalas' : 'Sudah Dibalas'}&rdquo;
-                  </span>
-                )}
-                {categoryFilter !== 'Semua' && (
-                  <span className="block mt-0.5 text-[11px] text-[var(--color-ink-soft)]">
-                    Filter kategori: &ldquo;{categoryFilter}&rdquo;
-                  </span>
-                )}
-                {visibilityFilter !== 'semua' && (
-                  <span className="block mt-0.5 text-[11px] text-[var(--color-ink-soft)]">
-                    Filter visibilitas: &ldquo;{visibilityFilter}&rdquo;
-                  </span>
-                )}
-                {landingFilter === 'landing' && (
-                  <span className="block mt-0.5 text-[11px] text-[var(--color-ink-soft)]">
-                    Filter: Hanya di Beranda
-                  </span>
-                )}
-                {dateFilter && (
-                  <span className="block mt-0.5 text-[11px] text-[var(--color-ink-soft)]">
-                    Filter tanggal: &ldquo;{dateFilter}&rdquo;
-                  </span>
-                )}
-              </p>
-            </div>
-            {onResetFilters && (
-              <div className="pt-2">
-                <button
-                  type="button"
-                  onClick={onResetFilters}
-                  className="btn-secondary btn-interactive inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold cursor-pointer shadow-xs"
-                >
-                  <RotateCcw className="w-3.5 h-3.5" />
-                  <span>Reset Semua Filter &amp; Pencarian</span>
-                </button>
-              </div>
-            )}
-          </>
-        ) : (
-          <>
-            <MessageSquareText className="w-8 h-8 text-[var(--color-ink-muted)]/50 mx-auto mb-1" />
-            <p className="font-semibold text-sm text-[var(--color-ink)]">Belum ada pesan curhat masuk</p>
-            <p>Pesan anonim dari konseli atau pengunjung akan muncul di sini.</p>
-          </>
-        )}
-      </div>
+      <EmptyState
+        icon={<MessageSquareText className="w-6 h-6 stroke-[1.75]" />}
+        title="Belum Ada Pesan Curhat Masuk"
+        description="Pesan anonim dan cerita batin dari pengunjung atau konseli akan otomatis masuk dan tersimpan privat di sini untuk ditanggapi."
+        action={
+          <a
+            href="/counseling"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn-secondary btn-interactive inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold cursor-pointer shadow-xs"
+          >
+            <span>Buka Ruang Curhat Publik</span>
+            <ExternalLink className="w-3.5 h-3.5" />
+          </a>
+        }
+      />
     );
   }
 
@@ -145,13 +132,11 @@ export function CounselingList({
 
   const handlePageChange = (newPage: number) => {
     onPageChange?.(newPage);
-    if (listTopRef.current) {
-      listTopRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
+    scrollContainerIntoViewIfAbove('admin-counseling-list-container', 90);
   };
 
   return (
-    <div ref={listTopRef} className="space-y-4 scroll-mt-24">
+    <div ref={listTopRef} id="admin-counseling-list-container" className="space-y-4 scroll-mt-24">
       <div key={currentPage} className="space-y-3.5 sm:space-y-4 pagination-slide-enter">
         {curhatList.map((item) => (
           <CounselingCard

@@ -32,6 +32,16 @@ const nextConfig: NextConfig = {
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     minimumCacheTTL: 60 * 60 * 24 * 30,
     contentDispositionType: 'inline',
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'y8ug7mrt.ap-southeast.insforge.app',
+      },
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+      },
+    ],
   },
   async headers() {
     return [

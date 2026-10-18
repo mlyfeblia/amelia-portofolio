@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 
 export interface UseModalAnimationOptions {
   isOpen: boolean;
@@ -9,6 +9,9 @@ export interface UseModalAnimationOptions {
   closeOnEscape?: boolean; // default: true
   lockScroll?: boolean; // default: true
   type?: 'dialog' | 'sheet'; // default: 'dialog'
+  containerRef?: React.RefObject<HTMLElement | null>;
+  restoreFocus?: boolean; // default: true
+  autoFocusFirst?: boolean; // default: true
 }
 
 export interface UseModalAnimationResult {
@@ -17,6 +20,9 @@ export interface UseModalAnimationResult {
   backdropClass: string;
   windowClass: string;
 }
+
+// Modal Stack Registry for nested modal handling
+const modalStack: string[] = [];
 
 // Centralized non-destructive background scroll locking
 // Intercepts wheel, touchmove, and keyboard scrolling on the background
@@ -89,10 +95,84 @@ function acquireModalScrollLock() {
 }
 
 /**
+ * Focus Trap hook for WCAG 2.1 AA dialog accessibility.
+ * Traps Tab and Shift+Tab navigation within containerRef and optionally auto-focuses first element.
+ */
+export function useFocusTrap(
+  containerRef: React.RefObject<HTMLElement | null>,
+  isActive: boolean,
+  autoFocusFirst = true
+) {
+  useEffect(() => {
+    if (!isActive || typeof window === 'undefined') return;
+
+    const container = containerRef.current;
+    if (!container) return;
+
+    const focusableSelector =
+      'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+    // Auto-focus first interactive element inside container
+    if (autoFocusFirst) {
+      const focusTimer = setTimeout(() => {
+        const focusableElements = container.querySelectorAll<HTMLElement>(focusableSelector);
+        if (focusableElements.length > 0) {
+          focusableElements[0].focus();
+        } else {
+          container.focus();
+        }
+      }, 50);
+
+      return () => clearTimeout(focusTimer);
+    }
+  }, [containerRef, isActive, autoFocusFirst]);
+
+  useEffect(() => {
+    if (!isActive || typeof window === 'undefined') return;
+
+    const handleTabKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab') return;
+
+      const container = containerRef.current;
+      if (!container) return;
+
+      const focusableSelector =
+        'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+      const focusableElements = Array.from(
+        container.querySelectorAll<HTMLElement>(focusableSelector)
+      ).filter((el) => el.offsetParent !== null); // only visible elements
+
+      if (focusableElements.length === 0) {
+        e.preventDefault();
+        return;
+      }
+
+      const firstElement = focusableElements[0];
+      const lastElement = focusableElements[focusableElements.length - 1];
+
+      if (e.shiftKey) {
+        if (document.activeElement === firstElement || !container.contains(document.activeElement)) {
+          e.preventDefault();
+          lastElement.focus();
+        }
+      } else {
+        if (document.activeElement === lastElement || !container.contains(document.activeElement)) {
+          e.preventDefault();
+          firstElement.focus();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleTabKeyDown);
+    return () => window.removeEventListener('keydown', handleTabKeyDown);
+  }, [containerRef, isActive]);
+}
+
+/**
  * Standardized hook to manage smooth enter and exit transitions for modals and dialogs.
  * Uses React 19 state-during-render patterns (no synchronous setState in effects, no ref render access)
  * to keep the component mounted during exit animation before unmounting cleanly.
- * Also manages centralized non-destructive background scroll locking and Escape key handling.
+ * Also manages centralized non-destructive background scroll locking, modal stack, return focus, and Escape key handling.
  */
 export function useModalAnimation({
   isOpen,
@@ -101,10 +181,20 @@ export function useModalAnimation({
   closeOnEscape = true,
   lockScroll = true,
   type = 'dialog',
+  containerRef,
+  restoreFocus = true,
+  autoFocusFirst = true,
 }: UseModalAnimationOptions): UseModalAnimationResult {
   const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
   const [isRendered, setIsRendered] = useState(isOpen);
   const [isExiting, setIsExiting] = useState(false);
+
+  const modalIdRef = useRef<string>('');
+  if (!modalIdRef.current) {
+    modalIdRef.current = `modal_${Math.random().toString(36).slice(2, 9)}`;
+  }
+
+  const triggerElementRef = useRef<HTMLElement | null>(null);
 
   // Synchronize state during render when isOpen prop transitions
   if (isOpen !== prevIsOpen) {
@@ -117,17 +207,49 @@ export function useModalAnimation({
     }
   }
 
-  // Handle timed unmount when exit transition is active
+  // Record trigger element on opening
+  useEffect(() => {
+    if (isOpen && typeof document !== 'undefined') {
+      triggerElementRef.current = document.activeElement as HTMLElement | null;
+    }
+  }, [isOpen]);
+
+  // Modal stack registration (top-most modal responds to Escape)
+  useEffect(() => {
+    if (!isRendered || isExiting) return;
+
+    const id = modalIdRef.current;
+    if (!modalStack.includes(id)) {
+      modalStack.push(id);
+    }
+
+    return () => {
+      const idx = modalStack.indexOf(id);
+      if (idx !== -1) {
+        modalStack.splice(idx, 1);
+      }
+    };
+  }, [isRendered, isExiting]);
+
+  // Handle timed unmount and return focus when exit transition completes
   useEffect(() => {
     if (!isExiting) return;
 
     const timer = setTimeout(() => {
       setIsRendered(false);
       setIsExiting(false);
+
+      if (restoreFocus && triggerElementRef.current) {
+        try {
+          if (typeof triggerElementRef.current.focus === 'function') {
+            triggerElementRef.current.focus({ preventScroll: true });
+          }
+        } catch {}
+      }
     }, durationMs);
 
     return () => clearTimeout(timer);
-  }, [isExiting, durationMs]);
+  }, [isExiting, durationMs, restoreFocus]);
 
   // Non-destructive background scroll locking (preserves sticky headers under backdrop)
   useEffect(() => {
@@ -139,20 +261,30 @@ export function useModalAnimation({
     };
   }, [lockScroll, isRendered]);
 
-  // Centralized Escape key handling
+  // Centralized Escape key handling (strictly top-of-stack modal only)
   useEffect(() => {
     if (!closeOnEscape || !isOpen || !onClose || typeof window === 'undefined') return;
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
-        event.stopPropagation();
-        onClose();
+        // Only trigger onClose if this modal is at the top of the stack
+        if (modalStack.length > 0 && modalStack[modalStack.length - 1] === modalIdRef.current) {
+          event.stopPropagation();
+          onClose();
+        }
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [closeOnEscape, isOpen, onClose]);
+
+  // Focus trap if containerRef is provided
+  useFocusTrap(
+    containerRef ?? { current: null },
+    Boolean(containerRef && isRendered && !isExiting),
+    autoFocusFirst
+  );
 
   const windowAnimationClass =
     type === 'sheet'

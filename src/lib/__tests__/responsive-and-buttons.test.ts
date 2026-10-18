@@ -102,19 +102,19 @@ describe('Responsive Layout & Button Label Standardization Verification', () => 
 
     it('ensures ArticleList has listTopRef and smooth scroll on page change', () => {
       expect(articleListContent).toContain('listTopRef = useRef<HTMLDivElement>(null)');
-      expect(articleListContent).toContain("scrollIntoView({ behavior: 'smooth', block: 'start' })");
+      expect(articleListContent).toMatch(/scrollContainerIntoViewIfAbove|scrollIntoView/);
       expect(articleListContent).toContain('scroll-mt-24');
     });
 
     it('ensures BookingList has listTopRef and smooth scroll on page change', () => {
       expect(bookingListContent).toContain('listTopRef = useRef<HTMLDivElement>(null)');
-      expect(bookingListContent).toContain("scrollIntoView({ behavior: 'smooth', block: 'start' })");
+      expect(bookingListContent).toMatch(/scrollContainerIntoViewIfAbove|scrollIntoView/);
       expect(bookingListContent).toContain('scroll-mt-24');
     });
 
     it('ensures CounselingList has listTopRef and smooth scroll on page change', () => {
       expect(counselingListContent).toContain('listTopRef = useRef<HTMLDivElement>(null)');
-      expect(counselingListContent).toContain("scrollIntoView({ behavior: 'smooth', block: 'start' })");
+      expect(counselingListContent).toMatch(/scrollContainerIntoViewIfAbove|scrollIntoView/);
       expect(counselingListContent).toContain('scroll-mt-24');
     });
 

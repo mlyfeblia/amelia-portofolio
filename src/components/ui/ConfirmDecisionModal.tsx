@@ -40,12 +40,14 @@ export function ConfirmDecisionModal({
   const mounted = useMounted();
   const [internalLoading, setInternalLoading] = useState(false);
   const isActionLoading = loading || internalLoading;
+  const dialogWindowRef = React.useRef<HTMLDivElement>(null);
 
   const { isRendered, isExiting, backdropClass, windowClass } = useModalAnimation({
     isOpen,
     onClose,
     closeOnEscape: !isActionLoading,
     lockScroll: true,
+    containerRef: dialogWindowRef,
   });
 
   // Retain props during exit animation to prevent content collapse or visual flicker
@@ -142,6 +144,7 @@ export function ConfirmDecisionModal({
 
       {/* Window */}
       <div
+        ref={dialogWindowRef}
         className={cn(
           'relative z-10 w-full max-w-sm sm:max-w-md bg-white rounded-2xl min-[340px]:rounded-3xl p-3.5 min-[340px]:p-5 sm:p-6 shadow-2xl border border-[var(--color-paper-border)] flex flex-col gap-3.5 min-[340px]:gap-4 sm:gap-5 my-auto select-text pointer-events-auto',
           windowClass

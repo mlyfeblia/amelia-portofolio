@@ -4,6 +4,8 @@ import React, { useState } from 'react';
 import { Share2, Check, Copy } from 'lucide-react';
 import { useToast } from '@/context/ToastContext';
 
+import { copyToClipboard } from '@/lib/clipboard';
+
 interface ArticleShareBarProps {
   title: string;
   url: string;
@@ -14,14 +16,12 @@ export function ArticleShareBar({ title, url }: ArticleShareBarProps) {
   const { toast } = useToast();
 
   const handleCopy = async () => {
-    try {
-      if (typeof navigator !== 'undefined' && navigator.clipboard) {
-        await navigator.clipboard.writeText(url);
-        setCopied(true);
-        toast.success('Tautan artikel berhasil disalin ke clipboard!');
-        setTimeout(() => setCopied(false), 2500);
-      }
-    } catch {
+    const success = await copyToClipboard(url);
+    if (success) {
+      setCopied(true);
+      toast.success('Tautan artikel berhasil disalin ke clipboard!');
+      setTimeout(() => setCopied(false), 2500);
+    } else {
       toast.error('Gagal menyalin tautan');
     }
   };

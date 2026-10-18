@@ -17,6 +17,7 @@ import { BookingTracker } from './booking/BookingTracker';
 import { ConfirmDecisionModal } from '@/components/ui/ConfirmDecisionModal';
 import { FormErrorMessage } from '@/components/ui/FormErrorMessage';
 import { saveDeviceBooking, useDeviceBookings } from '@/lib/booking-storage';
+import { enqueueOfflineMutation } from '@/lib/offline-queue';
 import {
   isNotificationSupported,
   getNotificationPermission,
@@ -27,6 +28,7 @@ import {
 import { CounselingMode } from '@/types';
 import { formatPersonName } from '@/lib/text-formatter';
 import { focusAndScrollToField } from '@/lib/dom-utils';
+import { useCooldownTimer } from '@/lib/use-cooldown';
 
 interface BookingSectionProps {
   initialTab?: 'new' | 'tracker';
@@ -181,6 +183,7 @@ export default function BookingSection({
   const [loading, setLoading] = useState(false);
   const [showBookingConfirmModal, setShowBookingConfirmModal] = useState(false);
   const [error, setError] = useState('');
+  const { cooldownSeconds, isCoolingDown, startCooldown } = useCooldownTimer();
   const [success, setSuccess] = useState<{
     code: string;
     name: string;
@@ -212,6 +215,11 @@ export default function BookingSection({
           mode: form.mode,
         });
       }, 500);
+      return;
+    }
+
+    if (isCoolingDown) {
+      setError(`Mohon tunggu ${cooldownSeconds} detik sebelum mengajukan janji temu kembali.`);
       return;
     }
 
@@ -265,14 +273,48 @@ export default function BookingSection({
   const executeBookingSubmit = async () => {
     setLoading(true);
     setError('');
+    const bookingPayload = { ...form, botTrap };
+
+    // Offline mode: enqueue mutation safely and generate local offline reservation
+    if (typeof window !== 'undefined' && !navigator.onLine) {
+      const offlineTempCode = `BKI-OFFLINE-${Date.now().toString().slice(-4)}`;
+      enqueueOfflineMutation('booking', '/api/bookings', bookingPayload, offlineTempCode);
+      saveDeviceBooking({
+        code: offlineTempCode,
+        name: form.alias || form.name,
+        category: form.category,
+        date: form.date,
+        timeSlot: form.timeSlot,
+      });
+      setSuccess({
+        code: offlineTempCode,
+        name: form.name,
+        alias: form.alias || undefined,
+        date: form.date,
+        slot: form.timeSlot,
+        mode: form.mode,
+      });
+      setForm(DEFAULT_BOOKING_FORM);
+      setShowBookingConfirmModal(false);
+      setLoading(false);
+      return;
+    }
+
     try {
       const res = await fetch('/api/bookings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, botTrap }),
+        body: JSON.stringify(bookingPayload),
       });
       const data = await res.json();
-      if (!res.ok || !data.success) throw new Error(data.message || 'Gagal memproses janji temu.');
+      if (!res.ok || !data.success) {
+        if (res.status === 429) {
+          const retryAfter = parseInt(res.headers.get('Retry-After') || '', 10);
+          const seconds = !isNaN(retryAfter) && retryAfter > 0 ? retryAfter : 60;
+          startCooldown(seconds);
+        }
+        throw new Error(data.message || 'Gagal memproses janji temu.');
+      }
 
       const newBooking = data.data;
 
@@ -311,6 +353,29 @@ export default function BookingSection({
       setForm(DEFAULT_BOOKING_FORM);
       setShowBookingConfirmModal(false);
     } catch (err: unknown) {
+      // If sudden connection failure occurred during submit, fallback to offline queue
+      if (typeof window !== 'undefined' && !navigator.onLine) {
+        const offlineTempCode = `BKI-OFFLINE-${Date.now().toString().slice(-4)}`;
+        enqueueOfflineMutation('booking', '/api/bookings', bookingPayload, offlineTempCode);
+        saveDeviceBooking({
+          code: offlineTempCode,
+          name: form.alias || form.name,
+          category: form.category,
+          date: form.date,
+          timeSlot: form.timeSlot,
+        });
+        setSuccess({
+          code: offlineTempCode,
+          name: form.name,
+          alias: form.alias || undefined,
+          date: form.date,
+          slot: form.timeSlot,
+          mode: form.mode,
+        });
+        setForm(DEFAULT_BOOKING_FORM);
+        setShowBookingConfirmModal(false);
+        return;
+      }
       setError(err instanceof Error ? err.message : 'Terjadi kendala sistem. Silakan ulangi sesaat lagi.');
       setShowBookingConfirmModal(false);
     } finally {
@@ -337,6 +402,8 @@ export default function BookingSection({
           <button
             type="button"
             role="tab"
+            id="tab-booking-new"
+            aria-controls="panel-booking-new"
             aria-selected={activeTab === 'new'}
             onClick={() => handleTabChange('new')}
             className={`group relative flex items-center justify-center gap-1.5 sm:gap-2 px-2 min-[360px]:px-2.5 py-1.5 sm:px-4 sm:py-2 rounded-lg text-[11px] min-[360px]:text-xs sm:text-sm font-semibold transition-all duration-200 cursor-pointer border text-center select-none ${
@@ -345,7 +412,7 @@ export default function BookingSection({
                 : 'border-transparent text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] hover:bg-[var(--color-surface)]/70 hover:shadow-2xs active:scale-[0.98]'
             }`}
           >
-            <CalendarPlus className="w-4 h-4 text-[var(--color-accent)] shrink-0" />
+            <CalendarPlus className="w-4 h-4 text-[var(--color-accent)] shrink-0" aria-hidden="true" />
             <span className="truncate">
               <span className="inline sm:hidden">Janji Temu</span>
               <span className="hidden sm:inline">Ajukan Janji Temu</span>
@@ -355,6 +422,8 @@ export default function BookingSection({
           <button
             type="button"
             role="tab"
+            id="tab-booking-tracker"
+            aria-controls="panel-booking-tracker"
             aria-selected={activeTab === 'tracker'}
             onClick={() => handleTabChange('tracker')}
             className={`group relative flex items-center justify-center gap-1.5 sm:gap-2 px-2 min-[360px]:px-2.5 py-1.5 sm:px-4 sm:py-2 rounded-lg text-[11px] min-[360px]:text-xs sm:text-sm font-semibold transition-all duration-200 cursor-pointer border text-center select-none ${
@@ -363,7 +432,7 @@ export default function BookingSection({
                 : 'border-transparent text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] hover:bg-[var(--color-surface)]/70 hover:shadow-2xs active:scale-[0.98]'
             }`}
           >
-            <Search className="w-4 h-4 text-[var(--color-accent)] shrink-0" />
+            <Search className="w-4 h-4 text-[var(--color-accent)] shrink-0" aria-hidden="true" />
             <span className="truncate">
               <span className="inline sm:hidden">Lacak Status</span>
               <span className="hidden sm:inline">Lacak Status Sesi</span>
@@ -394,7 +463,13 @@ export default function BookingSection({
 
       {/* Main Unified Card Body with Smooth Tab Content Transition */}
       <div className="p-4 sm:p-8 md:p-10">
-        <div key={activeTab} className="tab-content-enter">
+        <div
+          key={activeTab}
+          role="tabpanel"
+          id={`panel-booking-${activeTab}`}
+          aria-labelledby={`tab-booking-${activeTab}`}
+          className="tab-content-enter"
+        >
           {activeTab === 'tracker' ? (
             <BookingTracker
               initialCode={trackCode}
@@ -447,6 +522,8 @@ export default function BookingSection({
                 form={form}
                 formId={formId}
                 loading={loading}
+                isCoolingDown={isCoolingDown}
+                cooldownSeconds={cooldownSeconds}
                 onChange={handleChange}
               />
             </div>

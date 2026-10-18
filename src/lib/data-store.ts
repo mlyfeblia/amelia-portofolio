@@ -1151,7 +1151,7 @@ export async function updateCurhat(
 
       if (typeof options.answer === 'string') {
         const cleanAnswer = options.answer.trim();
-        updateData.answer = cleanAnswer;
+        updateData.answer = cleanAnswer.length > 0 ? cleanAnswer : null;
         updateData.isAnswered = cleanAnswer.length > 0;
         updateData.answeredAt = cleanAnswer.length > 0 ? new Date().toISOString() : null;
       }
@@ -1187,7 +1187,7 @@ export async function updateCurhat(
   if (idx !== -1) {
     if (typeof options.answer === 'string') {
       const cleanAnswer = options.answer.trim();
-      fallbackCurhat[idx].answer = cleanAnswer;
+      fallbackCurhat[idx].answer = cleanAnswer.length > 0 ? cleanAnswer : undefined;
       fallbackCurhat[idx].isAnswered = cleanAnswer.length > 0;
       fallbackCurhat[idx].answeredAt = cleanAnswer.length > 0 ? new Date().toISOString() : undefined;
     }
@@ -1247,8 +1247,8 @@ export async function getArticles(onlyPublished = false): Promise<Article[]> {
   if (isDatabaseConfigured && db) {
     try {
       const rows = onlyPublished
-        ? await db.select().from(articles).where(eq(articles.isPublished, true)).orderBy(desc(articles.id))
-        : await db.select().from(articles).orderBy(desc(articles.id));
+        ? await db.select().from(articles).where(eq(articles.isPublished, true)).orderBy(desc(articles.publishedAt))
+        : await db.select().from(articles).orderBy(desc(articles.publishedAt));
 
       return rows.map((r) => ({
         ...r,
@@ -1267,7 +1267,9 @@ export async function getArticles(onlyPublished = false): Promise<Article[]> {
   const list = onlyPublished
     ? fallbackArticles.filter((a) => a.isPublished !== false)
     : fallbackArticles;
-  return list.map((a) => ({ ...a, views: a.views ?? 0, coverImage: a.coverImage || undefined }));
+  return list
+    .map((a) => ({ ...a, views: a.views ?? 0, coverImage: a.coverImage || undefined }))
+    .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
 }
 
 export async function getArticleBySlug(slug: string, onlyPublished = false): Promise<Article | null> {

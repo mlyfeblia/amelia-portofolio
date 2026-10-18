@@ -6,14 +6,17 @@ import {
   Search, 
   Clock, 
   HeartHandshake,
-  X
+  X,
+  RotateCcw
 } from 'lucide-react';
 import { AnonymousMessage, CURHAT_CATEGORIES } from '@/types';
 import { parseIndonesianDate } from '@/lib/utils';
 import { SkeletonCurhatCard } from '@/components/ui/Skeleton';
 import { PaginationBar } from '@/components/ui/PaginationBar';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/Tabs';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { useSessionSeed, seededShuffle } from '@/lib/seeded-random';
+import { scrollContainerIntoViewIfAbove } from '@/lib/dom-utils';
 
 const ITEMS_PER_PAGE = 5;
 
@@ -145,6 +148,7 @@ export function CurhatWall({ messages, loading = false }: CurhatWallProps) {
     setActiveTab(cat);
     setCurrentPage(1);
     syncParams(cat, searchQuery, 1);
+    scrollContainerIntoViewIfAbove('curhat-wall-container', 90);
   };
 
   const handleSearchChange = (val: string) => {
@@ -157,9 +161,7 @@ export function CurhatWall({ messages, loading = false }: CurhatWallProps) {
     if (newPage < 1 || newPage > totalPages) return;
     setCurrentPage(newPage);
     syncParams(activeTab, searchQuery, newPage);
-    if (wallTopRef.current) {
-      wallTopRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
+    scrollContainerIntoViewIfAbove('curhat-wall-container', 90);
   };
 
   return (
@@ -234,6 +236,57 @@ export function CurhatWall({ messages, loading = false }: CurhatWallProps) {
             </TabsList>
           </Tabs>
         </div>
+
+        {/* Active Filter Indicator & Reset */}
+        {(searchQuery.trim() || activeTab !== 'Semua') && (
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-2 px-1 text-xs text-[var(--color-ink-muted)]">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span>Menampilkan:</span>
+              {activeTab !== 'Semua' && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[var(--color-paper-muted)] text-[var(--color-ink)] font-medium border border-[var(--color-paper-border)]">
+                  Kategori: {activeTab}
+                  <button
+                    type="button"
+                    onClick={() => handleTabChange('Semua')}
+                    className="hover:text-[var(--color-ink-soft)] cursor-pointer"
+                    title="Hapus filter kategori"
+                    aria-label="Hapus filter kategori"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              )}
+              {searchQuery.trim() && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[var(--color-paper-muted)] text-[var(--color-ink)] font-medium border border-[var(--color-paper-border)]">
+                  &ldquo;{searchQuery.trim()}&rdquo;
+                  <button
+                    type="button"
+                    onClick={() => handleSearchChange('')}
+                    className="hover:text-[var(--color-ink-soft)] cursor-pointer"
+                    title="Hapus kata kunci pencarian"
+                    aria-label="Hapus kata kunci pencarian"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setActiveTab('Semua');
+                setSearchQuery('');
+                setCurrentPage(1);
+                syncParams('Semua', '', 1);
+              }}
+              className="text-[11px] font-semibold text-[var(--color-accent)] hover:underline cursor-pointer inline-flex items-center gap-1"
+              title="Reset pencarian dan kategori ke Semua"
+            >
+              <RotateCcw className="w-3 h-3" />
+              <span>Reset Semua Filter</span>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* List of Messages / Skeletons / Empty State */}
@@ -250,42 +303,29 @@ export function CurhatWall({ messages, loading = false }: CurhatWallProps) {
             <SkeletonCurhatCard />
           </div>
         ) : filteredMessages.length === 0 ? (
-          <div className="p-8 sm:p-12 text-center border border-[var(--color-paper-border)] rounded-2xl bg-[var(--color-surface)] space-y-4 tab-content-enter shadow-2xs">
-            <div className="w-14 h-14 rounded-2xl bg-[var(--color-accent-soft)] text-[var(--color-accent)] mx-auto flex items-center justify-center shadow-xs">
-              <MessageCircle className="w-7 h-7" aria-hidden="true" />
-            </div>
-            <div className="space-y-1.5 max-w-md mx-auto">
-              <h3 className="text-sm sm:text-base font-semibold text-[var(--color-ink)]">
-                {searchQuery ? 'Cerita Tidak Ditemukan' : 'Belum Ada Curhat di Bagian Ini'}
-              </h3>
-              <p className="text-xs sm:text-sm text-[var(--color-ink-muted)] leading-relaxed">
-                {searchQuery ? (
-                  <>
-                    Tidak ada cerita yang cocok dengan kata kunci &ldquo;<strong className="text-[var(--color-ink)]">{searchQuery}</strong>&rdquo;
-                    {activeTab !== 'Semua' && <> pada kategori <strong>{activeTab}</strong></>}. Punya keresahan yang sama? Kamu bisa jadi orang pertama yang mencurahkan isi hati.
-                  </>
-                ) : (
-                  'Jadilah orang pertama yang berbagi unek-unek di kategori ini secara anonim tanpa perlu login.'
-                )}
-              </p>
-            </div>
-            <div className="pt-2 flex flex-wrap items-center justify-center gap-2">
-              {searchQuery && (
-                <button
-                  type="button"
-                  onClick={() => handleSearchChange('')}
-                  className="btn-secondary btn-interactive text-xs py-1.5 px-3.5 inline-flex items-center gap-1.5 cursor-pointer"
-                >
-                  Hapus Pencarian
-                </button>
-              )}
+          <EmptyState
+            icon={<MessageCircle className="w-6 h-6 stroke-[1.75]" />}
+            title={searchQuery ? 'Cerita Tidak Ditemukan' : 'Belum Ada Curhat di Bagian Ini'}
+            description={
+              searchQuery ? (
+                <>
+                  Tidak ada cerita yang cocok dengan kata kunci &ldquo;<strong className="text-[var(--color-ink)]">{searchQuery}</strong>&rdquo;
+                  {activeTab !== 'Semua' && <> pada kategori <strong>{activeTab}</strong></>}. Punya keresahan yang sama? Kamu bisa jadi yang pertama mencurahkan isi hati.
+                </>
+              ) : (
+                'Jadilah orang pertama yang berbagi unek-unek di kategori ini secara anonim, aman, dan tanpa perlu login.'
+              )
+            }
+            action={
               <a
                 href="#curhat-form"
-                className="btn-primary btn-interactive text-xs py-1.5 px-3.5 inline-flex items-center gap-1.5 cursor-pointer shadow-xs"
+                className="btn-primary btn-interactive text-xs py-2 px-4.5 inline-flex items-center gap-1.5 cursor-pointer shadow-xs"
               >
-                Tulis Curhat Baru
+                <span>Tulis Curhat Baru</span>
               </a>
-              {(activeTab !== 'Semua' || searchQuery) && (
+            }
+            secondaryAction={
+              (activeTab !== 'Semua' || searchQuery) ? (
                 <button
                   type="button"
                   onClick={() => {
@@ -293,14 +333,15 @@ export function CurhatWall({ messages, loading = false }: CurhatWallProps) {
                     setSearchQuery('');
                     setCurrentPage(1);
                     syncParams('Semua', '', 1);
+                    scrollContainerIntoViewIfAbove('curhat-wall-container', 90);
                   }}
-                  className="btn-secondary btn-interactive text-xs py-1.5 px-3.5 inline-flex items-center gap-1.5 cursor-pointer"
+                  className="btn-secondary btn-interactive text-xs py-2 px-4 inline-flex items-center gap-1.5 cursor-pointer"
                 >
-                  Tampilkan Semua
+                  <span>Tampilkan Semua Kategori</span>
                 </button>
-              )}
-            </div>
-          </div>
+              ) : undefined
+            }
+          />
         ) : (
           <div key={`${activeTab}-${safePage}`} className="space-y-4 pagination-slide-enter">
             {paginatedMessages.map((item) => (

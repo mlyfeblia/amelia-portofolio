@@ -19,6 +19,7 @@ import {
   Compass,
   Users,
 } from 'lucide-react';
+import { copyToClipboard } from '@/lib/clipboard';
 import {
   useDeviceAssessments,
   deleteDeviceAssessment,
@@ -27,6 +28,7 @@ import {
 import dynamic from 'next/dynamic';
 import { getAssessmentWhatsAppUrl } from '@/lib/whatsapp';
 import type { DimensionKey } from '@/data/assessment-data';
+import { EmptyState } from '@/components/ui/EmptyState';
 
 const AssessmentDeleteModal = dynamic(
   () => import('./AssessmentDeleteModal').then((m) => m.AssessmentDeleteModal),
@@ -74,42 +76,29 @@ export function AssessmentHistory({ onStartNew }: AssessmentHistoryProps) {
       `*Rincian Dimensi:*\n${dimSummary}\n\n` +
       `Refleksi mandiri via amelia-portofolio.`;
 
-    try {
-      await navigator.clipboard.writeText(textToCopy);
+    const success = await copyToClipboard(textToCopy);
+    if (success) {
       setCopiedId(record.id);
       setTimeout(() => setCopiedId(null), 2500);
-    } catch {
-      // Fallback
     }
   };
 
   if (records.length === 0) {
     return (
-      <div className="py-12 sm:py-16 text-center space-y-5 tab-content-enter">
-        <div className="w-16 h-16 rounded-3xl bg-[var(--color-paper)] border border-[var(--color-paper-border)] mx-auto flex items-center justify-center text-[var(--color-accent)] shadow-2xs">
-          <HeartHandshake className="w-8 h-8" aria-hidden="true" />
-        </div>
-        <div className="max-w-md mx-auto space-y-2">
-          <h3
-            className="text-xl sm:text-2xl font-medium text-[var(--color-ink)]"
-            style={{ fontFamily: 'var(--font-display)' }}
-          >
-            Belum Ada Riwayat di Perangkat Ini
-          </h3>
-          <p className="text-xs sm:text-sm text-[var(--color-ink-muted)] leading-relaxed">
-            Setelah kamu menyelesaikan asesmen kesejahteraan jiwa, rekaman evaluasi 4 dimensi akan tersimpan otomatis dan privat di perangkat ini buat bantu kamu memantau perkembangan batin secara berkala.
-          </p>
-        </div>
-        <div className="pt-2">
+      <EmptyState
+        icon={<HeartHandshake className="w-7 h-7 sm:w-8 sm:h-8 stroke-[1.75]" />}
+        title="Belum Ada Riwayat di Perangkat Ini"
+        description="Setelah kamu menyelesaikan asesmen kesejahteraan jiwa, rekaman evaluasi 4 dimensi akan tersimpan otomatis dan privat di perangkat ini untuk memantau perkembangan batinmu secara berkala."
+        action={
           <button
             type="button"
             onClick={onStartNew}
             className="btn-primary btn-interactive text-xs sm:text-sm py-2.5 px-6 rounded-xl cursor-pointer"
           >
-            Mulai Asesmen Mandiri Sekarang
+            <span>Mulai Asesmen Mandiri Sekarang</span>
           </button>
-        </div>
-      </div>
+        }
+      />
     );
   }
 

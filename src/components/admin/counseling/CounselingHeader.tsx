@@ -28,8 +28,16 @@ export function CounselingHeader({
         >
           Kelola Ruang Curhat Anonim
         </h1>
-        <p className="text-xs sm:text-sm text-[var(--color-ink-muted)] mt-1">
-          Total {totalCount} pesan ({unansweredCount} butuh tanggapan &bull; {answeredCount} terjawab).
+        <p className="text-xs sm:text-sm text-[var(--color-ink-muted)] mt-1 flex items-center gap-1.5 flex-wrap">
+          {loading && totalCount === 0 ? (
+            <span className="inline-flex items-center gap-1 text-[var(--color-ink-soft)]">
+              <span>Memuat pesan curhat anonim...</span>
+            </span>
+          ) : (
+            <span>
+              Total {totalCount} pesan ({unansweredCount} butuh tanggapan &bull; {answeredCount} terjawab)
+            </span>
+          )}
         </p>
       </div>
 

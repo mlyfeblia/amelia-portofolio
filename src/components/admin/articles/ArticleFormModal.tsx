@@ -33,6 +33,7 @@ import {
 import { ArticleCoverPicker } from './form/ArticleCoverPicker';
 import { ArticleEditorToolbar } from './form/ArticleEditorToolbar';
 import { ArticlePreviewTab } from './form/ArticlePreviewTab';
+import { useUnsavedChangesWarning } from '@/lib/use-unsaved-changes';
 
 function getCuratedImageForCategory(category: string): string {
   const direct = CURATED_ARTICLE_IMAGES.find(
@@ -167,6 +168,17 @@ function ArticleFormModalContent({
 
   const [lastSavedTime, setLastSavedTime] = useState<string | null>(null);
   const isRestoredRef = useRef(false);
+
+  const isDirty = Boolean(
+    formData.title.trim() ||
+    formData.content.trim() ||
+    formData.excerpt.trim()
+  );
+
+  const { confirmDiscard } = useUnsavedChangesWarning(
+    isDirty && !saveSuccess,
+    'Draf artikel Anda memiliki perubahan yang belum disimpan. Yakin ingin menutup editor?'
+  );
 
   // Restore saved draft safely on mount post-hydration
   useEffect(() => {
@@ -567,7 +579,7 @@ function ArticleFormModalContent({
         } catch {}
         setSaveSuccess(true);
         setTimeout(() => {
-          onSuccess({ ...initialArticle, ...payload, isPublished: isPublish }, 'edit');
+          onSuccess(data.data || { ...initialArticle, ...payload, isPublished: isPublish }, 'edit');
           onClose();
         }, 600);
       }
@@ -668,7 +680,7 @@ function ArticleFormModalContent({
 
             {/* Close Button */}
             <button
-              onClick={onClose}
+              onClick={() => confirmDiscard(onClose)}
               type="button"
               className="btn-interactive p-1.5 sm:p-2 rounded-xl text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] hover:bg-[var(--color-paper)] transition-colors cursor-pointer"
               aria-label="Tutup formulir"
@@ -948,11 +960,13 @@ export function ArticleFormModal({
   onSuccess,
 }: ArticleFormModalProps) {
   const mounted = useMounted();
+  const windowRef = React.useRef<HTMLDivElement>(null);
   const { isRendered, isExiting, backdropClass, windowClass } = useModalAnimation({
     isOpen,
     onClose,
     closeOnEscape: true,
     lockScroll: true,
+    containerRef: windowRef,
   });
 
   if (!mounted || !isRendered) return null;
@@ -974,6 +988,7 @@ export function ArticleFormModal({
       />
 
       <div
+        ref={windowRef}
         className={cn(
           'relative z-10 w-full sm:max-w-4xl h-full sm:h-[90vh] flex flex-col pointer-events-auto my-auto select-text modal-window-sheet-mobile',
           windowClass

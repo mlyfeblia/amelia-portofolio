@@ -7,6 +7,8 @@ import { useToast } from '@/context/ToastContext';
 import { BookingHeader } from '@/components/admin/bookings/BookingHeader';
 import { BookingFilters } from '@/components/admin/bookings/BookingFilters';
 import { BookingList } from '@/components/admin/bookings/BookingList';
+import { adminCache, useAdminRevalidate } from '@/lib/admin-cache';
+import { scrollContainerIntoViewIfAbove } from '@/lib/dom-utils';
 
 const BookingDeleteModal = dynamic(
   () => import('@/components/admin/bookings/BookingDeleteModal').then((m) => m.BookingDeleteModal),
@@ -29,8 +31,8 @@ const STATUS_PRIORITY: Record<string, number> = {
 
 export function AdminBookingsClient() {
   const { toast } = useToast();
-  const [bookings, setBookings] = useState<Booking[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [bookings, setBookings] = useState<Booking[]>(() => adminCache.getBookings() || []);
+  const [loading, setLoading] = useState(() => !adminCache.getBookings());
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -101,21 +103,25 @@ export function AdminBookingsClient() {
     setSearch(val);
     setCurrentPage(1);
     syncFilterParams(statusFilter, categoryFilter, dateFilter, val);
+    scrollContainerIntoViewIfAbove('admin-bookings-list-container');
   };
   const handleStatusChange = (val: BookingStatus | 'semua') => {
     setStatusFilter(val);
     setCurrentPage(1);
     syncFilterParams(val, categoryFilter, dateFilter, search);
+    scrollContainerIntoViewIfAbove('admin-bookings-list-container');
   };
   const handleCategoryChange = (val: string) => {
     setCategoryFilter(val);
     setCurrentPage(1);
     syncFilterParams(statusFilter, val, dateFilter, search);
+    scrollContainerIntoViewIfAbove('admin-bookings-list-container');
   };
   const handleDateChange = (val: string) => {
     setDateFilter(val);
     setCurrentPage(1);
     syncFilterParams(statusFilter, categoryFilter, val, search);
+    scrollContainerIntoViewIfAbove('admin-bookings-list-container');
   };
 
   // Status updating
@@ -125,41 +131,38 @@ export function AdminBookingsClient() {
   const [deleteTarget, setDeleteTarget] = useState<Booking | null>(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 
-  const loadBookings = useCallback(async () => {
-    setLoading(true);
+  const loadBookings = useCallback(async (signalArg?: unknown) => {
+    const signal = signalArg instanceof AbortSignal ? signalArg : undefined;
+    const cached = adminCache.getBookings();
+    if (!cached || cached.length === 0) {
+      setLoading(true);
+    }
     try {
-      const res = await fetch('/api/bookings');
+      const res = await fetch('/api/bookings', { signal });
       const data = await res.json();
-      if (data.success) {
+      if (data.success && Array.isArray(data.data)) {
         setBookings(data.data);
+        adminCache.setBookings(data.data);
       }
-    } catch (e) {
-      console.error('Failed to load bookings:', e);
+    } catch (e: unknown) {
+      if ((e as Error)?.name !== 'AbortError') {
+        console.error('Failed to load bookings:', e);
+      }
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    let ignore = false;
-    fetch('/api/bookings')
-      .then((res) => res.json())
-      .then((data) => {
-        if (!ignore && data.success) {
-          setBookings(data.data);
-        }
-      })
-      .catch((e) => {
-        console.error('Failed to load bookings:', e);
-      })
-      .finally(() => {
-        if (!ignore) setLoading(false);
-      });
-
+    const controller = new AbortController();
+    loadBookings(controller.signal);
     return () => {
-      ignore = true;
+      controller.abort();
     };
-  }, []);
+  }, [loadBookings]);
+
+  // Automatic silent background revalidation on tab re-entry and cross-tab sync
+  useAdminRevalidate('bookings', loadBookings);
 
   const handleUpdateStatus = async (id: string, newStatus: BookingStatus) => {
     const target = bookings.find((b) => b.id === id);
@@ -172,9 +175,11 @@ export function AdminBookingsClient() {
       });
       const data = await res.json();
       if (data.success) {
-        setBookings((prev) =>
-          prev.map((b) => (b.id === id ? { ...b, status: newStatus } : b))
-        );
+        setBookings((prev) => {
+          const next = prev.map((b) => (b.id === id ? { ...b, status: newStatus } : b));
+          adminCache.setBookings(next);
+          return next;
+        });
         if (newStatus === 'terkonfirmasi') {
           toast.success(`Janji temu konseli ${target?.name || ''} berhasil dikonfirmasi.`);
         } else if (newStatus === 'selesai') {
@@ -198,7 +203,11 @@ export function AdminBookingsClient() {
       const res = await fetch(`/api/bookings/${booking.id}`, { method: 'DELETE' });
       const data = await res.json();
       if (data.success) {
-        setBookings((prev) => prev.filter((b) => b.id !== booking.id));
+        setBookings((prev) => {
+          const next = prev.filter((b) => b.id !== booking.id);
+          adminCache.setBookings(next);
+          return next;
+        });
         setDeleteModalOpen(false);
         setTimeout(() => setDeleteTarget(null), 300);
         toast.info(`Janji temu ${booking.name} berhasil dihapus.`);
@@ -299,12 +308,19 @@ export function AdminBookingsClient() {
   }, [bookings, statusFilter, categoryFilter, dateFilter, search]);
 
   const handleResetFilters = () => {
+    try {
+      sessionStorage.removeItem('admin_bookings_status');
+      sessionStorage.removeItem('admin_bookings_topik');
+      sessionStorage.removeItem('admin_bookings_tgl');
+      sessionStorage.removeItem('admin_bookings_q');
+      window.history.replaceState({}, '', window.location.pathname);
+    } catch {}
     setSearch('');
     setStatusFilter('semua');
     setCategoryFilter('Semua Topik');
     setDateFilter('');
     setCurrentPage(1);
-    syncFilterParams('semua', 'Semua Topik', '', '');
+    scrollContainerIntoViewIfAbove('admin-bookings-list-container');
   };
 
   const hasActiveFilters = Boolean(
@@ -346,6 +362,8 @@ export function AdminBookingsClient() {
         categories={CATEGORIES}
         statusCounts={statusCounts}
         totalCount={bookings.length}
+        hasActiveFilters={hasActiveFilters}
+        onResetFilters={handleResetFilters}
       />
 
       <BookingList

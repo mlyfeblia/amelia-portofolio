@@ -5,6 +5,7 @@ import {
   NetworkOnly,
   CacheFirst,
   NetworkFirst,
+  StaleWhileRevalidate,
   ExpirationPlugin,
 } from 'serwist';
 
@@ -28,15 +29,17 @@ const serwist = new Serwist({
       matcher: ({ url }) => url.pathname.startsWith('/api/') || url.pathname.startsWith('/admin'),
       handler: new NetworkOnly(),
     },
-    // 2. Offline reading for articles: NetworkFirst (fresh on network, available offline from cache)
+    // 2. Offline reading for articles & public pages: NetworkFirst (fresh on network, cached for offline access)
     {
       matcher: ({ url, request }) =>
-        request.destination === 'document' && url.pathname.startsWith('/articles'),
+        request.destination === 'document' &&
+        !url.pathname.startsWith('/api') &&
+        !url.pathname.startsWith('/admin'),
       handler: new NetworkFirst({
-        cacheName: 'amelia-articles-cache',
+        cacheName: 'amelia-pages-cache',
         plugins: [
           new ExpirationPlugin({
-            maxEntries: 32,
+            maxEntries: 48,
             maxAgeSeconds: 7 * 24 * 60 * 60, // 7 days
             maxAgeFrom: 'last-used',
           }),
@@ -44,7 +47,21 @@ const serwist = new Serwist({
         networkTimeoutSeconds: 3,
       }),
     },
-    // 3. Article cover images & curated assets (CacheFirst with 30-day eviction)
+    // 3. Next.js image optimizer (StaleWhileRevalidate with 30-day eviction)
+    {
+      matcher: ({ url }) => url.pathname.startsWith('/_next/image'),
+      handler: new StaleWhileRevalidate({
+        cacheName: 'amelia-optimized-images',
+        plugins: [
+          new ExpirationPlugin({
+            maxEntries: 64,
+            maxAgeSeconds: 30 * 24 * 60 * 60, // 30 days
+            maxAgeFrom: 'last-used',
+          }),
+        ],
+      }),
+    },
+    // 4. Article cover images & curated assets (CacheFirst with 30-day eviction)
     {
       matcher: ({ url }) => url.pathname.startsWith('/images/articles/'),
       handler: new CacheFirst({
@@ -58,7 +75,7 @@ const serwist = new Serwist({
         ],
       }),
     },
-    // 4. Static images & favicons (CacheFirst with 30-day eviction)
+    // 5. Static images & favicons (CacheFirst with 30-day eviction)
     {
       matcher: ({ url }) =>
         /\.(?:png|jpg|jpeg|svg|webp|avif|ico)$/i.test(url.pathname) &&

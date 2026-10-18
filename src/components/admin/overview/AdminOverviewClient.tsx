@@ -7,59 +7,62 @@ import { OverviewMetrics } from '@/components/admin/overview/OverviewMetrics';
 import { OverviewRecentBookings } from '@/components/admin/overview/OverviewRecentBookings';
 import { OverviewPendingCurhat } from '@/components/admin/overview/OverviewPendingCurhat';
 
-export function AdminOverviewClient() {
-  const [bookings, setBookings] = useState<Booking[]>([]);
-  const [curhatList, setCurhatList] = useState<AnonymousMessage[]>([]);
-  const [articlesCount, setArticlesCount] = useState<number>(0);
-  const [loading, setLoading] = useState(true);
+import { adminCache, useAdminRevalidate } from '@/lib/admin-cache';
 
-  const loadData = useCallback(async () => {
-    setLoading(true);
+export function AdminOverviewClient() {
+  const [bookings, setBookings] = useState<Booking[]>(() => adminCache.getBookings() || []);
+  const [curhatList, setCurhatList] = useState<AnonymousMessage[]>(() => adminCache.getCurhat() || []);
+  const [articlesCount, setArticlesCount] = useState<number>(() => adminCache.getArticles()?.length || 0);
+  const [loading, setLoading] = useState(() => !adminCache.getBookings() && !adminCache.getCurhat());
+
+  const loadData = useCallback(async (signalArg?: unknown) => {
+    const signal = signalArg instanceof AbortSignal ? signalArg : undefined;
+    const hasCached = Boolean(adminCache.getBookings() || adminCache.getCurhat());
+    if (!hasCached) {
+      setLoading(true);
+    }
     try {
       const [resB, resC, resA] = await Promise.all([
-        fetch('/api/bookings'),
-        fetch('/api/curhat'),
-        fetch('/api/articles'),
+        fetch('/api/bookings', { signal }),
+        fetch('/api/curhat', { signal }),
+        fetch('/api/articles', { signal }),
       ]);
       const dataB = await resB.json();
       const dataC = await resC.json();
       const dataA = await resA.json();
 
-      if (dataB.success) setBookings(dataB.data);
-      if (dataC.success) setCurhatList(dataC.data);
-      if (dataA.success) setArticlesCount(dataA.data.length);
-    } catch (e) {
-      console.error('Error fetching admin data:', e);
+      if (dataB.success && Array.isArray(dataB.data)) {
+        setBookings(dataB.data);
+        adminCache.setBookings(dataB.data);
+      }
+      if (dataC.success && Array.isArray(dataC.data)) {
+        setCurhatList(dataC.data);
+        adminCache.setCurhat(dataC.data);
+      }
+      if (dataA.success && Array.isArray(dataA.data)) {
+        setArticlesCount(dataA.data.length);
+        adminCache.setArticles(dataA.data);
+      }
+    } catch (e: unknown) {
+      if ((e as Error)?.name !== 'AbortError') {
+        console.error('Error fetching admin data:', e);
+      }
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    let ignore = false;
-    Promise.all([
-      fetch('/api/bookings').then((r) => r.json()),
-      fetch('/api/curhat').then((r) => r.json()),
-      fetch('/api/articles').then((r) => r.json()),
-    ])
-      .then(([dataB, dataC, dataA]) => {
-        if (!ignore) {
-          if (dataB.success) setBookings(dataB.data);
-          if (dataC.success) setCurhatList(dataC.data);
-          if (dataA.success) setArticlesCount(dataA.data.length);
-        }
-      })
-      .catch((e) => {
-        console.error('Error fetching admin data:', e);
-      })
-      .finally(() => {
-        if (!ignore) setLoading(false);
-      });
-
+    const controller = new AbortController();
+    loadData(controller.signal);
     return () => {
-      ignore = true;
+      controller.abort();
     };
-  }, []);
+  }, [loadData]);
+
+  // Automatic silent background revalidation on tab re-entry and cross-tab sync
+  useAdminRevalidate('bookings', loadData);
+  useAdminRevalidate('curhat', loadData);
 
   const handleConfirmBooking = async (id: string) => {
     try {
@@ -70,9 +73,11 @@ export function AdminOverviewClient() {
       });
       const data = await res.json();
       if (data.success) {
-        setBookings((prev) =>
-          prev.map((b) => (b.id === id ? { ...b, status: 'terkonfirmasi' } : b))
-        );
+        setBookings((prev) => {
+          const next = prev.map((b) => (b.id === id ? { ...b, status: 'terkonfirmasi' as BookingStatus } : b));
+          adminCache.setBookings(next);
+          return next;
+        });
       }
     } catch (e) {
       console.error('Failed to update booking status', e);

@@ -8,6 +8,7 @@ import { useModalAnimation } from '@/lib/use-modal-animation';
 import { cn } from '@/lib/utils';
 import { ConfirmDecisionModal } from '@/components/ui/ConfirmDecisionModal';
 import { Spinner } from '@/components/ui/Spinner';
+import { useUnsavedChangesWarning } from '@/lib/use-unsaved-changes';
 
 export interface CounselingReplyBoxProps {
   isOpen?: boolean;
@@ -43,12 +44,20 @@ export function CounselingReplyBox({
   const [showSendConfirm, setShowSendConfirm] = useState(false);
   const [lastSavedTime, setLastSavedTime] = useState<string | null>(null);
   const isRestoredRef = useRef(false);
+  const windowRef = useRef<HTMLDivElement>(null);
+
+  const isDirty = replyText.trim() !== (initialText || '').trim() && replyText.trim().length > 0;
+  const { confirmDiscard } = useUnsavedChangesWarning(
+    isDirty && !saving,
+    'Tanggapan curhat yang Anda ketik belum disimpan. Yakin ingin keluar?'
+  );
 
   const { isRendered, isExiting, backdropClass, windowClass } = useModalAnimation({
     isOpen,
-    onClose: onCancel,
+    onClose: () => confirmDiscard(onCancel),
     closeOnEscape: !saving,
     lockScroll: true,
+    containerRef: windowRef,
   });
 
   // Synchronize state when modal is opened or item changes
@@ -104,8 +113,11 @@ export function CounselingReplyBox({
     return () => clearTimeout(timer);
   }, [replyText, storageKey]);
 
+  const isClearingReply = !replyText.trim() && Boolean(initialText);
+  const canSubmit = replyText.trim().length > 0 || isClearingReply;
+
   const handleSave = async () => {
-    if (!replyText.trim()) return;
+    if (!canSubmit) return;
     setSaving(true);
     try {
       await onSave(replyText.trim(), replyPublic, replyLanding);
@@ -139,11 +151,12 @@ export function CounselingReplyBox({
         aria-hidden="true"
         onWheel={(e) => e.preventDefault()}
         onTouchMove={(e) => e.preventDefault()}
-        onClick={onCancel}
+        onClick={() => confirmDiscard(onCancel)}
       />
 
       {/* Unified Modal Dialog Container with Standardized Animation */}
       <div
+        ref={windowRef}
         className={cn(
           'relative z-10 w-full sm:max-w-xl h-full sm:h-auto sm:max-h-[90vh] flex flex-col pointer-events-auto my-auto select-text modal-window-sheet-mobile',
           windowClass
@@ -170,7 +183,7 @@ export function CounselingReplyBox({
 
             <button
               type="button"
-              onClick={onCancel}
+              onClick={() => confirmDiscard(onCancel)}
               className="btn-interactive inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] hover:bg-[var(--color-paper-muted)] cursor-pointer shrink-0 transition-colors"
               aria-label="Tutup modal tanggapan"
             >
@@ -286,7 +299,7 @@ export function CounselingReplyBox({
           {/* Modal Footer Buttons */}
           <div className="flex items-center justify-end gap-2.5 px-4 sm:px-6 py-3.5 border-t border-[var(--color-paper-border)] bg-[var(--color-surface)] shrink-0">
             <button
-              onClick={onCancel}
+              onClick={() => confirmDiscard(onCancel)}
               type="button"
               className="btn-secondary btn-interactive inline-flex items-center justify-center gap-1.5 h-10 px-4 text-xs font-semibold rounded-xl cursor-pointer"
             >
@@ -295,14 +308,22 @@ export function CounselingReplyBox({
             </button>
             <button
               onClick={() => setShowSendConfirm(true)}
-              disabled={saving || !replyText.trim()}
+              disabled={saving || !canSubmit}
               type="button"
-              className="btn-primary btn-interactive inline-flex items-center justify-center gap-2 h-10 px-5 text-xs font-semibold rounded-xl cursor-pointer shadow-xs disabled:opacity-50"
+              className={cn(
+                "btn-interactive inline-flex items-center justify-center gap-2 h-10 px-5 text-xs font-semibold rounded-xl cursor-pointer shadow-xs disabled:opacity-50",
+                isClearingReply ? "bg-red-600 hover:bg-red-700 text-white" : "btn-primary"
+              )}
             >
               {saving ? (
                 <>
                   <Spinner size="xs" variant="white" />
                   <span>Menyimpan...</span>
+                </>
+              ) : isClearingReply ? (
+                <>
+                  <X className="w-3.5 h-3.5 shrink-0" />
+                  <span>Hapus Tanggapan</span>
                 </>
               ) : (
                 <>
@@ -330,15 +351,35 @@ export function CounselingReplyBox({
           setShowSendConfirm(false);
           await handleSave();
         }}
-        title={initialText ? 'Simpan Pembaruan Tanggapan?' : 'Kirim Tanggapan Penguatan?'}
+        title={
+          isClearingReply
+            ? 'Hapus Tanggapan Konseling?'
+            : initialText
+            ? 'Simpan Pembaruan Tanggapan?'
+            : 'Kirim Tanggapan Penguatan?'
+        }
         description={
-          initialText
+          isClearingReply
+            ? 'Tanggapan konselor akan dihapus dan status curhat konseli akan dikembalikan menjadi belum ditanggapi.'
+            : initialText
             ? 'Pembaruan tanggapan konselor akan disimpan dan disinkronkan ke ruang curhat konseli.'
             : 'Tanggapan penguatan ini akan dikirimkan kepada konseli sesuai pengaturan visibilitas yang dipilih.'
         }
-        confirmLabel={initialText ? 'Ya, Simpan Pembaruan' : 'Ya, Kirim Tanggapan'}
-        variant="primary"
-        icon={<Send className="w-5 h-5 text-[var(--color-accent)]" />}
+        confirmLabel={
+          isClearingReply
+            ? 'Ya, Hapus Tanggapan'
+            : initialText
+            ? 'Ya, Simpan Pembaruan'
+            : 'Ya, Kirim Tanggapan'
+        }
+        variant={isClearingReply ? 'danger' : 'primary'}
+        icon={
+          isClearingReply ? (
+            <X className="w-5 h-5 text-red-600" />
+          ) : (
+            <Send className="w-5 h-5 text-[var(--color-accent)]" />
+          )
+        }
         loading={saving}
         itemDetail={
           <div className="space-y-1">
@@ -347,17 +388,26 @@ export function CounselingReplyBox({
                 <span className="font-semibold text-[var(--color-ink)]">Konseli:</span> {itemAlias}
               </div>
             )}
-            <div>
-              <span className="font-semibold text-[var(--color-ink)]">Visibilitas:</span>{' '}
-              {replyPublic ? 'Publik (Dinding Curhat)' : 'Privat'}
-              {replyLanding && replyPublic && ' • Sorotan Beranda Utama'}
-            </div>
-            <div className="line-clamp-2 italic text-[11px] pt-0.5">
-              &ldquo;{replyText.trim()}&rdquo;
-            </div>
-            <div className="text-[10px] text-[var(--color-ink-muted)]">
-              Panjang: {replyText.trim().length} karakter
-            </div>
+            {!isClearingReply && (
+              <>
+                <div>
+                  <span className="font-semibold text-[var(--color-ink)]">Visibilitas:</span>{' '}
+                  {replyPublic ? 'Publik (Dinding Curhat)' : 'Privat'}
+                  {replyLanding && replyPublic && ' • Sorotan Beranda Utama'}
+                </div>
+                <div className="line-clamp-2 italic text-[11px] pt-0.5">
+                  &ldquo;{replyText.trim()}&rdquo;
+                </div>
+                <div className="text-[10px] text-[var(--color-ink-muted)]">
+                  Panjang: {replyText.trim().length} karakter
+                </div>
+              </>
+            )}
+            {isClearingReply && (
+              <div className="text-[11px] text-red-600 font-medium">
+                Catatan: Mengosongkan isi jawaban akan mereset status curhat menjadi Belum Ditanggapi.
+              </div>
+            )}
           </div>
         }
       />

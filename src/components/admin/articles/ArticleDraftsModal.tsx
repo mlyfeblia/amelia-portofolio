@@ -17,6 +17,7 @@ import {
 import { useMounted } from '@/lib/use-mounted';
 import { useModalAnimation } from '@/lib/use-modal-animation';
 import { ConfirmDecisionModal } from '@/components/ui/ConfirmDecisionModal';
+import { EmptyState } from '@/components/ui/EmptyState';
 import {
   ArticleDraftItem,
   useArticleDrafts,
@@ -168,37 +169,50 @@ export function ArticleDraftsModal({
           </div>
         )}
 
-        {/* Draft List or Empty State */}
-        <div className="flex-1 overflow-y-auto max-h-[50vh] space-y-2.5 pr-1 overscroll-contain">
+        {/* Draft List or Empty State with Stable Permanent Scrollbar */}
+        <div className="flex-1 overflow-y-scroll [scrollbar-gutter:stable] max-h-[50vh] space-y-2.5 pr-1 overscroll-contain">
           {drafts.length === 0 ? (
-            /* Calm Empty State */
-            <div className="py-10 px-4 text-center flex flex-col items-center justify-center">
-              <div className="w-14 h-14 rounded-3xl bg-[var(--color-paper)] border border-[var(--color-paper-border)] flex items-center justify-center text-[var(--color-ink-muted)] mb-3 shadow-2xs">
-                <FileEdit className="w-6 h-6" />
-              </div>
-              <h3 className="text-sm font-semibold text-[var(--color-ink)] mb-1">
-                Belum ada draf tersimpan
-              </h3>
-              <p className="text-xs text-[var(--color-ink-muted)] max-w-xs mb-4">
-                Semua artikel yang sedang Anda tulis dan simpan sebagai draf akan tersimpan rapi di sini.
-              </p>
-              <button
-                type="button"
-                onClick={() => {
-                  onNewDraft();
-                  onClose();
-                }}
-                className="btn-interactive inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-[var(--color-accent)] text-white hover:bg-[var(--color-accent-hover)] transition-all cursor-pointer shadow-xs"
-              >
-                <Plus className="w-4 h-4" />
-                <span>Mulai Menulis Draf Pertama</span>
-              </button>
-            </div>
+            /* Standardized Calm Empty State */
+            <EmptyState
+              size="sm"
+              icon={<FileEdit className="w-5 h-5 text-[var(--color-accent)]" />}
+              title="Belum Ada Draf Tersimpan"
+              description="Semua artikel yang sedang Anda susun dan simpan sebagai draf akan tersimpan rapi dan aman di sini."
+              action={
+                <button
+                  type="button"
+                  onClick={() => {
+                    onNewDraft();
+                    onClose();
+                  }}
+                  className="btn-interactive inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-[var(--color-accent)] text-white hover:bg-[var(--color-accent-hover)] transition-all cursor-pointer shadow-xs"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Mulai Menulis Draf Pertama</span>
+                </button>
+              }
+            />
           ) : filteredDrafts.length === 0 ? (
-            /* Filter Empty State */
-            <div className="py-8 text-center text-xs text-[var(--color-ink-muted)]">
-              Tidak ada draf yang cocok dengan kata kunci &quot;{searchQuery}&quot;.
-            </div>
+            /* Standardized Filter Empty State */
+            <EmptyState
+              size="sm"
+              icon={<Search className="w-5 h-5 text-[var(--color-ink-muted)]" />}
+              title="Draf Tidak Ditemukan"
+              description={
+                <>
+                  Tidak ditemukan draf dengan kata kunci &ldquo;<strong className="text-[var(--color-ink)]">{searchQuery}</strong>&rdquo;.
+                </>
+              }
+              action={
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  className="btn-secondary btn-interactive inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold cursor-pointer shadow-xs"
+                >
+                  <span>Tampilkan Semua Draf</span>
+                </button>
+              }
+            />
           ) : (
             /* Draft Cards */
             filteredDrafts.map((draft) => {

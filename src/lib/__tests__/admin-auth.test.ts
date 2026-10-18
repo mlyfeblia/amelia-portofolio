@@ -6,6 +6,7 @@ import {
   getAdminSessionRemainingSeconds,
   ADMIN_SESSION_MAX_AGE_SECONDS,
 } from '../admin-auth';
+import { isValidAdminSessionTokenEdge } from '../edge-admin-auth';
 
 describe('Admin Auth Unit Test Suite', () => {
   describe('verifyPin', () => {
@@ -23,7 +24,7 @@ describe('Admin Auth Unit Test Suite', () => {
     });
   });
 
-  describe('Session Token Lifecycle & Tamper Resistance', () => {
+  describe('Session Token Lifecycle & Tamper Resistance (Node.js crypto)', () => {
     it('generates a valid session token that passes verification', () => {
       const token = generateAdminSessionToken();
       expect(typeof token).toBe('string');
@@ -59,6 +60,35 @@ describe('Admin Auth Unit Test Suite', () => {
       expect(isValidAdminSessionToken(null)).toBe(false);
       expect(isValidAdminSessionToken('admin:onlytwoparts')).toBe(false);
       expect(isValidAdminSessionToken('user:12345:nonce:hmac')).toBe(false);
+    });
+  });
+
+  describe('Session Token Edge Verification (Web Crypto API)', () => {
+    it('verifies node-generated token correctly using edge Web Crypto API', async () => {
+      const token = generateAdminSessionToken();
+      const isValid = await isValidAdminSessionTokenEdge(token);
+      expect(isValid).toBe(true);
+    });
+
+    it('rejects tampered token using edge Web Crypto API', async () => {
+      const validToken = generateAdminSessionToken();
+      const parts = validToken.split(':');
+      const tampered = `admin:${parts[1]}:tamperedNonce:${parts[3]}`;
+      const isValid = await isValidAdminSessionTokenEdge(tampered);
+      expect(isValid).toBe(false);
+    });
+
+    it('rejects expired token using edge Web Crypto API', async () => {
+      const pastTime = Date.now() - 31 * 60 * 1000;
+      const fakeToken = `admin:${pastTime}:fakeNonce:fakeSignature`;
+      const isValid = await isValidAdminSessionTokenEdge(fakeToken);
+      expect(isValid).toBe(false);
+    });
+
+    it('rejects malformed or empty token in edge Web Crypto API', async () => {
+      expect(await isValidAdminSessionTokenEdge('')).toBe(false);
+      expect(await isValidAdminSessionTokenEdge(null)).toBe(false);
+      expect(await isValidAdminSessionTokenEdge('admin:invalid')).toBe(false);
     });
   });
 });

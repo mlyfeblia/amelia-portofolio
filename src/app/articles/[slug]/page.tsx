@@ -17,6 +17,7 @@ import { ArticleCta } from '@/components/articles/ArticleCta';
 import { ArticleShareBar } from '@/components/articles/ArticleShareBar';
 import { ArticleSidebar } from '@/components/articles/ArticleSidebar';
 import { ArticleMobileTopicExplorer } from '@/components/articles/ArticleMobileTopicExplorer';
+import { ArticleReadingProgress } from '@/components/articles/ArticleReadingProgress';
 import { seededShuffle } from '@/lib/prng';
 import { LEGACY_SLUG_REDIRECTS } from '@/lib/article-redirects';
 
@@ -170,6 +171,7 @@ export default async function ArticleDetailPage(props: {
       />
       <div className="min-h-screen flex flex-col">
         <Navbar />
+        <ArticleReadingProgress />
         <main
           id="main-content"
           className="flex-1 page-enter"

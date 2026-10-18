@@ -30,8 +30,16 @@ export function ArticleHeader({
         >
           Kelola Artikel &amp; Publikasi
         </h1>
-        <p className="text-xs sm:text-sm text-[var(--color-ink-muted)] mt-1">
-          Total {totalCount} artikel terbit &bull; Terbuka untuk dibaca publik secara luas.
+        <p className="text-xs sm:text-sm text-[var(--color-ink-muted)] mt-1 flex items-center gap-1.5 flex-wrap">
+          {loading && totalCount === 0 ? (
+            <span className="inline-flex items-center gap-1 text-[var(--color-ink-soft)]">
+              <span>Memuat koleksi artikel...</span>
+            </span>
+          ) : (
+            <span>Total {totalCount} artikel terbit</span>
+          )}
+          <span>&bull;</span>
+          <span>Terbuka untuk dibaca publik secara luas.</span>
         </p>
       </div>
 

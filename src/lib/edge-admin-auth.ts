@@ -18,7 +18,7 @@ function hexToUint8Array(hex: string): Uint8Array {
  */
 export async function isValidAdminSessionTokenEdge(
   token?: string | null,
-  secretKey: string = process.env.ADMIN_AUTH_SECRET || (process.env.NODE_ENV === 'production' ? '' : 'amel-admin-counseling-secret-key-2026')
+  secretKey: string = (process.env.ADMIN_AUTH_SECRET || '').trim() || (process.env.NODE_ENV === 'production' ? '' : 'amel-admin-counseling-secret-key-2026')
 ): Promise<boolean> {
   if (!token) return false;
   const parts = token.split(':');

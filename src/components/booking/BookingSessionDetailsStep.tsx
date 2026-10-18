@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Shield, Send } from 'lucide-react';
+import { Shield, Send, Clock } from 'lucide-react';
 import { Spinner } from '@/components/ui/Spinner';
 import {
   BookingFormState,
@@ -16,6 +16,8 @@ interface BookingSessionDetailsStepProps {
   form: BookingFormState;
   formId: string;
   loading: boolean;
+  isCoolingDown?: boolean;
+  cooldownSeconds?: number;
   onChange: (key: keyof BookingFormState, value: string) => void;
 }
 
@@ -23,6 +25,8 @@ export function BookingSessionDetailsStep({
   form,
   formId,
   loading,
+  isCoolingDown = false,
+  cooldownSeconds = 0,
   onChange,
 }: BookingSessionDetailsStepProps) {
   return (
@@ -35,7 +39,7 @@ export function BookingSessionDetailsStep({
         <label className="block text-xs font-semibold text-[var(--color-ink)] mb-2">
           Format Sesi Konseling <span className="text-[var(--color-error)]" aria-hidden="true">*</span>
         </label>
-        <div className="space-y-2" role="radiogroup">
+        <div className="space-y-2" role="radiogroup" aria-label="Format Sesi Konseling">
           {BOOKING_MODES.map((m) => {
             const Icon = m.icon;
             const active = form.mode === m.id;
@@ -149,13 +153,18 @@ export function BookingSessionDetailsStep({
       <div className="pt-2">
         <button
           type="submit"
-          disabled={loading}
+          disabled={loading || isCoolingDown}
           className="btn-primary btn-interactive w-full text-sm py-2.5 disabled:opacity-60 cursor-pointer disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
           {loading ? (
             <>
               <Spinner size="sm" variant="white" label="Memproses pengajuan janji temu..." />
               <span>Memproses Pengajuan...</span>
+            </>
+          ) : isCoolingDown ? (
+            <>
+              <Clock className="w-4 h-4 text-white" aria-hidden="true" />
+              <span>Tunggu {cooldownSeconds} detik...</span>
             </>
           ) : (
             <>

@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { ArrowLeft, KeyRound, Eye, EyeOff, ShieldAlert } from 'lucide-react';
 import { Spinner } from '@/components/ui/Spinner';
 
+import { adminCache } from '@/lib/admin-cache';
+
 interface AdminAuthContextType {
   isAuthenticated: boolean;
   remainingSeconds: number;
@@ -68,6 +70,7 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
     } catch {
       // ignore
     }
+    adminCache.clearAll();
     setIsAuthenticated(false);
     setRemainingSeconds(0);
     setPin('');

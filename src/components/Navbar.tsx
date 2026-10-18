@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { 
@@ -34,9 +34,11 @@ export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const { isInstalled } = usePwa();
+  const mobileNavRef = useRef<HTMLDivElement>(null);
 
   const { isRendered, isExiting } = useModalAnimation({
     isOpen: open,
+    containerRef: mobileNavRef,
     durationMs: 240,
     lockScroll: false,
   });
@@ -196,16 +198,16 @@ export default function Navbar() {
                   tabIndex={open ? -1 : 0}
                   className="btn-interactive inline-flex items-center justify-center gap-1.5 h-8 md:h-9 px-3.5 md:px-4 text-xs md:text-sm font-semibold rounded-lg text-white bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] shadow-xs hover:shadow-sm whitespace-nowrap select-none cursor-pointer transition-all duration-200 ease-out"
                 >
-                  <Calendar className="w-3.5 h-3.5 shrink-0" />
+                  <Calendar className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
                   <span>Janji Temu</span>
                 </Link>
               </div>
 
-              {/* Mobile toggle button - Desain kotak ramping & proporsional persis versi asli deploy */}
+              {/* Mobile toggle button - Desain kotak ramping & proporsional dengan area sentuh 44x44px */}
               <button
                 type="button"
                 onClick={() => setOpen(!open)}
-                className="group flex md:!hidden relative z-10 w-8 h-8 rounded-lg border border-[var(--color-paper-border)] bg-[var(--color-surface)] text-[var(--color-ink)] hover:border-[var(--color-accent-border)] hover:text-[var(--color-accent)] hover:bg-[var(--color-accent-soft)]/50 active:scale-95 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] items-center justify-center cursor-pointer shrink-0 select-none shadow-2xs"
+                className="group flex md:!hidden relative z-10 w-8 h-8 before:absolute before:-inset-1.5 before:content-[''] rounded-lg border border-[var(--color-paper-border)] bg-[var(--color-surface)] text-[var(--color-ink)] hover:border-[var(--color-accent-border)] hover:text-[var(--color-accent)] hover:bg-[var(--color-accent-soft)]/50 active:scale-95 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] items-center justify-center cursor-pointer shrink-0 select-none shadow-2xs"
                 aria-expanded={open}
                 aria-controls="mobile-nav"
                 aria-label={open ? 'Tutup menu navigasi' : 'Buka menu navigasi'}
@@ -233,6 +235,7 @@ export default function Navbar() {
         {isRendered && (
           <div
             id="mobile-nav"
+            ref={mobileNavRef}
             className={cn(
               'md:hidden absolute top-full left-0 right-0 bg-[var(--color-paper)]/98 backdrop-blur-xl border-b border-[var(--color-paper-border)] rounded-b-2xl sm:rounded-b-3xl shadow-xl px-5 sm:px-8 pt-3 pb-5 sm:pb-6 max-h-[calc(100dvh-4.5rem)] overflow-y-auto overscroll-contain origin-top',
               isExiting ? 'nav-dropdown-exit' : 'nav-dropdown-enter'
@@ -286,7 +289,7 @@ export default function Navbar() {
                 onClick={() => setOpen(false)}
                 className="w-full py-2.5 px-4 rounded-xl bg-[var(--color-accent)] text-white text-xs font-semibold hover:bg-[var(--color-accent-hover)] shadow-xs inline-flex items-center justify-center gap-2 active:scale-[0.98] transition-colors duration-150 select-none cursor-pointer"
               >
-                <Calendar className="w-4 h-4" />
+                <Calendar className="w-4 h-4" aria-hidden="true" />
                 <span>Janji Temu Konseling</span>
               </Link>
 
@@ -298,7 +301,7 @@ export default function Navbar() {
                 }}
                 className="w-full py-2.5 px-4 rounded-xl bg-white border border-[var(--color-paper-border)] text-[var(--color-ink)] text-xs font-medium hover:text-[var(--color-accent)] hover:border-[var(--color-accent-border)] hover:bg-[var(--color-paper-muted)] active:scale-[0.98] transition-colors duration-150 flex items-center justify-center gap-2 select-none cursor-pointer"
               >
-                <Smartphone className="w-4 h-4 text-[var(--color-accent)]" />
+                <Smartphone className="w-4 h-4 text-[var(--color-accent)]" aria-hidden="true" />
                 <span>{isInstalled ? 'Aplikasi Amelia (Terpasang)' : 'Pasang Aplikasi Amelia'}</span>
               </button>
             </div>

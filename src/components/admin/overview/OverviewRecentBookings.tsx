@@ -7,6 +7,7 @@ import { Booking } from '@/types';
 import { getAdminContactWhatsAppUrl } from '@/lib/whatsapp';
 import { SkeletonBookingCard } from '@/components/ui/Skeleton';
 import { Badge } from '@/components/ui/Badge';
+import { EmptyState } from '@/components/ui/EmptyState';
 
 interface OverviewRecentBookingsProps {
   bookings: Booking[];
@@ -50,15 +51,13 @@ export function OverviewRecentBookings({
           <SkeletonBookingCard />
         </div>
       ) : waitingBookings.length === 0 ? (
-        <div className="flex-1 flex flex-col items-center justify-center p-8 sm:p-12 text-center bg-[var(--color-surface)] border border-[var(--color-paper-border)] rounded-2xl text-xs text-[var(--color-ink-muted)] space-y-2 shadow-2xs min-h-[240px]">
-          <CheckCircle2 className="w-7 h-7 sm:w-8 sm:h-8 text-[var(--color-accent)] mx-auto mb-1" />
-          <p className="font-semibold text-sm sm:text-base text-[var(--color-ink)]">
-            Semua janji temu sudah terkonfirmasi!
-          </p>
-          <p className="max-w-xs text-xs sm:text-[13px] leading-relaxed">
-            Tidak ada permohonan baru yang tertunda saat ini.
-          </p>
-        </div>
+        <EmptyState
+          size="sm"
+          icon={<CheckCircle2 className="w-5 h-5 text-[var(--color-accent)]" />}
+          title="Semua Janji Temu Terkonfirmasi"
+          description="Tidak ada permohonan baru yang tertunda saat ini. Semua jadwal telah diproses."
+          className="min-h-[240px] flex-1"
+        />
       ) : (
         <div className="space-y-3">
           {waitingBookings.slice(0, 3).map((item) => (

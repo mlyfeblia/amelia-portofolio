@@ -5,6 +5,7 @@ export interface OfflineMutationItem {
   type: 'booking' | 'curhat';
   endpoint: string;
   payload: Record<string, unknown>;
+  tempCode?: string;
   createdAt: number;
 }
 
@@ -24,7 +25,8 @@ export function getOfflineQueue(): OfflineMutationItem[] {
 export function enqueueOfflineMutation(
   type: 'booking' | 'curhat',
   endpoint: string,
-  payload: Record<string, unknown>
+  payload: Record<string, unknown>,
+  tempCode?: string
 ): void {
   if (typeof window === 'undefined') return;
   try {
@@ -34,6 +36,7 @@ export function enqueueOfflineMutation(
       type,
       endpoint,
       payload,
+      tempCode,
       createdAt: Date.now(),
     };
     queue.push(item);
@@ -66,6 +69,28 @@ export async function processOfflineQueue(): Promise<{ processed: number; failed
 
       if (res.ok) {
         processed++;
+        try {
+          const data = await res.json();
+          if (item.type === 'booking' && data?.success && data?.data) {
+            const b = data.data;
+            const { saveDeviceBooking, removeDeviceBooking } = await import('@/lib/booking-storage');
+            if (item.tempCode) {
+              removeDeviceBooking(item.tempCode);
+            }
+            saveDeviceBooking({
+              code: b.code,
+              name: b.alias || b.name,
+              category: b.category,
+              date: b.date,
+              timeSlot: b.timeSlot,
+            });
+            window.dispatchEvent(
+              new CustomEvent('amelia:offline-booking-confirmed', {
+                detail: { code: b.code, tempCode: item.tempCode },
+              })
+            );
+          }
+        } catch {}
       } else {
         // Jika server menolak karena validasi 400, jangan coba ulang terus-menerus
         if (res.status >= 400 && res.status < 500) {
@@ -83,6 +108,16 @@ export async function processOfflineQueue(): Promise<{ processed: number; failed
   try {
     localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(remaining));
     window.dispatchEvent(new CustomEvent('amelia:offline-queue-updated'));
+    if (processed > 0) {
+      window.dispatchEvent(
+        new CustomEvent('amelia:show-toast', {
+          detail: {
+            type: 'success',
+            message: `Koneksi pulih: ${processed} data offline berhasil disinkronkan ke server.`,
+          },
+        })
+      );
+    }
   } catch {}
 
   return { processed, failed };

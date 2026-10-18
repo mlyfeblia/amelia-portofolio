@@ -66,27 +66,42 @@ export function SkeletonText({
  */
 export function SkeletonBookingCard() {
   return (
-    <div className="p-4 sm:p-5 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-paper-border)] shadow-xs space-y-4 animate-fade-in" aria-hidden="true">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <Skeleton variant="circular" className="w-10 h-10 shrink-0" />
-          <div className="space-y-1.5">
-            <Skeleton variant="rectangular" className="w-32 h-4" />
-            <Skeleton variant="rectangular" className="w-24 h-3" />
-          </div>
+    <div className="p-3 min-[340px]:p-3.5 sm:p-6 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-paper-border)] shadow-xs space-y-3.5 animate-fade-in" aria-hidden="true">
+      {/* Header row: Name on Left, Badge & Delete on Right */}
+      <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-[var(--color-paper-border)]">
+        <div className="space-y-1">
+          <Skeleton variant="rectangular" className="w-36 sm:w-48 h-5 rounded-md" />
+          <Skeleton variant="rectangular" className="w-24 sm:w-32 h-3.5 rounded" />
         </div>
-        <Skeleton variant="rectangular" className="w-24 h-6 rounded-full" />
+        <div className="flex items-center gap-2 shrink-0">
+          <Skeleton variant="rectangular" className="w-24 h-6 rounded-full" />
+          <Skeleton variant="rectangular" className="w-16 h-6 rounded-lg" />
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
-        <Skeleton variant="rectangular" className="h-8 rounded-lg" />
-        <Skeleton variant="rectangular" className="h-8 rounded-lg" />
-        <Skeleton variant="rectangular" className="h-8 rounded-lg" />
+      {/* Details grid: 3 columns on desktop */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="space-y-2">
+          <Skeleton variant="rectangular" className="w-24 h-5 rounded-md" />
+          <Skeleton variant="rectangular" className="w-36 h-4 rounded" />
+        </div>
+        <div className="space-y-2">
+          <Skeleton variant="rectangular" className="w-28 h-4 rounded" />
+          <Skeleton variant="rectangular" className="w-40 h-5 rounded" />
+        </div>
+        <div className="space-y-2">
+          <Skeleton variant="rectangular" className="w-28 h-4 rounded" />
+          <Skeleton variant="rectangular" className="w-36 h-5 rounded" />
+        </div>
       </div>
 
-      <div className="pt-2 border-t border-[var(--color-paper-border)] flex items-center justify-between gap-2">
-        <Skeleton variant="rectangular" className="w-28 h-8 rounded-lg" />
+      {/* Bottom actions: Contact on Left, Status actions on Right */}
+      <div className="pt-2.5 border-t border-[var(--color-paper-border)] flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
         <div className="flex items-center gap-2">
+          <Skeleton variant="rectangular" className="w-24 h-8 rounded-lg" />
+          <Skeleton variant="rectangular" className="w-20 h-8 rounded-lg" />
+        </div>
+        <div className="flex items-center gap-2 justify-start sm:justify-end">
           <Skeleton variant="rectangular" className="w-20 h-8 rounded-lg" />
           <Skeleton variant="rectangular" className="w-20 h-8 rounded-lg" />
         </div>
@@ -100,20 +115,31 @@ export function SkeletonBookingCard() {
  */
 export function SkeletonCurhatCard() {
   return (
-    <div className="p-4 sm:p-5 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-paper-border)] shadow-xs space-y-3.5 animate-fade-in" aria-hidden="true">
-      <div className="flex items-center justify-between gap-2">
+    <div className="p-3.5 sm:p-6 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-paper-border)] shadow-xs space-y-3.5 animate-fade-in" aria-hidden="true">
+      {/* Header: Alias on Left, Action buttons on Right */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-[var(--color-paper-border)]">
         <div className="flex items-center gap-2">
-          <Skeleton variant="circular" className="w-7 h-7" />
-          <Skeleton variant="rectangular" className="w-28 h-4" />
+          <Skeleton variant="rectangular" className="w-28 h-5 rounded-md" />
+          <Skeleton variant="rectangular" className="w-24 h-4 rounded" />
+          <Skeleton variant="rectangular" className="w-32 h-3.5 rounded hidden sm:block" />
         </div>
-        <Skeleton variant="rectangular" className="w-24 h-5 rounded-full" />
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          <Skeleton variant="rectangular" className="w-20 h-7 rounded-lg" />
+          <Skeleton variant="rectangular" className="w-18 h-7 rounded-lg" />
+          <Skeleton variant="rectangular" className="w-16 h-7 rounded-lg" />
+        </div>
       </div>
 
-      <SkeletonText lines={2} />
+      {/* Message Quote Block */}
+      <div className="p-3 sm:p-4 rounded-xl bg-[var(--color-paper)] border border-[var(--color-paper-border)] space-y-2">
+        <Skeleton variant="text" className="w-full h-3.5" />
+        <Skeleton variant="text" className="w-4/5 h-3.5" />
+      </div>
 
+      {/* Footer / Reply Action */}
       <div className="pt-2 border-t border-[var(--color-paper-border)] flex items-center justify-between">
-        <Skeleton variant="rectangular" className="w-32 h-4" />
-        <Skeleton variant="rectangular" className="w-20 h-7 rounded-lg" />
+        <Skeleton variant="rectangular" className="w-32 h-4 rounded" />
+        <Skeleton variant="rectangular" className="w-28 h-8 rounded-lg" />
       </div>
     </div>
   );
@@ -124,23 +150,35 @@ export function SkeletonCurhatCard() {
  */
 export function SkeletonArticleCard() {
   return (
-    <div className="p-4 sm:p-5 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-paper-border)] shadow-xs space-y-3.5 animate-fade-in" aria-hidden="true">
-      <div className="flex items-center justify-between gap-2">
-        <Skeleton variant="rectangular" className="w-28 h-5 rounded-full" />
-        <Skeleton variant="rectangular" className="w-20 h-4" />
+    <div className="p-3.5 sm:p-6 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-paper-border)] shadow-xs space-y-3.5 animate-fade-in" aria-hidden="true">
+      {/* Title & Full-width Description */}
+      <div className="space-y-2">
+        <Skeleton variant="rectangular" className="w-3/4 sm:w-2/3 h-6 rounded-md" />
+        <div className="space-y-1.5 pt-0.5">
+          <Skeleton variant="text" className="w-full h-3.5" />
+          <Skeleton variant="text" className="w-11/12 sm:w-4/5 h-3.5" />
+        </div>
+
+        {/* Metadata info */}
+        <div className="flex items-center gap-2 pt-1">
+          <Skeleton variant="rectangular" className="w-28 h-4 rounded" />
+          <Skeleton variant="rectangular" className="w-16 h-4 rounded" />
+          <Skeleton variant="rectangular" className="w-12 h-4 rounded" />
+        </div>
       </div>
 
-      <Skeleton variant="rectangular" className="w-4/5 h-6" />
-      <SkeletonText lines={2} />
-
-      <div className="pt-2 border-t border-[var(--color-paper-border)] flex items-center justify-between">
-        <div className="flex gap-1.5">
-          <Skeleton variant="rectangular" className="w-14 h-4 rounded-md" />
-          <Skeleton variant="rectangular" className="w-14 h-4 rounded-md" />
+      {/* Footer Row: Tags on Left, Action Buttons on Right */}
+      <div className="pt-3 border-t border-[var(--color-paper-border)] flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
+        <div className="flex items-center gap-1.5">
+          <Skeleton variant="rectangular" className="w-16 h-5 rounded-md" />
+          <Skeleton variant="rectangular" className="w-20 h-5 rounded-md" />
+          <Skeleton variant="rectangular" className="w-16 h-5 rounded-md hidden sm:block" />
         </div>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2 justify-start sm:justify-end">
+          <Skeleton variant="rectangular" className="w-20 h-7 rounded-lg" />
           <Skeleton variant="rectangular" className="w-16 h-7 rounded-lg" />
-          <Skeleton variant="rectangular" className="w-16 h-7 rounded-lg" />
+          <Skeleton variant="rectangular" className="w-14 h-7 rounded-lg" />
+          <Skeleton variant="rectangular" className="w-14 h-7 rounded-lg" />
         </div>
       </div>
     </div>

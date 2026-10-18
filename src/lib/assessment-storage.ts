@@ -138,7 +138,15 @@ export function saveDeviceAssessment(
       localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
       notifySubscribers();
     } catch {
-      // Fallback for private mode or quota
+      // Fallback for private mode or quota exceeded: try trimming to 5 most recent records
+      try {
+        const existing = getDeviceAssessments();
+        const trimmed = [newRecord, ...existing].slice(0, 5);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(trimmed));
+        notifySubscribers();
+      } catch {
+        // Complete fallback if storage is fully disabled/locked
+      }
     }
   }
 

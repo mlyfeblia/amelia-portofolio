@@ -10,7 +10,10 @@ export interface AdminContactEmailParams {
   slot: string;
 }
 
-export function getAdminContactEmailUrl(params: AdminContactEmailParams): string {
+export function getAdminContactEmailContent(params: AdminContactEmailParams): {
+  subject: string;
+  body: string;
+} {
   const subject = `Konfirmasi Jadwal Bimbingan Konseling Amelia [${params.code}]`;
   const body = `Halo ${params.clientName},
 
@@ -34,5 +37,15 @@ Amelia (Amel)
 Bimbingan Konseling Islam - UIN Siber Syekh Nurjati Cirebon
 WhatsApp: +62 822-1044-5785`;
 
+  return { subject, body };
+}
+
+export function getAdminContactEmailUrl(params: AdminContactEmailParams): string {
+  const { subject, body } = getAdminContactEmailContent(params);
   return `mailto:${params.clientEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+}
+
+export function getAdminContactGmailUrl(params: AdminContactEmailParams): string {
+  const { subject, body } = getAdminContactEmailContent(params);
+  return `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(params.clientEmail)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }

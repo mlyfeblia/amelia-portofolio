@@ -6,6 +6,8 @@ import { Article } from '@/types';
 import { ArticleCard } from './ArticleCard';
 import { SkeletonArticleCard } from '@/components/ui/Skeleton';
 import { PaginationBar } from '@/components/ui/PaginationBar';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { scrollContainerIntoViewIfAbove } from '@/lib/dom-utils';
 
 interface ArticleListProps {
   articles: Article[];
@@ -65,86 +67,66 @@ export function ArticleList({
   }
 
   if (articles.length === 0) {
+    if (hasActiveFilters) {
+      const activeFiltersList: { label: string; value: string }[] = [];
+      if (search) activeFiltersList.push({ label: 'Kata Kunci', value: search });
+      if (statusFilter !== 'semua') activeFiltersList.push({ label: 'Status', value: statusFilter === 'published' ? 'Publik' : 'Draf' });
+      if (selectedCategory !== 'Semua') activeFiltersList.push({ label: 'Kategori', value: selectedCategory });
+      if (landingFilter === 'landing') activeFiltersList.push({ label: 'Tampilan', value: 'Hanya di Beranda' });
+      if (dateFilter) activeFiltersList.push({ label: 'Tanggal', value: dateFilter });
+
+      return (
+        <EmptyState
+          icon={<SearchX className="w-6 h-6 stroke-[1.75]" />}
+          title="Tidak Ada Artikel yang Cocok"
+          description="Tidak ditemukan artikel atau draf publikasi yang memenuhi kata kunci dan kriteria filter saat ini."
+          activeFilters={activeFiltersList}
+          action={
+            <button
+              onClick={onCreateNew}
+              type="button"
+              className="btn-primary btn-interactive inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold cursor-pointer shadow-xs"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Tulis Artikel Baru</span>
+            </button>
+          }
+          secondaryAction={
+            onResetFilters ? (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onResetFilters();
+                }}
+                className="btn-secondary btn-interactive inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold cursor-pointer shadow-xs"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Reset Semua Filter &amp; Pencarian</span>
+              </button>
+            ) : undefined
+          }
+        />
+      );
+    }
+
     return (
-      <div className="p-8 sm:p-12 text-center bg-[var(--color-surface)] border border-[var(--color-paper-border)] rounded-2xl text-xs text-[var(--color-ink-muted)] space-y-3 tab-content-enter">
-        {hasActiveFilters ? (
-          <>
-            <div className="w-12 h-12 rounded-full bg-[var(--color-paper-muted)] text-[var(--color-ink-muted)] mx-auto flex items-center justify-center">
-              <SearchX className="w-6 h-6" />
-            </div>
-            <div className="space-y-1">
-              <p className="font-semibold text-sm text-[var(--color-ink)]">
-                Tidak ada artikel yang cocok
-              </p>
-              <p className="max-w-md mx-auto leading-relaxed">
-                {search ? (
-                  <>
-                    Tidak ditemukan artikel untuk kata kunci <span className="font-semibold text-[var(--color-ink)]">&ldquo;{search}&rdquo;</span>.
-                  </>
-                ) : (
-                  'Tidak ada artikel yang memenuhi filter yang sedang aktif.'
-                )}
-                {statusFilter !== 'semua' && (
-                  <span className="block mt-0.5 text-[11px] text-[var(--color-ink-soft)]">
-                    Filter status: &ldquo;{statusFilter === 'published' ? 'Publik' : 'Draf'}&rdquo;
-                  </span>
-                )}
-                {selectedCategory !== 'Semua' && (
-                  <span className="block mt-0.5 text-[11px] text-[var(--color-ink-soft)]">
-                    Filter kategori: &ldquo;{selectedCategory}&rdquo;
-                  </span>
-                )}
-                {landingFilter === 'landing' && (
-                  <span className="block mt-0.5 text-[11px] text-[var(--color-ink-soft)]">
-                    Filter: Hanya di Beranda
-                  </span>
-                )}
-                {dateFilter && (
-                  <span className="block mt-0.5 text-[11px] text-[var(--color-ink-soft)]">
-                    Filter tanggal rilis: &ldquo;{dateFilter}&rdquo;
-                  </span>
-                )}
-              </p>
-            </div>
-            <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
-              {onResetFilters && (
-                <button
-                  type="button"
-                  onClick={onResetFilters}
-                  className="btn-secondary btn-interactive inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold cursor-pointer shadow-xs"
-                >
-                  <RotateCcw className="w-3.5 h-3.5" />
-                  <span>Reset Semua Filter &amp; Pencarian</span>
-                </button>
-              )}
-              <button
-                onClick={onCreateNew}
-                type="button"
-                className="btn-primary btn-interactive inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold cursor-pointer shadow-xs"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>Tulis Artikel Baru</span>
-              </button>
-            </div>
-          </>
-        ) : (
-          <>
-            <BookOpen className="w-8 h-8 text-[var(--color-ink-muted)]/50 mx-auto mb-1" />
-            <p className="font-semibold text-sm text-[var(--color-ink)]">Belum ada artikel yang diterbitkan</p>
-            <p>Mulai bagikan tulisan dan wawasan konseling pertamamu.</p>
-            <div className="pt-2">
-              <button
-                onClick={onCreateNew}
-                type="button"
-                className="btn-primary btn-interactive inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold cursor-pointer shadow-xs"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>Tulis Artikel Sekarang</span>
-              </button>
-            </div>
-          </>
-        )}
-      </div>
+      <EmptyState
+        icon={<BookOpen className="w-6 h-6 stroke-[1.75]" />}
+        title="Belum Ada Artikel yang Diterbitkan"
+        description="Mulai bagikan tulisan reflektif, edukasi bimbingan konseling Islam, atau artikel kesehatan mental pertamamu kepada para konseli dan pembaca umum."
+        action={
+          <button
+            onClick={onCreateNew}
+            type="button"
+            className="btn-primary btn-interactive inline-flex items-center gap-1.5 px-5 py-2.5 text-xs font-semibold cursor-pointer shadow-xs"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Tulis Artikel Sekarang</span>
+          </button>
+        }
+      />
     );
   }
 
@@ -152,13 +134,11 @@ export function ArticleList({
 
   const handlePageChange = (newPage: number) => {
     onPageChange?.(newPage);
-    if (listTopRef.current) {
-      listTopRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
+    scrollContainerIntoViewIfAbove('admin-articles-list-container', 90);
   };
 
   return (
-    <div ref={listTopRef} className="space-y-4 scroll-mt-24">
+    <div ref={listTopRef} id="admin-articles-list-container" className="space-y-4 scroll-mt-24">
       <div key={currentPage} className="grid grid-cols-1 gap-3.5 sm:gap-4 pagination-slide-enter">
         {articles.map((art) => (
           <ArticleCard

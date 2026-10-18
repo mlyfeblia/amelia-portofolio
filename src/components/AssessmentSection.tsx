@@ -14,7 +14,7 @@ import { AssessmentQuiz } from './assessment/AssessmentQuiz';
 import { AssessmentResult } from './assessment/AssessmentResult';
 import { AssessmentHistory } from './assessment/AssessmentHistory';
 import { saveDeviceAssessment, useDeviceAssessments } from '@/lib/assessment-storage';
-
+import { getPreferredScrollBehavior } from '@/lib/dom-utils';
 
 interface AssessmentSectionProps {
   initialTab?: 'quiz' | 'history';
@@ -22,6 +22,7 @@ interface AssessmentSectionProps {
 
 export default function AssessmentSection({ initialTab }: AssessmentSectionProps = {}) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const hasSavedRef = useRef<boolean>(false);
   const [sessionSeed, setSessionSeed] = useState<string>('initial-seed');
   const [questions, setQuestions] = useState<AssessmentQuestion[]>(() => assessmentQuestions.slice(0, 8));
   // Always initialize with SSR-safe defaults based on props
@@ -79,10 +80,26 @@ export default function AssessmentSection({ initialTab }: AssessmentSectionProps
     } catch {}
   };
 
-  // Acak sampling 8 pertanyaan dan pilihan ganda pada setiap sesi baru di sisi client tanpa cascading render
+  // Acak sampling 8 pertanyaan atau pulihkan draf kuis yang belum selesai pasca-rekoneksi/rotasi
   useEffect(() => {
     const frame = requestAnimationFrame(() => {
       try {
+        const rawDraft = sessionStorage.getItem('amelia_quiz_draft_v1');
+        if (rawDraft) {
+          const parsed = JSON.parse(rawDraft);
+          if (
+            parsed &&
+            typeof parsed.step === 'number' &&
+            parsed.answersById &&
+            typeof parsed.sessionSeed === 'string'
+          ) {
+            setSessionSeed(parsed.sessionSeed);
+            setQuestions(sampleAssessmentQuestions(parsed.sessionSeed));
+            setStep(parsed.step);
+            setAnswersById(parsed.answersById);
+            return;
+          }
+        }
         const freshSeed = `${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
         setSessionSeed(freshSeed);
         setQuestions(sampleAssessmentQuestions(freshSeed));
@@ -108,9 +125,10 @@ export default function AssessmentSection({ initialTab }: AssessmentSectionProps
 
   const dimensionScores: DimensionScoreResult[] = done ? computeDimensionScoresById(answersById, questions) : [];
 
-  // Automatically save completed assessment to device history
+  // Automatically save completed assessment to device history (anti-duplicate with hasSavedRef)
   useEffect(() => {
-    if (done && result && answeredValues.length === questions.length) {
+    if (done && result && answeredValues.length === questions.length && !hasSavedRef.current) {
+      hasSavedRef.current = true;
       const scores = computeDimensionScoresById(answersById, questions);
       saveDeviceAssessment({
         totalScore,
@@ -122,6 +140,9 @@ export default function AssessmentSection({ initialTab }: AssessmentSectionProps
         dimensions: scores,
         recs: result.recs,
       });
+      try {
+        sessionStorage.removeItem('amelia_quiz_draft_v1');
+      } catch {}
     }
   }, [done, result, totalScore, maxScore, answeredValues.length, questions, answersById]);
 
@@ -134,10 +155,23 @@ export default function AssessmentSection({ initialTab }: AssessmentSectionProps
       setIsTransitioning(true);
       setDirection('next');
 
-      setAnswersById((prev) => ({
-        ...prev,
+      const nextAnswers = {
+        ...answersById,
         [currentQuestion.id]: score,
-      }));
+      };
+      setAnswersById(nextAnswers);
+
+      const nextStep = Math.min(step + 1, questions.length - 1);
+      try {
+        sessionStorage.setItem(
+          'amelia_quiz_draft_v1',
+          JSON.stringify({
+            step: nextStep,
+            answersById: nextAnswers,
+            sessionSeed,
+          })
+        );
+      } catch {}
 
       // Tactile delay: let user see the selected state before sliding to next question
       setTimeout(() => {
@@ -146,19 +180,19 @@ export default function AssessmentSection({ initialTab }: AssessmentSectionProps
           if (containerRef.current) {
             const rect = containerRef.current.getBoundingClientRect();
             if (rect.top < 0) {
-              containerRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              containerRef.current.scrollIntoView({ behavior: getPreferredScrollBehavior(), block: 'start' });
             }
           }
         } else {
           setDone(true);
           if (containerRef.current) {
-            containerRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            containerRef.current.scrollIntoView({ behavior: getPreferredScrollBehavior(), block: 'start' });
           }
         }
         setIsTransitioning(false);
       }, 190);
     },
-    [step, isTransitioning, questions]
+    [step, isTransitioning, questions, answersById, sessionSeed]
   );
 
   const handlePrev = useCallback(() => {
@@ -169,10 +203,12 @@ export default function AssessmentSection({ initialTab }: AssessmentSectionProps
   }, [step]);
 
   const handleReset = useCallback(() => {
-    const freshSeed = `${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+    hasSavedRef.current = false;
     try {
-      sessionStorage.setItem('amelia_assessment_session_seed', freshSeed);
+      sessionStorage.removeItem('amelia_quiz_draft_v1');
+      sessionStorage.removeItem('amelia_assessment_session_seed');
     } catch {}
+    const freshSeed = `${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
     setSessionSeed(freshSeed);
     setQuestions(sampleAssessmentQuestions(freshSeed));
     setDirection('next');
@@ -202,6 +238,8 @@ export default function AssessmentSection({ initialTab }: AssessmentSectionProps
           <button
             type="button"
             role="tab"
+            id="tab-quiz"
+            aria-controls="panel-quiz"
             aria-selected={activeTab === 'quiz'}
             onClick={() => handleTabChange('quiz')}
             className={`group relative flex items-center justify-center gap-1.5 sm:gap-2 px-2 min-[360px]:px-2.5 py-1.5 sm:px-4 sm:py-2 rounded-lg text-[11px] min-[360px]:text-xs sm:text-sm font-semibold transition-all duration-200 cursor-pointer border text-center select-none ${
@@ -210,13 +248,15 @@ export default function AssessmentSection({ initialTab }: AssessmentSectionProps
                 : 'border-transparent text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] hover:bg-[var(--color-surface)]/70 hover:shadow-2xs active:scale-[0.98]'
             }`}
           >
-            <ClipboardList className="w-4 h-4 text-[var(--color-accent)] shrink-0" />
+            <ClipboardList className="w-4 h-4 text-[var(--color-accent)] shrink-0" aria-hidden="true" />
             <span className="truncate">Mulai Asesmen</span>
           </button>
 
           <button
             type="button"
             role="tab"
+            id="tab-history"
+            aria-controls="panel-history"
             aria-selected={activeTab === 'history'}
             onClick={() => handleTabChange('history')}
             className={`group relative flex items-center justify-center gap-1.5 sm:gap-2 px-2 min-[360px]:px-2.5 py-1.5 sm:px-4 sm:py-2 rounded-lg text-[11px] min-[360px]:text-xs sm:text-sm font-semibold transition-all duration-200 cursor-pointer border text-center select-none ${
@@ -225,7 +265,7 @@ export default function AssessmentSection({ initialTab }: AssessmentSectionProps
                 : 'border-transparent text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] hover:bg-[var(--color-surface)]/70 hover:shadow-2xs active:scale-[0.98]'
             }`}
           >
-            <History className="w-4 h-4 text-[var(--color-accent)] shrink-0" />
+            <History className="w-4 h-4 text-[var(--color-accent)] shrink-0" aria-hidden="true" />
             <span className="truncate">
               <span className="inline sm:hidden">Riwayat</span>
               <span className="hidden sm:inline">Riwayat di Perangkat</span>
@@ -275,7 +315,13 @@ export default function AssessmentSection({ initialTab }: AssessmentSectionProps
 
       {/* ── Main Unified Card Body with Smooth Tab Content Transitions ── */}
       <div className="p-4 sm:p-8 md:p-10">
-        <div key={activeTab} className="tab-content-enter">
+        <div
+          key={activeTab}
+          role="tabpanel"
+          id={`panel-${activeTab}`}
+          aria-labelledby={`tab-${activeTab}`}
+          className="tab-content-enter"
+        >
           {activeTab === 'quiz' ? (
             !done ? (
               <AssessmentQuiz

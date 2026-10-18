@@ -1,13 +1,15 @@
 'use client';
 
 import React, { useState, useEffect, useId, useRef } from 'react';
-import { Send, AlertCircle, CheckCircle2, Lock, PenLine, Check, X } from 'lucide-react';
+import { Send, AlertCircle, CheckCircle2, Lock, PenLine, Check, X, Clock } from 'lucide-react';
 import { Spinner } from '@/components/ui/Spinner';
 import { ConfirmDecisionModal } from '@/components/ui/ConfirmDecisionModal';
 import { FormErrorMessage } from '@/components/ui/FormErrorMessage';
 import { CURHAT_CATEGORIES } from '@/types';
 import { formatPersonName, formatSentenceCase } from '@/lib/text-formatter';
 import { enqueueOfflineMutation } from '@/lib/offline-queue';
+import { focusAndScrollToField } from '@/lib/dom-utils';
+import { useCooldownTimer } from '@/lib/use-cooldown';
 
 const CATEGORIES = CURHAT_CATEGORIES;
 
@@ -33,6 +35,7 @@ export function CurhatForm({ onSuccess }: CurhatFormProps) {
   const [submitting, setSubmitting] = useState(false);
   const [sent, setSent] = useState(false);
   const [sendError, setSendError] = useState('');
+  const { cooldownSeconds, isCoolingDown, startCooldown } = useCooldownTimer();
 
   // Always initialize with SSR-safe defaults to avoid hydration mismatch
   const [alias, setAlias] = useState('');
@@ -119,14 +122,15 @@ export function CurhatForm({ onSuccess }: CurhatFormProps) {
       return;
     }
 
+    if (isCoolingDown) {
+      setSendError(`Mohon tunggu ${cooldownSeconds} detik sebelum mengirim cerita kembali.`);
+      return;
+    }
+
     const trimmed = message.trim();
     if (trimmed.length < 10) {
       setSendError('Pesan minimal 10 karakter agar Amel dapat memahami situasimu.');
-      const msgElem = document.getElementById(`${formId}-msg`);
-      if (msgElem) {
-        msgElem.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        msgElem.focus();
-      }
+      focusAndScrollToField(`${formId}-msg`);
       return;
     }
 
@@ -167,7 +171,14 @@ export function CurhatForm({ onSuccess }: CurhatFormProps) {
         body: JSON.stringify(payload),
       });
       const data = await res.json();
-      if (!res.ok || !data.success) throw new Error(data.message);
+      if (!res.ok || !data.success) {
+        if (res.status === 429) {
+          const retryAfter = parseInt(res.headers.get('Retry-After') || '', 10);
+          const seconds = !isNaN(retryAfter) && retryAfter > 0 ? retryAfter : 60;
+          startCooldown(seconds);
+        }
+        throw new Error(data.message || 'Gagal mengirim pesan.');
+      }
       setSent(true);
       setMessage('');
       setAlias('');
@@ -359,13 +370,18 @@ export function CurhatForm({ onSuccess }: CurhatFormProps) {
 
           <button
             type="submit"
-            disabled={submitting}
-            className="btn-primary btn-interactive w-full text-sm py-2.5 disabled:opacity-60 cursor-pointer disabled:cursor-not-allowed"
+            disabled={submitting || isCoolingDown}
+            className="btn-primary btn-interactive w-full text-sm py-2.5 disabled:opacity-60 cursor-pointer disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {submitting ? (
               <>
                 <Spinner size="sm" variant="white" label="Sedang mengirim pesan..." />
                 <span>Mengirim Pesan...</span>
+              </>
+            ) : isCoolingDown ? (
+              <>
+                <Clock className="w-3.5 h-3.5 text-white" aria-hidden="true" />
+                <span>Tunggu {cooldownSeconds} detik...</span>
               </>
             ) : (
               <>

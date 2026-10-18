@@ -27,9 +27,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (!file.type.startsWith('image/')) {
+    const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/avif'];
+    if (!ALLOWED_MIME_TYPES.includes(file.type.toLowerCase())) {
       return NextResponse.json(
-        { success: false, message: 'Format berkas tidak valid. Hanya berkas gambar yang diperbolehkan.' },
+        { success: false, message: 'Format berkas tidak didukung. Hanya gambar JPEG, PNG, WebP, atau AVIF yang diperbolehkan.' },
         { status: 400 }
       );
     }
@@ -44,6 +45,21 @@ export async function POST(req: NextRequest) {
 
     const bytes = await file.arrayBuffer();
     const rawBuffer = Buffer.from(bytes);
+
+    // Validate binary header magic bytes to prevent disguised or polyglot files
+    const isMagicValid =
+      rawBuffer.length >= 12 &&
+      ((rawBuffer[0] === 0xff && rawBuffer[1] === 0xd8 && rawBuffer[2] === 0xff) || // JPEG
+        (rawBuffer[0] === 0x89 && rawBuffer[1] === 0x50 && rawBuffer[2] === 0x4e && rawBuffer[3] === 0x47) || // PNG
+        (rawBuffer[0] === 0x52 && rawBuffer[1] === 0x49 && rawBuffer[2] === 0x46 && rawBuffer[3] === 0x46 && rawBuffer[8] === 0x57 && rawBuffer[9] === 0x45 && rawBuffer[10] === 0x42 && rawBuffer[11] === 0x50) || // WebP
+        (rawBuffer[4] === 0x66 && rawBuffer[5] === 0x74 && rawBuffer[6] === 0x79 && rawBuffer[7] === 0x70)); // AVIF/ISO Base Media
+
+    if (!isMagicValid) {
+      return NextResponse.json(
+        { success: false, message: 'Struktur berkas gambar terindikasi rusak atau tidak sesuai dengan format aslinya.' },
+        { status: 400 }
+      );
+    }
 
     const originalName = file.name || 'foto-artikel';
     const baseNameWithoutExt = path.parse(originalName).name;

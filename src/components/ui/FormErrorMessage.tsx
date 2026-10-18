@@ -22,7 +22,34 @@ export function FormErrorMessage({
   const [cachedMessage, setCachedMessage] = useState<string>(message || '');
   const [isRendered, setIsRendered] = useState<boolean>(Boolean(message));
   const [isExiting, setIsExiting] = useState<boolean>(false);
-  const [isHovered, setIsHovered] = useState<boolean>(false);
+  const [isHovered, _setIsHovered] = useState<boolean>(false);
+
+  // Safe hover setter that guards against touchscreen/mobile emulation
+  const setIsHovered = useCallback((val: boolean) => {
+    if (val) {
+      if (
+        typeof window !== 'undefined' &&
+        window.matchMedia &&
+        !window.matchMedia('(hover: hover) and (pointer: fine)').matches
+      ) {
+        return; // Do not pause on touchscreens/mobile devices
+      }
+    }
+    _setIsHovered(val);
+  }, []);
+
+  // Listen to window scroll & touch movements to ensure hover state is instantly cleared on mobile
+  useEffect(() => {
+    const handleScrollOrTouch = () => {
+      _setIsHovered(false);
+    };
+    window.addEventListener('scroll', handleScrollOrTouch, { passive: true });
+    window.addEventListener('touchmove', handleScrollOrTouch, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', handleScrollOrTouch);
+      window.removeEventListener('touchmove', handleScrollOrTouch);
+    };
+  }, []);
 
   const unmountTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const autoDismissTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -131,6 +158,8 @@ export function FormErrorMessage({
       aria-live="assertive"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      onTouchStart={() => _setIsHovered(false)}
+      onTouchMove={() => _setIsHovered(false)}
       className={cn(
         'relative overflow-hidden rounded-xl border shadow-2xs select-none transition-all',
         'text-xs sm:text-sm text-[var(--color-error)] bg-[var(--color-error-soft)] border-[var(--color-error-border)]',

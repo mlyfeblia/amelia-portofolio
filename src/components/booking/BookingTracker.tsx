@@ -18,7 +18,8 @@ import {
   MessageSquare,
   Users,
   ClipboardPaste,
-  X
+  X,
+  RotateCcw
 } from 'lucide-react';
 import { 
   useDeviceBookings, 
@@ -33,6 +34,9 @@ import { SkeletonBookingCard, SkeletonDeviceBookingCard } from '@/components/ui/
 import { Spinner } from '@/components/ui/Spinner';
 
 import { FormErrorMessage } from '@/components/ui/FormErrorMessage';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { focusAndScrollToField } from '@/lib/dom-utils';
+import { copyToClipboard } from '@/lib/clipboard';
 
 const BookingDeviceDeleteModal = dynamic(
   () => import('./BookingDeviceDeleteModal').then((m) => m.BookingDeviceDeleteModal),
@@ -101,6 +105,29 @@ export function BookingTracker({ initialCode, onCodeChange, onNavigateToNewBooki
       return;
     }
 
+    if (cleanCode.startsWith('BKI-OFFLINE-')) {
+      const rec = deviceRecords.find((r) => r.code.toUpperCase() === cleanCode);
+      const offlineDetail: BookingDetailData = {
+        id: cleanCode,
+        code: cleanCode,
+        name: rec?.name || 'Konseli',
+        alias: rec?.name || 'Konseli',
+        category: rec?.category || 'Konseling Privat',
+        date: rec?.date || '-',
+        timeSlot: rec?.timeSlot || '-',
+        mode: 'online_meet',
+        status: 'menunggu',
+        createdAt: new Date().toISOString(),
+        notes: 'Pengajuan ini disimpan saat perangkat offline dan akan otomatis disinkronkan ke server segera setelah perangkat kembali terhubung ke internet.',
+      };
+      setActiveBooking(offlineDetail);
+      onCodeChange?.(cleanCode);
+      if (shouldScroll) {
+        scrollToTrackerTop();
+      }
+      return;
+    }
+
     lastTrackedCodeRef.current = cleanCode;
     setLoading(true);
     setError('');
@@ -130,10 +157,11 @@ export function BookingTracker({ initialCode, onCodeChange, onNavigateToNewBooki
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Gagal melacak kode janji temu.');
+      focusAndScrollToField('booking-track-input');
     } finally {
       setLoading(false);
     }
-  }, [onCodeChange, scrollToTrackerTop]);
+  }, [deviceRecords, onCodeChange, scrollToTrackerTop]);
 
   // Adjust state during render when initialCode prop changes
   const [prevInitialCode, setPrevInitialCode] = useState(initialCode);
@@ -149,7 +177,11 @@ export function BookingTracker({ initialCode, onCodeChange, onNavigateToNewBooki
 
   // Fetch live statuses for all stored device bookings
   useEffect(() => {
-    if (deviceRecords.length === 0) {
+    const onlineCodes = deviceRecords
+      .map((r) => r.code)
+      .filter((code) => !code.toUpperCase().startsWith('BKI-OFFLINE-'));
+
+    if (onlineCodes.length === 0) {
       return;
     }
 
@@ -159,7 +191,7 @@ export function BookingTracker({ initialCode, onCodeChange, onNavigateToNewBooki
       if (!isMounted) return;
       setLoadingHistory(true);
       try {
-        const codes = deviceRecords.map((r) => r.code).join(',');
+        const codes = onlineCodes.join(',');
         const res = await fetch(`/api/bookings/track?codes=${encodeURIComponent(codes)}`);
         const json = await res.json();
         if (isMounted && json.success && Array.isArray(json.data)) {
@@ -180,6 +212,27 @@ export function BookingTracker({ initialCode, onCodeChange, onNavigateToNewBooki
       isMounted = false;
     };
   }, [deviceRecords]);
+
+  // Real-time synchronization when background offline queue successfully confirms a booking
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const handleOfflineBookingConfirmed = (event: Event) => {
+      const customEvent = event as CustomEvent<{ code: string; tempCode?: string }>;
+      const { code, tempCode } = customEvent.detail || {};
+      if (code) {
+        // If user is currently viewing the temporary offline reservation, auto-swap to server record
+        if (activeBooking && tempCode && activeBooking.code.toUpperCase() === tempCode.toUpperCase()) {
+          handleTrackCode(code, false);
+        }
+      }
+    };
+
+    window.addEventListener('amelia:offline-booking-confirmed', handleOfflineBookingConfirmed);
+    return () => {
+      window.removeEventListener('amelia:offline-booking-confirmed', handleOfflineBookingConfirmed);
+    };
+  }, [activeBooking, handleTrackCode]);
 
   // If initialCode provided, automatically track it via async task (without jumping scroll)
   useEffect(() => {
@@ -204,12 +257,10 @@ export function BookingTracker({ initialCode, onCodeChange, onNavigateToNewBooki
 
   const handleCopyCode = async (e: React.MouseEvent, code: string) => {
     e.stopPropagation();
-    try {
-      await navigator.clipboard.writeText(code);
+    const success = await copyToClipboard(code);
+    if (success) {
       setCopiedCode(code);
       setTimeout(() => setCopiedCode(null), 2000);
-    } catch {
-      // fallback
     }
   };
 
@@ -477,23 +528,12 @@ export function BookingTracker({ initialCode, onCodeChange, onNavigateToNewBooki
                 </div>
               </div>
             ) : deviceRecords.length === 0 ? (
-              <div className="py-12 sm:py-16 text-center space-y-5 tab-content-enter">
-                <div className="w-16 h-16 rounded-3xl bg-[var(--color-paper)] border border-[var(--color-paper-border)] mx-auto flex items-center justify-center text-[var(--color-accent)] shadow-2xs">
-                  <CalendarCheck className="w-8 h-8" aria-hidden="true" />
-                </div>
-                <div className="max-w-md mx-auto space-y-2">
-                  <h3
-                    className="text-xl sm:text-2xl font-medium text-[var(--color-ink)]"
-                    style={{ fontFamily: 'var(--font-display)' }}
-                  >
-                    Belum Ada Riwayat di Perangkat Ini
-                  </h3>
-                  <p className="text-xs sm:text-sm text-[var(--color-ink-muted)] leading-relaxed">
-                    Setiap kali kamu mengajukan janji temu melalui browser ini, kode referensi dan perkembangan sesinya akan tersimpan otomatis dan privat di perangkat ini tanpa perlu repot login.
-                  </p>
-                </div>
-                {onNavigateToNewBooking && (
-                  <div className="pt-2">
+              <EmptyState
+                icon={<CalendarCheck className="w-7 h-7 sm:w-8 sm:h-8 stroke-[1.75]" />}
+                title="Belum Ada Riwayat di Perangkat Ini"
+                description="Setiap kali kamu mengajukan janji temu melalui browser ini, kode referensi dan perkembangan sesinya akan tersimpan otomatis dan privat di perangkat ini tanpa perlu repot login."
+                action={
+                  onNavigateToNewBooking ? (
                     <button
                       onClick={onNavigateToNewBooking}
                       type="button"
@@ -502,9 +542,9 @@ export function BookingTracker({ initialCode, onCodeChange, onNavigateToNewBooki
                       <CalendarPlus className="w-4 h-4" />
                       <span>Ajukan Janji Temu Sekarang</span>
                     </button>
-                  </div>
-                )}
-              </div>
+                  ) : undefined
+                }
+              />
             ) : (
               <div className="space-y-3">
                 {searchInput.trim() && filteredDeviceRecords.length > 0 && (
@@ -514,35 +554,34 @@ export function BookingTracker({ initialCode, onCodeChange, onNavigateToNewBooki
                     </span>
                     <button
                       type="button"
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
                         setSearchInput('');
                         setError('');
                         onCodeChange?.('');
                       }}
-                      className="text-[11px] text-[var(--color-accent)] hover:underline cursor-pointer font-medium"
+                      className="text-[11px] text-[var(--color-accent)] hover:underline cursor-pointer font-medium inline-flex items-center gap-1"
+                      title="Reset filter pencarian riwayat"
                     >
-                      Reset Filter
+                      <RotateCcw className="w-3 h-3" />
+                      <span>Reset Filter</span>
                     </button>
                   </div>
                 )}
 
                 {filteredDeviceRecords.length === 0 ? (
-                  <div className="p-6 sm:p-8 flex flex-col items-center justify-center text-center border border-[var(--color-paper-border)] rounded-2xl bg-[var(--color-surface)] space-y-3 tab-content-enter shadow-2xs w-full mx-auto">
-                    <div className="w-10 h-10 rounded-full bg-[var(--color-paper-muted)] text-[var(--color-ink-muted)] flex items-center justify-center shrink-0">
-                      <Search className="w-5 h-5" />
-                    </div>
-                    <div className="space-y-1.5 max-w-md w-full flex flex-col items-center justify-center text-center">
-                      <p className="text-xs sm:text-sm font-semibold text-[var(--color-ink)] text-center w-full">
-                        Tidak ada rekaman &ldquo;{searchInput}&rdquo; di histori perangkat ini
-                      </p>
-                      <p className="text-xs text-[var(--color-ink-muted)] text-center leading-relaxed max-w-sm w-full">
-                        {error
-                          ? 'Tidak ditemukan janji temu dengan kode tersebut baik di perangkat ini maupun di sistem.'
-                          : 'Kode ini mungkin didaftarkan melalui perangkat lain.'}
-                      </p>
-                    </div>
-                    <div className="flex flex-wrap items-center justify-center gap-2 pt-1 w-full">
-                      {!error && (
+                  <EmptyState
+                    size="sm"
+                    icon={<Search className="w-5 h-5 text-[var(--color-ink-muted)]" />}
+                    title={`Tidak Ada Rekaman "${searchInput}" di Perangkat`}
+                    description={
+                      error
+                        ? 'Tidak ditemukan janji temu dengan kode tersebut baik di histori perangkat ini maupun di database sistem.'
+                        : 'Kode reservasi ini mungkin didaftarkan melalui perangkat atau browser yang berbeda.'
+                    }
+                    action={
+                      !error ? (
                         <button
                           type="button"
                           onClick={() => handleTrackCode(searchInput, true)}
@@ -552,7 +591,9 @@ export function BookingTracker({ initialCode, onCodeChange, onNavigateToNewBooki
                           <Search className="w-3.5 h-3.5" />
                           <span>Lacak ke Server</span>
                         </button>
-                      )}
+                      ) : undefined
+                    }
+                    secondaryAction={
                       <button
                         type="button"
                         onClick={() => {
@@ -565,8 +606,8 @@ export function BookingTracker({ initialCode, onCodeChange, onNavigateToNewBooki
                         <X className="w-3.5 h-3.5" />
                         <span>Tampilkan Semua Riwayat</span>
                       </button>
-                    </div>
-                  </div>
+                    }
+                  />
                 ) : (
                   <div className="grid grid-cols-1 gap-3.5">
                     {filteredDeviceRecords.map((record) => {
@@ -611,7 +652,16 @@ export function BookingTracker({ initialCode, onCodeChange, onNavigateToNewBooki
                               )}
                             </button>
                           </div>
-                          <div className="shrink-0">{getStatusBadge(status)}</div>
+                          <div className="shrink-0">
+                            {record.code.toUpperCase().startsWith('BKI-OFFLINE-') ? (
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">
+                                <Clock className="w-3.5 h-3.5 text-amber-600 animate-pulse" aria-hidden="true" />
+                                <span>Sinkronisasi Tertunda</span>
+                              </span>
+                            ) : (
+                              getStatusBadge(status)
+                            )}
+                          </div>
                         </div>
 
                         <button
@@ -631,6 +681,13 @@ export function BookingTracker({ initialCode, onCodeChange, onNavigateToNewBooki
                         <h4 className="text-sm font-semibold text-[var(--color-ink)] group-hover:text-[var(--color-accent)] transition-colors">
                           {categoryText}
                         </h4>
+
+                        {record.code.toUpperCase().startsWith('BKI-OFFLINE-') && (
+                          <div className="px-3 py-2 rounded-xl bg-amber-50/70 border border-amber-200/80 text-[11.5px] text-amber-800 flex items-center gap-2">
+                            <AlertCircle className="w-3.5 h-3.5 text-amber-600 shrink-0" aria-hidden="true" />
+                            <span>Tersimpan lokal di perangkat. Akan otomatis disinkronkan ke server dan mendapat kode resmi saat online.</span>
+                          </div>
+                        )}
 
                         <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-[var(--color-ink-muted)]">
                           {nameText && (

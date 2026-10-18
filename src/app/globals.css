@@ -236,7 +236,10 @@
     letter-spacing: -0.01em;
   }
 
-  p {
+  /* Scoped prose line-length optimization for reading comfort without breaking general UI component layouts */
+  .prose p,
+  .article-prose p,
+  .prose-editorial p {
     max-width: 68ch;
   }
 
@@ -1420,6 +1423,8 @@ select.form-input {
   *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
     scroll-behavior: auto !important;
   }
   .skeleton::after {

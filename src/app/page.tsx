@@ -67,7 +67,7 @@ export default async function Home() {
   const landingCurhatPinned = publicAnswered.filter((c) => c.showOnLandingPage);
   const remainingCurhat = publicAnswered.filter((c) => !c.showOnLandingPage);
   const answeredCurhat = landingCurhatPinned.length > 0
-    ? landingCurhatPinned
+    ? landingCurhatPinned.slice(0, 3)
     : seededShuffle(remainingCurhat, `homepage_curhat_${dayKey}`).slice(0, 2);
 
   // Landing page articles: prioritaskan kurasi admin (showOnLandingPage), fallback rotasi harian otomatis
@@ -75,7 +75,7 @@ export default async function Home() {
   const landingArticlesPinned = publishedArticles.filter((a) => a.showOnLandingPage);
   const remainingArticles = publishedArticles.filter((a) => !a.showOnLandingPage);
   const featuredArticles = landingArticlesPinned.length > 0
-    ? landingArticlesPinned
+    ? landingArticlesPinned.slice(0, 4)
     : seededShuffle(remainingArticles, `homepage_articles_${dayKey}`).slice(0, 2);
 
   return (
