@@ -6,9 +6,21 @@ export interface VersionRelease {
   highlights: string[];
 }
 
-export const CURRENT_APP_VERSION = '2.2.0';
+export const CURRENT_APP_VERSION = '2.5.0';
 
 export const APP_CHANGELOG: VersionRelease[] = [
+  {
+    version: '2.5.0',
+    releaseDate: '19 Oktober 2026',
+    title: 'Optimasi Tampilan Kartu Reservasi Admin & Pengiriman Langsung Email via Gmail SMTP',
+    badge: 'Rilis Pembaruan v2.5.0',
+    highlights: [
+      'Penyederhanaan tata letak kartu reservasi pengelola (/admin/bookings): penghapusan banner repetitif "Kirim Kabar" untuk visual yang lebih ringkas, hemat ruang, dan fokus pada tombol aksi utama WhatsApp & Email.',
+      'Implementasi arsitektur Dual-Engine pengiriman email transaksional dengan integrasi penuh Gmail SMTP (Nodemailer) port 465 SSL berotentikasi Google App Password.',
+      'Pengiriman email konfirmasi reservasi dan pembaruan jadwal kini terkirim langsung ke kotak masuk pribadi seluruh konseli tanpa batasan domain sandbox.',
+      'Penyempurnaan modul telemetri dan penanganan peringatan sistem terstruktur (telemetry.warn) untuk keandalan serverless runtime.',
+    ],
+  },
   {
     version: '2.2.0',
     releaseDate: '19 Oktober 2026',

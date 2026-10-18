@@ -243,37 +243,6 @@ export function BookingCard({
         </div>
       )}
 
-      {/* Confirmed Status Follow-up Banner */}
-      {item.status === 'terkonfirmasi' && (
-        <div className="p-2.5 sm:p-3 rounded-xl bg-emerald-50/90 border border-emerald-200 text-xs text-emerald-950 flex flex-col min-[340px]:flex-row items-start min-[340px]:items-center justify-between gap-2.5">
-          <div className="flex items-center gap-2 min-w-0 flex-1">
-            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-            <span className="font-medium text-[11px] sm:text-xs leading-snug">
-              Sesi ini terkonfirmasi. Hubungi atau kirim kabar WhatsApp ke konseli:
-            </span>
-          </div>
-          <a
-            href={getAdminContactWhatsAppUrl({
-              clientPhone: item.phone,
-              clientName: item.alias || item.name,
-              code: item.code,
-              date: item.date,
-              slot: item.timeSlot,
-              mode: item.mode,
-            })}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="btn-primary btn-interactive inline-flex items-center justify-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold shadow-2xs transition-all shrink-0 cursor-pointer whitespace-nowrap w-full min-[340px]:w-auto"
-          >
-            <Phone className="w-3.5 h-3.5" />
-            <span>
-              <span className="sm:hidden">Kirim Kabar</span>
-              <span className="hidden sm:inline">Kirim Kabar WhatsApp</span>
-            </span>
-          </a>
-        </div>
-      )}
-
       {/* Contact and Status Actions - Responsive Mobile First */}
       <div className="pt-2.5 border-t border-[var(--color-paper-border)] flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
         
