@@ -27,6 +27,7 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
   const [pin, setPin] = useState('');
   const [showPin, setShowPin] = useState(false);
   const [pinError, setPinError] = useState(false);
+  const [pinErrorMessage, setPinErrorMessage] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [remainingSeconds, setRemainingSeconds] = useState<number>(DEFAULT_SESSION_SECONDS);
   const [sessionNotice, setSessionNotice] = useState<string | null>(null);
@@ -38,7 +39,7 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
     let active = true;
     async function verify() {
       try {
-        const res = await fetch('/api/admin/verify');
+        const res = await fetch('/api/admin/verify', { cache: 'no-store' });
         const data = await res.json();
         if (!active) return;
         if (data.authenticated) {
@@ -64,6 +65,18 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
+  // Automatically register 'admin' Web Push subscription when authenticated if notification permission is granted
+  useEffect(() => {
+    if (!isAuthenticated || typeof window === 'undefined') return;
+    if ('Notification' in window && Notification.permission === 'granted') {
+      import('@/lib/notifications')
+        .then(({ registerWebPushSubscription }) => {
+          registerWebPushSubscription(undefined, 'admin').catch(() => {});
+        })
+        .catch(() => {});
+    }
+  }, [isAuthenticated]);
+
   const broadcastAuthSync = useCallback((action: 'login' | 'logout' | 'refresh', remaining?: number) => {
     if (typeof window === 'undefined') return;
     try {
@@ -84,6 +97,8 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
     setIsAuthenticated(false);
     setRemainingSeconds(0);
     setPin('');
+    setPinError(false);
+    setPinErrorMessage(null);
     if (pinInputRef.current) {
       pinInputRef.current.value = '';
     }
@@ -131,7 +146,7 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
     const handleVisibilityChange = async () => {
       if (document.visibilityState === 'visible' && isAuthenticated) {
         try {
-          const res = await fetch('/api/admin/verify');
+          const res = await fetch('/api/admin/verify', { cache: 'no-store' });
           const data = await res.json();
           if (data.authenticated) {
             if (typeof data.remainingSeconds === 'number' && data.remainingSeconds > 0) {
@@ -196,32 +211,42 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
     submittingRef.current = true;
     setSubmitting(true);
     setPinError(false);
+    setPinErrorMessage(null);
+    let errorMessage = 'PIN yang dimasukkan belum tepat.';
     try {
       const res = await fetch('/api/admin/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ pin: inputPin.trim() }),
       });
-      const data = await res.json();
-      if (res.ok && data.success) {
+      const data = await res.json().catch(() => null);
+      if (res.ok && data?.success) {
         setIsAuthenticated(true);
         setPin('');
         if (pinInputRef.current) {
           pinInputRef.current.value = '';
         }
         setPinError(false);
+        setPinErrorMessage(null);
         setRemainingSeconds(DEFAULT_SESSION_SECONDS);
         setSessionNotice(null);
+        if (typeof window !== 'undefined' && window.location.search.includes('unauthenticated')) {
+          window.history.replaceState({}, '', window.location.pathname);
+        }
         broadcastAuthSync('login', DEFAULT_SESSION_SECONDS);
         return true;
       }
+      if (data && typeof data.message === 'string' && data.message.trim()) {
+        errorMessage = data.message;
+      }
     } catch {
-      // network/fetch error
+      errorMessage = 'Gagal terhubung ke server autentikasi. Periksa koneksi internet Anda.';
     } finally {
       submittingRef.current = false;
       setSubmitting(false);
     }
     setPinError(true);
+    setPinErrorMessage(errorMessage);
     setPin('');
     if (pinInputRef.current) {
       pinInputRef.current.value = '';
@@ -307,7 +332,10 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
                   onChange={(e) => {
                     const onlyNums = e.target.value.replace(/[^0-9]/g, '');
                     setPin(onlyNums);
-                    if (pinError) setPinError(false);
+                    if (pinError) {
+                      setPinError(false);
+                      setPinErrorMessage(null);
+                    }
                     if (onlyNums.length === 6 && !submitting && !submittingRef.current) {
                       login(onlyNums);
                     }
@@ -348,7 +376,7 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
 
               {pinError && (
                 <p className="text-xs text-[var(--color-error)] mt-1.5 text-center font-medium animate-fade-in-up">
-                  PIN yang dimasukkan belum tepat.
+                  {pinErrorMessage || 'PIN yang dimasukkan belum tepat.'}
                 </p>
               )}
             </div>

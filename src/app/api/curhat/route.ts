@@ -90,16 +90,16 @@ export async function POST(request: Request) {
 
     const newCurhat = await createCurhat(validation.data);
 
-    // Trigger async email notification to admin in background
-    sendAdminCurhatAlertEmail(newCurhat).catch((e) => console.error('Admin curhat alert email error:', e));
-
-    // Trigger non-blocking push notification to admin devices
-    sendPushNotificationToRole('admin', {
-      title: 'Pesan Teman Curhat Baru!',
-      body: `Dari "${newCurhat.alias}" (Kategori: ${newCurhat.category})`,
-      url: '/admin/counseling',
-      tag: `curhat-${newCurhat.id}`,
-    }).catch(() => {});
+    // Await email & push notifications so Vercel Serverless does not freeze before Resend completes
+    await Promise.allSettled([
+      sendAdminCurhatAlertEmail(newCurhat),
+      sendPushNotificationToRole('admin', {
+        title: 'Pesan Teman Curhat Baru!',
+        body: `Dari "${newCurhat.alias}" (Kategori: ${newCurhat.category})`,
+        url: '/admin/counseling',
+        tag: `curhat-${newCurhat.id}`,
+      }),
+    ]);
 
     return NextResponse.json({
       success: true,

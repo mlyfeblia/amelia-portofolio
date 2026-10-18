@@ -3,6 +3,7 @@ import { getArticles, createArticle } from '@/lib/data-store';
 import { isAuthenticatedAdmin } from '@/lib/admin-auth';
 import { validateArticleCreateInput } from '@/lib/validators';
 import { telemetry } from '@/lib/telemetry';
+import { sendPushNotificationToRole } from '@/lib/web-push-server';
 
 export async function GET(request: Request) {
   try {
@@ -53,6 +54,16 @@ export async function POST(request: Request) {
     }
 
     const created = await createArticle(validation.data);
+
+    if (created.isPublished) {
+      await sendPushNotificationToRole('client', {
+        title: 'Artikel Refleksi Baru!',
+        body: created.title,
+        url: `/articles/${created.slug}`,
+        tag: `article-${created.slug}`,
+      }).catch(() => {});
+    }
+
     return NextResponse.json({ success: true, data: created }, { status: 201 });
   } catch (error) {
     telemetry.error('Error creating article', error, { route: '/api/articles', method: 'POST' });

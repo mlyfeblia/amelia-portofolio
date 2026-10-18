@@ -21,7 +21,7 @@ declare const self: ServiceWorkerGlobalScope;
 const serwist = new Serwist({
   precacheEntries: self.__SW_MANIFEST,
   skipWaiting: false,
-  clientsClaim: false,
+  clientsClaim: true,
   navigationPreload: true,
   runtimeCaching: [
     // 1. API & Admin routes should always go to the network (no stale booking/curhat/admin data, protect sensitive sessions)

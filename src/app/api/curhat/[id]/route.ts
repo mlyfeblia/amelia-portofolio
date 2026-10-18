@@ -3,6 +3,7 @@ import { updateCurhat, deleteCurhat } from '@/lib/data-store';
 import { isAuthenticatedAdmin } from '@/lib/admin-auth';
 import { sanitizeString } from '@/lib/validators';
 import { telemetry } from '@/lib/telemetry';
+import { sendPushNotificationToRole } from '@/lib/web-push-server';
 
 export async function PATCH(
   request: Request,
@@ -52,6 +53,15 @@ export async function PATCH(
     const updated = await updateCurhat(id, updateOptions);
     if (!updated) {
       return NextResponse.json({ success: false, message: 'Pesan curhat tidak ditemukan' }, { status: 404 });
+    }
+
+    if (typeof updateOptions.answer === 'string' && updateOptions.answer.trim().length > 0 && updated.isPublic) {
+      await sendPushNotificationToRole('client', {
+        title: 'Balasan Baru di Teman Curhat',
+        body: `Amel telah menanggapi cerita dari "${updated.alias}". Baca refleksinya sekarang.`,
+        url: '/curhat',
+        tag: `curhat-reply-${updated.id}`,
+      }).catch(() => {});
     }
 
     return NextResponse.json({ success: true, data: updated });

@@ -89,17 +89,17 @@ export async function POST(request: Request) {
 
     const newBooking = await createBooking(validation.data);
 
-    // Trigger async email notifications in background
-    sendBookingConfirmationEmail(newBooking).catch((e) => console.error('Booking confirmation email error:', e));
-    sendAdminBookingAlertEmail(newBooking).catch((e) => console.error('Admin booking alert email error:', e));
-
-    // Trigger non-blocking push notification to admin devices
-    sendPushNotificationToRole('admin', {
-      title: 'Janji Temu Baru Diajukan!',
-      body: `${newBooking.name} (${newBooking.category}) untuk jadwal ${newBooking.date}`,
-      url: '/admin/bookings',
-      tag: `booking-${newBooking.code}`,
-    }).catch(() => {});
+    // Await email & push notifications so Vercel Serverless does not freeze before Resend completes
+    await Promise.allSettled([
+      sendBookingConfirmationEmail(newBooking),
+      sendAdminBookingAlertEmail(newBooking),
+      sendPushNotificationToRole('admin', {
+        title: 'Janji Temu Baru Diajukan!',
+        body: `${newBooking.name} (${newBooking.category}) untuk jadwal ${newBooking.date}`,
+        url: '/admin/bookings',
+        tag: `booking-${newBooking.code}`,
+      }),
+    ]);
 
     return NextResponse.json({
       success: true,

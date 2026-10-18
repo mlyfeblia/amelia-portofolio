@@ -43,30 +43,34 @@ export async function PATCH(
       return NextResponse.json({ success: false, message: 'Janji temu tidak ditemukan' }, { status: 404 });
     }
 
-    // Trigger non-blocking email notification if status changed and client has an email
-    if (existing && existing.status !== status && updated.email) {
-      sendBookingStatusUpdateEmail(updated, status as BookingStatus).catch((err) => {
-        telemetry.error('Failed to trigger background booking status update email', err, {
-          bookingCode: updated.code,
-          status,
-        });
-      });
-    }
-
-    // Trigger non-blocking Web Push notification to client device
+    // Await email & Web Push notifications if status changed so serverless function completes delivery
     if (existing && existing.status !== status) {
-      const statusTitle = status === 'terkonfirmasi' ? 'Jadwal Konseling Terkonfirmasi!' : status === 'selesai' ? 'Sesi Konseling Selesai' : `Status Jadwal: ${status}`;
-      const statusBody = status === 'terkonfirmasi'
-        ? 'Alhamdulillah, jadwal konselingmu telah dikonfirmasi oleh Amel. Buka web untuk melihat detail.'
-        : status === 'selesai'
-        ? 'Sesi konselingmu telah selesai dilaksanakan. Terima kasih atas kepercayaanmu.'
-        : `Status reservasi [${updated.code}] diperbarui menjadi ${status}.`;
+      const statusTitle =
+        status === 'terkonfirmasi'
+          ? 'Jadwal Konseling Terkonfirmasi!'
+          : status === 'selesai'
+          ? 'Sesi Konseling Selesai'
+          : `Status Jadwal: ${status}`;
+      const statusBody =
+        status === 'terkonfirmasi'
+          ? 'Alhamdulillah, jadwal konselingmu telah dikonfirmasi oleh Amel. Buka web untuk melihat detail.'
+          : status === 'selesai'
+          ? 'Sesi konselingmu telah selesai dilaksanakan. Terima kasih atas kepercayaanmu.'
+          : `Status reservasi [${updated.code}] diperbarui menjadi ${status}.`;
 
-      sendPushNotificationToBooking(updated.code, {
-        title: statusTitle,
-        body: statusBody,
-        url: `/schedule?code=${updated.code}`,
-      }).catch(() => {});
+      const notificationTasks: Promise<unknown>[] = [
+        sendPushNotificationToBooking(updated.code, {
+          title: statusTitle,
+          body: statusBody,
+          url: `/schedule?code=${updated.code}`,
+        }),
+      ];
+
+      if (updated.email) {
+        notificationTasks.push(sendBookingStatusUpdateEmail(updated, status as BookingStatus));
+      }
+
+      await Promise.allSettled(notificationTasks);
     }
 
     return NextResponse.json({ success: true, data: updated });

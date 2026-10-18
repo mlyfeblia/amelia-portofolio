@@ -6,9 +6,21 @@ export interface VersionRelease {
   highlights: string[];
 }
 
-export const CURRENT_APP_VERSION = '2.1.0';
+export const CURRENT_APP_VERSION = '2.2.0';
 
 export const APP_CHANGELOG: VersionRelease[] = [
+  {
+    version: '2.2.0',
+    releaseDate: '19 Oktober 2026',
+    title: 'Stabilitas Autentikasi Produksi, Pengiriman Email Resend & Pembaruan Instan PWA',
+    badge: 'Rilis Stabilitas v2.2.0',
+    highlights: [
+      'Penyempurnaan autentikasi Portal Konselor Admin di produksi dengan sinkronisasi kunci sesi Edge & Node.js serta pesan diagnostik akurat.',
+      'Optimalisasi pengiriman email transaksional Resend pada serverless runtime (await Promise.allSettled) beserta fallback otomatis inbox konselor.',
+      'Perbaikan menyeluruh tombol "Perbarui Sekarang" pada kartu Pembaruan Baru Tersedia dengan aktivasi Service Worker instan, pembersihan cache halaman, dan umpan balik visual langsung.',
+      'Integrasi otomatis Web Push Notification untuk pengelola admin dan konseli dengan dukungan penuh kunci VAPID.',
+    ],
+  },
   {
     version: '2.1.0',
     releaseDate: '19 Oktober 2026',

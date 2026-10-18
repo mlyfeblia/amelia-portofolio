@@ -76,6 +76,8 @@ export default function PwaLifecycle() {
   const [updateWaiting, setUpdateWaiting] = useState(false);
   const [waitingWorker, setWaitingWorker] = useState<ServiceWorker | null>(null);
   const [updateDismissed, setUpdateDismissed] = useState(false);
+  const [isApplyingUpdate, setIsApplyingUpdate] = useState(false);
+  const [remoteVersion, setRemoteVersion] = useState<string | null>(null);
   const [showOnlineToast, setShowOnlineToast] = useState(false);
   const [onlineToastMessage, setOnlineToastMessage] = useState<string | null>(null);
   const [isSuppressed, setIsSuppressed] = useState(false);
@@ -177,6 +179,18 @@ export default function PwaLifecycle() {
     window.addEventListener('offline', handleOfflineEvent);
     window.addEventListener('amelia:show-toast', handleCustomToast);
 
+    // If user just completed an update reload, display confirmation toast
+    try {
+      if (sessionStorage.getItem('amel_just_updated') === '1') {
+        sessionStorage.removeItem('amel_just_updated');
+        setOnlineToastMessage(`Aplikasi berhasil diperbarui ke versi terbaru (v${CURRENT_APP_VERSION}).`);
+        setShowOnlineToast(true);
+        timer = setTimeout(() => setShowOnlineToast(false), 4500);
+      }
+    } catch {
+      // Ignore storage errors
+    }
+
     return () => {
       clearTimeout(timer);
       window.removeEventListener('online', handleOnlineEvent);
@@ -234,34 +248,38 @@ export default function PwaLifecycle() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
+    // Sync localStorage version to the currently running bundle version so we don't show a false-positive
+    // update banner when the browser has already loaded the latest bundle.
+    try {
+      const storedVersion = localStorage.getItem('amel_app_version');
+      if (storedVersion !== CURRENT_APP_VERSION) {
+        localStorage.setItem('amel_app_version', CURRENT_APP_VERSION);
+      }
+    } catch {
+      // Ignore
+    }
+
     const checkRemoteVersion = () => {
       if (typeof navigator !== 'undefined' && navigator.onLine === false) return;
       fetch('/api/version', { cache: 'no-store' })
         .then((res) => (res.ok ? res.json() : null))
         .then((data) => {
           if (data?.version && typeof data.version === 'string' && data.version !== CURRENT_APP_VERSION) {
+            setRemoteVersion(data.version);
+            setUpdateDismissed(false);
             setUpdateWaiting(true);
+            if ('serviceWorker' in navigator) {
+              navigator.serviceWorker.getRegistration().then((reg) => {
+                reg?.update().catch(() => {});
+              });
+            }
           }
         })
         .catch(() => {});
     };
 
-    // Check localStorage version against CURRENT_APP_VERSION asynchronously
-    const versionCheckTimer = setTimeout(() => {
-      try {
-        const storedVersion = localStorage.getItem('amel_app_version');
-        if (!storedVersion) {
-          localStorage.setItem('amel_app_version', CURRENT_APP_VERSION);
-        } else if (storedVersion !== CURRENT_APP_VERSION) {
-          setUpdateWaiting(true);
-        }
-      } catch {
-        // Ignore
-      }
-    }, 100);
-
     if (!('serviceWorker' in navigator)) {
-      return () => clearTimeout(versionCheckTimer);
+      return;
     }
 
     let updateInterval: NodeJS.Timeout;
@@ -279,6 +297,7 @@ export default function PwaLifecycle() {
         newWorker.addEventListener('statechange', () => {
           if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
             setWaitingWorker(newWorker);
+            setUpdateDismissed(false);
             setUpdateWaiting(true);
           }
         });
@@ -293,6 +312,12 @@ export default function PwaLifecycle() {
 
     if (window.serwist !== undefined) {
       window.serwist.addEventListener('waiting', () => {
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.getRegistration().then((reg) => {
+            if (reg?.waiting) setWaitingWorker(reg.waiting);
+          });
+        }
+        setUpdateDismissed(false);
         setUpdateWaiting(true);
       });
     }
@@ -312,41 +337,73 @@ export default function PwaLifecycle() {
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
-      clearTimeout(versionCheckTimer);
       clearInterval(updateInterval);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, []);
 
   const handleApplyUpdate = useCallback(() => {
+    if (isApplyingUpdate) return;
+    setIsApplyingUpdate(true);
+
     try {
-      localStorage.setItem('amel_app_version', CURRENT_APP_VERSION);
+      localStorage.setItem('amel_app_version', remoteVersion || CURRENT_APP_VERSION);
+      sessionStorage.setItem('amel_just_updated', '1');
     } catch {
       // Ignore
     }
 
-    let refreshing = false;
+    let reloaded = false;
+    const performReload = () => {
+      if (reloaded) return;
+      reloaded = true;
+      setUpdateWaiting(false);
+      setUpdateDismissed(true);
+      window.location.reload();
+    };
+
     if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
-      navigator.serviceWorker.addEventListener(
-        'controllerchange',
-        () => {
-          if (!refreshing) {
-            refreshing = true;
-            window.location.reload();
-          }
-        },
-        { once: true }
-      );
+      navigator.serviceWorker.addEventListener('controllerchange', performReload, { once: true });
     }
 
-    if (waitingWorker) {
-      waitingWorker.postMessage({ type: 'SKIP_WAITING' });
-    } else if (window.serwist !== undefined && typeof window.serwist.messageSkipWaiting === 'function') {
-      window.serwist.messageSkipWaiting();
-    } else {
-      window.location.reload();
+    // Clear cached HTML documents so the reload fetches fresh server HTML
+    if (typeof window !== 'undefined' && 'caches' in window) {
+      caches.delete('amelia-pages-cache').catch(() => {});
     }
-  }, [waitingWorker]);
+
+    // Trigger SKIP_WAITING on waiting worker (from state, live registration, or Serwist)
+    if (waitingWorker) {
+      try {
+        waitingWorker.postMessage({ type: 'SKIP_WAITING' });
+      } catch {
+        // Ignore
+      }
+    }
+
+    if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+      navigator.serviceWorker
+        .getRegistration()
+        .then((reg) => {
+          if (reg?.waiting) {
+            reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+          } else {
+            reg?.update().catch(() => {});
+          }
+        })
+        .catch(() => {});
+    }
+
+    if (typeof window !== 'undefined' && window.serwist !== undefined && typeof window.serwist.messageSkipWaiting === 'function') {
+      try {
+        window.serwist.messageSkipWaiting();
+      } catch {
+        // Ignore
+      }
+    }
+
+    // Guaranteed fallback reload if controllerchange does not fire within 450ms
+    setTimeout(performReload, 450);
+  }, [waitingWorker, isApplyingUpdate, remoteVersion]);
 
   // Contextual copy based on smart visitor frequency scenario
   const getBannerContent = () => {
@@ -444,7 +501,7 @@ export default function PwaLifecycle() {
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
                 <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-[var(--color-accent)] text-white">
-                  v{CURRENT_APP_VERSION}
+                  v{remoteVersion || CURRENT_APP_VERSION}
                 </span>
                 <span className="text-xs font-semibold text-[var(--color-ink)]">
                   Pembaruan Baru Tersedia
@@ -458,8 +515,9 @@ export default function PwaLifecycle() {
               type="button"
               onClick={() => {
                 setUpdateDismissed(true);
+                setUpdateWaiting(false);
                 try {
-                  localStorage.setItem('amel_app_version', CURRENT_APP_VERSION);
+                  localStorage.setItem('amel_app_version', remoteVersion || CURRENT_APP_VERSION);
                 } catch {
                   // Ignore
                 }
@@ -496,10 +554,12 @@ export default function PwaLifecycle() {
             </button>
             <button
               type="button"
+              disabled={isApplyingUpdate}
               onClick={handleApplyUpdate}
-              className="px-4 py-2 rounded-xl bg-[var(--color-accent)] text-white text-xs font-medium hover:bg-[var(--color-accent-hover)] transition-colors cursor-pointer active:scale-95 shadow-xs"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[var(--color-accent)] text-white text-xs font-medium hover:bg-[var(--color-accent-hover)] transition-colors cursor-pointer active:scale-95 shadow-xs disabled:opacity-70"
             >
-              Perbarui Sekarang
+              <RefreshCw className={cn('w-3.5 h-3.5', isApplyingUpdate && 'animate-spin')} aria-hidden="true" />
+              <span>{isApplyingUpdate ? 'Memperbarui...' : 'Perbarui Sekarang'}</span>
             </button>
           </div>
         </aside>

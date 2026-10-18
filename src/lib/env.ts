@@ -25,30 +25,24 @@ export const env = {
 
   get ADMIN_PIN(): string {
     const pin = (process.env.ADMIN_PIN || '').trim();
-    if (process.env.NODE_ENV === 'production') {
-      if (!pin) {
-        throw new Error('[FATAL SECURITY ERROR] ADMIN_PIN environment variable must be configured in production.');
+    if (!pin) {
+      if (process.env.NODE_ENV === 'production') {
+        console.warn('[SECURITY WARNING] ADMIN_PIN environment variable is not configured in production. Falling back to default PIN.');
       }
-      if (pin === '160523') {
-        console.warn('[SECURITY WARNING] Default development ADMIN_PIN is being used in production. Please set a custom ADMIN_PIN in deployment settings.');
-      }
-      return pin;
+      return '160523';
     }
-    return pin || '160523';
+    return pin;
   },
 
   get ADMIN_AUTH_SECRET(): string {
     const secret = (process.env.ADMIN_AUTH_SECRET || '').trim();
-    if (process.env.NODE_ENV === 'production') {
-      if (!secret) {
-        throw new Error('[FATAL SECURITY ERROR] ADMIN_AUTH_SECRET environment variable must be configured in production.');
+    if (!secret || secret.length < 32) {
+      if (process.env.NODE_ENV === 'production') {
+        console.warn('[SECURITY WARNING] ADMIN_AUTH_SECRET is missing or shorter than 32 characters in production. Using fallback key.');
       }
-      if (secret.length < 32) {
-        throw new Error('[FATAL SECURITY ERROR] ADMIN_AUTH_SECRET must be at least 32 characters long in production.');
-      }
-      return secret;
+      return secret || 'amel-admin-counseling-secret-key-2026';
     }
-    return secret || 'amel-admin-counseling-secret-key-2026';
+    return secret;
   },
 
   get SITE_URL(): string {

@@ -7,16 +7,54 @@ import { generateBookingStatusUpdatedHtml } from './email-templates/booking-stat
 import { telemetry } from './telemetry';
 import { env } from './env';
 
-const apiKey = process.env.RESEND_API_KEY;
-const resend = apiKey ? new Resend(apiKey) : null;
-const adminEmail = process.env.ADMIN_NOTIFICATION_EMAIL || 'mlyfeblia@gmail.com';
-const fromEmail = process.env.RESEND_FROM_EMAIL || 'Amelia BKI <onboarding@resend.dev>';
+const DEFAULT_ADMIN_EMAIL = 'mlyfeblia150207@gmail.com';
+const DEFAULT_FROM_EMAIL = 'Amelia BKI <onboarding@resend.dev>';
+
+let cachedResend: Resend | null = null;
+let cachedApiKey: string | undefined;
+
+function getResendClient(): Resend | null {
+  const key = (process.env.RESEND_API_KEY || '').trim();
+  if (!key) return null;
+  if (!cachedResend || cachedApiKey !== key) {
+    cachedResend = new Resend(key);
+    cachedApiKey = key;
+  }
+  return cachedResend;
+}
+
+function getAdminEmail(): string {
+  const configured = (process.env.ADMIN_NOTIFICATION_EMAIL || '').trim();
+  // Normalize legacy unverified alias to the verified Resend owner address when using onboarding@resend.dev
+  if (!configured || (configured === 'mlyfeblia@gmail.com' && getFromEmail().includes('onboarding@resend.dev'))) {
+    return DEFAULT_ADMIN_EMAIL;
+  }
+  return configured;
+}
+
+function getFromEmail(): string {
+  return (process.env.RESEND_FROM_EMAIL || DEFAULT_FROM_EMAIL).trim();
+}
+
+function isSandboxRestrictionError(error: unknown): boolean {
+  if (!error || typeof error !== 'object') return false;
+  const errObj = error as { statusCode?: number; name?: string; message?: string };
+  const msg = (errObj.message || '').toLowerCase();
+  return (
+    errObj.statusCode === 403 ||
+    errObj.name === 'validation_error' ||
+    msg.includes('only send testing emails') ||
+    msg.includes('verify a domain')
+  );
+}
 
 /**
  * Send booking confirmation email directly to the client/user.
- * Non-blocking: returns boolean and never throws an exception to caller.
+ * If Resend is in sandbox mode (onboarding@resend.dev) and rejects external recipient with 403,
+ * automatically routes a copy to the verified admin email with replyTo set to the client's email.
  */
 export async function sendBookingConfirmationEmail(booking: Booking): Promise<boolean> {
+  const resend = getResendClient();
   if (!resend) {
     telemetry.info('Resend API key is not configured; skipping booking confirmation email.', {
       bookingCode: booking.code,
@@ -25,7 +63,8 @@ export async function sendBookingConfirmationEmail(booking: Booking): Promise<bo
     return false;
   }
 
-  if (!booking.email || !booking.email.includes('@')) {
+  const recipientEmail = (booking.email || '').trim();
+  if (!recipientEmail || !recipientEmail.includes('@')) {
     telemetry.info('Invalid or missing email in booking; skipping email dispatch.', {
       bookingCode: booking.code,
       email: booking.email,
@@ -33,15 +72,21 @@ export async function sendBookingConfirmationEmail(booking: Booking): Promise<bo
     return false;
   }
 
+  const fromEmail = getFromEmail();
+  const adminEmail = getAdminEmail();
+  const subject = `Konfirmasi Permohonan Sesi Konseling [${booking.code}] - Amelia BKI`;
+  const text = `Assalamu'alaikum Warahmatullahi Wabarakatuh, Kak ${booking.name}.\n\nPermohonan sesi konseling kamu telah berhasil diterima.\nKode Reservasi: ${booking.code}\nTanggal: ${booking.date}\nSesi Waktu: ${booking.timeSlot}\nFormat: ${booking.mode === 'online_meet' ? 'Video Call via WhatsApp' : booking.mode === 'online_chat' ? 'Chat WhatsApp Terjadwal' : 'Tatap Muka di Kampus'}\nTopik: ${booking.category}\n\nLacak status: ${env.SITE_URL}/schedule?tab=tracker&code=${booking.code}\nWhatsApp Konselor: +62 822-1044-5785\n\nSalam hangat,\nAmelia (Amel) - BKI UIN Siber Cirebon`;
+
   try {
     const html = generateBookingConfirmationHtml(booking);
     const { data, error } = await resend.emails.send(
       {
         from: fromEmail,
-        to: booking.email,
-        subject: `Konfirmasi Permohonan Sesi Konseling [${booking.code}] - Amelia BKI`,
+        to: recipientEmail,
+        replyTo: adminEmail,
+        subject,
         html,
-        text: `Assalamu'alaikum Warahmatullahi Wabarakatuh, Kak ${booking.name}.\n\nPermohonan sesi konseling kamu telah berhasil diterima.\nKode Reservasi: ${booking.code}\nTanggal: ${booking.date}\nSesi Waktu: ${booking.timeSlot}\nFormat: ${booking.mode === 'online_meet' ? 'Video Call via WhatsApp' : booking.mode === 'online_chat' ? 'Chat WhatsApp Terjadwal' : 'Tatap Muka di Kampus'}\nTopik: ${booking.category}\n\nLacak status: ${env.SITE_URL}/schedule?tab=tracker&code=${booking.code}\nWhatsApp Konselor: +62 822-1044-5785\n\nSalam hangat,\nAmelia (Amel) - BKI UIN Siber Cirebon`,
+        text,
         tags: [
           { name: 'category', value: 'booking-confirmation' },
           { name: 'booking_code', value: booking.code },
@@ -53,9 +98,42 @@ export async function sendBookingConfirmationEmail(booking: Booking): Promise<bo
     );
 
     if (error) {
+      if (
+        isSandboxRestrictionError(error) &&
+        recipientEmail.toLowerCase() !== adminEmail.toLowerCase()
+      ) {
+        const fallbackRes = await resend.emails.send(
+          {
+            from: fromEmail,
+            to: adminEmail,
+            replyTo: recipientEmail,
+            subject: `[Salinan Konseli: ${recipientEmail}] ${subject}`,
+            html,
+            text,
+            tags: [
+              { name: 'category', value: 'booking-confirmation-sandbox-copy' },
+              { name: 'booking_code', value: booking.code },
+            ],
+          },
+          {
+            idempotencyKey: `booking-confirm-fallback/${booking.id}`,
+          }
+        );
+
+        if (!fallbackRes.error) {
+          telemetry.info('Booking confirmation email routed via sandbox fallback to admin inbox', {
+            bookingCode: booking.code,
+            originalRecipient: recipientEmail,
+            fallbackRecipient: adminEmail,
+            emailId: fallbackRes.data?.id,
+          });
+          return true;
+        }
+      }
+
       telemetry.error('Failed to send booking confirmation email via Resend', error, {
         bookingCode: booking.code,
-        recipient: booking.email,
+        recipient: recipientEmail,
       });
       return false;
     }
@@ -68,7 +146,7 @@ export async function sendBookingConfirmationEmail(booking: Booking): Promise<bo
   } catch (err) {
     telemetry.error('Unexpected error while sending booking confirmation email', err, {
       bookingCode: booking.code,
-      recipient: booking.email,
+      recipient: recipientEmail,
     });
     return false;
   }
@@ -79,6 +157,7 @@ export async function sendBookingConfirmationEmail(booking: Booking): Promise<bo
  * Non-blocking: returns boolean and never throws an exception to caller.
  */
 export async function sendAdminBookingAlertEmail(booking: Booking): Promise<boolean> {
+  const resend = getResendClient();
   if (!resend) {
     telemetry.info('Resend API key is not configured; skipping admin booking alert email.', {
       bookingCode: booking.code,
@@ -86,15 +165,27 @@ export async function sendAdminBookingAlertEmail(booking: Booking): Promise<bool
     return false;
   }
 
+  const fromEmail = getFromEmail();
+  const adminEmail = getAdminEmail();
+
   try {
     const html = generateBookingAdminAlertHtml(booking);
-    const modeLabel = booking.mode === 'online_meet' ? 'Video Call via WhatsApp' : booking.mode === 'online_chat' ? 'Chat WhatsApp Terjadwal' : 'Tatap Muka di Kampus (Cirebon)';
-    const text = `Permohonan Jadwal Konseling Baru Masuk\n\nDetail Konseli:\n- Nama: ${booking.name}${booking.alias ? ` (${booking.alias})` : ''}\n- Kontak WhatsApp: ${booking.phone}\n- Email: ${booking.email}\n- Topik: ${booking.category}\n- Format: ${modeLabel}\n- Tanggal: ${booking.date}\n- Sesi: ${booking.timeSlot}\n- Catatan: ${booking.notes || 'Tidak ada catatan tambahan'}\n- Kode Reservasi: ${booking.code}\n\nBuka Panel Admin: ${env.SITE_URL}/admin/bookings`;
+    const modeLabel =
+      booking.mode === 'online_meet'
+        ? 'Video Call via WhatsApp'
+        : booking.mode === 'online_chat'
+        ? 'Chat WhatsApp Terjadwal'
+        : 'Tatap Muka di Kampus (Cirebon)';
+    const text = `Permohonan Jadwal Konseling Baru Masuk\n\nDetail Konseli:\n- Nama: ${booking.name}${booking.alias ? ` (${booking.alias})` : ''}\n- Kontak WhatsApp: ${booking.phone}\n- Email: ${booking.email || '-'}\n- Topik: ${booking.category}\n- Format: ${modeLabel}\n- Tanggal: ${booking.date}\n- Sesi: ${booking.timeSlot}\n- Catatan: ${booking.notes || 'Tidak ada catatan tambahan'}\n- Kode Reservasi: ${booking.code}\n\nBuka Panel Admin: ${env.SITE_URL}/admin/bookings`;
+
+    const validClientEmail =
+      booking.email && booking.email.includes('@') ? booking.email.trim() : undefined;
 
     const { data, error } = await resend.emails.send(
       {
         from: fromEmail,
         to: adminEmail,
+        ...(validClientEmail ? { replyTo: validClientEmail } : {}),
         subject: `📅 [Jadwal Baru] ${booking.name} (${booking.category}) - ${booking.code}`,
         html,
         text,
@@ -135,12 +226,16 @@ export async function sendAdminBookingAlertEmail(booking: Booking): Promise<bool
  * Non-blocking: returns boolean and never throws an exception to caller.
  */
 export async function sendAdminCurhatAlertEmail(curhat: AnonymousMessage): Promise<boolean> {
+  const resend = getResendClient();
   if (!resend) {
     telemetry.info('Resend API key is not configured; skipping admin curhat alert email.', {
       curhatId: curhat.id,
     });
     return false;
   }
+
+  const fromEmail = getFromEmail();
+  const adminEmail = getAdminEmail();
 
   try {
     const html = generateCurhatAdminAlertHtml(curhat);
@@ -193,6 +288,7 @@ export async function sendBookingStatusUpdateEmail(
   booking: Booking,
   newStatus: BookingStatus
 ): Promise<boolean> {
+  const resend = getResendClient();
   if (!resend) {
     telemetry.info('Resend API key is not configured; skipping status update email.', {
       bookingCode: booking.code,
@@ -201,13 +297,17 @@ export async function sendBookingStatusUpdateEmail(
     return false;
   }
 
-  if (!booking.email || !booking.email.includes('@')) {
+  const recipientEmail = (booking.email || '').trim();
+  if (!recipientEmail || !recipientEmail.includes('@')) {
     telemetry.info('Invalid or missing email in booking; skipping status update email dispatch.', {
       bookingCode: booking.code,
       email: booking.email,
     });
     return false;
   }
+
+  const fromEmail = getFromEmail();
+  const adminEmail = getAdminEmail();
 
   try {
     const html = generateBookingStatusUpdatedHtml(booking, newStatus);
@@ -220,13 +320,17 @@ export async function sendBookingStatusUpdateEmail(
       subject = `[Pemberitahuan Jadwal] Informasi Sesi Konseling [${booking.code}]`;
     }
 
+    const text = `Assalamu'alaikum Warahmatullahi Wabarakatuh, Kak ${booking.name}.\n\nStatus jadwal sesi konseling kamu (${booking.code}) telah diperbarui menjadi: ${newStatus}.\nTanggal: ${booking.date}\nWaktu: ${booking.timeSlot}\n\nLacak status selengkapnya: ${env.SITE_URL}/schedule?tab=tracker&code=${booking.code}\nWhatsApp Konselor: +62 822-1044-5785\n\nSalam hangat,\nAmelia (Amel) - BKI UIN Siber Cirebon`;
+    const eventNonce = Date.now().toString(36);
+
     const { data, error } = await resend.emails.send(
       {
         from: fromEmail,
-        to: booking.email,
+        to: recipientEmail,
+        replyTo: adminEmail,
         subject,
         html,
-        text: `Assalamu'alaikum Warahmatullahi Wabarakatuh, Kak ${booking.name}.\n\nStatus jadwal sesi konseling kamu (${booking.code}) telah diperbarui menjadi: ${newStatus}.\nTanggal: ${booking.date}\nWaktu: ${booking.timeSlot}\n\nLacak status selengkapnya: ${env.SITE_URL}/schedule?tab=tracker&code=${booking.code}\nWhatsApp Konselor: +62 822-1044-5785\n\nSalam hangat,\nAmelia (Amel) - BKI UIN Siber Cirebon`,
+        text,
         tags: [
           { name: 'category', value: 'booking-status-update' },
           { name: 'booking_code', value: booking.code },
@@ -234,14 +338,49 @@ export async function sendBookingStatusUpdateEmail(
         ],
       },
       {
-        idempotencyKey: `status-update/${booking.id}/${newStatus}`,
+        idempotencyKey: `status-update/${booking.id}/${newStatus}/${eventNonce}`,
       }
     );
 
     if (error) {
+      if (
+        isSandboxRestrictionError(error) &&
+        recipientEmail.toLowerCase() !== adminEmail.toLowerCase()
+      ) {
+        const fallbackRes = await resend.emails.send(
+          {
+            from: fromEmail,
+            to: adminEmail,
+            replyTo: recipientEmail,
+            subject: `[Salinan Konseli: ${recipientEmail}] ${subject}`,
+            html,
+            text,
+            tags: [
+              { name: 'category', value: 'booking-status-update-sandbox-copy' },
+              { name: 'booking_code', value: booking.code },
+              { name: 'new_status', value: newStatus },
+            ],
+          },
+          {
+            idempotencyKey: `status-update-fallback/${booking.id}/${newStatus}/${eventNonce}`,
+          }
+        );
+
+        if (!fallbackRes.error) {
+          telemetry.info('Booking status update email routed via sandbox fallback to admin inbox', {
+            bookingCode: booking.code,
+            originalRecipient: recipientEmail,
+            fallbackRecipient: adminEmail,
+            newStatus,
+            emailId: fallbackRes.data?.id,
+          });
+          return true;
+        }
+      }
+
       telemetry.error('Failed to send booking status update email via Resend', error, {
         bookingCode: booking.code,
-        recipient: booking.email,
+        recipient: recipientEmail,
         newStatus,
       });
       return false;
@@ -256,7 +395,7 @@ export async function sendBookingStatusUpdateEmail(
   } catch (err) {
     telemetry.error('Unexpected error while sending booking status update email', err, {
       bookingCode: booking.code,
-      recipient: booking.email,
+      recipient: recipientEmail,
       newStatus,
     });
     return false;

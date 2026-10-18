@@ -89,4 +89,42 @@ describe('System Integration & Full-Site Architecture Verification', () => {
       expect(replyBoxContent).not.toContain('animate-fade-in-up');
     });
   });
+
+  describe('Production Reliability: Resend Email, PWA Update Button & Admin Auth', () => {
+    it('resend.ts uses verified owner email mlyfeblia150207@gmail.com and sandbox fallback', () => {
+      const resendContent = fs.readFileSync(path.resolve(process.cwd(), 'src/lib/resend.ts'), 'utf-8');
+      expect(resendContent).toContain("DEFAULT_ADMIN_EMAIL = 'mlyfeblia150207@gmail.com'");
+      expect(resendContent).toContain('isSandboxRestrictionError');
+      expect(resendContent).toContain('[Salinan Konseli:');
+    });
+
+    it('serverless routes await Promise.allSettled for email and push notifications', () => {
+      const bookingsRoute = fs.readFileSync(bookingsRoutePath, 'utf-8');
+      const bookingIdRoute = fs.readFileSync(
+        path.resolve(process.cwd(), 'src/app/api/bookings/[id]/route.ts'),
+        'utf-8'
+      );
+      const curhatRoute = fs.readFileSync(curhatRoutePath, 'utf-8');
+
+      expect(bookingsRoute).toContain('await Promise.allSettled');
+      expect(bookingIdRoute).toContain('await Promise.allSettled');
+      expect(curhatRoute).toContain('await Promise.allSettled');
+    });
+
+    it('PwaLifecycle.tsx Perbarui Sekarang button has guaranteed reload fallback and loading state', () => {
+      const pwaContent = fs.readFileSync(
+        path.resolve(process.cwd(), 'src/components/pwa/PwaLifecycle.tsx'),
+        'utf-8'
+      );
+      expect(pwaContent).toContain('isApplyingUpdate');
+      expect(pwaContent).toContain("caches.delete('amelia-pages-cache')");
+      expect(pwaContent).toContain('setTimeout(performReload, 450)');
+      expect(pwaContent).toContain("isApplyingUpdate ? 'Memperbarui...' : 'Perbarui Sekarang'");
+    });
+
+    it('sw.ts enables clientsClaim: true so skipped-waiting worker claims active clients', () => {
+      const swContent = fs.readFileSync(path.resolve(process.cwd(), 'src/sw.ts'), 'utf-8');
+      expect(swContent).toContain('clientsClaim: true');
+    });
+  });
 });

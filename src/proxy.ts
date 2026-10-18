@@ -13,11 +13,22 @@ export async function proxy(request: NextRequest) {
     ['POST', 'PATCH', 'PUT', 'DELETE'].includes(request.method)
   ) {
     const origin = request.headers.get('origin');
-    const host = request.headers.get('x-forwarded-host') || request.headers.get('host');
-    if (origin && host) {
+    const forwardedHost = request.headers.get('x-forwarded-host');
+    const directHost = request.headers.get('host');
+    const allowedHosts = new Set(
+      [
+        ...(forwardedHost ? forwardedHost.split(',') : []),
+        directHost,
+        request.nextUrl.host,
+      ]
+        .map((h) => h?.trim().toLowerCase())
+        .filter((h): h is string => Boolean(h))
+    );
+
+    if (origin && allowedHosts.size > 0) {
       try {
-        const originHost = new URL(origin).host;
-        if (originHost !== host) {
+        const originHost = new URL(origin).host.trim().toLowerCase();
+        if (!allowedHosts.has(originHost)) {
           return NextResponse.json(
             {
               success: false,
