@@ -6,6 +6,7 @@ import { generateCurhatAdminAlertHtml } from './email-templates/curhat-admin-ale
 import { generateBookingStatusUpdatedHtml } from './email-templates/booking-status-updated-template';
 import { telemetry } from './telemetry';
 import { env } from './env';
+import { isSmtpConfigured, sendEmailViaSmtp } from './smtp';
 
 const DEFAULT_ADMIN_EMAIL = 'mlyfeblia150207@gmail.com';
 const DEFAULT_FROM_EMAIL = 'Amelia BKI <onboarding@resend.dev>';
@@ -49,20 +50,12 @@ function isSandboxRestrictionError(error: unknown): boolean {
 }
 
 /**
- * Send booking confirmation email directly to the client/user.
- * If Resend is in sandbox mode (onboarding@resend.dev) and rejects external recipient with 403,
- * automatically routes a copy to the verified admin email with replyTo set to the client's email.
+ * Send booking confirmation email directly to the client/konseli.
+ * 1. Primary: Uses Gmail SMTP (if configured) so the email lands directly in the konseli's personal inbox.
+ * 2. Secondary: Falls back to Resend API.
+ * 3. Fallback: If Resend is restricted to sandbox, routes a copy to the counselor's inbox with replyTo set to the konseli.
  */
 export async function sendBookingConfirmationEmail(booking: Booking): Promise<boolean> {
-  const resend = getResendClient();
-  if (!resend) {
-    telemetry.info('Resend API key is not configured; skipping booking confirmation email.', {
-      bookingCode: booking.code,
-      recipient: booking.email,
-    });
-    return false;
-  }
-
   const recipientEmail = (booking.email || '').trim();
   if (!recipientEmail || !recipientEmail.includes('@')) {
     telemetry.info('Invalid or missing email in booking; skipping email dispatch.', {
@@ -72,13 +65,51 @@ export async function sendBookingConfirmationEmail(booking: Booking): Promise<bo
     return false;
   }
 
-  const fromEmail = getFromEmail();
   const adminEmail = getAdminEmail();
   const subject = `Konfirmasi Permohonan Sesi Konseling [${booking.code}] - Amelia BKI`;
   const text = `Assalamu'alaikum Warahmatullahi Wabarakatuh, Kak ${booking.name}.\n\nPermohonan sesi konseling kamu telah berhasil diterima.\nKode Reservasi: ${booking.code}\nTanggal: ${booking.date}\nSesi Waktu: ${booking.timeSlot}\nFormat: ${booking.mode === 'online_meet' ? 'Video Call via WhatsApp' : booking.mode === 'online_chat' ? 'Chat WhatsApp Terjadwal' : 'Tatap Muka di Kampus'}\nTopik: ${booking.category}\n\nLacak status: ${env.SITE_URL}/schedule?tab=tracker&code=${booking.code}\nWhatsApp Konselor: +62 822-1044-5785\n\nSalam hangat,\nAmelia (Amel) - BKI UIN Siber Cirebon`;
 
+  const html = generateBookingConfirmationHtml(booking);
+
+  // 1. Primary Engine: Gmail SMTP (delivers directly to ANY konseli inbox without domain restrictions)
+  if (isSmtpConfigured()) {
+    const smtpRes = await sendEmailViaSmtp({
+      to: recipientEmail,
+      replyTo: adminEmail,
+      subject,
+      html,
+      text,
+    });
+
+    if (smtpRes.success) {
+      telemetry.info('Booking confirmation email delivered directly to konseli via SMTP', {
+        bookingCode: booking.code,
+        recipient: recipientEmail,
+        messageId: smtpRes.messageId,
+      });
+      return true;
+    }
+
+    telemetry.warn('Gmail SMTP failed for booking confirmation; attempting Resend fallback', {
+      bookingCode: booking.code,
+      recipient: recipientEmail,
+      error: smtpRes.error,
+    });
+  }
+
+  // 2. Secondary Engine: Resend API
+  const resend = getResendClient();
+  if (!resend) {
+    telemetry.info('Neither SMTP nor Resend API key is configured; skipping booking confirmation email.', {
+      bookingCode: booking.code,
+      recipient: booking.email,
+    });
+    return false;
+  }
+
+  const fromEmail = getFromEmail();
+
   try {
-    const html = generateBookingConfirmationHtml(booking);
     const { data, error } = await resend.emails.send(
       {
         from: fromEmail,
@@ -138,7 +169,7 @@ export async function sendBookingConfirmationEmail(booking: Booking): Promise<bo
       return false;
     }
 
-    telemetry.info('Booking confirmation email sent successfully', {
+    telemetry.info('Booking confirmation email sent successfully via Resend', {
       bookingCode: booking.code,
       emailId: data?.id,
     });
@@ -153,40 +184,69 @@ export async function sendBookingConfirmationEmail(booking: Booking): Promise<bo
 }
 
 /**
- * Send notification email to Amelia (admin) when a new counseling booking is created.
- * Non-blocking: returns boolean and never throws an exception to caller.
+ * Send notification email to Amelia (konselor) when a new counseling booking is created.
+ * 1. Primary: Uses Gmail SMTP.
+ * 2. Secondary: Falls back to Resend API.
  */
 export async function sendAdminBookingAlertEmail(booking: Booking): Promise<boolean> {
+  const adminEmail = getAdminEmail();
+  const html = generateBookingAdminAlertHtml(booking);
+  const modeLabel =
+    booking.mode === 'online_meet'
+      ? 'Video Call via WhatsApp'
+      : booking.mode === 'online_chat'
+      ? 'Chat WhatsApp Terjadwal'
+      : 'Tatap Muka di Kampus (Cirebon)';
+  const text = `Permohonan Jadwal Konseling Baru Masuk\n\nDetail Konseli:\n- Nama: ${booking.name}${booking.alias ? ` (${booking.alias})` : ''}\n- Kontak WhatsApp: ${booking.phone}\n- Email: ${booking.email || '-'}\n- Topik: ${booking.category}\n- Format: ${modeLabel}\n- Tanggal: ${booking.date}\n- Sesi: ${booking.timeSlot}\n- Catatan: ${booking.notes || 'Tidak ada catatan tambahan'}\n- Kode Reservasi: ${booking.code}\n\nBuka Panel Admin: ${env.SITE_URL}/admin/bookings`;
+
+  const validClientEmail =
+    booking.email && booking.email.includes('@') ? booking.email.trim() : undefined;
+  const subject = `📅 [Jadwal Baru] ${booking.name} (${booking.category}) - ${booking.code}`;
+
+  // 1. Primary Engine: Gmail SMTP
+  if (isSmtpConfigured()) {
+    const smtpRes = await sendEmailViaSmtp({
+      to: adminEmail,
+      replyTo: validClientEmail,
+      subject,
+      html,
+      text,
+    });
+
+    if (smtpRes.success) {
+      telemetry.info('Admin booking alert delivered directly via SMTP', {
+        bookingCode: booking.code,
+        adminEmail,
+        messageId: smtpRes.messageId,
+      });
+      return true;
+    }
+
+    telemetry.warn('Gmail SMTP failed for admin booking alert; attempting Resend fallback', {
+      bookingCode: booking.code,
+      adminEmail,
+      error: smtpRes.error,
+    });
+  }
+
+  // 2. Secondary Engine: Resend API
   const resend = getResendClient();
   if (!resend) {
-    telemetry.info('Resend API key is not configured; skipping admin booking alert email.', {
+    telemetry.info('Neither SMTP nor Resend API key is configured; skipping admin booking alert email.', {
       bookingCode: booking.code,
     });
     return false;
   }
 
   const fromEmail = getFromEmail();
-  const adminEmail = getAdminEmail();
 
   try {
-    const html = generateBookingAdminAlertHtml(booking);
-    const modeLabel =
-      booking.mode === 'online_meet'
-        ? 'Video Call via WhatsApp'
-        : booking.mode === 'online_chat'
-        ? 'Chat WhatsApp Terjadwal'
-        : 'Tatap Muka di Kampus (Cirebon)';
-    const text = `Permohonan Jadwal Konseling Baru Masuk\n\nDetail Konseli:\n- Nama: ${booking.name}${booking.alias ? ` (${booking.alias})` : ''}\n- Kontak WhatsApp: ${booking.phone}\n- Email: ${booking.email || '-'}\n- Topik: ${booking.category}\n- Format: ${modeLabel}\n- Tanggal: ${booking.date}\n- Sesi: ${booking.timeSlot}\n- Catatan: ${booking.notes || 'Tidak ada catatan tambahan'}\n- Kode Reservasi: ${booking.code}\n\nBuka Panel Admin: ${env.SITE_URL}/admin/bookings`;
-
-    const validClientEmail =
-      booking.email && booking.email.includes('@') ? booking.email.trim() : undefined;
-
     const { data, error } = await resend.emails.send(
       {
         from: fromEmail,
         to: adminEmail,
         ...(validClientEmail ? { replyTo: validClientEmail } : {}),
-        subject: `📅 [Jadwal Baru] ${booking.name} (${booking.category}) - ${booking.code}`,
+        subject,
         html,
         text,
         tags: [
@@ -207,7 +267,7 @@ export async function sendAdminBookingAlertEmail(booking: Booking): Promise<bool
       return false;
     }
 
-    telemetry.info('Admin booking alert email sent successfully', {
+    telemetry.info('Admin booking alert email sent successfully via Resend', {
       bookingCode: booking.code,
       emailId: data?.id,
     });
@@ -222,30 +282,58 @@ export async function sendAdminBookingAlertEmail(booking: Booking): Promise<bool
 }
 
 /**
- * Send notification email to Amelia (admin) when a new anonymous curhat message is submitted.
- * Non-blocking: returns boolean and never throws an exception to caller.
+ * Send notification email to Amelia (konselor) when a new anonymous curhat message is submitted.
+ * 1. Primary: Uses Gmail SMTP.
+ * 2. Secondary: Falls back to Resend API.
  */
 export async function sendAdminCurhatAlertEmail(curhat: AnonymousMessage): Promise<boolean> {
+  const adminEmail = getAdminEmail();
+  const html = generateCurhatAdminAlertHtml(curhat);
+  const text = `Pesan Curhat Anonim Baru Masuk\n\nDetail Curhat:\n- Nama Samaran: ${curhat.alias || 'Teman Anonim'}\n- Kategori: ${curhat.category || 'Curhat Umum'}\n- Waktu: ${curhat.createdAt}\n\nIsi Pesan:\n"${curhat.message}"\n\nTanggapi di Panel Admin: ${env.SITE_URL}/admin/counseling`;
+  const subject = `💌 [Curhat Baru] Pesan dari ${curhat.alias || 'Anonim'} (${curhat.category || 'Umum'})`;
+
+  // 1. Primary Engine: Gmail SMTP
+  if (isSmtpConfigured()) {
+    const smtpRes = await sendEmailViaSmtp({
+      to: adminEmail,
+      subject,
+      html,
+      text,
+    });
+
+    if (smtpRes.success) {
+      telemetry.info('Admin curhat alert delivered directly via SMTP', {
+        curhatId: curhat.id,
+        adminEmail,
+        messageId: smtpRes.messageId,
+      });
+      return true;
+    }
+
+    telemetry.warn('Gmail SMTP failed for admin curhat alert; attempting Resend fallback', {
+      curhatId: curhat.id,
+      adminEmail,
+      error: smtpRes.error,
+    });
+  }
+
+  // 2. Secondary Engine: Resend API
   const resend = getResendClient();
   if (!resend) {
-    telemetry.info('Resend API key is not configured; skipping admin curhat alert email.', {
+    telemetry.info('Neither SMTP nor Resend API key is configured; skipping admin curhat alert email.', {
       curhatId: curhat.id,
     });
     return false;
   }
 
   const fromEmail = getFromEmail();
-  const adminEmail = getAdminEmail();
 
   try {
-    const html = generateCurhatAdminAlertHtml(curhat);
-    const text = `Pesan Curhat Anonim Baru Masuk\n\nDetail Curhat:\n- Nama Samaran: ${curhat.alias || 'Teman Anonim'}\n- Kategori: ${curhat.category || 'Curhat Umum'}\n- Waktu: ${curhat.createdAt}\n\nIsi Pesan:\n"${curhat.message}"\n\nTanggapi di Panel Admin: ${env.SITE_URL}/admin/counseling`;
-
     const { data, error } = await resend.emails.send(
       {
         from: fromEmail,
         to: adminEmail,
-        subject: `💌 [Curhat Baru] Pesan dari ${curhat.alias || 'Anonim'} (${curhat.category || 'Umum'})`,
+        subject,
         html,
         text,
         tags: [
@@ -266,7 +354,7 @@ export async function sendAdminCurhatAlertEmail(curhat: AnonymousMessage): Promi
       return false;
     }
 
-    telemetry.info('Admin curhat alert email sent successfully', {
+    telemetry.info('Admin curhat alert email sent successfully via Resend', {
       curhatId: curhat.id,
       emailId: data?.id,
     });
@@ -281,22 +369,14 @@ export async function sendAdminCurhatAlertEmail(curhat: AnonymousMessage): Promi
 }
 
 /**
- * Send status update email directly to the client when admin confirms, completes, or cancels a booking.
- * Non-blocking: returns boolean and never throws an exception to caller.
+ * Send status update email directly to the client/konseli when admin confirms, completes, or cancels a booking.
+ * 1. Primary: Uses Gmail SMTP (delivers directly to ANY konseli inbox).
+ * 2. Secondary: Falls back to Resend API.
  */
 export async function sendBookingStatusUpdateEmail(
   booking: Booking,
   newStatus: BookingStatus
 ): Promise<boolean> {
-  const resend = getResendClient();
-  if (!resend) {
-    telemetry.info('Resend API key is not configured; skipping status update email.', {
-      bookingCode: booking.code,
-      status: newStatus,
-    });
-    return false;
-  }
-
   const recipientEmail = (booking.email || '').trim();
   if (!recipientEmail || !recipientEmail.includes('@')) {
     telemetry.info('Invalid or missing email in booking; skipping status update email dispatch.', {
@@ -306,23 +386,61 @@ export async function sendBookingStatusUpdateEmail(
     return false;
   }
 
-  const fromEmail = getFromEmail();
   const adminEmail = getAdminEmail();
+  const html = generateBookingStatusUpdatedHtml(booking, newStatus);
+  let subject = `Pembaruan Jadwal Konseling [${booking.code}] - Amelia BKI`;
+  if (newStatus === 'terkonfirmasi') {
+    subject = `[Jadwal Terkonfirmasi] Sesi Konseling [${booking.code}] - Amelia BKI`;
+  } else if (newStatus === 'selesai') {
+    subject = `[Sesi Selesai] Terima Kasih Telah Berbagi Ruang Konseling [${booking.code}]`;
+  } else if (newStatus === 'dibatalkan') {
+    subject = `[Pemberitahuan Jadwal] Informasi Sesi Konseling [${booking.code}]`;
+  }
 
-  try {
-    const html = generateBookingStatusUpdatedHtml(booking, newStatus);
-    let subject = `Pembaruan Jadwal Konseling [${booking.code}] - Amelia BKI`;
-    if (newStatus === 'terkonfirmasi') {
-      subject = `[Jadwal Terkonfirmasi] Sesi Konseling [${booking.code}] - Amelia BKI`;
-    } else if (newStatus === 'selesai') {
-      subject = `[Sesi Selesai] Terima Kasih Telah Berbagi Ruang Konseling [${booking.code}]`;
-    } else if (newStatus === 'dibatalkan') {
-      subject = `[Pemberitahuan Jadwal] Informasi Sesi Konseling [${booking.code}]`;
+  const text = `Assalamu'alaikum Warahmatullahi Wabarakatuh, Kak ${booking.name}.\n\nStatus jadwal sesi konseling kamu (${booking.code}) telah diperbarui menjadi: ${newStatus}.\nTanggal: ${booking.date}\nWaktu: ${booking.timeSlot}\n\nLacak status selengkapnya: ${env.SITE_URL}/schedule?tab=tracker&code=${booking.code}\nWhatsApp Konselor: +62 822-1044-5785\n\nSalam hangat,\nAmelia (Amel) - BKI UIN Siber Cirebon`;
+
+  // 1. Primary Engine: Gmail SMTP (delivers directly to konseli)
+  if (isSmtpConfigured()) {
+    const smtpRes = await sendEmailViaSmtp({
+      to: recipientEmail,
+      replyTo: adminEmail,
+      subject,
+      html,
+      text,
+    });
+
+    if (smtpRes.success) {
+      telemetry.info('Booking status update email delivered directly to konseli via SMTP', {
+        bookingCode: booking.code,
+        recipient: recipientEmail,
+        newStatus,
+        messageId: smtpRes.messageId,
+      });
+      return true;
     }
 
-    const text = `Assalamu'alaikum Warahmatullahi Wabarakatuh, Kak ${booking.name}.\n\nStatus jadwal sesi konseling kamu (${booking.code}) telah diperbarui menjadi: ${newStatus}.\nTanggal: ${booking.date}\nWaktu: ${booking.timeSlot}\n\nLacak status selengkapnya: ${env.SITE_URL}/schedule?tab=tracker&code=${booking.code}\nWhatsApp Konselor: +62 822-1044-5785\n\nSalam hangat,\nAmelia (Amel) - BKI UIN Siber Cirebon`;
-    const eventNonce = Date.now().toString(36);
+    telemetry.warn('Gmail SMTP failed for booking status update; attempting Resend fallback', {
+      bookingCode: booking.code,
+      recipient: recipientEmail,
+      newStatus,
+      error: smtpRes.error,
+    });
+  }
 
+  // 2. Secondary Engine: Resend API
+  const resend = getResendClient();
+  if (!resend) {
+    telemetry.info('Neither SMTP nor Resend API key is configured; skipping status update email.', {
+      bookingCode: booking.code,
+      status: newStatus,
+    });
+    return false;
+  }
+
+  const fromEmail = getFromEmail();
+  const eventNonce = Date.now().toString(36);
+
+  try {
     const { data, error } = await resend.emails.send(
       {
         from: fromEmail,
@@ -386,7 +504,7 @@ export async function sendBookingStatusUpdateEmail(
       return false;
     }
 
-    telemetry.info('Booking status update email sent successfully', {
+    telemetry.info('Booking status update email sent successfully via Resend', {
       bookingCode: booking.code,
       emailId: data?.id,
       newStatus,
@@ -401,4 +519,5 @@ export async function sendBookingStatusUpdateEmail(
     return false;
   }
 }
+
 

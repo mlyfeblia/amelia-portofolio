@@ -91,11 +91,13 @@ describe('System Integration & Full-Site Architecture Verification', () => {
   });
 
   describe('Production Reliability: Resend Email, PWA Update Button & Admin Auth', () => {
-    it('resend.ts uses verified owner email mlyfeblia150207@gmail.com and sandbox fallback', () => {
+    it('resend.ts uses verified owner email mlyfeblia150207@gmail.com and dual-engine SMTP fallback', () => {
       const resendContent = fs.readFileSync(path.resolve(process.cwd(), 'src/lib/resend.ts'), 'utf-8');
       expect(resendContent).toContain("DEFAULT_ADMIN_EMAIL = 'mlyfeblia150207@gmail.com'");
       expect(resendContent).toContain('isSandboxRestrictionError');
       expect(resendContent).toContain('[Salinan Konseli:');
+      expect(resendContent).toContain('isSmtpConfigured');
+      expect(resendContent).toContain('sendEmailViaSmtp');
     });
 
     it('serverless routes await Promise.allSettled for email and push notifications', () => {

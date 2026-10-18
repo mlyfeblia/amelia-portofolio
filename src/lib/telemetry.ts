@@ -46,6 +46,25 @@ class Telemetry {
   }
 
   /**
+   * Log warning event with structured metadata.
+   */
+  warn(message: string, context?: TelemetryContext): void {
+    const timestamp = new Date().toISOString();
+    const payload = {
+      level: 'warn',
+      message,
+      timestamp,
+      ...context,
+    };
+
+    if (process.env.NODE_ENV !== 'production') {
+      console.warn(`[WARN] ${timestamp} - ${message}`, context ? JSON.stringify(context) : '');
+    }
+
+    this.sendToAxiom(payload);
+  }
+
+  /**
    * Capture error with stack trace and context.
    */
   error(message: string, err?: unknown, context?: TelemetryContext): void {
