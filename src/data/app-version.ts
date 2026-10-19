@@ -22,6 +22,29 @@ export const APP_CHANGELOG: VersionRelease[] = [
     ],
   },
   {
+    version: '2.4.0',
+    releaseDate: '19 Oktober 2026',
+    title: 'Arsitektur Pengiriman Email Ganda: Gmail SMTP via Nodemailer & Resend Fallback',
+    badge: 'Rilis Email v2.4.0',
+    highlights: [
+      'Integrasi mesin pengiriman email ganda (Dual-Engine) dengan Gmail SMTP port 465 SSL via Nodemailer berotentikasi Google App Password 16-karakter.',
+      'Pengiriman email konfirmasi reservasi dan pembaruan jadwal terkirim langsung ke kotak masuk pribadi seluruh konseli tanpa batasan sandbox.',
+      'Pemisahan jalur email transaksional: konseli menerima pesan di email pribadi masing-masing, sementara konselor menerima alert notifikasi di inbox pribadi.',
+      'Penyempurnaan modul telemetri dan logging peringatan terstruktur (telemetry.warn) untuk observabilitas serverless runtime yang tangguh.',
+    ],
+  },
+  {
+    version: '2.3.0',
+    releaseDate: '19 Oktober 2026',
+    title: 'Penguatan Keamanan PIN Portal Admin & Retensi AutoFocus Interaktif',
+    badge: 'Rilis Keamanan v2.3.0',
+    highlights: [
+      'Proteksi formulir PIN Portal Admin Konselor (/admin) dari intervensi otomatis password manager browser (Chrome, Edge, Safari, Bitwarden) melalui input decoy dan dynamic field handling.',
+      'Pemeliharaan atribut autoFocus aktif agar kursor otomatis siap mengetik pada digit pertama saat pengelola membuka portal admin.',
+      'Standarisasi sanitasi numerik 6-digit PIN instan dan pengamanan session cookie berenkripsi HMAC SHA-256.',
+    ],
+  },
+  {
     version: '2.2.0',
     releaseDate: '19 Oktober 2026',
     title: 'Stabilitas Autentikasi Produksi, Pengiriman Email Resend & Pembaruan Instan PWA',

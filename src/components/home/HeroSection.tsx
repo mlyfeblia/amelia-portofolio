@@ -60,7 +60,7 @@ export function HeroSection() {
 
           {/* Right Column: Clean Portrait Photo */}
           <div className="md:col-span-5 flex justify-center md:justify-end">
-            <div className="relative w-full max-w-[340px] aspect-[4/5] rounded-2xl overflow-hidden bg-[#1E2E25] border border-[var(--color-paper-border)] shadow-sm group">
+            <div className="hero-photo-interactive relative w-full max-w-[280px] min-[400px]:max-w-[300px] md:max-w-[340px] aspect-[4/5] rounded-2xl overflow-hidden bg-[var(--color-surface)] border border-[var(--color-paper-border)] shadow-sm hover:shadow-xl transition-all duration-300 ease-out group cursor-pointer">
               <Image
                 src="/amelia.webp"
                 alt="Foto Profil Amelia, Mahasiswi Bimbingan Konseling UIN Siber Syekh Nurjati Cirebon"
@@ -70,18 +70,18 @@ export function HeroSection() {
                 placeholder="blur"
                 blurDataURL="data:image/webp;base64,UklGRmwAAABXRUJQVlA4IGAAAAAwBACdASoQABQAPzmGuVOvKSWisAgB4CcJZwDImCLY9Ls72ZrEJEF4/ewA/owBQOkyjLLc5jRc6xVnRV8Ih0nQBejrOHiefbZyHM/aYbkUsYDKEbJfV2RdDH7EoOfAAAA="
                 sizes="(max-width: 768px) 100vw, 340px"
-                className="object-cover object-top"
+                className="object-cover object-[center_15%] scale-[1.06] transition-transform duration-500 ease-out group-hover:scale-[1.10]"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[var(--color-ink)]/75 via-transparent to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-300 pointer-events-none" />
               
-              <div className="absolute bottom-4 left-4 right-4 text-white pointer-events-none select-none">
+              <div className="absolute bottom-3.5 sm:bottom-4 left-3.5 sm:left-4 right-3.5 sm:right-4 text-white pointer-events-none select-none">
                 <p
-                  className="text-lg font-medium leading-snug"
+                  className="text-base sm:text-lg font-medium leading-snug"
                   style={{ fontFamily: 'var(--font-display)' }}
                 >
                   Amelia
                 </p>
-                <p className="text-xs text-white/80">
+                <p className="text-[11px] sm:text-xs text-white/80">
                   Bimbingan Konseling · UIN Siber Cirebon
                 </p>
               </div>
