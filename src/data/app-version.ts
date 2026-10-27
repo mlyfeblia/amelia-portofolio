@@ -12,15 +12,17 @@ export const APP_CHANGELOG: VersionRelease[] = [
   {
     version: '2.6.0',
     releaseDate: '27 Oktober 2026',
-    title: 'Pemulihan Bencana Auto-Pause InsForge, Sinkronisasi Kalender (.ICS), Ekspor CSV & Jembatan Asesmen',
+    title: 'Pemulihan Bencana Auto-Pause InsForge, Sinkronisasi Kalender (.ICS), Ekspor CSV, Manifest AI & Jembatan Asesmen',
     badge: 'Rilis Pembaruan v2.6.0',
     highlights: [
       'Sistem pemulihan bencana otomatis saat database InsForge ter-pause: panel admin beralih mulus ke cadangan snapshot lokal persisten dengan banner status interaktif dan sinkronisasi multi-tab.',
       'Otomatisasi cron job keep-alive untuk mencegah pembekuan otomatis (idle auto-pause) pada basis data InsForge BaaS.',
-      'Jembatan asesmen ke reservasi: hasil refleksi psikologis, skor, dan kategori otomatis terisi ke formulir penjadwalan konseli.',
+      'Jembatan asesmen ke reservasi: hasil refleksi psikologis, level, dan ringkasan dimensi otomatis terisi ke formulir penjadwalan konseli.',
       'Fitur ekspor laporan reservasi & curhat ke berkas RFC 4180 CSV berstandar keamanan formula injection dan UTF-8 BOM.',
       'Dukungan simpan jadwal satu klik ke iCalendar (.ICS) dan Google Calendar pada kartu sukses dan pelacakan reservasi.',
-      'Protokol tanggap darurat krisis kesehatan jiwa (SEJIWA 119 ext. 8) pada formulir curhat dan penjadwalan.',
+      'Protokol tanggap darurat krisis kesehatan jiwa (SEJIWA Kemenkes 119 ext. 8) pada formulir curhat dan penjadwalan.',
+      'Integrasi manifest AI (llms.txt) untuk optimasi visibilitas dan sitasi akurat pada mesin pencari generatif (ChatGPT, Perplexity, Gemini).',
+      'Penyempurnaan kompresi foto artikel dengan WebP kualitas 82, auto-rotate EXIF kamera, dan pembersihan peringatan linter React 19.',
     ],
   },
   {
