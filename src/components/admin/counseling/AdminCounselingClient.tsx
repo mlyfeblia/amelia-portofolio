@@ -9,6 +9,7 @@ import { CounselingList } from '@/components/admin/counseling/CounselingList';
 import { useToast } from '@/context/ToastContext';
 import { adminCache, useAdminRevalidate } from '@/lib/admin-cache';
 import { scrollContainerIntoViewIfAbove } from '@/lib/dom-utils';
+import { exportCurhatToCsv } from '@/lib/csv-export';
 
 const CounselingDeleteModal = dynamic(
   () => import('@/components/admin/counseling/CounselingDeleteModal').then((m) => m.CounselingDeleteModal),
@@ -572,6 +573,7 @@ export function AdminCounselingClient() {
         answeredCount={answeredCount}
         loading={loading}
         onRefresh={loadCurhat}
+        onExport={() => exportCurhatToCsv(curhatList)}
       />
 
       <CounselingFilters

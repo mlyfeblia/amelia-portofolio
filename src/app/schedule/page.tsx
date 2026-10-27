@@ -81,6 +81,8 @@ interface SchedulePageProps {
     kategori?: string;
     category?: string;
     topik?: string;
+    notes?: string;
+    catatan?: string;
   }>;
 }
 
@@ -102,6 +104,7 @@ export default async function SchedulePage({ searchParams }: SchedulePageProps) 
 
   const rawCategory = params?.kategori || params?.category || params?.topik;
   const initialCategory = rawCategory ? resolveBookingCategory(rawCategory) : undefined;
+  const initialNotes = params?.notes || params?.catatan;
 
   return (
     <>
@@ -141,6 +144,7 @@ export default async function SchedulePage({ searchParams }: SchedulePageProps) 
                 initialCode={initialCode}
                 initialMode={initialMode}
                 initialCategory={initialCategory}
+                initialNotes={initialNotes}
               />
             </div>
           </div>

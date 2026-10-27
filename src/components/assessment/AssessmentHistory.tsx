@@ -309,6 +309,8 @@ export function AssessmentHistory({ onStartNew }: AssessmentHistoryProps) {
                           getAssessmentSuggestions(
                             record.dimensions.map((d) => ({ ...d, advice: d.advice || '' }))
                           ).recommendedTopic
+                        )}&catatan=${encodeURIComponent(
+                          `[Hasil Refleksi Diri (${record.dateFormatted})]: Level ${record.level} (${record.percentage}% - Skor ${record.totalScore}/${record.maxScore}). Ringkasan: ${record.summary}`
                         )}`}
                         className="btn-primary text-xs py-2 px-3.5 rounded-xl inline-flex items-center justify-center gap-1.5 w-full sm:w-auto hover:shadow-md transition-all duration-200"
                       >

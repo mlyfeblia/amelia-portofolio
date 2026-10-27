@@ -27,6 +27,9 @@ describe('Validators Unit Test Suite', () => {
   });
 
   describe('validateBookingInput', () => {
+    const futureDateStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jakarta' })
+      .format(new Date(Date.now() + 3 * 24 * 60 * 60 * 1000));
+
     const validBooking = {
       name: 'Fulan bin Fulan',
       alias: 'Fulan',
@@ -34,7 +37,7 @@ describe('Validators Unit Test Suite', () => {
       email: 'fulan@example.com',
       category: 'Manajemen Stres, Emosi & Burnout',
       mode: 'online_meet',
-      date: '2026-10-20',
+      date: futureDateStr,
       timeSlot: '14:00 - 15:00 WIB',
       notes: 'Ingin konsultasi seputar stres kuliah.',
     };

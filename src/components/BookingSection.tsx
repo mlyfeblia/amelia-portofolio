@@ -16,6 +16,7 @@ import { BookingSessionDetailsStep } from './booking/BookingSessionDetailsStep';
 import { BookingTracker } from './booking/BookingTracker';
 import { ConfirmDecisionModal } from '@/components/ui/ConfirmDecisionModal';
 import { FormErrorMessage } from '@/components/ui/FormErrorMessage';
+import { CrisisHotlineDisclaimer } from '@/components/ui/CrisisHotlineDisclaimer';
 import { saveDeviceBooking, useDeviceBookings } from '@/lib/booking-storage';
 import { enqueueOfflineMutation } from '@/lib/offline-queue';
 import {
@@ -35,6 +36,7 @@ interface BookingSectionProps {
   initialCode?: string;
   initialMode?: CounselingMode;
   initialCategory?: string;
+  initialNotes?: string;
 }
 
 export default function BookingSection({
@@ -42,6 +44,7 @@ export default function BookingSection({
   initialCode,
   initialMode,
   initialCategory,
+  initialNotes,
 }: BookingSectionProps = {}) {
   const formId = useId();
   const containerRef = React.useRef<HTMLDivElement>(null);
@@ -56,10 +59,15 @@ export default function BookingSection({
     if (initialCategory) {
       category = resolveBookingCategory(initialCategory);
     }
+    let notes = DEFAULT_BOOKING_FORM.notes;
+    if (initialNotes && initialNotes.trim()) {
+      notes = initialNotes.trim();
+    }
     return {
       ...DEFAULT_BOOKING_FORM,
       mode,
       category,
+      notes,
     };
   });
 
@@ -615,6 +623,7 @@ export default function BookingSection({
                 onChange={handleChange}
               />
             </div>
+            <CrisisHotlineDisclaimer variant="subtle" className="mt-6" />
           </form>
         )}
         </div>

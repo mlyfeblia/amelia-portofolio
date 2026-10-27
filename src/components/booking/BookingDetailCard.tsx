@@ -18,6 +18,7 @@ import { BookingStatus, CounselingMode } from '@/types';
 import { BookingTimelineStepper } from './BookingTimelineStepper';
 import { getBookingConfirmationWhatsAppUrl } from '@/lib/whatsapp';
 import { copyToClipboard } from '@/lib/clipboard';
+import { downloadIcsFile, getGoogleCalendarUrl } from '@/lib/calendar-export';
 
 export interface BookingDetailData {
   id?: string;
@@ -202,6 +203,49 @@ export function BookingDetailCard({
           </p>
         </div>
       )}
+
+      {/* Calendar Integration */}
+      <div className="flex flex-wrap items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl bg-[var(--color-surface)] border border-[var(--color-paper-border)] text-xs text-[var(--color-ink-muted)]">
+        <span className="inline-flex items-center gap-1.5 font-medium text-[var(--color-ink)]">
+          <Calendar className="w-3.5 h-3.5 text-[var(--color-accent)]" /> Simpan Sesi ke Kalender:
+        </span>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() =>
+              downloadIcsFile({
+                code: booking.code,
+                name: booking.name,
+                category: booking.category,
+                date: booking.date,
+                timeSlot: booking.timeSlot,
+                mode: booking.mode,
+                notes: booking.notes,
+              })
+            }
+            className="hover:text-[var(--color-accent)] underline decoration-dotted underline-offset-2 cursor-pointer font-medium"
+          >
+            Download .ICS
+          </button>
+          <span className="text-[var(--color-paper-border)]">•</span>
+          <a
+            href={getGoogleCalendarUrl({
+              code: booking.code,
+              name: booking.name,
+              category: booking.category,
+              date: booking.date,
+              timeSlot: booking.timeSlot,
+              mode: booking.mode,
+              notes: booking.notes,
+            })}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-[var(--color-accent)] underline decoration-dotted underline-offset-2 cursor-pointer font-medium"
+          >
+            Google Calendar
+          </a>
+        </div>
+      </div>
 
       {/* Action Footer */}
       <div className="pt-3 border-t border-[var(--color-paper-border)] flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">

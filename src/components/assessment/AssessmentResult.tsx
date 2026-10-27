@@ -273,7 +273,9 @@ export function AssessmentResult({
               <span>Konsultasi WhatsApp</span>
             </a>
             <Link
-              href={`/schedule?kategori=${encodeURIComponent(suggestions.recommendedTopic)}`}
+              href={`/schedule?kategori=${encodeURIComponent(suggestions.recommendedTopic)}&catatan=${encodeURIComponent(
+                `Hasil Asesmen Kesejahteraan Jiwa: ${result.level} (Skor ${totalScore}/${maxScore}, Dimensi Perhatian: ${suggestions.lowestDimension.shortName})`
+              )}`}
               className="btn-primary btn-interactive text-xs sm:text-sm py-2.5 px-4 inline-flex items-center justify-center gap-2 rounded-xl"
             >
               <Calendar className="w-4 h-4 shrink-0" />

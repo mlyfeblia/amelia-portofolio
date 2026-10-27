@@ -9,6 +9,7 @@ import { BookingFilters } from '@/components/admin/bookings/BookingFilters';
 import { BookingList } from '@/components/admin/bookings/BookingList';
 import { adminCache, useAdminRevalidate } from '@/lib/admin-cache';
 import { scrollContainerIntoViewIfAbove } from '@/lib/dom-utils';
+import { exportBookingsToCsv } from '@/lib/csv-export';
 
 const BookingDeleteModal = dynamic(
   () => import('@/components/admin/bookings/BookingDeleteModal').then((m) => m.BookingDeleteModal),
@@ -417,6 +418,7 @@ export function AdminBookingsClient() {
         totalCount={bookings.length}
         loading={loading}
         onRefresh={loadBookings}
+        onExport={() => exportBookingsToCsv(bookings)}
       />
 
       <BookingFilters

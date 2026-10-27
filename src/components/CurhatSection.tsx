@@ -4,6 +4,7 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { AnonymousMessage } from '@/types';
 import { CurhatForm } from './counseling/CurhatForm';
 import { CurhatWall } from './counseling/CurhatWall';
+import { CrisisHotlineDisclaimer } from '@/components/ui/CrisisHotlineDisclaimer';
 
 interface CurhatSectionProps {
   initialMessages?: AnonymousMessage[];
@@ -42,8 +43,9 @@ export default function CurhatSection({ initialMessages = [] }: CurhatSectionPro
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
-      <div className="md:col-span-5 md:sticky md:top-20 md:self-start">
+      <div className="md:col-span-5 md:sticky md:top-20 md:self-start space-y-4">
         <CurhatForm onSuccess={fetchList} />
+        <CrisisHotlineDisclaimer variant="subtle" />
       </div>
       <div className="md:col-span-7">
         <CurhatWall messages={list} loading={loading} />

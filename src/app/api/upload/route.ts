@@ -75,26 +75,22 @@ export async function POST(req: NextRequest) {
     let processedBuffer = rawBuffer;
     const mimeType = 'image/webp';
 
-    const isWebp = file.type === 'image/webp' || file.name.toLowerCase().endsWith('.webp');
-    const isSmallWebp = isWebp && file.size <= 500 * 1024; // <= 500 KB
-
-    if (!isSmallWebp) {
-      try {
-        const sharp = (await import('sharp')).default;
-        processedBuffer = await sharp(rawBuffer)
-          .resize({ width: 1600, withoutEnlargement: true })
-          .webp({ quality: 85, effort: 4 })
-          .toBuffer();
-      } catch (sharpErr) {
-        console.warn('Sharp image decoding failed:', sharpErr);
-        return NextResponse.json(
-          {
-            success: false,
-            message: 'Berkas gambar tidak dapat diproses (rusak atau format tidak valid).',
-          },
-          { status: 400 }
-        );
-      }
+    try {
+      const sharp = (await import('sharp')).default;
+      processedBuffer = await sharp(rawBuffer)
+        .rotate()
+        .resize({ width: 1200, withoutEnlargement: true })
+        .webp({ quality: 82, effort: 4 })
+        .toBuffer();
+    } catch (sharpErr) {
+      console.warn('Sharp image decoding failed:', sharpErr);
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'Berkas gambar tidak dapat diproses (rusak atau format tidak valid).',
+        },
+        { status: 400 }
+      );
     }
 
     // 1. Primary: InsForge Cloud Object Storage

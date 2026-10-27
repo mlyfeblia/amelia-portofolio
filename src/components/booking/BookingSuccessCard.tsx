@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useState } from 'react';
-import { CheckCircle, MessageCircle, RotateCcw, Copy, Check, Search } from 'lucide-react';
+import { CheckCircle, MessageCircle, RotateCcw, Copy, Check, Search, Calendar } from 'lucide-react';
 import { getBookingConfirmationWhatsAppUrl } from '@/lib/whatsapp';
 import { copyToClipboard } from '@/lib/clipboard';
+import { downloadIcsFile, getGoogleCalendarUrl } from '@/lib/calendar-export';
 
 interface BookingSuccessCardProps {
   success: {
@@ -79,6 +80,42 @@ export function BookingSuccessCard({ success, onReset, onTrack }: BookingSuccess
           </span>
         </p>
         <p>Amel akan menghubungi nomor WhatsApp kamu buat konfirmasi sesi ya.</p>
+      </div>
+
+      <div className="inline-flex flex-wrap items-center justify-center gap-2 px-3 py-1.5 rounded-lg bg-[var(--color-surface)] border border-[var(--color-paper-border)] text-xs text-[var(--color-ink-muted)]">
+        <span className="inline-flex items-center gap-1.5 font-medium text-[var(--color-ink)]">
+          <Calendar className="w-3.5 h-3.5 text-[var(--color-accent)]" /> Simpan Jadwal:
+        </span>
+        <button
+          type="button"
+          onClick={() =>
+            downloadIcsFile({
+              code: success.code,
+              name: success.name,
+              date: success.date,
+              timeSlot: success.slot,
+              mode: success.mode,
+            })
+          }
+          className="hover:text-[var(--color-accent)] underline decoration-dotted underline-offset-2 cursor-pointer font-medium"
+        >
+          Download .ICS (Apple/Outlook)
+        </button>
+        <span className="text-[var(--color-paper-border)]">•</span>
+        <a
+          href={getGoogleCalendarUrl({
+            code: success.code,
+            name: success.name,
+            date: success.date,
+            timeSlot: success.slot,
+            mode: success.mode,
+          })}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="hover:text-[var(--color-accent)] underline decoration-dotted underline-offset-2 cursor-pointer font-medium"
+        >
+          Google Calendar
+        </a>
       </div>
 
       <div className="pt-2 flex flex-col sm:flex-row justify-center items-center gap-3">
