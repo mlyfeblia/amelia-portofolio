@@ -17,6 +17,7 @@ import { AdminAuthProvider, useAdminAuth } from '@/context/AdminAuthContext';
 import { cn } from '@/lib/utils';
 import { ConfirmDecisionModal } from '@/components/ui/ConfirmDecisionModal';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/Tabs';
+import { DatabaseStatusBanner } from '@/components/admin/DatabaseStatusBanner';
 
 const AdminSessionModal = dynamic(
   () => import('./AdminSessionModal').then((m) => m.AdminSessionModal),
@@ -182,6 +183,7 @@ export function AdminLayoutClient({
     <AdminAuthProvider>
       <div className="min-h-screen flex flex-col bg-[var(--color-paper)] text-[var(--color-ink)]">
         <AdminHeader />
+        <DatabaseStatusBanner />
         <main
           id="main-content"
           tabIndex={-1}

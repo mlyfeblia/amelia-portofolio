@@ -791,6 +791,17 @@ function revalidateDataPaths(types: ('bookings' | 'curhat' | 'articles')[]) {
   }
 }
 
+// Operational Database Status Tracker (online | paused | unconfigured)
+let lastKnownDatabaseStatus: 'online' | 'paused' | 'unconfigured' = isDatabaseConfigured ? 'online' : 'unconfigured';
+
+export function getLastKnownDatabaseStatus(): 'online' | 'paused' | 'unconfigured' {
+  return lastKnownDatabaseStatus;
+}
+
+export function setLastKnownDatabaseStatus(status: 'online' | 'paused' | 'unconfigured') {
+  lastKnownDatabaseStatus = status;
+}
+
 // Bookings
 export async function getBookings(limit: number = 100, offset: number = 0): Promise<Booking[]> {
   const safeLimit = Math.min(Math.max(1, limit), 500);
@@ -805,12 +816,14 @@ export async function getBookings(limit: number = 100, offset: number = 0): Prom
         .limit(safeLimit)
         .offset(safeOffset);
 
+      lastKnownDatabaseStatus = 'online';
       return rows.map((r) => ({
         ...r,
         alias: r.alias ?? undefined,
         notes: r.notes ?? '',
       })) as Booking[];
     } catch (error) {
+      lastKnownDatabaseStatus = 'paused';
       console.error('Error in getBookings from db, falling back to in-memory store:', error);
     }
   }
@@ -1066,6 +1079,7 @@ export async function getCurhatList(
             .limit(safeLimit)
             .offset(safeOffset);
 
+      lastKnownDatabaseStatus = 'online';
       return rows.map((r) => ({
         ...r,
         answer: r.answer ?? undefined,
@@ -1073,6 +1087,7 @@ export async function getCurhatList(
         showOnLandingPage: r.showOnLandingPage ?? false,
       })) as AnonymousMessage[];
     } catch (error) {
+      lastKnownDatabaseStatus = 'paused';
       console.error('Error in getCurhatList from db:', error);
     }
   }
@@ -1278,6 +1293,7 @@ export async function getArticles(onlyPublished = false): Promise<Article[]> {
         ? await db.select().from(articles).where(eq(articles.isPublished, true)).orderBy(desc(articles.publishedAt))
         : await db.select().from(articles).orderBy(desc(articles.publishedAt));
 
+      lastKnownDatabaseStatus = 'online';
       return rows.map((r) => ({
         ...r,
         tags: Array.isArray(r.tags) ? r.tags : [],
@@ -1287,6 +1303,7 @@ export async function getArticles(onlyPublished = false): Promise<Article[]> {
         coverImage: r.coverImage || undefined,
       })) as Article[];
     } catch (error) {
+      lastKnownDatabaseStatus = 'paused';
       console.error('Error in getArticles from db:', error);
     }
   }

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getArticles, createArticle } from '@/lib/data-store';
+import { getArticles, createArticle, getLastKnownDatabaseStatus } from '@/lib/data-store';
 import { isAuthenticatedAdmin } from '@/lib/admin-auth';
 import { validateArticleCreateInput } from '@/lib/validators';
 import { telemetry } from '@/lib/telemetry';
@@ -9,19 +9,34 @@ export async function GET(request: Request) {
   try {
     const isAuth = await isAuthenticatedAdmin(request);
     const articles = await getArticles(!isAuth);
+    const dbStatus = getLastKnownDatabaseStatus();
     return NextResponse.json(
-      { success: true, data: articles },
+      {
+        success: true,
+        data: articles,
+        dbStatus,
+        isFallback: dbStatus === 'paused',
+      },
       {
         headers: {
           'Cache-Control': isAuth
             ? 'no-store, max-age=0'
             : 'private, no-cache, must-revalidate',
+          'X-Database-Status': dbStatus,
         },
       }
     );
   } catch (error) {
     telemetry.error('Error fetching articles', error, { route: '/api/articles', method: 'GET' });
-    return NextResponse.json({ success: false, message: 'Gagal mengambil artikel' }, { status: 500 });
+    try {
+      const fallback = await getArticles(true);
+      return NextResponse.json(
+        { success: true, data: fallback, dbStatus: 'paused', isFallback: true },
+        { headers: { 'Cache-Control': 'no-store, max-age=0' } }
+      );
+    } catch {
+      return NextResponse.json({ success: false, message: 'Gagal mengambil artikel', dbStatus: 'paused' }, { status: 500 });
+    }
   }
 }
 

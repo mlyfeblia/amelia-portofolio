@@ -177,13 +177,25 @@ export function AdminArticlesClient() {
       }
 
       const data = await res.json();
+      if (data.dbStatus === 'paused') {
+        adminCache.setDatabaseStatus('paused');
+      } else if (data.dbStatus === 'online') {
+        adminCache.setDatabaseStatus('online');
+      }
+
       if (data.success && Array.isArray(data.data)) {
         setArticles(data.data);
         adminCache.setArticles(data.data);
+      } else {
+        const cached = adminCache.getArticles();
+        if (cached && cached.length > 0) setArticles(cached);
       }
     } catch (e: unknown) {
       if ((e as Error)?.name !== 'AbortError') {
         console.error('Failed to load articles:', e);
+        adminCache.setDatabaseStatus('paused');
+        const cached = adminCache.getArticles();
+        if (cached && cached.length > 0) setArticles(cached);
       }
     } finally {
       setLoading(false);
@@ -206,13 +218,27 @@ export function AdminArticlesClient() {
         }
 
         const data = await res.json();
+        if (data.dbStatus === 'paused') {
+          adminCache.setDatabaseStatus('paused');
+        } else if (data.dbStatus === 'online') {
+          adminCache.setDatabaseStatus('online');
+        }
+
         if (!ignore && data.success && Array.isArray(data.data)) {
           setArticles(data.data);
           adminCache.setArticles(data.data);
+        } else if (!ignore) {
+          const cached = adminCache.getArticles();
+          if (cached && cached.length > 0) setArticles(cached);
         }
       } catch (e: unknown) {
         if ((e as Error)?.name !== 'AbortError') {
           console.error('Failed to load articles:', e);
+          adminCache.setDatabaseStatus('paused');
+          if (!ignore) {
+            const cached = adminCache.getArticles();
+            if (cached && cached.length > 0) setArticles(cached);
+          }
         }
       } finally {
         if (!ignore) {
@@ -278,6 +304,10 @@ export function AdminArticlesClient() {
   };
 
   const handleTogglePublish = async (art: Article) => {
+    if (adminCache.getDatabaseStatus() === 'paused') {
+      toast.error('Database InsForge sedang ter-pause. Harap aktifkan kembali di InsForge Console.');
+      return;
+    }
     const nextStatus = !(art.isPublished ?? true);
     const patchBody: Record<string, unknown> = { isPublished: nextStatus };
     if (!nextStatus) {
@@ -314,6 +344,10 @@ export function AdminArticlesClient() {
   };
 
   const handleToggleLanding = async (art: Article) => {
+    if (adminCache.getDatabaseStatus() === 'paused') {
+      toast.error('Database InsForge sedang ter-pause. Harap aktifkan kembali di InsForge Console.');
+      return;
+    }
     const nextVal = !art.showOnLandingPage;
     const patchBody: Record<string, unknown> = { showOnLandingPage: nextVal };
     if (nextVal) {
@@ -355,6 +389,10 @@ export function AdminArticlesClient() {
   };
 
   const handleConfirmDelete = async (art: Article) => {
+    if (adminCache.getDatabaseStatus() === 'paused') {
+      toast.error('Database InsForge sedang ter-pause. Harap aktifkan kembali di InsForge Console agar artikel dapat dihapus.');
+      return;
+    }
     try {
       const res = await fetch(`/api/articles/${art.id}`, { method: 'DELETE' });
       const data = await res.json();

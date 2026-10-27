@@ -40,21 +40,47 @@ export function AdminOverviewClient() {
       const dataC = await resC.json();
       const dataA = await resA.json();
 
+      if (dataB.dbStatus === 'paused' || dataC.dbStatus === 'paused' || dataA.dbStatus === 'paused') {
+        adminCache.setDatabaseStatus('paused');
+      } else if (dataB.dbStatus === 'online' && dataC.dbStatus === 'online') {
+        adminCache.setDatabaseStatus('online');
+      }
+
       if (dataB.success && Array.isArray(dataB.data)) {
         setBookings(dataB.data);
         adminCache.setBookings(dataB.data);
+      } else {
+        const cached = adminCache.getBookings();
+        if (cached && cached.length > 0) setBookings(cached);
       }
+
       if (dataC.success && Array.isArray(dataC.data)) {
         setCurhatList(dataC.data);
         adminCache.setCurhat(dataC.data);
+      } else {
+        const cached = adminCache.getCurhat();
+        if (cached && cached.length > 0) setCurhatList(cached);
       }
+
       if (dataA.success && Array.isArray(dataA.data)) {
         setArticlesCount(dataA.data.filter((a: Article) => a.isPublished !== false).length);
         adminCache.setArticles(dataA.data);
+      } else {
+        const cached = adminCache.getArticles();
+        if (cached && cached.length > 0) {
+          setArticlesCount(cached.filter((a: Article) => a.isPublished !== false).length);
+        }
       }
     } catch (e: unknown) {
       if ((e as Error)?.name !== 'AbortError') {
         console.error('Error fetching admin data:', e);
+        adminCache.setDatabaseStatus('paused');
+        const cachedB = adminCache.getBookings();
+        if (cachedB && cachedB.length > 0) setBookings(cachedB);
+        const cachedC = adminCache.getCurhat();
+        if (cachedC && cachedC.length > 0) setCurhatList(cachedC);
+        const cachedA = adminCache.getArticles();
+        if (cachedA && cachedA.length > 0) setArticlesCount(cachedA.filter((a: Article) => a.isPublished !== false).length);
       }
     } finally {
       setLoading(false);
@@ -84,21 +110,51 @@ export function AdminOverviewClient() {
         const dataC = await resC.json();
         const dataA = await resA.json();
 
+        if (dataB.dbStatus === 'paused' || dataC.dbStatus === 'paused' || dataA.dbStatus === 'paused') {
+          adminCache.setDatabaseStatus('paused');
+        } else if (dataB.dbStatus === 'online' && dataC.dbStatus === 'online') {
+          adminCache.setDatabaseStatus('online');
+        }
+
         if (!ignore && dataB.success && Array.isArray(dataB.data)) {
           setBookings(dataB.data);
           adminCache.setBookings(dataB.data);
+        } else if (!ignore) {
+          const cached = adminCache.getBookings();
+          if (cached && cached.length > 0) setBookings(cached);
         }
+
         if (!ignore && dataC.success && Array.isArray(dataC.data)) {
           setCurhatList(dataC.data);
           adminCache.setCurhat(dataC.data);
+        } else if (!ignore) {
+          const cached = adminCache.getCurhat();
+          if (cached && cached.length > 0) setCurhatList(cached);
         }
+
         if (!ignore && dataA.success && Array.isArray(dataA.data)) {
           setArticlesCount(dataA.data.filter((a: Article) => a.isPublished !== false).length);
           adminCache.setArticles(dataA.data);
+        } else if (!ignore) {
+          const cached = adminCache.getArticles();
+          if (cached && cached.length > 0) {
+            setArticlesCount(cached.filter((a: Article) => a.isPublished !== false).length);
+          }
         }
       } catch (e: unknown) {
         if ((e as Error)?.name !== 'AbortError') {
           console.error('Error fetching admin data:', e);
+          adminCache.setDatabaseStatus('paused');
+          if (!ignore) {
+            const cachedB = adminCache.getBookings();
+            if (cachedB && cachedB.length > 0) setBookings(cachedB);
+            const cachedC = adminCache.getCurhat();
+            if (cachedC && cachedC.length > 0) setCurhatList(cachedC);
+            const cachedA = adminCache.getArticles();
+            if (cachedA && cachedA.length > 0) {
+              setArticlesCount(cachedA.filter((a: Article) => a.isPublished !== false).length);
+            }
+          }
         }
       } finally {
         if (!ignore) {
@@ -121,6 +177,11 @@ export function AdminOverviewClient() {
   useAdminRevalidate('articles', loadData);
 
   const handleConfirmBooking = async (id: string) => {
+    if (adminCache.getDatabaseStatus() === 'paused') {
+      toast.error('Database InsForge sedang ter-pause. Harap aktifkan kembali di InsForge Console agar perubahan status tersimpan.');
+      return;
+    }
+
     const target = bookings.find((b) => b.id === id);
     setConfirmingId(id);
     try {

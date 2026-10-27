@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getCurhatList, createCurhat } from '@/lib/data-store';
+import { getCurhatList, createCurhat, getLastKnownDatabaseStatus } from '@/lib/data-store';
 import { isAuthenticatedAdmin } from '@/lib/admin-auth';
 import { checkDistributedRateLimit, getClientIp } from '@/lib/rate-limiter';
 import { validateCurhatInput } from '@/lib/validators';
@@ -20,19 +20,34 @@ export async function GET(request: Request) {
       isNaN(limit) ? 100 : limit,
       isNaN(offset) ? 0 : offset
     );
+    const dbStatus = getLastKnownDatabaseStatus();
     return NextResponse.json(
-      { success: true, data: list },
+      {
+        success: true,
+        data: list,
+        dbStatus,
+        isFallback: dbStatus === 'paused',
+      },
       {
         headers: {
           'Cache-Control': isAuth
             ? 'no-store, max-age=0'
             : 'private, no-cache, must-revalidate',
+          'X-Database-Status': dbStatus,
         },
       }
     );
   } catch (error) {
     telemetry.error('Error fetching curhat', error, { route: '/api/curhat', method: 'GET' });
-    return NextResponse.json({ success: false, message: 'Gagal mengambil curhat' }, { status: 500 });
+    try {
+      const fallback = await getCurhatList(true, 100, 0);
+      return NextResponse.json(
+        { success: true, data: fallback, dbStatus: 'paused', isFallback: true },
+        { headers: { 'Cache-Control': 'no-store, max-age=0' } }
+      );
+    } catch {
+      return NextResponse.json({ success: false, message: 'Gagal mengambil curhat', dbStatus: 'paused' }, { status: 500 });
+    }
   }
 }
 

@@ -144,13 +144,25 @@ export function AdminBookingsClient() {
       }
 
       const data = await res.json();
+      if (data.dbStatus === 'paused') {
+        adminCache.setDatabaseStatus('paused');
+      } else if (data.dbStatus === 'online') {
+        adminCache.setDatabaseStatus('online');
+      }
+
       if (data.success && Array.isArray(data.data)) {
         setBookings(data.data);
         adminCache.setBookings(data.data);
+      } else {
+        const cached = adminCache.getBookings();
+        if (cached && cached.length > 0) setBookings(cached);
       }
     } catch (e: unknown) {
       if ((e as Error)?.name !== 'AbortError') {
         console.error('Failed to load bookings:', e);
+        adminCache.setDatabaseStatus('paused');
+        const cached = adminCache.getBookings();
+        if (cached && cached.length > 0) setBookings(cached);
       }
     } finally {
       setLoading(false);
@@ -173,13 +185,27 @@ export function AdminBookingsClient() {
         }
 
         const data = await res.json();
+        if (data.dbStatus === 'paused') {
+          adminCache.setDatabaseStatus('paused');
+        } else if (data.dbStatus === 'online') {
+          adminCache.setDatabaseStatus('online');
+        }
+
         if (!ignore && data.success && Array.isArray(data.data)) {
           setBookings(data.data);
           adminCache.setBookings(data.data);
+        } else if (!ignore) {
+          const cached = adminCache.getBookings();
+          if (cached && cached.length > 0) setBookings(cached);
         }
       } catch (e: unknown) {
         if ((e as Error)?.name !== 'AbortError') {
           console.error('Failed to load bookings:', e);
+          adminCache.setDatabaseStatus('paused');
+          if (!ignore) {
+            const cached = adminCache.getBookings();
+            if (cached && cached.length > 0) setBookings(cached);
+          }
         }
       } finally {
         if (!ignore) {
@@ -200,6 +226,11 @@ export function AdminBookingsClient() {
   useAdminRevalidate('bookings', loadBookings);
 
   const handleUpdateStatus = async (id: string, newStatus: BookingStatus) => {
+    if (adminCache.getDatabaseStatus() === 'paused') {
+      toast.error('Database InsForge sedang ter-pause. Harap aktifkan kembali di InsForge Console agar perubahan status tersimpan.');
+      return;
+    }
+
     const target = bookings.find((b) => b.id === id);
     setUpdatingId(id);
     try {
@@ -234,6 +265,10 @@ export function AdminBookingsClient() {
   };
 
   const handleConfirmDelete = async (booking: Booking) => {
+    if (adminCache.getDatabaseStatus() === 'paused') {
+      toast.error('Database InsForge sedang ter-pause. Harap aktifkan kembali di InsForge Console agar data dapat dihapus.');
+      return;
+    }
     try {
       const res = await fetch(`/api/bookings/${booking.id}`, { method: 'DELETE' });
       const data = await res.json();

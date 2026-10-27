@@ -176,13 +176,25 @@ export function AdminCounselingClient() {
       }
 
       const data = await res.json();
+      if (data.dbStatus === 'paused') {
+        adminCache.setDatabaseStatus('paused');
+      } else if (data.dbStatus === 'online') {
+        adminCache.setDatabaseStatus('online');
+      }
+
       if (data.success && Array.isArray(data.data)) {
         setCurhatList(data.data);
         adminCache.setCurhat(data.data);
+      } else {
+        const cached = adminCache.getCurhat();
+        if (cached && cached.length > 0) setCurhatList(cached);
       }
     } catch (e: unknown) {
       if ((e as Error)?.name !== 'AbortError') {
         console.error('Failed to load curhat:', e);
+        adminCache.setDatabaseStatus('paused');
+        const cached = adminCache.getCurhat();
+        if (cached && cached.length > 0) setCurhatList(cached);
       }
     } finally {
       setLoading(false);
@@ -205,13 +217,27 @@ export function AdminCounselingClient() {
         }
 
         const data = await res.json();
+        if (data.dbStatus === 'paused') {
+          adminCache.setDatabaseStatus('paused');
+        } else if (data.dbStatus === 'online') {
+          adminCache.setDatabaseStatus('online');
+        }
+
         if (!ignore && data.success && Array.isArray(data.data)) {
           setCurhatList(data.data);
           adminCache.setCurhat(data.data);
+        } else if (!ignore) {
+          const cached = adminCache.getCurhat();
+          if (cached && cached.length > 0) setCurhatList(cached);
         }
       } catch (e: unknown) {
         if ((e as Error)?.name !== 'AbortError') {
           console.error('Failed to load curhat:', e);
+          adminCache.setDatabaseStatus('paused');
+          if (!ignore) {
+            const cached = adminCache.getCurhat();
+            if (cached && cached.length > 0) setCurhatList(cached);
+          }
         }
       } finally {
         if (!ignore) {
@@ -238,6 +264,10 @@ export function AdminCounselingClient() {
     isPublic: boolean,
     showOnLandingPage: boolean
   ) => {
+    if (adminCache.getDatabaseStatus() === 'paused') {
+      toast.error('Database InsForge sedang ter-pause. Harap aktifkan kembali di InsForge Console agar tanggapan tersimpan.');
+      return;
+    }
     try {
       const res = await fetch(`/api/curhat/${id}`, {
         method: 'PATCH',
@@ -281,6 +311,10 @@ export function AdminCounselingClient() {
 
   // Quick toggle privacy
   const handleTogglePrivacy = async (item: AnonymousMessage) => {
+    if (adminCache.getDatabaseStatus() === 'paused') {
+      toast.error('Database InsForge sedang ter-pause. Harap aktifkan kembali di InsForge Console.');
+      return;
+    }
     const nextPublic = !item.isPublic;
     // If making private, also disable landing page visibility
     const nextLanding = nextPublic ? item.showOnLandingPage : false;
@@ -319,6 +353,10 @@ export function AdminCounselingClient() {
 
   // Quick toggle Landing Page showcase
   const handleToggleLanding = async (item: AnonymousMessage) => {
+    if (adminCache.getDatabaseStatus() === 'paused') {
+      toast.error('Database InsForge sedang ter-pause. Harap aktifkan kembali di InsForge Console.');
+      return;
+    }
     const nextLanding = !(item.showOnLandingPage ?? false);
     // If turning on landing page, ensure it is also public
     const nextPublic = nextLanding ? true : item.isPublic;
@@ -357,6 +395,10 @@ export function AdminCounselingClient() {
 
   // Delete curhat
   const handleConfirmDelete = async (item: AnonymousMessage) => {
+    if (adminCache.getDatabaseStatus() === 'paused') {
+      toast.error('Database InsForge sedang ter-pause. Harap aktifkan kembali di InsForge Console agar data dapat dihapus.');
+      return;
+    }
     try {
       const res = await fetch(`/api/curhat/${item.id}`, { method: 'DELETE' });
       const data = await res.json();

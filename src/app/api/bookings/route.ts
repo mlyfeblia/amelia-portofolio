@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getBookings, createBooking } from '@/lib/data-store';
+import { getBookings, createBooking, getLastKnownDatabaseStatus } from '@/lib/data-store';
 import { isAuthenticatedAdmin } from '@/lib/admin-auth';
 import { checkDistributedRateLimit, getClientIp } from '@/lib/rate-limiter';
 import { validateBookingInput } from '@/lib/validators';
@@ -25,13 +25,32 @@ export async function GET(request: Request) {
       isNaN(limit) ? 100 : limit,
       isNaN(offset) ? 0 : offset
     );
+    const dbStatus = getLastKnownDatabaseStatus();
     return NextResponse.json(
-      { success: true, data: bookings },
-      { headers: { 'Cache-Control': 'no-store, max-age=0' } }
+      {
+        success: true,
+        data: bookings,
+        dbStatus,
+        isFallback: dbStatus === 'paused',
+      },
+      {
+        headers: {
+          'Cache-Control': 'no-store, max-age=0',
+          'X-Database-Status': dbStatus,
+        },
+      }
     );
   } catch (error) {
     telemetry.error('Failed to fetch bookings', error, { route: '/api/bookings', method: 'GET' });
-    return NextResponse.json({ success: false, message: 'Gagal mengambil data janji temu' }, { status: 500 });
+    try {
+      const fallback = await getBookings(100, 0);
+      return NextResponse.json(
+        { success: true, data: fallback, dbStatus: 'paused', isFallback: true },
+        { headers: { 'Cache-Control': 'no-store, max-age=0' } }
+      );
+    } catch {
+      return NextResponse.json({ success: false, message: 'Gagal mengambil data janji temu', dbStatus: 'paused' }, { status: 500 });
+    }
   }
 }
 

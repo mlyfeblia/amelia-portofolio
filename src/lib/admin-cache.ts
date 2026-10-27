@@ -1,19 +1,29 @@
 /**
- * In-memory & Session-backed Stale-While-Revalidate Cache for Amelia Admin Dashboard
- * Eliminates empty-state flashes, skeleton re-renders, and provides multi-tab sync & window focus revalidation.
+ * In-memory, Session-backed & Persistent Snapshot Disaster Recovery Cache for Amelia Admin Dashboard
+ * 
+ * Capabilities:
+ * 1. Instant optimistic renders: Eliminates empty-state flashes and skeleton re-renders.
+ * 2. Persistent Local Backup: Retains the latest known good production dataset in localStorage
+ *    so that even when InsForge is paused, the admin dashboard never appears empty.
+ * 3. Health & Status Awareness: Tracks database operational status ('online' | 'paused' | 'checking').
+ * 4. Multi-tab synchronization & window focus revalidation.
  */
 
 import { Booking, AnonymousMessage, Article } from '@/types';
 import { useEffect, useRef } from 'react';
 
+export type DatabaseOperationalStatus = 'online' | 'paused' | 'checking';
+
 interface AdminCacheStore {
   bookings: Booking[] | null;
   curhat: AnonymousMessage[] | null;
   articles: Article[] | null;
+  dbStatus: DatabaseOperationalStatus;
   lastFetched: {
     bookings: number;
     curhat: number;
     articles: number;
+    health: number;
   };
 }
 
@@ -21,20 +31,50 @@ const memoryStore: AdminCacheStore = {
   bookings: null,
   curhat: null,
   articles: null,
+  dbStatus: 'online',
   lastFetched: {
     bookings: 0,
     curhat: 0,
     articles: 0,
+    health: 0,
   },
 };
 
 export const TTL_MS = 60 * 1000; // 1 minute fresh TTL; stale data still served instantly while revalidating
 
-function notifyCrossTab(key: 'bookings' | 'curhat' | 'articles') {
+const STORAGE_KEYS = {
+  SESSION_BOOKINGS: 'admin_cached_bookings',
+  SESSION_CURHAT: 'admin_cached_curhat',
+  SESSION_ARTICLES: 'admin_cached_articles',
+  SNAPSHOT_BOOKINGS: 'admin_snapshot_bookings',
+  SNAPSHOT_CURHAT: 'admin_snapshot_curhat',
+  SNAPSHOT_ARTICLES: 'admin_snapshot_articles',
+  SNAPSHOT_META: 'admin_snapshot_meta',
+  DB_STATUS: 'admin_db_status',
+  SYNC_EVENT: 'admin_sync_event',
+} as const;
+
+function notifyCrossTab(key: 'bookings' | 'curhat' | 'articles' | 'db_status') {
   if (typeof window === 'undefined') return;
   try {
-    localStorage.setItem('admin_sync_event', JSON.stringify({ key, timestamp: Date.now() }));
-    window.dispatchEvent(new CustomEvent('amelia:admin-cache-updated', { detail: { key } }));
+    localStorage.setItem(STORAGE_KEYS.SYNC_EVENT, JSON.stringify({ key, timestamp: Date.now() }));
+    if (key === 'db_status') {
+      window.dispatchEvent(new CustomEvent('amelia:admin-db-status-changed', { detail: { status: memoryStore.dbStatus } }));
+    } else {
+      window.dispatchEvent(new CustomEvent('amelia:admin-cache-updated', { detail: { key } }));
+    }
+  } catch {}
+}
+
+function updateSnapshotMeta(category: 'bookings' | 'curhat' | 'articles', count: number) {
+  if (typeof window === 'undefined') return;
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.SNAPSHOT_META);
+    const meta = raw ? JSON.parse(raw) : { lastSaved: Date.now(), counts: {} };
+    meta.lastSaved = Date.now();
+    meta.counts = meta.counts || {};
+    meta.counts[category] = count;
+    localStorage.setItem(STORAGE_KEYS.SNAPSHOT_META, JSON.stringify(meta));
   } catch {}
 }
 
@@ -45,6 +85,46 @@ export const adminCache = {
     return Date.now() - last > TTL_MS;
   },
 
+  // Database Operational Status
+  getDatabaseStatus(): DatabaseOperationalStatus {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem(STORAGE_KEYS.DB_STATUS);
+      if (stored === 'online' || stored === 'paused' || stored === 'checking') {
+        memoryStore.dbStatus = stored;
+      }
+    }
+    return memoryStore.dbStatus;
+  },
+
+  setDatabaseStatus(status: DatabaseOperationalStatus, broadcast = true) {
+    const changed = memoryStore.dbStatus !== status;
+    memoryStore.dbStatus = status;
+    memoryStore.lastFetched.health = Date.now();
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem(STORAGE_KEYS.DB_STATUS, status);
+      } catch {}
+      if (changed || broadcast) {
+        window.dispatchEvent(new CustomEvent('amelia:admin-db-status-changed', { detail: { status } }));
+        if (broadcast) {
+          notifyCrossTab('db_status');
+        }
+      }
+    }
+  },
+
+  getSnapshotMeta(): { lastSaved: number | null; counts: Record<string, number> } {
+    if (typeof window !== 'undefined') {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEYS.SNAPSHOT_META);
+        if (raw) {
+          return JSON.parse(raw);
+        }
+      } catch {}
+    }
+    return { lastSaved: null, counts: {} };
+  },
+
   // Articles
   getArticles(): Article[] | null {
     if (memoryStore.articles !== null) {
@@ -52,10 +132,20 @@ export const adminCache = {
     }
     if (typeof window !== 'undefined') {
       try {
-        const raw = sessionStorage.getItem('admin_cached_articles');
-        if (raw) {
-          const parsed = JSON.parse(raw);
-          if (Array.isArray(parsed)) {
+        // 1. Check session storage
+        const rawSession = sessionStorage.getItem(STORAGE_KEYS.SESSION_ARTICLES);
+        if (rawSession) {
+          const parsed = JSON.parse(rawSession);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            memoryStore.articles = parsed;
+            return parsed;
+          }
+        }
+        // 2. Fallback to persistent disaster-recovery snapshot
+        const rawSnapshot = localStorage.getItem(STORAGE_KEYS.SNAPSHOT_ARTICLES);
+        if (rawSnapshot) {
+          const parsed = JSON.parse(rawSnapshot);
+          if (Array.isArray(parsed) && parsed.length > 0) {
             memoryStore.articles = parsed;
             return parsed;
           }
@@ -70,7 +160,12 @@ export const adminCache = {
     memoryStore.lastFetched.articles = Date.now();
     if (typeof window !== 'undefined') {
       try {
-        sessionStorage.setItem('admin_cached_articles', JSON.stringify(articles));
+        sessionStorage.setItem(STORAGE_KEYS.SESSION_ARTICLES, JSON.stringify(articles));
+        // Persist disaster recovery snapshot whenever we receive non-empty data
+        if (articles.length > 0) {
+          localStorage.setItem(STORAGE_KEYS.SNAPSHOT_ARTICLES, JSON.stringify(articles));
+          updateSnapshotMeta('articles', articles.length);
+        }
       } catch {}
       if (broadcast) {
         notifyCrossTab('articles');
@@ -85,10 +180,20 @@ export const adminCache = {
     }
     if (typeof window !== 'undefined') {
       try {
-        const raw = sessionStorage.getItem('admin_cached_bookings');
-        if (raw) {
-          const parsed = JSON.parse(raw);
-          if (Array.isArray(parsed)) {
+        // 1. Check session storage
+        const rawSession = sessionStorage.getItem(STORAGE_KEYS.SESSION_BOOKINGS);
+        if (rawSession) {
+          const parsed = JSON.parse(rawSession);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            memoryStore.bookings = parsed;
+            return parsed;
+          }
+        }
+        // 2. Fallback to persistent disaster-recovery snapshot
+        const rawSnapshot = localStorage.getItem(STORAGE_KEYS.SNAPSHOT_BOOKINGS);
+        if (rawSnapshot) {
+          const parsed = JSON.parse(rawSnapshot);
+          if (Array.isArray(parsed) && parsed.length > 0) {
             memoryStore.bookings = parsed;
             return parsed;
           }
@@ -103,7 +208,12 @@ export const adminCache = {
     memoryStore.lastFetched.bookings = Date.now();
     if (typeof window !== 'undefined') {
       try {
-        sessionStorage.setItem('admin_cached_bookings', JSON.stringify(bookings));
+        sessionStorage.setItem(STORAGE_KEYS.SESSION_BOOKINGS, JSON.stringify(bookings));
+        // Persist disaster recovery snapshot whenever we receive non-empty data
+        if (bookings.length > 0) {
+          localStorage.setItem(STORAGE_KEYS.SNAPSHOT_BOOKINGS, JSON.stringify(bookings));
+          updateSnapshotMeta('bookings', bookings.length);
+        }
       } catch {}
       if (broadcast) {
         notifyCrossTab('bookings');
@@ -118,10 +228,20 @@ export const adminCache = {
     }
     if (typeof window !== 'undefined') {
       try {
-        const raw = sessionStorage.getItem('admin_cached_curhat');
-        if (raw) {
-          const parsed = JSON.parse(raw);
-          if (Array.isArray(parsed)) {
+        // 1. Check session storage
+        const rawSession = sessionStorage.getItem(STORAGE_KEYS.SESSION_CURHAT);
+        if (rawSession) {
+          const parsed = JSON.parse(rawSession);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            memoryStore.curhat = parsed;
+            return parsed;
+          }
+        }
+        // 2. Fallback to persistent disaster-recovery snapshot
+        const rawSnapshot = localStorage.getItem(STORAGE_KEYS.SNAPSHOT_CURHAT);
+        if (rawSnapshot) {
+          const parsed = JSON.parse(rawSnapshot);
+          if (Array.isArray(parsed) && parsed.length > 0) {
             memoryStore.curhat = parsed;
             return parsed;
           }
@@ -136,7 +256,12 @@ export const adminCache = {
     memoryStore.lastFetched.curhat = Date.now();
     if (typeof window !== 'undefined') {
       try {
-        sessionStorage.setItem('admin_cached_curhat', JSON.stringify(curhat));
+        sessionStorage.setItem(STORAGE_KEYS.SESSION_CURHAT, JSON.stringify(curhat));
+        // Persist disaster recovery snapshot whenever we receive non-empty data
+        if (curhat.length > 0) {
+          localStorage.setItem(STORAGE_KEYS.SNAPSHOT_CURHAT, JSON.stringify(curhat));
+          updateSnapshotMeta('curhat', curhat.length);
+        }
       } catch {}
       if (broadcast) {
         notifyCrossTab('curhat');
@@ -144,18 +269,33 @@ export const adminCache = {
     }
   },
 
-  // Clear all on logout
+  // Health Verification Test Helper
+  async checkDatabaseHealth(): Promise<DatabaseOperationalStatus> {
+    this.setDatabaseStatus('checking');
+    try {
+      const res = await fetch('/api/admin/health', { cache: 'no-store' });
+      const json = await res.json();
+      const status: DatabaseOperationalStatus = json.database === 'online' ? 'online' : 'paused';
+      this.setDatabaseStatus(status);
+      return status;
+    } catch {
+      this.setDatabaseStatus('paused');
+      return 'paused';
+    }
+  },
+
+  // Clear session on logout (retains persistent disaster-recovery snapshot so offline emergency view remains available)
   clearAll() {
     memoryStore.bookings = null;
     memoryStore.curhat = null;
     memoryStore.articles = null;
-    memoryStore.lastFetched = { bookings: 0, curhat: 0, articles: 0 };
+    memoryStore.lastFetched = { bookings: 0, curhat: 0, articles: 0, health: 0 };
     if (typeof window !== 'undefined') {
       try {
-        sessionStorage.removeItem('admin_cached_articles');
-        sessionStorage.removeItem('admin_cached_bookings');
-        sessionStorage.removeItem('admin_cached_curhat');
-        localStorage.removeItem('admin_sync_event');
+        sessionStorage.removeItem(STORAGE_KEYS.SESSION_ARTICLES);
+        sessionStorage.removeItem(STORAGE_KEYS.SESSION_BOOKINGS);
+        sessionStorage.removeItem(STORAGE_KEYS.SESSION_CURHAT);
+        localStorage.removeItem(STORAGE_KEYS.SYNC_EVENT);
       } catch {}
     }
   },
@@ -186,7 +326,7 @@ export function useAdminRevalidate(
     };
 
     const handleStorage = (e: StorageEvent) => {
-      if (e.key === 'admin_sync_event' && e.newValue) {
+      if (e.key === STORAGE_KEYS.SYNC_EVENT && e.newValue) {
         try {
           const parsed = JSON.parse(e.newValue);
           if (parsed.key === key) {
