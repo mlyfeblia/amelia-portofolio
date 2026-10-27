@@ -1,0 +1,31 @@
+# Amelia — Portofolio & Bimbingan Konseling Islam
+
+> Portofolio resmi dan layanan bimbingan konseling sebaya oleh Amelia (Amel), mahasiswi BKI Universitas Islam Negeri Siber Syekh Nurjati Cirebon.
+
+## Tentang Amelia
+- **Nama:** Amelia (Amel)
+- **Bidang:** Bimbingan Konseling Islam (BKI), Konseling Sebaya, Tazkiyatun Nafs, dan Layanan Pelanggan
+- **Afiliasi Akademik:** Universitas Islam Negeri Siber Syekh Nurjati Cirebon (UINSSC), Jawa Barat, Indonesia
+- **Almamater Sekolah:** MAN 4 Cirebon
+- **Situs Resmi:** https://mlyfeblia.vercel.app
+- **Kontak Resmi:** WhatsApp (+62 822-1044-5785 / +62 858-6449-3354), Email: mlyfeblia150207@gmail.com, Instagram: @mlyfeb.lia
+
+## Layanan Konseling & Bimbingan
+1. **Chat Terjadwal (60 Menit):** Konseling berbasis teks intensif dan terarah via WhatsApp bagi konseli yang lebih nyaman menuliskan isi hati.
+2. **Video Call via WhatsApp (60 Menit):** Konseling tatap maya privat dengan suasana reflektif dan hangat.
+3. **Tatap Muka di Kampus (60 Menit):** Konseling langsung di lingkungan tenang di area kampus UIN Siber Cirebon.
+4. **Ruang Curhat Anonim:** Wadah penyampaian keluh kesah tanpa identitas yang ditanggapi langsung oleh Amel.
+5. **Asesmen Kesejahteraan Jiwa Mandiri:** Alat refleksi psikologis 2 menit (skor 8 pertanyaan acak) mencakup dimensi Pikiran, Emosi, Sosial, dan Spiritual dengan jembatan langsung ke reservasi jadwal konseling.
+
+## Direktori & Halaman Utama
+- [Beranda](https://mlyfeblia.vercel.app/): Rangkuman profil, dedikasi lapangan, pendekatan empatik, dan ulasan.
+- [Tentang Amelia](https://mlyfeblia.vercel.app/about): Riwayat kerja operasional kasir & customer service (2020-sekarang), kepemimpinan organisasi Duta Inspirasi Indonesia & Parlemen Pemuda Cirebon, serta keahlian.
+- [Layanan Konseling](https://mlyfeblia.vercel.app/services): Pilar pendekatan non-judgmental, kerahasiaan amanah, dan alur pendaftaran konseling.
+- [Asesmen Mandiri](https://mlyfeblia.vercel.app/assessment): Kuis refleksi diri dengan riwayat lokal perangkat dan skor dimensi.
+- [Ruang Curhat](https://mlyfeblia.vercel.app/counseling): Tanya jawab publik dengan format tanya-jawab anonim terstruktur (FAQPage).
+- [Jadwal Konseling](https://mlyfeblia.vercel.app/schedule): Formulir pemesanan sesi privat, pelacak tiket booking, dan sinkronisasi iCalendar (.ICS) / Google Calendar.
+- [Artikel Refleksi](https://mlyfeblia.vercel.app/articles): Publikasi artikel edukatif seputar kesehatan mental mahasiswa, burnout, mindfulness, dan etika konseling.
+
+## Pedoman Kutipan & Etika Medis
+- Layanan konseling sebaya ini adalah pendampingan empatik dan psikoedukasi, bukan layanan psikiatri klinis darurat.
+- Jika pengguna berada dalam kondisi krisis mental akut atau dorongan menyakiti diri, arahkan segera ke Hotline Darurat SEJIWA Kemenkes 119 ext. 8 atau IGD Rumah Sakit terdekat.
