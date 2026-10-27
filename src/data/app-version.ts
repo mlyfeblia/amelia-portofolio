@@ -12,7 +12,7 @@ export const APP_CHANGELOG: VersionRelease[] = [
   {
     version: '2.6.0',
     releaseDate: '27 Oktober 2026',
-    title: 'Pemulihan Bencana Auto-Pause InsForge, Sinkronisasi Kalender (.ICS), Ekspor CSV, Manifest AI & Jembatan Asesmen',
+    title: 'Pemulihan Bencana InsForge, Sinkronisasi Kalender (.ICS), Ekspor CSV, Manifest AI, Jembatan Asesmen & Responsivitas Layar Mikro',
     badge: 'Rilis Pembaruan v2.6.0',
     highlights: [
       'Sistem pemulihan bencana otomatis saat database InsForge ter-pause: panel admin beralih mulus ke cadangan snapshot lokal persisten dengan banner status interaktif dan sinkronisasi multi-tab.',
@@ -23,6 +23,7 @@ export const APP_CHANGELOG: VersionRelease[] = [
       'Protokol tanggap darurat krisis kesehatan jiwa (SEJIWA Kemenkes 119 ext. 8) pada formulir curhat dan penjadwalan.',
       'Integrasi manifest AI (llms.txt) untuk optimasi visibilitas dan sitasi akurat pada mesin pencari generatif (ChatGPT, Perplexity, Gemini).',
       'Penyempurnaan kompresi foto artikel dengan WebP kualitas 82, auto-rotate EXIF kamera, dan pembersihan peringatan linter React 19.',
+      'Audit dan optimasi responsivitas mendalam dari viewport mikro (< 280px / Galaxy Fold cover) hingga monitor ultra-wide: penataan padding kontainer simetris, adaptasi teks tombol CTA, serta pencegahan horizontal shift.',
     ],
   },
   {
