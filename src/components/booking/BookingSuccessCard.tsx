@@ -99,7 +99,7 @@ export function BookingSuccessCard({ success, onReset, onTrack }: BookingSuccess
           }
           className="hover:text-[var(--color-accent)] underline decoration-dotted underline-offset-2 cursor-pointer font-medium"
         >
-          Download .ICS (Apple/Outlook)
+          Download .ICS<span className="hidden min-[360px]:inline"> (Apple/Outlook)</span>
         </button>
         <span className="text-[var(--color-paper-border)]">•</span>
         <a

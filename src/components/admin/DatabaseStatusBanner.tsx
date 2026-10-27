@@ -113,7 +113,7 @@ export function DatabaseStatusBanner() {
         </div>
 
         {/* Right: Action Buttons */}
-        <div className="flex items-center gap-2 w-full md:w-auto shrink-0 pt-1 md:pt-0">
+        <div className="flex flex-col min-[340px]:flex-row items-stretch min-[340px]:items-center gap-2 w-full md:w-auto shrink-0 pt-1 md:pt-0">
           <button
             type="button"
             onClick={handleRecheck}

@@ -25,7 +25,7 @@ export default function Footer() {
     >
       {/* Main Footer Links */}
       <div className="py-12 md:py-14">
-        <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-10 grid grid-cols-1 md:grid-cols-12 gap-8 lg:gap-12">
+        <div className="max-w-7xl mx-auto px-3.5 min-[340px]:px-5 sm:px-8 lg:px-10 grid grid-cols-1 md:grid-cols-12 gap-8 lg:gap-12">
 
           {/* Col 1: Bio */}
           <div className="md:col-span-5 space-y-3">
@@ -126,7 +126,7 @@ export default function Footer() {
         className="border-t border-white/10 pt-6 pb-6 sm:py-5"
         style={{ paddingBottom: 'max(1.5rem, calc(1.25rem + env(safe-area-inset-bottom, 0px)))' }}
       >
-        <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-10 flex flex-col sm:flex-row items-center sm:justify-between gap-3 text-center sm:text-left">
+        <div className="max-w-7xl mx-auto px-3.5 min-[340px]:px-5 sm:px-8 lg:px-10 flex flex-col sm:flex-row items-center sm:justify-between gap-3 text-center sm:text-left">
           <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4">
             <p className="text-xs text-white/75 tracking-tight">
               &copy; {year} Amelia. Seluruh hak cipta dilindungi.

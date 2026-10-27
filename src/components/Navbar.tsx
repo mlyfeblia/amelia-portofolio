@@ -94,7 +94,7 @@ export default function Navbar() {
           )}
           aria-hidden="true"
         />
-        <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-10 h-16 flex items-center justify-between gap-6 overflow-visible">
+        <div className="max-w-7xl mx-auto px-3.5 min-[340px]:px-5 sm:px-8 lg:px-10 h-16 flex items-center justify-between gap-2 sm:gap-6 overflow-visible">
 
           {/* Wordmark logo with elegant lift and color shift hover animation */}
           <Link
@@ -156,10 +156,11 @@ export default function Navbar() {
                   href="/schedule"
                   onClick={() => setOpen(false)}
                   tabIndex={open ? -1 : 0}
-                  className="btn-interactive inline-flex items-center justify-center gap-1.5 h-8 md:h-9 px-3.5 md:px-4 text-xs md:text-sm font-semibold rounded-lg text-white bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] shadow-xs hover:shadow-sm whitespace-nowrap select-none cursor-pointer transition-all duration-200 ease-out"
+                  className="btn-interactive inline-flex items-center justify-center gap-1.5 h-8 md:h-9 px-2.5 min-[340px]:px-3.5 md:px-4 text-xs md:text-sm font-semibold rounded-lg text-white bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] shadow-xs hover:shadow-sm whitespace-nowrap select-none cursor-pointer transition-all duration-200 ease-out"
                 >
                   <Calendar className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
-                  <span>Janji Temu</span>
+                  <span className="hidden min-[320px]:inline">Janji Temu</span>
+                  <span className="min-[320px]:hidden">Janji</span>
                 </Link>
               </div>
 
