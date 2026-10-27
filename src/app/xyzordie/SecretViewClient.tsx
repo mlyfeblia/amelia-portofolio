@@ -12,10 +12,16 @@ import {
   AlertCircle,
   Eye,
   ArrowUpRight,
-  Sparkles,
   Sliders,
   History,
   ShieldAlert,
+  Zap,
+  ChevronDown,
+  ChevronUp,
+  Terminal,
+  Activity,
+  Layers,
+  Check,
 } from 'lucide-react';
 
 interface ArticleItem {
@@ -51,6 +57,7 @@ export default function SecretViewClient({ initialArticles }: SecretViewClientPr
   const [customCount, setCustomCount] = useState<number>(25);
   const [targetViewInput, setTargetViewInput] = useState<number>(100);
   const [activeTab, setActiveTab] = useState<'autopilot' | 'batch' | 'target'>('autopilot');
+  const [showMobileLogs, setShowMobileLogs] = useState(false);
 
   // Auto-Pilot state
   const [isAutoPilot, setIsAutoPilot] = useState(false);
@@ -135,7 +142,7 @@ export default function SecretViewClient({ initialArticles }: SecretViewClientPr
         const data = await res.json();
         if (res.ok && data.success) {
           setActionSuccessMessage(data.message);
-          addLog('success', `+${count} views ditambahkan ke seluruh artikel.`);
+          addLog('success', `+${count} views ke seluruh ${data.totalUpdated || 'semua'} artikel.`);
           fetchLatestArticles();
         } else {
           setActionErrorMessage(data.message || 'Gagal menambah views');
@@ -150,7 +157,6 @@ export default function SecretViewClient({ initialArticles }: SecretViewClientPr
         if (res.ok && data.success) {
           setActionSuccessMessage(data.message);
           addLog('success', `+${count} views [${slug}] -> total ${data.currentViews}`);
-          // Optimistic local update
           setArticles((prev) =>
             prev.map((a) => (a.slug === slug ? { ...a, views: data.currentViews } : a))
           );
@@ -166,7 +172,7 @@ export default function SecretViewClient({ initialArticles }: SecretViewClientPr
   // 4. Set Exact Target Views
   const handleSetTarget = async (slug: string, targetViews: number) => {
     if (slug === 'all') {
-      setActionErrorMessage('Harap pilih artikel spesifik untuk target view.');
+      setActionErrorMessage('Harap pilih satu artikel spesifik untuk mode target view.');
       return;
     }
 
@@ -179,12 +185,12 @@ export default function SecretViewClient({ initialArticles }: SecretViewClientPr
       const data = await res.json();
       if (res.ok && data.success) {
         setActionSuccessMessage(data.message);
-        addLog('info', `Target views [${slug}] diubah ke ${data.currentViews}`);
+        addLog('info', `Target views [${slug}] disetel ke ${data.currentViews}`);
         setArticles((prev) =>
           prev.map((a) => (a.slug === slug ? { ...a, views: data.currentViews } : a))
         );
       } else {
-        setActionErrorMessage(data.message || 'Gagal mengubah target views');
+        setActionErrorMessage(data.message || 'Gagal mengatur target views');
       }
     } catch {
       setActionErrorMessage('Terjadi kesalahan jaringan');
@@ -201,7 +207,7 @@ export default function SecretViewClient({ initialArticles }: SecretViewClientPr
       return;
     }
 
-    addLog('info', `Auto-Pilot aktif. Interval setiap ${intervalSeconds} detik.`);
+    addLog('info', `Auto-Pilot aktif. Menjalankan penambahan setiap ${intervalSeconds} detik.`);
 
     const executeTick = async () => {
       try {
@@ -225,21 +231,18 @@ export default function SecretViewClient({ initialArticles }: SecretViewClientPr
         if (res.ok) {
           const data = await res.json();
           if (data.success) {
-            addLog('success', `[Auto-Pilot] +${data.added} views -> [${data.slug}] total ${data.currentViews}`);
+            addLog('success', `+${data.added} views -> [${data.slug}] total ${data.currentViews}`);
             setArticles((prev) =>
               prev.map((a) => (a.slug === data.slug ? { ...a, views: data.currentViews } : a))
             );
           }
         }
       } catch {
-        // silent fail on network jitter
+        // silent fail on intermittent network drop
       }
     };
 
-    // Run first tick immediately
     executeTick();
-
-    // Loop
     autoPilotTimerRef.current = setInterval(executeTick, intervalSeconds * 1000);
 
     return () => {
@@ -259,27 +262,37 @@ export default function SecretViewClient({ initialArticles }: SecretViewClientPr
 
   const totalAllViews = articles.reduce((sum, a) => sum + (a.views || 0), 0);
 
-  // ── Render Screen: PIN Lock Screen ──
+  // ═════════════════════════════════════════════════════════════════════
+  // SCREEN 1: PIN LOCK GATEWAY (Obsidian Security Screen)
+  // ═════════════════════════════════════════════════════════════════════
   if (!isUnlocked) {
     return (
-      <div className="min-h-screen bg-[#0D1410] text-[#E0EBE4] flex flex-col items-center justify-center p-4 selection:bg-emerald-900 selection:text-white">
-        <div className="w-full max-w-sm bg-[#141F19] border border-[#23332A] rounded-2xl p-6 sm:p-8 shadow-2xl space-y-6">
-          <div className="text-center space-y-2">
-            <div className="w-12 h-12 rounded-xl bg-emerald-950/60 border border-emerald-500/20 text-emerald-400 mx-auto flex items-center justify-center">
+      <main className="min-h-screen bg-[#070B09] text-[#E0EBE4] flex flex-col items-center justify-center p-3.5 min-[340px]:p-5 sm:p-8 selection:bg-emerald-900 selection:text-white">
+        <div className="w-full max-w-[340px] sm:max-w-[380px] bg-[#0E1511] border border-[#1B2921] rounded-2xl p-5 sm:p-7 shadow-2xl space-y-6 relative overflow-hidden">
+          {/* Subtle Accent Glow */}
+          <div className="absolute -top-24 -left-24 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+
+          <div className="text-center space-y-2 relative z-10">
+            <div className="w-11 h-11 rounded-xl bg-[#14201A] border border-emerald-500/25 text-emerald-400 mx-auto flex items-center justify-center shadow-inner">
               <Lock className="w-5 h-5" />
             </div>
-            <h1 className="text-lg font-semibold tracking-tight text-white">
-              Restricted Operation Gateway
-            </h1>
-            <p className="text-xs text-[#8A9F93]">
-              Masukkan PIN otorisasi rahasia untuk membuka dasbor manajemen views.
-            </p>
+            <div className="space-y-1 pt-1">
+              <span className="text-[10.5px] uppercase tracking-wider font-mono text-emerald-400 font-semibold block">
+                /xyzordie gateway
+              </span>
+              <h1 className="text-base sm:text-lg font-semibold tracking-tight text-white">
+                Otorisasi Konsol Rahasia
+              </h1>
+              <p className="text-xs text-[#7A9184] leading-relaxed">
+                Masukkan 6-digit PIN otorisasi internal untuk membuka dasbor views.
+              </p>
+            </div>
           </div>
 
-          <form onSubmit={handleVerifyPin} className="space-y-4">
+          <form onSubmit={handleVerifyPin} className="space-y-4 relative z-10">
             <div className="space-y-1.5">
-              <label htmlFor="secret-pin" className="text-xs font-medium text-[#A1B5A9]">
-                PIN Otorisasi (6 Digit)
+              <label htmlFor="secret-pin" className="text-[11.5px] font-medium text-[#9BB1A4] block">
+                Kode PIN Akses
               </label>
               <input
                 id="secret-pin"
@@ -288,26 +301,26 @@ export default function SecretViewClient({ initialArticles }: SecretViewClientPr
                 maxLength={6}
                 value={pin}
                 onChange={(e) => {
-                  setPin(e.target.value);
+                  setPin(e.target.value.replace(/\D/g, ''));
                   setPinError('');
                 }}
                 placeholder="••••••"
                 autoFocus
-                className="w-full h-11 px-4 text-center tracking-[0.5em] text-lg font-mono bg-[#0D1410] border border-[#2B3E34] rounded-xl text-white focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all placeholder:tracking-normal placeholder:text-sm placeholder:text-[#4A5D52]"
+                className="w-full h-11 px-3 text-center tracking-[0.35em] sm:tracking-[0.5em] text-lg font-mono bg-[#070B09] border border-[#23352B] rounded-xl text-white focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all placeholder:tracking-normal placeholder:text-sm placeholder:text-[#42554A]"
               />
             </div>
 
             {pinError && (
-              <div className="flex items-center gap-2 p-2.5 rounded-lg bg-rose-950/40 border border-rose-500/20 text-rose-300 text-xs">
+              <div className="flex items-center gap-2 p-2.5 rounded-xl bg-rose-950/40 border border-rose-500/20 text-rose-300 text-xs animate-in fade-in">
                 <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
-                <span>{pinError}</span>
+                <span className="leading-tight">{pinError}</span>
               </div>
             )}
 
             <button
               type="submit"
               disabled={isCheckingPin || pin.length < 4}
-              className="w-full h-11 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-[0.98] text-white font-medium text-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2 shadow-lg shadow-emerald-950/50"
+              className="w-full h-11 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-[0.98] text-white font-medium text-xs sm:text-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2 shadow-lg shadow-emerald-950/60"
             >
               {isCheckingPin ? (
                 <>
@@ -316,84 +329,140 @@ export default function SecretViewClient({ initialArticles }: SecretViewClientPr
                 </>
               ) : (
                 <>
-                  <span>Buka Akses</span>
+                  <span>Buka Akses Konsol</span>
                   <ArrowUpRight className="w-4 h-4" />
                 </>
               )}
             </button>
           </form>
 
-          <div className="pt-2 border-t border-[#23332A] flex items-center justify-between text-[11px] text-[#5C7366]">
-            <span>Status: Sesi Admin Aktif</span>
-            <span>v2.6.0 Internal</span>
+          <div className="pt-2 border-t border-[#18241E] flex items-center justify-between text-[10.5px] text-[#55695E] relative z-10">
+            <span className="flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Sesi Admin Aktif
+            </span>
+            <span className="font-mono">v2.6.0</span>
           </div>
         </div>
-      </div>
+      </main>
     );
   }
 
-  // ── Render Screen: Secret View Engine Dashboard ──
+  // ═════════════════════════════════════════════════════════════════════
+  // SCREEN 2: SECRET VIEW ENGINE CONSOLE (Obsidian Command Console)
+  // ═════════════════════════════════════════════════════════════════════
   return (
-    <div className="min-h-screen bg-[#0D1410] text-[#E0EBE4] p-4 sm:p-6 lg:p-8 font-sans selection:bg-emerald-900 selection:text-white">
-      <div className="max-w-6xl mx-auto space-y-6">
+    <div className="min-h-screen bg-[#070B09] text-[#E0EBE4] p-3.5 min-[340px]:p-5 sm:p-7 lg:p-10 font-sans selection:bg-emerald-900 selection:text-white">
+      <div className="max-w-6xl mx-auto space-y-5 sm:space-y-6">
 
-        {/* Top Header */}
-        <header className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-5 rounded-2xl bg-[#141F19] border border-[#23332A] shadow-xl">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-emerald-950 border border-emerald-500/30 text-emerald-400">
-                <Flame className="w-3 h-3" /> Secret View Engine
-              </span>
-              <span className="text-xs text-[#5C7366] font-mono">/xyzordie</span>
+        {/* ── Top Header & Telemetry Summary HUD ── */}
+        <header className="rounded-2xl bg-[#0E1511] border border-[#1B2921] p-4 sm:p-6 shadow-xl space-y-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            
+            {/* Title & Brand */}
+            <div className="space-y-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-medium bg-emerald-950/90 border border-emerald-500/30 text-emerald-400">
+                  <Terminal className="w-3 h-3" /> /xyzordie
+                </span>
+                <span className="text-[11px] text-[#55695E] font-mono">Restricted Telemetry Console</span>
+              </div>
+              <h1 className="text-lg sm:text-2xl font-bold text-white tracking-tight">
+                Konsol Otomasi Pembaca Artikel
+              </h1>
+              <p className="text-xs text-[#7A9184] max-w-xl">
+                Sistem internal untuk menambah jumlah pembaca secara atomik, instan, maupun terjadwal berkala (Auto-Pilot).
+              </p>
             </div>
-            <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
-              Otomasi Pembaca Artikel
-            </h1>
-            <p className="text-xs text-[#8A9F93]">
-              Pengatur jumlah pembaca artikel secara atomik, instan, atau berkelanjutan (Auto-Pilot).
-            </p>
+
+            {/* Quick Actions */}
+            <div className="flex items-center gap-2 self-stretch sm:self-auto justify-end">
+              <button
+                type="button"
+                onClick={fetchLatestArticles}
+                disabled={isRefreshing}
+                className="btn-interactive h-9 min-[340px]:h-10 px-3 sm:px-4 rounded-xl border border-[#23352B] bg-[#14201A] hover:bg-[#1A2A22] text-[#C1D4C9] text-xs font-medium flex items-center justify-center gap-1.5 transition-all cursor-pointer disabled:opacity-50 flex-1 sm:flex-initial"
+                title="Segarkan data terbaru"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-emerald-400' : ''}`} />
+                <span>Segarkan</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setIsUnlocked(false)}
+                className="btn-interactive h-9 min-[340px]:h-10 px-3.5 rounded-xl border border-rose-900/30 bg-rose-950/20 hover:bg-rose-900/30 text-rose-300 text-xs font-medium transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                title="Kunci kembali konsol"
+              >
+                <Lock className="w-3.5 h-3.5" />
+                <span className="hidden min-[360px]:inline">Kunci</span>
+              </button>
+            </div>
           </div>
 
-          <div className="flex items-center gap-3 shrink-0">
-            <div className="text-right px-3 py-1.5 rounded-xl bg-[#0D1410] border border-[#23332A]">
-              <span className="text-[10px] uppercase tracking-wider text-[#5C7366] block">Total Pembaca</span>
-              <span className="text-lg font-bold text-emerald-400 font-mono">
+          {/* Telemetry Metric Cards */}
+          <div className="grid grid-cols-2 min-[480px]:grid-cols-4 gap-2.5 sm:gap-3 pt-1 border-t border-[#18241E]">
+            <div className="p-3 rounded-xl bg-[#070B09] border border-[#18241E]">
+              <span className="text-[10px] uppercase tracking-wider text-[#55695E] font-medium block">
+                Total Pembaca
+              </span>
+              <span className="text-base sm:text-xl font-bold font-mono text-emerald-400 tabular-nums">
                 {totalAllViews.toLocaleString('id-ID')}
               </span>
             </div>
 
-            <button
-              type="button"
-              onClick={fetchLatestArticles}
-              disabled={isRefreshing}
-              className="h-10 px-3.5 rounded-xl border border-[#2B3E34] bg-[#1A2821] hover:bg-[#23352C] text-[#C1D4C9] text-xs font-medium flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
-              title="Segarkan data dari server"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-emerald-400' : ''}`} />
-              <span className="hidden sm:inline">Refresh</span>
-            </button>
+            <div className="p-3 rounded-xl bg-[#070B09] border border-[#18241E]">
+              <span className="text-[10px] uppercase tracking-wider text-[#55695E] font-medium block">
+                Jumlah Artikel
+              </span>
+              <span className="text-base sm:text-xl font-bold font-mono text-white tabular-nums">
+                {articles.length} <span className="text-xs font-normal text-[#55695E]">item</span>
+              </span>
+            </div>
 
-            <button
-              type="button"
-              onClick={() => setIsUnlocked(false)}
-              className="h-10 px-3 rounded-xl border border-rose-900/30 bg-rose-950/20 hover:bg-rose-900/40 text-rose-300 text-xs font-medium transition-all cursor-pointer"
-              title="Kunci kembali dasbor"
-            >
-              Kunci
-            </button>
+            <div className="p-3 rounded-xl bg-[#070B09] border border-[#18241E]">
+              <span className="text-[10px] uppercase tracking-wider text-[#55695E] font-medium block">
+                Status Auto-Pilot
+              </span>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <span
+                  className={`w-2 h-2 rounded-full ${
+                    isAutoPilot ? 'bg-emerald-400 animate-pulse' : 'bg-zinc-600'
+                  }`}
+                />
+                <span
+                  className={`text-xs sm:text-sm font-semibold font-mono ${
+                    isAutoPilot ? 'text-emerald-400' : 'text-[#7A9184]'
+                  }`}
+                >
+                  {isAutoPilot ? 'Aktif' : 'Standby'}
+                </span>
+              </div>
+            </div>
+
+            <div className="p-3 rounded-xl bg-[#070B09] border border-[#18241E]">
+              <span className="text-[10px] uppercase tracking-wider text-[#55695E] font-medium block">
+                Koneksi Database
+              </span>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <Activity className="w-3.5 h-3.5 text-emerald-400" />
+                <span className="text-xs sm:text-sm font-semibold text-emerald-400 font-mono">
+                  Tersambung
+                </span>
+              </div>
+            </div>
           </div>
         </header>
 
-        {/* Action Alerts */}
+        {/* ── Status Alerts ── */}
         {actionSuccessMessage && (
           <div className="flex items-center justify-between gap-3 p-3.5 rounded-xl bg-emerald-950/40 border border-emerald-500/30 text-emerald-300 text-xs animate-in fade-in">
             <div className="flex items-center gap-2">
               <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />
-              <span>{actionSuccessMessage}</span>
+              <span className="leading-relaxed">{actionSuccessMessage}</span>
             </div>
             <button
               onClick={() => setActionSuccessMessage('')}
-              className="text-emerald-400 hover:text-emerald-200 text-xs font-mono"
+              className="text-emerald-400 hover:text-emerald-200 text-xs font-mono px-1 py-0.5 cursor-pointer"
             >
               ✕
             </button>
@@ -403,93 +472,99 @@ export default function SecretViewClient({ initialArticles }: SecretViewClientPr
           <div className="flex items-center justify-between gap-3 p-3.5 rounded-xl bg-rose-950/40 border border-rose-500/30 text-rose-300 text-xs animate-in fade-in">
             <div className="flex items-center gap-2">
               <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
-              <span>{actionErrorMessage}</span>
+              <span className="leading-relaxed">{actionErrorMessage}</span>
             </div>
             <button
               onClick={() => setActionErrorMessage('')}
-              className="text-rose-400 hover:text-rose-200 text-xs font-mono"
+              className="text-rose-400 hover:text-rose-200 text-xs font-mono px-1 py-0.5 cursor-pointer"
             >
               ✕
             </button>
           </div>
         )}
 
-        {/* Engine Modes: Auto-Pilot vs Quick Batch vs Target */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* ── Control Center & Activity Terminal ── */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 items-start">
 
-          {/* Left Panel: Control Center (7 cols) */}
+          {/* Left Panel: Segmented Control Hub (7 Cols) */}
           <div className="lg:col-span-7 space-y-4">
-            <div className="bg-[#141F19] border border-[#23332A] rounded-2xl p-5 space-y-5">
+            <div className="bg-[#0E1511] border border-[#1B2921] rounded-2xl p-4 sm:p-5 space-y-5 shadow-xl">
               
-              {/* Tab Selector */}
-              <div className="flex items-center gap-1.5 p-1 rounded-xl bg-[#0D1410] border border-[#23332A]">
+              {/* Segmented Tab Controls (Responsive Mobile & Desktop) */}
+              <div className="flex items-center gap-1 p-1 rounded-xl bg-[#070B09] border border-[#18241E]">
                 <button
                   type="button"
                   onClick={() => setActiveTab('autopilot')}
-                  className={`flex-1 py-2 px-3 rounded-lg text-xs font-medium flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                  className={`flex-1 py-2 px-2 sm:px-3 rounded-lg text-xs font-medium flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                     activeTab === 'autopilot'
                       ? 'bg-emerald-600 text-white shadow-sm'
-                      : 'text-[#8A9F93] hover:text-white'
+                      : 'text-[#7A9184] hover:text-white'
                   }`}
                 >
-                  <Play className="w-3.5 h-3.5" />
-                  <span>1. Auto-Pilot (Otomatis)</span>
+                  <Zap className="w-3.5 h-3.5" />
+                  <span className="sm:hidden">Auto</span>
+                  <span className="hidden sm:inline">1. Auto-Pilot</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setActiveTab('batch')}
-                  className={`flex-1 py-2 px-3 rounded-lg text-xs font-medium flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                  className={`flex-1 py-2 px-2 sm:px-3 rounded-lg text-xs font-medium flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                     activeTab === 'batch'
                       ? 'bg-emerald-600 text-white shadow-sm'
-                      : 'text-[#8A9F93] hover:text-white'
+                      : 'text-[#7A9184] hover:text-white'
                   }`}
                 >
                   <Flame className="w-3.5 h-3.5" />
-                  <span>2. Tambah Cepat</span>
+                  <span className="sm:hidden">Cepat</span>
+                  <span className="hidden sm:inline">2. Tambah Cepat</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setActiveTab('target')}
-                  className={`flex-1 py-2 px-3 rounded-lg text-xs font-medium flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                  className={`flex-1 py-2 px-2 sm:px-3 rounded-lg text-xs font-medium flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                     activeTab === 'target'
                       ? 'bg-emerald-600 text-white shadow-sm'
-                      : 'text-[#8A9F93] hover:text-white'
+                      : 'text-[#7A9184] hover:text-white'
                   }`}
                 >
                   <Sliders className="w-3.5 h-3.5" />
-                  <span>3. Atur Target</span>
+                  <span className="sm:hidden">Target</span>
+                  <span className="hidden sm:inline">3. Atur Target</span>
                 </button>
               </div>
 
-              {/* ── Tab 1: Auto-Pilot ── */}
+              {/* ── MODE 1: AUTO-PILOT ── */}
               {activeTab === 'autopilot' && (
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between p-4 rounded-xl bg-[#0D1410] border border-[#23332A]">
-                    <div className="space-y-1">
+                  {/* Master Toggle Banner */}
+                  <div className="flex flex-col min-[420px]:flex-row items-start min-[420px]:items-center justify-between gap-3 p-4 rounded-xl bg-[#070B09] border border-[#18241E]">
+                    <div className="space-y-0.5">
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-semibold text-white">Status Auto-Pilot</span>
+                        <span className="text-xs sm:text-sm font-semibold text-white">
+                          Status Runner
+                        </span>
                         {isAutoPilot ? (
-                          <span className="flex items-center gap-1 text-[11px] font-medium text-emerald-400 bg-emerald-950/80 px-2 py-0.5 rounded-full border border-emerald-500/30">
-                            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                            Berjalan
+                          <span className="inline-flex items-center gap-1 text-[11px] font-mono font-medium text-emerald-400 bg-emerald-950/80 px-2 py-0.5 rounded-full border border-emerald-500/30">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                            Aktif ({intervalSeconds}s)
                           </span>
                         ) : (
-                          <span className="text-[11px] font-medium text-[#5C7366] bg-[#141F19] px-2 py-0.5 rounded-full border border-[#23332A]">
+                          <span className="text-[11px] font-mono text-[#55695E] bg-[#0E1511] px-2 py-0.5 rounded-full border border-[#18241E]">
                             Nonaktif
                           </span>
                         )}
                       </div>
-                      <p className="text-xs text-[#8A9F93]">
+                      <p className="text-[11.5px] text-[#7A9184] leading-normal">
                         {isAutoPilot
                           ? `Menambah views setiap ${intervalSeconds} detik secara otomatis.`
-                          : 'Aktifkan untuk menambah pembaca secara berkala dan alami.'}
+                          : 'Jalankan untuk penambahan pembaca berkala dan acak natural.'}
                       </p>
                     </div>
 
                     <button
                       type="button"
                       onClick={() => setIsAutoPilot(!isAutoPilot)}
-                      className={`h-10 px-5 rounded-xl font-medium text-xs flex items-center gap-2 transition-all cursor-pointer shadow-lg ${
+                      className={`btn-interactive h-10 px-4 min-[340px]:px-5 rounded-xl font-medium text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-lg w-full min-[420px]:w-auto shrink-0 ${
                         isAutoPilot
                           ? 'bg-rose-600 hover:bg-rose-500 text-white shadow-rose-950/40'
                           : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-950/40'
@@ -498,7 +573,7 @@ export default function SecretViewClient({ initialArticles }: SecretViewClientPr
                       {isAutoPilot ? (
                         <>
                           <Square className="w-3.5 h-3.5 fill-current" />
-                          <span>Hentikan</span>
+                          <span>Hentikan Runner</span>
                         </>
                       ) : (
                         <>
@@ -509,29 +584,34 @@ export default function SecretViewClient({ initialArticles }: SecretViewClientPr
                     </button>
                   </div>
 
+                  {/* Settings Grid */}
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div className="space-y-1.5">
-                      <label className="text-[11px] font-medium text-[#8A9F93]">Target Artikel</label>
+                      <label className="text-[11px] font-medium text-[#7A9184] block">
+                        Target Artikel
+                      </label>
                       <select
                         value={autoTarget}
                         onChange={(e) => setAutoTarget(e.target.value)}
-                        className="w-full h-9 px-2.5 rounded-lg bg-[#0D1410] border border-[#23332A] text-xs text-white focus:outline-none focus:border-emerald-500"
+                        className="w-full h-10 px-2.5 rounded-xl bg-[#070B09] border border-[#1B2921] text-xs text-white focus:outline-none focus:border-emerald-500 transition-colors"
                       >
                         <option value="random">🎲 Seluruh Artikel (Acak)</option>
                         {articles.map((a) => (
                           <option key={a.id} value={a.slug}>
-                            {a.title.slice(0, 32)}... ({a.views} views)
+                            {a.title.slice(0, 30)}... ({a.views} views)
                           </option>
                         ))}
                       </select>
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="text-[11px] font-medium text-[#8A9F93]">Interval Detik</label>
+                      <label className="text-[11px] font-medium text-[#7A9184] block">
+                        Frekuensi Interval
+                      </label>
                       <select
                         value={intervalSeconds}
                         onChange={(e) => setIntervalSeconds(Number(e.target.value))}
-                        className="w-full h-9 px-2.5 rounded-lg bg-[#0D1410] border border-[#23332A] text-xs text-white focus:outline-none focus:border-emerald-500"
+                        className="w-full h-10 px-2.5 rounded-xl bg-[#070B09] border border-[#1B2921] text-xs text-white focus:outline-none focus:border-emerald-500 transition-colors"
                       >
                         <option value={5}>Setiap 5 Detik (Cepat)</option>
                         <option value={8}>Setiap 8 Detik (Rekomendasi)</option>
@@ -542,41 +622,48 @@ export default function SecretViewClient({ initialArticles }: SecretViewClientPr
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="text-[11px] font-medium text-[#8A9F93]">Views / Tik</label>
-                      <div className="flex items-center gap-1.5 h-9 px-2.5 rounded-lg bg-[#0D1410] border border-[#23332A] text-xs text-white">
-                        <span>Antara</span>
-                        <input
-                          type="number"
-                          min={1}
-                          max={5}
-                          value={autoMinViews}
-                          onChange={(e) => setAutoMinViews(Math.max(1, Number(e.target.value)))}
-                          className="w-8 text-center bg-transparent border-b border-emerald-500 focus:outline-none"
-                        />
-                        <span>sd</span>
-                        <input
-                          type="number"
-                          min={autoMinViews}
-                          max={10}
-                          value={autoMaxViews}
-                          onChange={(e) => setAutoMaxViews(Math.max(autoMinViews, Number(e.target.value)))}
-                          className="w-8 text-center bg-transparent border-b border-emerald-500 focus:outline-none"
-                        />
+                      <label className="text-[11px] font-medium text-[#7A9184] block">
+                        Views per Tik
+                      </label>
+                      <div className="flex items-center justify-between gap-1.5 h-10 px-3 rounded-xl bg-[#070B09] border border-[#1B2921] text-xs text-white font-mono">
+                        <span className="text-[11px] text-[#7A9184]">Acak:</span>
+                        <div className="flex items-center gap-1">
+                          <input
+                            type="number"
+                            min={1}
+                            max={5}
+                            value={autoMinViews}
+                            onChange={(e) => setAutoMinViews(Math.max(1, Number(e.target.value)))}
+                            className="w-8 text-center bg-transparent border-b border-emerald-500/50 focus:border-emerald-500 focus:outline-none text-emerald-400 font-bold"
+                          />
+                          <span className="text-[#55695E]">-</span>
+                          <input
+                            type="number"
+                            min={autoMinViews}
+                            max={10}
+                            value={autoMaxViews}
+                            onChange={(e) => setAutoMaxViews(Math.max(autoMinViews, Number(e.target.value)))}
+                            className="w-8 text-center bg-transparent border-b border-emerald-500/50 focus:border-emerald-500 focus:outline-none text-emerald-400 font-bold"
+                          />
+                          <span className="text-[10px] text-[#55695E]">views</span>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
               )}
 
-              {/* ── Tab 2: Quick Batch Boost ── */}
+              {/* ── MODE 2: QUICK BATCH BOOST ── */}
               {activeTab === 'batch' && (
                 <div className="space-y-4">
                   <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-[#8A9F93]">Pilih Target Artikel</label>
+                    <label className="text-xs font-medium text-[#7A9184] block">
+                      Pilih Sasaran Artikel
+                    </label>
                     <select
                       value={selectedSlug}
                       onChange={(e) => setSelectedSlug(e.target.value)}
-                      className="w-full h-10 px-3 rounded-xl bg-[#0D1410] border border-[#23332A] text-xs text-white focus:outline-none focus:border-emerald-500"
+                      className="w-full h-10 px-3 rounded-xl bg-[#070B09] border border-[#1B2921] text-xs text-white focus:outline-none focus:border-emerald-500 transition-colors"
                     >
                       <option value="all">🌐 Seluruh Artikel Publik Sekaligus</option>
                       {articles.map((a) => (
@@ -588,54 +675,66 @@ export default function SecretViewClient({ initialArticles }: SecretViewClientPr
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-xs font-medium text-[#8A9F93]">Pilihan Penambahan Instan</label>
-                    <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                    <span className="text-xs font-medium text-[#7A9184] block">
+                      Tombol Penambahan Instan
+                    </span>
+                    <div className="grid grid-cols-2 min-[340px]:grid-cols-3 sm:grid-cols-6 gap-2">
                       {[10, 25, 50, 100, 250, 500].map((num) => (
                         <button
                           key={num}
                           type="button"
                           onClick={() => handleBoost(selectedSlug, num)}
-                          className="h-10 rounded-xl bg-[#0D1410] hover:bg-emerald-950/60 border border-[#2B3E34] hover:border-emerald-500/50 text-white font-mono text-xs font-semibold transition-all cursor-pointer flex items-center justify-center gap-1 active:scale-95"
+                          className="btn-interactive h-10 rounded-xl bg-[#070B09] hover:bg-emerald-950/60 border border-[#1B2921] hover:border-emerald-500/40 text-white font-mono text-xs font-semibold transition-all cursor-pointer flex items-center justify-center gap-1 active:scale-95"
                         >
-                          <Flame className="w-3 h-3 text-emerald-400" />
+                          <Flame className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                           <span>+{num}</span>
                         </button>
                       ))}
                     </div>
                   </div>
 
-                  <div className="pt-2 flex items-center gap-2">
-                    <input
-                      type="number"
-                      min={1}
-                      max={5000}
-                      value={customCount}
-                      onChange={(e) => setCustomCount(Math.max(1, Number(e.target.value)))}
-                      className="w-32 h-10 px-3 rounded-xl bg-[#0D1410] border border-[#23332A] text-xs text-white font-mono focus:outline-none focus:border-emerald-500"
-                      placeholder="Angka custom"
-                    />
+                  <div className="pt-2 flex flex-col min-[380px]:flex-row items-stretch min-[380px]:items-center gap-2">
+                    <div className="relative flex-1">
+                      <input
+                        type="number"
+                        min={1}
+                        max={5000}
+                        value={customCount}
+                        onChange={(e) => setCustomCount(Math.max(1, Number(e.target.value)))}
+                        className="w-full h-10 px-3 rounded-xl bg-[#070B09] border border-[#1B2921] text-xs text-white font-mono focus:outline-none focus:border-emerald-500 transition-colors"
+                        placeholder="Jumlah custom"
+                      />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-[#55695E] font-mono pointer-events-none">
+                        views
+                      </span>
+                    </div>
+
                     <button
                       type="button"
                       onClick={() => handleBoost(selectedSlug, customCount)}
-                      className="h-10 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-medium transition-all cursor-pointer flex items-center gap-1.5"
+                      className="btn-interactive h-10 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-medium transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-md shadow-emerald-950/40 shrink-0"
                     >
-                      <Sparkles className="w-3.5 h-3.5" />
+                      <Zap className="w-3.5 h-3.5" />
                       <span>Tambah +{customCount} Views</span>
                     </button>
                   </div>
                 </div>
               )}
 
-              {/* ── Tab 3: Set Exact Target Views ── */}
+              {/* ── MODE 3: ATUR TARGET ── */}
               {activeTab === 'target' && (
                 <div className="space-y-4">
-                  <div className="p-3.5 rounded-xl bg-amber-950/30 border border-amber-500/20 text-amber-200 text-xs flex items-center gap-2">
-                    <ShieldAlert className="w-4 h-4 shrink-0 text-amber-400" />
-                    <span>Mode Target akan langsung mengatur nilai `views` artikel ke angka pasti yang kamu masukkan.</span>
+                  <div className="p-3.5 rounded-xl bg-amber-950/20 border border-amber-500/25 text-amber-200 text-xs flex items-start gap-2.5">
+                    <ShieldAlert className="w-4 h-4 shrink-0 text-amber-400 mt-0.5" />
+                    <span className="leading-relaxed">
+                      Mode Target akan langsung menyesuaikan angka views artikel ke angka pasti yang kamu masukkan.
+                    </span>
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-[#8A9F93]">Pilih Artikel Spesifik</label>
+                    <label className="text-xs font-medium text-[#7A9184] block">
+                      Pilih Artikel
+                    </label>
                     <select
                       value={selectedSlug === 'all' && articles[0] ? articles[0].slug : selectedSlug}
                       onChange={(e) => {
@@ -643,7 +742,7 @@ export default function SecretViewClient({ initialArticles }: SecretViewClientPr
                         const match = articles.find((a) => a.slug === e.target.value);
                         if (match) setTargetViewInput(match.views);
                       }}
-                      className="w-full h-10 px-3 rounded-xl bg-[#0D1410] border border-[#23332A] text-xs text-white focus:outline-none focus:border-emerald-500"
+                      className="w-full h-10 px-3 rounded-xl bg-[#070B09] border border-[#1B2921] text-xs text-white focus:outline-none focus:border-emerald-500 transition-colors"
                     >
                       {articles.map((a) => (
                         <option key={a.id} value={a.slug}>
@@ -653,26 +752,28 @@ export default function SecretViewClient({ initialArticles }: SecretViewClientPr
                     </select>
                   </div>
 
-                  <div className="flex items-center gap-3">
-                    <div className="space-y-1">
-                      <label className="text-[11px] text-[#8A9F93] block">Target Views</label>
+                  <div className="flex flex-col min-[380px]:flex-row items-stretch min-[380px]:items-center gap-3">
+                    <div className="space-y-1 flex-1">
+                      <label className="text-[11px] text-[#7A9184] block">
+                        Target Jumlah Pembaca
+                      </label>
                       <input
                         type="number"
                         min={0}
                         value={targetViewInput}
                         onChange={(e) => setTargetViewInput(Math.max(0, Number(e.target.value)))}
-                        className="w-36 h-10 px-3 rounded-xl bg-[#0D1410] border border-[#23332A] text-sm text-white font-mono font-semibold focus:outline-none focus:border-emerald-500"
+                        className="w-full h-10 px-3 rounded-xl bg-[#070B09] border border-[#1B2921] text-sm text-white font-mono font-semibold focus:outline-none focus:border-emerald-500 transition-colors"
                       />
                     </div>
 
-                    <div className="pt-5">
+                    <div className="min-[380px]:pt-5">
                       <button
                         type="button"
                         onClick={() => {
                           const target = selectedSlug === 'all' && articles[0] ? articles[0].slug : selectedSlug;
                           handleSetTarget(target, targetViewInput);
                         }}
-                        className="h-10 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-medium transition-all cursor-pointer flex items-center gap-1.5"
+                        className="btn-interactive w-full min-[380px]:w-auto h-10 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-medium transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-md shadow-emerald-950/40"
                       >
                         <Sliders className="w-3.5 h-3.5" />
                         <span>Terapkan Target</span>
@@ -685,39 +786,61 @@ export default function SecretViewClient({ initialArticles }: SecretViewClientPr
             </div>
           </div>
 
-          {/* Right Panel: Live Activity Terminal (5 cols) */}
-          <div className="lg:col-span-5 space-y-4">
-            <div className="bg-[#141F19] border border-[#23332A] rounded-2xl p-5 space-y-3 h-full flex flex-col">
+          {/* Right Panel: Live Activity Terminal (5 Cols) */}
+          <div className="lg:col-span-5 space-y-3">
+            <div className="bg-[#0E1511] border border-[#1B2921] rounded-2xl p-4 sm:p-5 space-y-3 shadow-xl">
+              
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <History className="w-4 h-4 text-emerald-400" />
-                  <span className="text-xs font-semibold text-white tracking-wide">Live Activity Log</span>
+                  <span className="text-xs font-semibold text-white tracking-wide">
+                    Live Telemetry Log
+                  </span>
+                  <span className="text-[10px] font-mono text-[#55695E]">({logs.length})</span>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setLogs([])}
-                  className="text-[11px] text-[#5C7366] hover:text-white transition-colors"
-                >
-                  Bersihkan
-                </button>
+
+                <div className="flex items-center gap-2">
+                  {/* Mobile toggle log visibility button */}
+                  <button
+                    type="button"
+                    onClick={() => setShowMobileLogs(!showMobileLogs)}
+                    className="lg:hidden text-[11px] text-[#7A9184] hover:text-white transition-colors flex items-center gap-1 px-2 py-0.5 rounded-lg border border-[#18241E]"
+                  >
+                    {showMobileLogs ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                    <span>{showMobileLogs ? 'Tutup' : 'Lihat'}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setLogs([])}
+                    className="text-[11px] text-[#55695E] hover:text-[#C1D4C9] transition-colors cursor-pointer px-1 py-0.5"
+                  >
+                    Bersihkan
+                  </button>
+                </div>
               </div>
 
-              <div className="flex-1 min-h-[220px] max-h-[300px] overflow-y-auto p-3 rounded-xl bg-[#0D1410] border border-[#23332A] font-mono text-[11px] space-y-1.5 scrollbar-thin">
+              {/* Terminal Screen (Always open on lg:, toggled on mobile) */}
+              <div
+                className={`${
+                  showMobileLogs ? 'block' : 'hidden lg:block'
+                } h-[200px] sm:h-[240px] overflow-y-auto p-3 rounded-xl bg-[#070B09] border border-[#18241E] font-mono text-[11px] space-y-1.5 scrollbar-thin select-text`}
+              >
                 {logs.length === 0 ? (
-                  <div className="h-full flex items-center justify-center text-[#4A5D52] italic text-xs">
-                    Belum ada aktivitas. Mulai Auto-Pilot atau tambah view secara manual.
+                  <div className="h-full flex items-center justify-center text-[#42554A] italic text-xs text-center px-4">
+                    Belum ada aktivitas. Mulai Auto-Pilot atau tambah view secara instan.
                   </div>
                 ) : (
                   logs.map((log) => (
-                    <div key={log.id} className="flex items-start gap-2 leading-relaxed">
-                      <span className="text-[#4A5D52] shrink-0">[{log.time}]</span>
+                    <div key={log.id} className="flex items-start gap-1.5 leading-relaxed break-all">
+                      <span className="text-[#42554A] shrink-0 font-mono">[{log.time}]</span>
                       <span
                         className={
                           log.type === 'success'
                             ? 'text-emerald-400'
                             : log.type === 'error'
                             ? 'text-rose-400'
-                            : 'text-[#8A9F93]'
+                            : 'text-[#85998D]'
                         }
                       >
                         {log.message}
@@ -731,33 +854,115 @@ export default function SecretViewClient({ initialArticles }: SecretViewClientPr
 
         </div>
 
-        {/* Bottom Section: Articles Table */}
-        <section className="bg-[#141F19] border border-[#23332A] rounded-2xl p-5 space-y-4 shadow-xl">
+        {/* ── Articles List Section (Dual-Mode: Smart Cards on Mobile, High-Density Table on Desktop) ── */}
+        <section className="bg-[#0E1511] border border-[#1B2921] rounded-2xl p-4 sm:p-6 space-y-4 shadow-xl">
+          
+          {/* Section Toolbar */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-            <div>
-              <h2 className="text-base font-semibold text-white tracking-tight">
-                Daftar Seluruh Artikel ({articles.length})
+            <div className="space-y-0.5">
+              <h2 className="text-sm sm:text-base font-semibold text-white tracking-tight flex items-center gap-2">
+                <Layers className="w-4 h-4 text-emerald-400" />
+                <span>Daftar Artikel ({articles.length})</span>
               </h2>
-              <p className="text-xs text-[#8A9F93]">
-                Klik aksi cepat untuk menambah pembaca secara spesifik pada masing-masing artikel.
+              <p className="text-xs text-[#7A9184]">
+                Akses cepat untuk menambah views secara langsung per artikel.
               </p>
             </div>
 
+            {/* Search Input */}
             <div className="w-full sm:w-64 relative">
-              <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#5C7366]" />
+              <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#55695E]" />
               <input
                 type="text"
-                placeholder="Cari artikel..."
+                placeholder="Cari judul / slug artikel..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full h-9 pl-9 pr-3 rounded-xl bg-[#0D1410] border border-[#23332A] text-xs text-white placeholder:text-[#4A5D52] focus:outline-none focus:border-emerald-500"
+                className="w-full h-9 pl-9 pr-3 rounded-xl bg-[#070B09] border border-[#18241E] text-xs text-white placeholder:text-[#42554A] focus:outline-none focus:border-emerald-500 transition-colors"
               />
             </div>
           </div>
 
-          <div className="overflow-x-auto rounded-xl border border-[#23332A]">
+          {/* ── 1. MOBILE VIEW: SMART ARTICLE CARDS (< 640px) ── */}
+          <div className="space-y-2.5 sm:hidden">
+            {filteredArticles.length === 0 ? (
+              <div className="p-8 text-center text-xs text-[#55695E] bg-[#070B09] rounded-xl border border-[#18241E] italic">
+                Tidak ada artikel yang sesuai dengan pencarian.
+              </div>
+            ) : (
+              filteredArticles.map((art) => (
+                <div
+                  key={art.id}
+                  className="p-3.5 rounded-xl bg-[#070B09] border border-[#18241E] space-y-2.5 transition-colors"
+                >
+                  {/* Title & Slug */}
+                  <div className="space-y-1">
+                    <div className="flex items-start justify-between gap-2">
+                      <h3 className="text-xs font-semibold text-white leading-snug line-clamp-2">
+                        {art.title}
+                      </h3>
+                      {art.isPublished ? (
+                        <span className="shrink-0 px-2 py-0.5 rounded-full text-[10px] font-mono bg-emerald-950/80 text-emerald-400 border border-emerald-500/20">
+                          Publik
+                        </span>
+                      ) : (
+                        <span className="shrink-0 px-2 py-0.5 rounded-full text-[10px] font-mono bg-zinc-800 text-zinc-400">
+                          Draft
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 text-[10px] text-[#55695E] font-mono">
+                      <span>{art.category || 'Refleksi'}</span>
+                      <span>•</span>
+                      <span className="truncate">{art.slug}</span>
+                    </div>
+                  </div>
+
+                  {/* Metrics & Quick Actions Bar */}
+                  <div className="flex items-center justify-between gap-2 pt-2 border-t border-[#14201A]">
+                    <div className="flex items-center gap-1.5 font-mono">
+                      <Eye className="w-3.5 h-3.5 text-emerald-400" />
+                      <span className="text-sm font-bold text-emerald-400 tabular-nums">
+                        {art.views.toLocaleString('id-ID')}
+                      </span>
+                      <span className="text-[10px] text-[#55695E]">views</span>
+                    </div>
+
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => handleBoost(art.slug, 10)}
+                        className="btn-interactive h-8 px-2.5 rounded-lg bg-[#0E1511] hover:bg-emerald-950 border border-[#23352B] hover:border-emerald-500/40 text-[11px] font-mono font-semibold text-emerald-300 transition-all cursor-pointer active:scale-95"
+                        title="Tambah 10 views"
+                      >
+                        +10
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleBoost(art.slug, 50)}
+                        className="btn-interactive h-8 px-2.5 rounded-lg bg-[#0E1511] hover:bg-emerald-950 border border-[#23352B] hover:border-emerald-500/40 text-[11px] font-mono font-semibold text-emerald-300 transition-all cursor-pointer active:scale-95"
+                        title="Tambah 50 views"
+                      >
+                        +50
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleBoost(art.slug, 100)}
+                        className="btn-interactive h-8 px-2.5 rounded-lg bg-[#0E1511] hover:bg-emerald-950 border border-[#23352B] hover:border-emerald-500/40 text-[11px] font-mono font-semibold text-emerald-300 transition-all cursor-pointer active:scale-95"
+                        title="Tambah 100 views"
+                      >
+                        +100
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* ── 2. DESKTOP VIEW: HIGH-DENSITY TELEMETRY TABLE (>= 640px) ── */}
+          <div className="hidden sm:block overflow-x-auto rounded-xl border border-[#18241E]">
             <table className="w-full text-left text-xs">
-              <thead className="bg-[#0D1410] text-[#8A9F93] border-b border-[#23332A] uppercase tracking-wider text-[10px]">
+              <thead className="bg-[#070B09] text-[#7A9184] border-b border-[#18241E] uppercase tracking-wider text-[10px] font-mono">
                 <tr>
                   <th className="py-3 px-4">Judul Artikel</th>
                   <th className="py-3 px-4">Kategori</th>
@@ -766,39 +971,39 @@ export default function SecretViewClient({ initialArticles }: SecretViewClientPr
                   <th className="py-3 px-4 text-center">Aksi Cepat</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#1D2B23] font-sans">
+              <tbody className="divide-y divide-[#14201A] font-sans">
                 {filteredArticles.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="py-8 text-center text-[#5C7366] italic">
+                    <td colSpan={5} className="py-10 text-center text-[#55695E] italic">
                       Tidak ada artikel yang cocok dengan pencarian.
                     </td>
                   </tr>
                 ) : (
                   filteredArticles.map((art) => (
-                    <tr key={art.id} className="hover:bg-[#1A2821]/60 transition-colors">
+                    <tr key={art.id} className="hover:bg-[#121B16] transition-colors">
                       <td className="py-3 px-4">
-                        <div className="font-medium text-white max-w-md line-clamp-1">
+                        <div className="font-medium text-white max-w-sm lg:max-w-md line-clamp-1">
                           {art.title}
                         </div>
-                        <span className="text-[10px] text-[#5C7366] font-mono">{art.slug}</span>
+                        <span className="text-[10px] text-[#55695E] font-mono">{art.slug}</span>
                       </td>
-                      <td className="py-3 px-4 text-[#8A9F93] whitespace-nowrap">
-                        {art.category || 'Refleksi'}
+                      <td className="py-3 px-4 text-[#7A9184] whitespace-nowrap">
+                        {art.category || 'Refleksi Diri'}
                       </td>
                       <td className="py-3 px-4 text-center whitespace-nowrap">
                         {art.isPublished ? (
-                          <span className="px-2 py-0.5 rounded-full text-[10px] bg-emerald-950 text-emerald-400 border border-emerald-500/20">
-                            Publik
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono bg-emerald-950/80 text-emerald-400 border border-emerald-500/25">
+                            <Check className="w-2.5 h-2.5" /> Publik
                           </span>
                         ) : (
-                          <span className="px-2 py-0.5 rounded-full text-[10px] bg-zinc-800 text-zinc-400">
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-mono bg-zinc-800 text-zinc-400">
                             Draft
                           </span>
                         )}
                       </td>
                       <td className="py-3 px-4 text-right font-mono font-bold text-emerald-400 whitespace-nowrap">
-                        <span className="inline-flex items-center gap-1">
-                          <Eye className="w-3 h-3 text-[#5C7366]" />
+                        <span className="inline-flex items-center gap-1 tabular-nums">
+                          <Eye className="w-3 h-3 text-[#55695E]" />
                           {art.views.toLocaleString('id-ID')}
                         </span>
                       </td>
@@ -807,7 +1012,7 @@ export default function SecretViewClient({ initialArticles }: SecretViewClientPr
                           <button
                             type="button"
                             onClick={() => handleBoost(art.slug, 10)}
-                            className="px-2 py-1 rounded-md bg-[#0D1410] hover:bg-emerald-950 border border-[#2B3E34] hover:border-emerald-500/40 text-[11px] font-mono text-emerald-300 transition-all cursor-pointer"
+                            className="btn-interactive px-2 py-1 rounded-md bg-[#070B09] hover:bg-emerald-950 border border-[#1B2921] hover:border-emerald-500/40 text-[11px] font-mono text-emerald-300 transition-all cursor-pointer active:scale-95"
                             title="Tambah 10 views"
                           >
                             +10
@@ -815,7 +1020,7 @@ export default function SecretViewClient({ initialArticles }: SecretViewClientPr
                           <button
                             type="button"
                             onClick={() => handleBoost(art.slug, 50)}
-                            className="px-2 py-1 rounded-md bg-[#0D1410] hover:bg-emerald-950 border border-[#2B3E34] hover:border-emerald-500/40 text-[11px] font-mono text-emerald-300 transition-all cursor-pointer"
+                            className="btn-interactive px-2 py-1 rounded-md bg-[#070B09] hover:bg-emerald-950 border border-[#1B2921] hover:border-emerald-500/40 text-[11px] font-mono text-emerald-300 transition-all cursor-pointer active:scale-95"
                             title="Tambah 50 views"
                           >
                             +50
@@ -823,7 +1028,7 @@ export default function SecretViewClient({ initialArticles }: SecretViewClientPr
                           <button
                             type="button"
                             onClick={() => handleBoost(art.slug, 100)}
-                            className="px-2 py-1 rounded-md bg-[#0D1410] hover:bg-emerald-950 border border-[#2B3E34] hover:border-emerald-500/40 text-[11px] font-mono text-emerald-300 transition-all cursor-pointer"
+                            className="btn-interactive px-2 py-1 rounded-md bg-[#070B09] hover:bg-emerald-950 border border-[#1B2921] hover:border-emerald-500/40 text-[11px] font-mono text-emerald-300 transition-all cursor-pointer active:scale-95"
                             title="Tambah 100 views"
                           >
                             +100
@@ -836,6 +1041,7 @@ export default function SecretViewClient({ initialArticles }: SecretViewClientPr
               </tbody>
             </table>
           </div>
+
         </section>
 
       </div>
