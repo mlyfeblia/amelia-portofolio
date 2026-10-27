@@ -1,5 +1,5 @@
 import React from 'react';
-import { PhoneCall, HeartPulse, ExternalLink } from 'lucide-react';
+import { PhoneCall, HeartPulse } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface CrisisHotlineDisclaimerProps {

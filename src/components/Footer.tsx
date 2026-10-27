@@ -10,6 +10,7 @@ const footerNav = [
   { label: 'Layanan', href: '/services' },
   { label: 'Asesmen', href: '/assessment' },
   { label: 'Curhat', href: '/counseling' },
+  { label: 'Jadwal Konseling', href: '/schedule' },
   { label: 'Artikel', href: '/articles' },
 ];
 

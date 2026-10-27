@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { AlertTriangle, RefreshCw, ExternalLink, Database, ShieldAlert, CheckCircle2 } from 'lucide-react';
+import { AlertTriangle, RefreshCw, ExternalLink } from 'lucide-react';
 import { adminCache, DatabaseOperationalStatus } from '@/lib/admin-cache';
 import { useToast } from '@/context/ToastContext';
 import { cn } from '@/lib/utils';
@@ -10,7 +10,6 @@ export function DatabaseStatusBanner() {
   const { toast } = useToast();
   const [status, setStatus] = useState<DatabaseOperationalStatus>(() => adminCache.getDatabaseStatus());
   const [checking, setChecking] = useState(false);
-  const [lastCheckTime, setLastCheckTime] = useState<number | null>(null);
   const [meta, setMeta] = useState(() => adminCache.getSnapshotMeta());
 
   const handleSyncStatus = useCallback((newStatus: DatabaseOperationalStatus) => {
@@ -39,7 +38,6 @@ export function DatabaseStatusBanner() {
     setChecking(true);
     try {
       const res = await adminCache.checkDatabaseHealth();
-      setLastCheckTime(Date.now());
       if (res === 'online') {
         toast.success('Koneksi ke database InsForge berhasil pulih! Data terbaru kini sinkron.');
         window.dispatchEvent(new CustomEvent('amelia:admin-cache-updated', { detail: { key: 'bookings' } }));

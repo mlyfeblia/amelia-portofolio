@@ -31,7 +31,6 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
   const [submitting, setSubmitting] = useState(false);
   const [remainingSeconds, setRemainingSeconds] = useState<number>(DEFAULT_SESSION_SECONDS);
   const [sessionNotice, setSessionNotice] = useState<string | null>(null);
-  const [isInputReady, setIsInputReady] = useState(true);
 
   const submittingRef = useRef(false);
   const pinInputRef = useRef<HTMLInputElement>(null);
@@ -39,11 +38,14 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
   // Ensure PIN input is strictly cleared on mount and unauthenticated state while focusing
   useEffect(() => {
     if (!isAuthenticated) {
-      setPin('');
-      if (pinInputRef.current) {
-        pinInputRef.current.value = '';
-        pinInputRef.current.focus();
-      }
+      const timer = setTimeout(() => {
+        setPin('');
+        if (pinInputRef.current) {
+          pinInputRef.current.value = '';
+          pinInputRef.current.focus();
+        }
+      }, 0);
+      return () => clearTimeout(timer);
     }
   }, [isAuthenticated]);
 
@@ -361,7 +363,7 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
                       setPinError(false);
                       setPinErrorMessage(null);
                     }
-                    if (onlyNums.length === 6 && isInputReady && !submitting && !submittingRef.current) {
+                    if (onlyNums.length === 6 && !submitting && !submittingRef.current) {
                       login(onlyNums);
                     }
                   }}

@@ -6,9 +6,23 @@ export interface VersionRelease {
   highlights: string[];
 }
 
-export const CURRENT_APP_VERSION = '2.5.0';
+export const CURRENT_APP_VERSION = '2.6.0';
 
 export const APP_CHANGELOG: VersionRelease[] = [
+  {
+    version: '2.6.0',
+    releaseDate: '27 Oktober 2026',
+    title: 'Pemulihan Bencana Auto-Pause InsForge, Sinkronisasi Kalender (.ICS), Ekspor CSV & Jembatan Asesmen',
+    badge: 'Rilis Pembaruan v2.6.0',
+    highlights: [
+      'Sistem pemulihan bencana otomatis saat database InsForge ter-pause: panel admin beralih mulus ke cadangan snapshot lokal persisten dengan banner status interaktif dan sinkronisasi multi-tab.',
+      'Otomatisasi cron job keep-alive untuk mencegah pembekuan otomatis (idle auto-pause) pada basis data InsForge BaaS.',
+      'Jembatan asesmen ke reservasi: hasil refleksi psikologis, skor, dan kategori otomatis terisi ke formulir penjadwalan konseli.',
+      'Fitur ekspor laporan reservasi & curhat ke berkas RFC 4180 CSV berstandar keamanan formula injection dan UTF-8 BOM.',
+      'Dukungan simpan jadwal satu klik ke iCalendar (.ICS) dan Google Calendar pada kartu sukses dan pelacakan reservasi.',
+      'Protokol tanggap darurat krisis kesehatan jiwa (SEJIWA 119 ext. 8) pada formulir curhat dan penjadwalan.',
+    ],
+  },
   {
     version: '2.5.0',
     releaseDate: '19 Oktober 2026',

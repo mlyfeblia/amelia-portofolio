@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { Booking } from '@/types';
 
 const localStorageMap = new Map<string, string>();

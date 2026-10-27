@@ -183,9 +183,11 @@ export default function PwaLifecycle() {
     try {
       if (sessionStorage.getItem('amel_just_updated') === '1') {
         sessionStorage.removeItem('amel_just_updated');
-        setOnlineToastMessage(`Aplikasi berhasil diperbarui ke versi terbaru (v${CURRENT_APP_VERSION}).`);
-        setShowOnlineToast(true);
-        timer = setTimeout(() => setShowOnlineToast(false), 4500);
+        timer = setTimeout(() => {
+          setOnlineToastMessage(`Aplikasi berhasil diperbarui ke versi terbaru (v${CURRENT_APP_VERSION}).`);
+          setShowOnlineToast(true);
+          timer = setTimeout(() => setShowOnlineToast(false), 4500);
+        }, 0);
       }
     } catch {
       // Ignore storage errors
