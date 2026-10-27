@@ -1379,6 +1379,82 @@ export async function incrementArticleViews(slug: string): Promise<number> {
   return currentViews || 1;
 }
 
+export async function boostArticleViews(slug: string, count: number): Promise<number> {
+  const safeCount = Math.max(1, Math.floor(count));
+  let currentViews = 0;
+
+  if (isDatabaseConfigured && db) {
+    try {
+      const updated = await db
+        .update(articles)
+        .set({ views: sql`COALESCE(${articles.views}, 0) + ${safeCount}` })
+        .where(eq(articles.slug, slug))
+        .returning({ views: articles.views });
+
+      if (updated && updated.length > 0) {
+        currentViews = updated[0].views ?? 0;
+      }
+    } catch (dbErr) {
+      console.error('Failed to boost article views in db:', dbErr);
+    }
+  }
+
+  // Update in fallback articles
+  const fallback = fallbackArticles.find((a) => a.slug === slug);
+  if (fallback) {
+    fallback.views = (fallback.views || 0) + safeCount;
+    if (!currentViews) currentViews = fallback.views;
+  }
+
+  saveLocalJsonBackup();
+  try {
+    revalidatePath('/articles');
+    revalidatePath(`/articles/${slug}`);
+    revalidatePath('/');
+  } catch {
+    // Safe outside request context
+  }
+
+  return currentViews;
+}
+
+export async function setArticleViews(slug: string, targetViews: number): Promise<number> {
+  const safeViews = Math.max(0, Math.floor(targetViews));
+  let currentViews = safeViews;
+
+  if (isDatabaseConfigured && db) {
+    try {
+      const updated = await db
+        .update(articles)
+        .set({ views: safeViews })
+        .where(eq(articles.slug, slug))
+        .returning({ views: articles.views });
+
+      if (updated && updated.length > 0) {
+        currentViews = updated[0].views ?? safeViews;
+      }
+    } catch (dbErr) {
+      console.error('Failed to set article views in db:', dbErr);
+    }
+  }
+
+  const fallback = fallbackArticles.find((a) => a.slug === slug);
+  if (fallback) {
+    fallback.views = safeViews;
+  }
+
+  saveLocalJsonBackup();
+  try {
+    revalidatePath('/articles');
+    revalidatePath(`/articles/${slug}`);
+    revalidatePath('/');
+  } catch {
+    // Safe outside request context
+  }
+
+  return currentViews;
+}
+
 export async function updateArticle(
   id: string,
   data: Partial<Omit<Article, 'id'>>
